@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+
+# Claude Code runtime (keep everything in .claude/agents/ but ignore local overrides)
+.claude/settings.local.json
+.claude/.cache/
