@@ -16,10 +16,9 @@ OUTPUT_DIR = ROOT / ".claude" / "agents"
 MODELS = ("opus", "sonnet", "haiku")
 
 
-def derive_one(template_path: pathlib.Path, dry_run: bool = False):
+def derive_one(template_path: pathlib.Path, dry_run: bool = False) -> None:
     role = template_path.name.replace(".md.tmpl", "")
     template_text = template_path.read_text()
-    results = []
     for model in MODELS:
         name = f"{role}-{model}"
         out_text = template_text.replace("__NAME__", name).replace("__MODEL__", model)
@@ -29,23 +28,21 @@ def derive_one(template_path: pathlib.Path, dry_run: bool = False):
         else:
             out_path.write_text(out_text)
             print(f"wrote: {out_path}")
-        results.append(out_path)
-    return results
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Derive <role>-<model>.md agent files from .md.tmpl templates."
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     templates = sorted(TEMPLATES_DIR.glob("*.md.tmpl"))
     if not templates:
         print(f"no templates found in {TEMPLATES_DIR}", file=sys.stderr)
         sys.exit(1)
     for t in templates:
-        # skip artifacts/ subdirectory templates if any matched (sanity)
-        if "artifacts" in t.parts:
-            continue
         derive_one(t, dry_run=args.dry_run)
 
 
