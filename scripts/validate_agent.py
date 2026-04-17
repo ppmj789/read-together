@@ -32,48 +32,65 @@ def split_frontmatter(text):
     return text[4:end], text[end + 5 :]
 
 
+KEY_LINE_RE = re.compile(r"^[a-zA-Z_-]+:")
+
+
 def parse_frontmatter(fm):
-    """Minimal YAML-ish parser: one key per line, optional list/block value."""
+    """Minimal YAML-ish parser: one key per line, optional flow-list or |-block value.
+
+    A `|`-block continues until the next line that matches the key pattern
+    `^[a-zA-Z_-]+:`. Blank lines inside the block are preserved (as empty
+    strings in the joined text) so descriptions with blank separators are
+    not silently truncated.
+    """
     result = {}
-    current_key = None
+    current_block_key = None
     block_lines = []
+
+    def _flush_block():
+        nonlocal current_block_key, block_lines
+        if current_block_key is not None:
+            result[current_block_key] = "\n".join(block_lines).strip()
+            current_block_key = None
+            block_lines = []
+
     for line in fm.splitlines():
-        if re.match(r"^[a-zA-Z_-]+:", line):
-            if current_key is not None and block_lines:
-                result[current_key] = "\n".join(block_lines).strip()
-                block_lines = []
+        if current_block_key is not None:
+            # Inside a |-block: close on the next key line, otherwise accumulate.
+            if KEY_LINE_RE.match(line):
+                _flush_block()
+                # fall through to handle this line as a new key
+            else:
+                # Preserve blank lines; strip up to 2 leading spaces of indent
+                # (standard YAML block-scalar indent used in agent files).
+                if line.startswith("  "):
+                    block_lines.append(line[2:])
+                else:
+                    block_lines.append(line)
+                continue
+
+        if KEY_LINE_RE.match(line):
             key, _, value = line.partition(":")
             key = key.strip()
             value = value.strip()
             if value == "|":
-                current_key = key
+                current_block_key = key
                 result[key] = ""
             elif value.startswith("[") and value.endswith("]"):
                 result[key] = [v.strip() for v in value[1:-1].split(",") if v.strip()]
-                current_key = None
             else:
                 result[key] = value
-                current_key = None
-        elif current_key is not None and line.startswith("  "):
-            block_lines.append(line[2:])
-        elif re.match(r"^\s*-\s+", line):
-            # list continuation: "- Item"
-            key = current_key
-            if key is None:
-                continue
-            if not isinstance(result.get(key), list):
-                result[key] = []
-            result[key].append(re.sub(r"^\s*-\s+", "", line).strip())
-        else:
-            if current_key is not None and line.strip() == "":
-                continue
-    if current_key is not None and block_lines:
-        result[current_key] = "\n".join(block_lines).strip()
+        # Lines outside a block that are not key lines (e.g. blank separators
+        # or stray text) are ignored by this minimal parser.
+
+    _flush_block()
     return result
 
 
 def errors_for(path):
     text = path.read_text()
+    # Normalize CRLF so files saved on Windows editors are accepted.
+    text = text.replace("\r\n", "\n")
     fm_text, body = split_frontmatter(text)
     errs = []
     if fm_text is None:
