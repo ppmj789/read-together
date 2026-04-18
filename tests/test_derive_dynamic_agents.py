@@ -43,7 +43,7 @@ def test_all_derived_files_pass_validation():
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-def test_committed_files_match_templates(tmp_path):
+def test_committed_files_match_templates():
     """Guard against template/derived-file drift.
 
     If a template was edited without re-running derive_dynamic_agents.py,
