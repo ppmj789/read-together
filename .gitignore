@@ -15,3 +15,11 @@ venv/
 # Claude Code runtime (keep everything in .claude/agents/ but ignore local overrides)
 .claude/settings.local.json
 .claude/.cache/
+
+# Runtime project artifacts — each SI project's generated files stay untracked.
+# The system (agents, templates, scripts) is what we version; the output of running
+# it against any specific project is not.
+projects/*/
+!projects/.gitkeep
+src/
+infra/
