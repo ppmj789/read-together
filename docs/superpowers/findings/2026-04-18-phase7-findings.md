@@ -176,3 +176,48 @@
 8. **`claude -p` CLI 인자 순서 가이드 (HIGH)**: spec/plan/role 모든 Track A 호출 예시에 `--add-dir` 을 `--append-system-prompt` 보다 앞에 두도록 통일. 잘못된 순서는 silent failure → 디버그 어려움.
 9. **spec decision #15 amendment (med)**: "PM 이 scripts/run_audit.sh 를 통해 audit-team 을 호출할 수 있다" 명시. 본 Phase 7 에서 role 파일 차원 적용 완료, spec 본문 반영 필요.
 10. **인덱스 의존성 요약 표 자동 검증 (low-med)**: validate_artifact_hierarchy 는 자식 frontmatter 양방향만 검사. 인덱스의 "의존성 요약" 마크다운 표는 미검사 → 본 감리에서 발견된 4건 대부분 이 카테고리. 인덱스 표 vs 자식 frontmatter 를 비교 검증하는 script 추가 검토.
+
+## Task 7: 03_implementation (5 도메인 구현, 2-Wave 구조)
+
+### 진행
+- §2-6 gate: business-manager 자문 — 2-Wave 구조, P0 carry-forward REC-D-01~06 + ARCH-R-01, MOCK 범위 정의 (agentId a502d89cbdfa11fb7)
+- Track A 2 갈래 병렬 (PM → appdir + infra-dir 모두 opus/xhigh, 약 ~?분)
+- appdir Wave 1 (단독): backend-developer-sonnet/xhigh — PRG-COMMON-01/02/03 + PRG-AUTH-01~03 + UT-RES-01~05/28/29/30 (REC-D-01~05 P0 일괄 반영)
+- appdir Wave 2 (6 sub-Track A 병렬): member, loan, book(haiku), search, batch, web — 22 UT-RES + 16 SCN
+- infra-dir 1 sub-Track A: W-I-07 (Dockerfile, compose, 8 TBL DDL, REC-D-06 secrets, ARCH-R-01 heartbeat 컬럼, DBP-R-07 확장 초기화)
+- 산출물 90+ 파일 (`src/backend` 32 .py, `src/batch` 6 .py, `src/web/admin` 24, tests 22, `infra/` 8, 03_implementation 32)
+- PM Step 3: RTM/by-stage/implementation.md 자동 추출 (25 RQ × 20 PRG × 30 UT-RES 매핑)
+
+### 핵심 발견 (Task 4·5 보강 효과 3차 검증 — 메이저 성공 지속)
+- **🟢 양 디렉터 모두 sync + validate self-check 준수, verbatim 인용**:
+  - appdir: `OK: book-mgmt-api updated 30 parent file(s)` + `OK: ... clean (247 child file(s))` 인용 후 PASS-WITH-COMMENTS
+  - infra: `OK: ... already in sync` + `OK: ... clean (215 child file(s))` 인용 후 PASS
+  - 잔여 finding 자체 시정 후 보고 (UT-RES-19~23 frontmatter drift 일괄 regex 수정, depends-on/resolved-by 분리)
+- **🟢 Prompt cache 효과 (3차 검증)**:
+  - appdir: cache_read 4.08M / cache_creation 121K → ~97% hit (3-tier nested 환경)
+  - infra: cache_read 803K / cache_creation 9.8K → ~99% hit (단일 sub-Track A)
+- **🟢 비용 절감 검증 (Task 5 보다 더 절감)**:
+  - 추정 $8-15 → 실측 ~$5.0 (~60% 절감)
+  - haiku 활용 효과 (book CRUD + 단순 SCN): Wave 2 비용 일부 추가 절감
+- **🟢 P0 carry-forward 전수 해결**: REC-D-01~05 (보안), REC-D-06 (Docker Secrets), ARCH-R-01 (배치 격리), DBP-R-02 (overdue 정책 A3 하이브리드), DBP-R-07 (pgcrypto/pg_trgm) 모두 구현 + 증적 매핑 PM 보고에 file:line 인용
+- **🟡 2-Wave 구조 효율**: appdir 가 Wave 1 (auth+COMMON) 완료 후 Wave 2 (5 도메인) 병렬 dispatch — 의존성 관리 정확. cache 재사용 극대화.
+- **🟡 cross-track 동기화 (DBP-R-02)**: appdir 가 Wave 2 PRG-LOAN/BATCH 호출 시 infra-dir 의 W-I-07 결과 (loans.overdue_days 컬럼 + 정책 권고)를 context 에 주입. 양 트랙 일관 결과.
+
+### 산출물 요약 (90+ 파일)
+| 영역 | 파일 수 | 담당 |
+|------|------|-----|
+| src/backend/{auth,common,member,book,loan,search} | 32 .py | backend-developer-sonnet (auth/member/loan/search) + backend-developer-haiku (book) |
+| src/batch/ | 6 .py | batch-developer-sonnet |
+| src/web/admin/{auth,member,book,loan,search,batch,common}/ | 24 (HTML 16 + CSS 1 + JS 6 + index 1) | web-developer + web-publisher + designer (haiku 우세, AUTH·COMMON 만 sonnet/high) |
+| tests/test_ut_unit_*.py | 22 | backend-developer (Wave 2) |
+| infra/{Dockerfile, docker-compose.yml, migrations/, scripts/, .env.example, .github/workflows/, README.md} | 8 | infrastructure-engineer-sonnet |
+| 03_implementation/{unit-test-results 30 + reviews 2 + index 2} | 34 | 본 단계 산출 |
+
+### Carry-forward → 04_test (PM 권고)
+- batch audit 확장 CR: OVERDUE_NOTICE_SENT action_type 미등록 → CR 등재 + write_audit_log 확장
+- UT-RES-09/13 AC 표 → IT 케이스에 Given/When/Then 재구성
+- MOCK 한계: 04_test 에서 Docker + PG 실 환경 기동 후 실제 green 재검증
+
+### Phase 7 patches 후보 추가
+11. **MOCK→실 환경 전이 가이드 (med)**: 03_implementation MOCK 와 04_test 실 환경 전이 시 어떤 검증이 필수인지 spec 에 명시 필요. 현 spec 은 04_test 시험 케이스 작성만 명시, 환경 전이 게이트 없음.
+12. **2-Wave dispatch 패턴 정착 (low-med)**: appdir 가 자체 판단으로 2-Wave 구조 (선행 1 + 병렬 N) 채택. 일반화 가능 — application-director.md 의 "How You Invoke" 에 "공통 모듈/암호화 선행, 도메인 병렬" 패턴 명시 가능.
