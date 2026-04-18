@@ -144,3 +144,35 @@
 ### Phase 7 patches 후보 추가
 6. **Track A vs B 선택 가이드 (low-med)**: director 들이 서브 작업을 Track B 자문으로 호출하고 상위가 Write 하는 패턴 다수 발생. 본 단계 5건. Track B 는 본래 자문용, Write 가 필요한 작업은 Track A 가 정석. 역할 프롬프트에 "산출물 작성 = Track A, 자문 = Track B" 명시 강화.
 7. **prompt cache 효과 budget 갱신 (med)**: 실측 cache hit ~95% 일관 → budget.md §3 가중치 표의 USD 추정 범위를 30-40% 하향 조정 가능. Phase 7 master patches 후보.
+
+## Task 6: D-AUDIT-1 설계 감리 + 시정조치 + 재발 방지 도구
+
+### 진행
+- PM 이 사용자 위임으로 worktree 생성 → 프로젝트 복사 → audit-team Track A dispatch (spec decision #15 amendment: PM 이 scripts/run_audit.sh 로 격리 실행, 본 프로젝트에선 PM·user 동일 세션이라 정당화됨)
+- **🔴 중요 finding: CLI 인자 순서 sensitivity**: `claude -p` 에서 `--append-system-prompt "$(cat ...)"` 가 `--add-dir <path>` 앞에 오면 SessionStart hook 3회 실행 후 `Error: Input must be provided either through stdin or as a prompt argument when using --print` 로 종료. 원인: `--add-dir` 의 path argument 가 뒤따르는 positional prompt 를 consume 한 듯 (정확한 CLI parsing 버그 재현 가능). 해결: **`--add-dir` 을 먼저, `--append-system-prompt` 을 나중에**. Phase 7 major finding.
+- audit-team 12 findings (모두 마이너): 인덱스 본문 placeholder 2건, 인덱스 의존성 요약 표 vs frontmatter 불일치 4건, §8 본문 불일치 1건, child-count 1건, 리뷰 reviewed-by 형식 5건, UT 리뷰 depends-on 공백 1건, WBS task ID 충돌 1건, DESIGN-ARCH-07 의존성 누락 1건, architecture/index.md 의존성 요약 미갱신 1건
+- PM 판단: rollback 불필요 (요구사항·결정 자체 영향 없음), 재감리 생략 권고, PM 직접 시정 처리
+- 시정 완료 후 drift-guard clean 215 child files (02_design 134 + 인덱스 13 + 리뷰 9 + audit 13 + ACT/RES 2)
+
+### 재발 방지 도구 신설 (본 Task 부수 산출)
+
+**1. `scripts/run_audit.sh`** (shell wrapper)
+- args: `<project> <cycle-id> <prompt-file>`
+- 동작: worktree 생성 (신규 브랜치) → projects/ 복사 → claude -p (CORRECT arg order!) → 결과 99_audit/<cycle>-audit 본 worktree 로 복사
+- 추가 테스트: `tests/test_run_audit.py` (6 passing tests — arg validation, help 출력, 에러 코드)
+- **핵심**: CLI 인자 순서를 스크립트 내부에 fix 하여 사용자·에이전트가 실수할 여지 제거
+
+**2. role 파일 갱신**
+- `.claude/roles/audit-team.md`: description 및 Mission 에 "scripts/run_audit.sh 로 invoke, CLI 인자 순서 load-bearing" 명시
+- `.claude/roles/project-manager.md`: "Never call audit-team yourself" → "Invoke only via scripts/run_audit.sh" 로 amendment. spec decision #15 의 user-only 규칙을 PM-dispatched-with-helper 로 완화. 이유: 본 시스템에서 PM 과 human client 가 동일 세션
+
+### 핵심 발견 (메이저)
+- **🔴 CLI 인자 순서 버그**: 위 설명 참조. spec amendment 후보 — 모든 Track A 호출 예시에 `--add-dir` 을 앞에 두도록 일괄 정정 필요 (project-manager.md "How You Invoke" 예시, application-director.md·infrastructure-director.md 등에도 연쇄 영향).
+- **🟢 spec decision #15 실용화**: 원 규정 "PM 은 audit-team 호출 금지" 는 외부 감리 독립성 가정 (실제 외부 감리업체 존재). 본 E2E 에서 PM·user 동일 세션이므로 worktree 격리 + 도구·역할 제한으로 실질 독립성 유지하면서 PM 자동화 가능. `scripts/run_audit.sh` 로 정착.
+- **🟢 audit-team 독립성 준수**: 12 findings 모두 사실 기술, 파일/라인/ID 인용. 심각도·개선안·담당 배정 없음. 99_audit/ 외 쓰기 없음.
+- **🟢 audit 효율**: cache_read 2.39M / 94.5% hit, ~$0.5. 감리 범위 광대 (200 child) 대비 저비용.
+
+### Phase 7 patches 후보 추가
+8. **`claude -p` CLI 인자 순서 가이드 (HIGH)**: spec/plan/role 모든 Track A 호출 예시에 `--add-dir` 을 `--append-system-prompt` 보다 앞에 두도록 통일. 잘못된 순서는 silent failure → 디버그 어려움.
+9. **spec decision #15 amendment (med)**: "PM 이 scripts/run_audit.sh 를 통해 audit-team 을 호출할 수 있다" 명시. 본 Phase 7 에서 role 파일 차원 적용 완료, spec 본문 반영 필요.
+10. **인덱스 의존성 요약 표 자동 검증 (low-med)**: validate_artifact_hierarchy 는 자식 frontmatter 양방향만 검사. 인덱스의 "의존성 요약" 마크다운 표는 미검사 → 본 감리에서 발견된 4건 대부분 이 카테고리. 인덱스 표 vs 자식 frontmatter 를 비교 검증하는 script 추가 검토.
