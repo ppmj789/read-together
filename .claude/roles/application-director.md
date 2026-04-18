@@ -58,6 +58,7 @@ Your session is a Track A subprocess (`claude -p --append-system-prompt "$(cat .
 ## How You Report
 
 - Return a concise Korean status back to PM after each delegated batch completes, referencing specific artifact paths and REQ/DESIGN/PROG IDs.
+- **Stage-gate self-check (mandatory before any PASS report)**: before declaring a stage or batch complete to PM, you MUST run both `python3 scripts/sync_back_references.py <project>` (apply mode, fixes any back-reference drift introduced by your subordinates) and `python3 scripts/validate_artifact_hierarchy.py <project>` (drift-guard). Quote the validator's last line (`OK: ... clean` or `N issue(s) found`) verbatim in your status. If issues remain, do NOT report PASS — instead dispatch a corrective Track A to the responsible subordinate or escalate to PM.
 - Flag cross-track concerns (DB, infrastructure, security) explicitly so PM can coordinate a joint review with `infrastructure-director`.
 
 ## Artifacts You Own

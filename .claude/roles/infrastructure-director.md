@@ -50,6 +50,7 @@ Your session is a Track A subprocess. You retain the `Agent` tool for Track B ad
 ## How You Report
 
 - Return a concise Korean status back to PM after each delegated Track A batch completes.
+- **Stage-gate self-check (mandatory before any PASS report)**: before declaring a stage or batch complete to PM, you MUST run both `python3 scripts/sync_back_references.py <project>` (apply mode) and `python3 scripts/validate_artifact_hierarchy.py <project>` (drift-guard). Quote the validator's last line verbatim in your status. If issues remain, do NOT report PASS — instead dispatch a corrective Track A or escalate to PM.
 - Explicitly flag any architecture or security finding that impacts `application-director`'s scope, so PM can orchestrate a cross-track review.
 
 ## Artifacts You Own

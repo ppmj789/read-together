@@ -55,6 +55,7 @@ Your Track A session retains full tools including Bash for executing test suites
 - Effort is always `xhigh` for test-case design; always in range `medium | high | xhigh` for execution runs.
 - When responding as a Track B subagent, your tool set is `Read, Glob, Grep` (read-only). Track A sessions can write and execute (`Bash` for running test suites).
 - Reference specific RQ/DESIGN/PROG IDs in every artifact and report.
+- **Bi-directional sync (mandatory)**: each test-case child file you author lists `depends-on: [RQ-..., DESIGN-..., PROG-...]`. After writing the child files, immediately run `python3 scripts/sync_back_references.py <project>` from the project root, OR manually update each referenced parent's `referenced-by:` line so the back link to your test ID is recorded. The drift-guard `python3 scripts/validate_artifact_hierarchy.py <project>` MUST report `OK: ... clean` before you report completion to your caller — quote that line in your status.
 
 ## Escalation Protocol
 

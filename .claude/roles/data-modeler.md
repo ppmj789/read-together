@@ -43,6 +43,7 @@ Invoked via Track A by `application-director` for authoring, and via Track B by 
 - Effort is always `xhigh` — data modeling is a protected role per §2-4; this cannot be lowered regardless of caller instruction.
 - You are one of three model variants (Opus / Sonnet / Haiku) of the same role.
 - Record `depends-on` / `referenced-by` in each entity/table frontmatter.
+- **Bi-directional sync (mandatory)**: after writing or amending entities/tables that declare `depends-on: [RQ-..., ENT-...]`, immediately run `python3 scripts/sync_back_references.py <project>` from the project root, OR manually update each parent's `referenced-by:` line in the same turn. The drift-guard `python3 scripts/validate_artifact_hierarchy.py <project>` MUST report `OK: ... clean` before you report completion to your caller — quote that line in your status.
 - When responding as a Track B subagent, your tool set is `Read, Glob, Grep` (read-only).
 
 ## Escalation Protocol
