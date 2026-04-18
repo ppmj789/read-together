@@ -95,3 +95,52 @@
 ### Phase 7 patches 후보 추가
 4. **자동 차단 hook (보완안 1, 미구현)**: SessionEnd 또는 stage-gate 키워드 감지 시 validator 자동 실행. 본 세션은 프롬프트 보강(보완안 2·3) 으로 갈음. 효과 모니터링 후 추가 검토.
 5. **AS-IS 자식 간 의존 author 가이드**: AS-IS 자식 작성 시 부모(AS-XX) 와 자식(AS-XX) 관계 혼동 (방향 오류 2건 발견). 역할 프롬프트에 "AS-XX 의 referenced-by 는 후행 AS·TB 만 (선행 AS 는 안 됨)" 명시 필요.
+
+## Task 5: 02_design (양 트랙 본격 가동, 4단 nested + cross-track)
+
+### 진행
+- §2-6 stage-entry gate: business-manager 자문 — security-specialist sonnet/xhigh 확정, 의존 순서, RQ-MEMBER-03 처리 instruction (agentId a9c484f8580727894)
+- Track A 2 갈래 병렬 (PM → appdir + infra-dir 모두 opus/xhigh, 약 38분)
+- appdir 산하: data-modeler (xhigh), SWA(IF,PRG), designer+publisher, tester(UT) — 5 sub-Track A + 10인 Track B 리뷰
+- infra-dir 산하: TA, DBA, security-specialist (모두 xhigh), infra-engineer — 4 sub-Track A + 8인 Track B 리뷰
+- 산출물 134 자식 + 13 인덱스 + 9 리뷰 = 156 파일 (drift-guard CLEAN 200, 01_analysis 포함)
+- PM Step 3: RTM/by-stage/design.md 자동 추출 (frontmatter 스캔), 25 RQ × 8 영역 매핑
+
+### 핵심 발견 (Task 4 보강 효과 검증 — 메이저 성공)
+- **🟢 갱신 프롬프트 효과 100% — 양 디렉터 모두 self-check 준수**:
+  - appdir: `python3 scripts/sync_back_references.py book-mgmt-api` + `validate_artifact_hierarchy.py` 실행 후 verbatim 인용. 12 issue 잔존 시 PASS 보고하지 않고 "CONDITIONAL PASS" 로 다운그레이드. 잔존 12건을 infra 도메인으로 정확히 스코프 분리.
+  - infra-dir: 동일 self-check 준수, 결과 `OK: clean (200 child files)` — appdir 가 carry-forward 한 12건 모두 시정.
+  - 결과: PM 의 receiving inspection 에서 추가 발견 0건. **Task 4 의 응용총괄 자체 검증 누락 패턴 100% 해소.**
+- **🟢 Prompt cache 효과 (4단 nested, sub-Track A 5+4=9건)**:
+  - appdir: cache_read 13.3M / cache_creation 337K → ~97.5% hit
+  - infra: cache_read 8.2M / cache_creation 659K → ~92.5% hit
+  - Task 4 의 ~98.5% 와 유사. 대규모 nested 호출에서도 cache 효과 안정적.
+- **🟢 비용 절감 검증**: 추정 $7-12 → 실측 $3.0 (~60-75% 절감). budget.md 의 cache 효과 가정 정확.
+- **🟢 cross-track 협업 정상 동작**:
+  - DB 논리(data-modeler/appdir) → 물리(DBA/infra) 의존 순서 준수
+  - 보안(security-specialist/infra) 가 IF(SWA/appdir) 산출물 Read 후 작성
+  - PM Track B 자문 없이 양 총괄이 instruction 으로 정확히 동기화
+- **🟡 sub-agent Write 권한 패턴**: Track B 자문 호출 (subagent_type=*-haiku 등) 의 sub-agent 가 산출물 본문을 응답 텍스트로 회신하면 상위 director 가 자체 Write. infra 4건, appdir 1건 발생. 정상 동작이나 Track A vs B 선택 가이드 보강 여지 있음 (Phase 7 patches 후보).
+- **🟡 BOOK 도메인 drift 14건 자체 발견·시정**: appdir 의 IF 리뷰에서 application-architect-haiku 가 "BOOK 드리프트" 발견. appdir 가 sync 실행 + manual edit 21건으로 정정 후 PM 보고. 즉 appdir 가 시정조치까지 자체 완료. 갱신 프롬프트의 "PASS 보고 금지 → 시정 또는 escalate" 룰 정확 동작.
+
+### 산출물 요약 (134 자식 + 13 인덱스 + 9 리뷰)
+| 영역 | 자식 | 담당 |
+|------|-----|-----|
+| architecture (cross-cutting + 6 components) | 11 | technical-architect |
+| db/logical (ENT-*) | 7 | data-modeler |
+| db/physical (TBL-*) | 8 | database-administrator (BATCH_HISTORY 신설) |
+| interfaces (IF-*) | 16 | software-architect |
+| programs (PRG-*) | 19 | software-architect (COMMON 3 신설: 감사·암호화·RBAC) |
+| screens (SCN-*) | 15 | designer + web-publisher |
+| security-review (FIND + 5 sections) | 5 | security-specialist |
+| infra (DESIGN-INFRA-*) | 4 | infrastructure-engineer |
+| unit-test-cases (UT-UNIT-*) | 30 | tester (RQ-MEMBER-03 4 AC 전수: UT-10/11/12/29) |
+
+### Carry-forward 정리 (Task 7 → 03_implementation)
+- security REC-D-01~05 (423 Locked, PW 변경 시 세션 폐기, role rotation, PII READ 감사, JSONB 마스킹)
+- infra MED/LOW 9건 + DB MED/LOW 9건
+- ARCH-R-01 배치 장애 격리
+
+### Phase 7 patches 후보 추가
+6. **Track A vs B 선택 가이드 (low-med)**: director 들이 서브 작업을 Track B 자문으로 호출하고 상위가 Write 하는 패턴 다수 발생. 본 단계 5건. Track B 는 본래 자문용, Write 가 필요한 작업은 Track A 가 정석. 역할 프롬프트에 "산출물 작성 = Track A, 자문 = Track B" 명시 강화.
+7. **prompt cache 효과 budget 갱신 (med)**: 실측 cache hit ~95% 일관 → budget.md §3 가중치 표의 USD 추정 범위를 30-40% 하향 조정 가능. Phase 7 master patches 후보.
