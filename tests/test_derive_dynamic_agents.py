@@ -41,3 +41,30 @@ def test_all_derived_files_pass_validation():
             paths.append(str(project_root / ".claude" / "agents" / f"{role}-{model}.md"))
     r = subprocess.run([sys.executable, str(validator), *paths], capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_committed_files_match_templates(tmp_path):
+    """Guard against template/derived-file drift.
+
+    If a template was edited without re-running derive_dynamic_agents.py,
+    the committed <role>-<model>.md will differ from what the template
+    would produce now. This test fails loudly in that case.
+    """
+    project_root = pathlib.Path(__file__).parent.parent
+    templates_dir = project_root / ".claude" / "agents" / "templates"
+    output_dir = project_root / ".claude" / "agents"
+    drifted = []
+    for t in sorted(templates_dir.glob("*.md.tmpl")):
+        role = t.name.replace(".md.tmpl", "")
+        template_text = t.read_text()
+        for model in ("opus", "sonnet", "haiku"):
+            name = f"{role}-{model}"
+            expected = template_text.replace("__NAME__", name).replace("__MODEL__", model)
+            committed = (output_dir / f"{name}.md").read_text()
+            if expected != committed:
+                drifted.append(f"{name}.md")
+    assert not drifted, (
+        f"{len(drifted)} derived file(s) drifted from their templates. "
+        f"Re-run `python3 scripts/derive_dynamic_agents.py` and commit. "
+        f"Files: {drifted}"
+    )
