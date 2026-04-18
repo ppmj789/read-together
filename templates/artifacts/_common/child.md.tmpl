@@ -1,0 +1,43 @@
+---
+id: <ID>                            # 예: RQ-AUTH-01, SCN-AUTH-01, PRG-AUTH-01, ENT-USER, TBL-user, IF-AUTH-login
+title: <한국어 제목>
+stage: <00_kickoff | 01_analysis | 02_design | 03_implementation | 04_test | 05_deployment | 99_audit>
+area: <영역>                        # 예: requirements, screens, programs, db/logical
+group:                              # 선택 — 그룹이 있는 경우 (RQ-AUTH, SCN-AUTH 등)
+owner: <role-name>                  # 저작 담당 역할 (.claude/roles/<role>.md)
+depends-on: []                      # 선행 산출물 ID 배열 (예: [RQ-AUTH-01])
+referenced-by: []                   # 후행 산출물 ID 배열 — 양방향 drift-guard 대상
+reviewed-by: []                     # 리뷰 회의록 경로 배열
+status: draft                       # draft | in-review | approved | rollback
+version: v1
+---
+
+# <한국어 제목>
+
+## 개요
+
+<이 항목이 무엇을 정의·저작하는지 2–3줄로 요약.>
+
+## 본문
+
+<상세 내용. 영역 유형에 따라 섹션 구성이 달라짐. 예:
+- 요구사항(RQ): 설명, 유형(기능/비기능/보안/성능), 출처 인용, 수용 기준
+- 화면(SCN): 레이아웃 설명, 컴포넌트 목록, 상호작용, 에러·상태 분기
+- 프로그램(PRG): 입력/출력, 처리 흐름, 연관 DB·IF, 예외 처리
+- 엔티티(ENT): 속성, 키, 관계, 제약, 감사 컬럼
+- 테이블(TBL): 컬럼, 타입, 인덱스, 파티션, 감사 컬럼
+- 인터페이스(IF): 엔드포인트, 요청·응답 스키마, 에러 코드, 성공·실패 경로
+- 보안 발견(FIND): 위협 모델, 통제, 수용 여부, 근거
+- 테스트 케이스: 시나리오, 전제 조건, 입력, 기대 결과
+>
+
+## 의존성
+
+- **depends-on**: 이 항목이 참조하는 선행 산출물 — frontmatter 의 `depends-on:` 와 일치시킴
+- **referenced-by**: 이 항목을 참조하는 후행 산출물 — frontmatter 의 `referenced-by:` 와 일치시킴
+
+(drift-guard 는 양방향 일관성을 검증하므로 어느 한쪽만 기록해도 안 됩니다.)
+
+## 변경 이력
+
+- YYYY-MM-DD v1: 초기 작성 (owner: <role-name>)

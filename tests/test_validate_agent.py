@@ -1,161 +1,300 @@
+"""Tests for scripts/validate_agent.py (v2 roles/agents/skills validator)."""
 import subprocess
 import pathlib
 import sys
 
-SCRIPT = pathlib.Path(__file__).parent.parent / "scripts" / "validate_agent.py"
+ROOT = pathlib.Path(__file__).parent.parent
+SCRIPT = ROOT / "scripts" / "validate_agent.py"
 
-def run(args):
-    return subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True)
 
-def write(tmp, content):
-    p = pathlib.Path(tmp) / "agent.md"
+def run(*args):
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), *args], capture_output=True, text=True
+    )
+
+
+# ---------- Builders --------------------------------------------------------
+
+def role_fm(name="application-director", description="|\n  Two-line\n  description."):
+    return "---\n" + f"name: {name}\ndescription: {description}\n" + "---\n"
+
+
+def role_body(with_invoke=True, with_consult=True):
+    parts = [
+        "\n# Role: 응용총괄\n",
+        "\n## Mission\nLead.\n",
+        "\n## Responsibilities\nCoordinate.\n",
+    ]
+    if with_invoke:
+        parts.append("\n## How You Invoke Sub-executions (Track A)\n| t | dst | why | ctx |\n|---|----|----|----|\n")
+    if with_consult:
+        parts.append("\n## How You Consult Advisors (Track B)\n| s | dst | why |\n|---|----|----|\n")
+    parts.extend([
+        "\n## How You Report\nTo PM.\n",
+        "\n## Artifacts You Own\nreview records.\n",
+        "\n## Rules\nDelegation chain enforced.\n",
+        "\n## Language\n한국어.\n",
+    ])
+    return "".join(parts)
+
+
+def agent_fm(name="backend-developer-sonnet", model="sonnet", effort="xhigh",
+             tools="[Read, Glob, Grep]", description="|\n  Backend dev shell."):
+    return ("---\n"
+            f"name: {name}\n"
+            f"description: {description}\n"
+            f"tools: {tools}\n"
+            f"model: {model}\n"
+            f"effort: {effort}\n"
+            "---\n")
+
+
+def agent_body(role_ref="backend-developer"):
+    return (f"\n# Role: Shell\n\n이 껍데기는 `.claude/roles/{role_ref}.md` 를 참조합니다.\n")
+
+
+def skill_fm(name="project-manager", model="opus", effort="xhigh",
+             description="|\n  PM loader skill."):
+    return ("---\n"
+            f"name: {name}\n"
+            f"description: {description}\n"
+            f"model: {model}\n"
+            f"effort: {effort}\n"
+            "---\n")
+
+
+def skill_body(role_ref="project-manager"):
+    return (f"\n# Skill: PM\n\n로드: `.claude/roles/{role_ref}.md`\n")
+
+
+def write_role(tmp_path, name, content):
+    d = tmp_path / ".claude" / "roles"
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / f"{name}.md"
     p.write_text(content)
     return p
 
-def valid_frontmatter(**overrides):
-    fields = {
-        "name": "project-manager",
-        "description": "|\n  Two-line\n  description.",
-        "tools": "[Read, Write, Edit, Glob, Grep, Bash, Agent, TaskCreate, TaskUpdate]",
-        "model": "opus",
-        "effort": "xhigh",
-    }
-    fields.update(overrides)
-    return "---\n" + "\n".join(f"{k}: {v}" for k, v in fields.items()) + "\n---\n"
 
-def valid_body():
-    return (
-        "\n# Role: PM\n"
-        "\n## Mission\nLead.\n"
-        "\n## Responsibilities\nCoordinate.\n"
-        "\n## Who You Call\nDirectors.\n"
-        "\n## How You Report\nTo user.\n"
-        "\n## Artifacts You Own\nproject-state.md.\n"
-        "\n## Rules\nNo auto-progress.\n"
-        "\n## Language\nKorean for user-facing.\n"
-    )
+def write_agent(tmp_path, name, content):
+    d = tmp_path / ".claude" / "agents"
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / f"{name}.md"
+    p.write_text(content)
+    return p
 
-def test_valid_agent_passes(tmp_path):
-    p = write(tmp_path, valid_frontmatter() + valid_body())
-    r = run([str(p)])
-    assert r.returncode == 0, r.stdout + r.stderr
 
-def test_missing_name_fails(tmp_path):
-    fm = valid_frontmatter()
-    fm = fm.replace("name: project-manager\n", "")
-    p = write(tmp_path, fm + valid_body())
-    r = run([str(p)])
-    assert r.returncode != 0
-    assert "name" in r.stdout or "name" in r.stderr
+def write_skill(tmp_path, name, content):
+    d = tmp_path / ".claude" / "skills" / name
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / "SKILL.md"
+    p.write_text(content)
+    return p
 
-def test_invalid_model_fails(tmp_path):
-    p = write(tmp_path, valid_frontmatter(model="gpt-4") + valid_body())
-    r = run([str(p)])
-    assert r.returncode != 0
 
-def test_invalid_effort_fails(tmp_path):
-    p = write(tmp_path, valid_frontmatter(effort="ultra") + valid_body())
-    r = run([str(p)])
-    assert r.returncode != 0
+# ---------- Role tests -----------------------------------------------------
 
-def test_missing_mission_fails(tmp_path):
-    body = valid_body().replace("\n## Mission\nLead.\n", "")
-    p = write(tmp_path, valid_frontmatter() + body)
-    r = run([str(p)])
-    assert r.returncode != 0
-
-def test_leaf_requires_escalation(tmp_path):
-    # leaf agent = no Agent tool
-    fm = valid_frontmatter(tools="[Read, Write, Edit, Glob, Grep, Bash]")
-    body = valid_body().replace("\n## Who You Call\nDirectors.\n", "")
-    # leaf must have Escalation Protocol
-    p = write(tmp_path, fm + body)
-    r = run([str(p)])
-    assert r.returncode != 0
-    assert "Escalation" in r.stdout or "Escalation" in r.stderr
-
-def test_leaf_with_escalation_passes(tmp_path):
-    fm = valid_frontmatter(tools="[Read, Write, Edit, Glob, Grep, Bash]")
-    body = (
-        valid_body().replace("\n## Who You Call\nDirectors.\n", "")
-        + "\n## Escalation Protocol\nReturn ESCALATION:...\n"
-    )
-    p = write(tmp_path, fm + body)
-    r = run([str(p)])
+def test_valid_role_passes(tmp_path):
+    p = write_role(tmp_path, "application-director", role_fm() + role_body())
+    r = run(str(p))
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-def test_audit_team_exempt_from_escalation(tmp_path):
-    # audit-team agent has no Agent tool AND no Escalation Protocol -- must still pass
-    fm = valid_frontmatter(name="audit-team", tools="[Read, Glob, Grep, Write]", model="sonnet")
-    body = (
-        "\n# Role: audit\n"
-        "\n## Mission\nAudit.\n"
-        "\n## Responsibilities\nReview.\n"
-        "\n## How You Report\nReports.\n"
-        "\n## Artifacts You Own\naudit docs.\n"
-        "\n## Rules\nIndependence.\n"
-        "\n## Language\nKorean.\n"
-    )
-    p = write(tmp_path, fm + body)
-    r = run([str(p)])
+def test_role_name_mismatch_fails(tmp_path):
+    p = write_role(tmp_path, "different-name", role_fm(name="application-director") + role_body())
+    r = run(str(p))
+    assert r.returncode != 0
+    assert "name" in r.stdout
+
+
+def test_role_with_tools_field_fails(tmp_path):
+    fm = role_fm() + ""
+    # Insert tools key inside frontmatter
+    bad_fm = fm.replace("---\n", "---\ntools: [Read, Write]\n", 1)
+    # The above inserts tools before the opening '---' -- correct instead:
+    bad_fm = fm.replace("name: application-director\n",
+                        "name: application-director\ntools: [Read, Write]\n")
+    p = write_role(tmp_path, "application-director", bad_fm + role_body())
+    r = run(str(p))
+    assert r.returncode != 0
+    assert "tools" in r.stdout
+
+
+def test_role_missing_mission_fails(tmp_path):
+    body = role_body().replace("\n## Mission\nLead.\n", "")
+    p = write_role(tmp_path, "application-director", role_fm() + body)
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_role_missing_track_sections_fails(tmp_path):
+    # Non-audit role must have at least one of Invoke/Consult
+    body = role_body(with_invoke=False, with_consult=False)
+    p = write_role(tmp_path, "application-director", role_fm() + body)
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_audit_team_role_exempt_from_track_sections(tmp_path):
+    # audit-team is the lone exemption (isolation principle, decision #15)
+    body = role_body(with_invoke=False, with_consult=False)
+    p = write_role(tmp_path, "audit-team", role_fm(name="audit-team") + body)
+    r = run(str(p))
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-def test_disallowed_tool_fails(tmp_path):
-    p = write(tmp_path, valid_frontmatter(tools="[Read, Hammer]") + valid_body())
-    r = run([str(p)])
+def test_unknown_role_name_fails(tmp_path):
+    # 'random-name' is not one of the 20 defined roles
+    p = write_role(tmp_path, "random-name", role_fm(name="random-name") + role_body())
+    r = run(str(p))
     assert r.returncode != 0
-    assert "Hammer" in r.stdout or "Hammer" in r.stderr or "not allowed" in r.stdout
+    assert "unknown role-name" in r.stdout
+
+
+# ---------- Agent shell tests ---------------------------------------------
+
+def test_valid_agent_shell_passes(tmp_path):
+    p = write_agent(tmp_path, "backend-developer-sonnet", agent_fm() + agent_body())
+    r = run(str(p))
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_agent_with_agent_tool_fails(tmp_path):
+    p = write_agent(tmp_path, "backend-developer-sonnet",
+                    agent_fm(tools="[Read, Glob, Grep, Agent]") + agent_body())
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_agent_with_task_tool_fails(tmp_path):
+    p = write_agent(tmp_path, "backend-developer-sonnet",
+                    agent_fm(tools="[Read, Glob, Grep, TaskCreate]") + agent_body())
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_agent_tools_must_be_exactly_three(tmp_path):
+    # Write too — extra beyond Read/Glob/Grep breaks the rule
+    p = write_agent(tmp_path, "backend-developer-sonnet",
+                    agent_fm(tools="[Read, Glob, Grep, Write]") + agent_body())
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_agent_effort_low_fails(tmp_path):
+    p = write_agent(tmp_path, "backend-developer-sonnet",
+                    agent_fm(effort="low") + agent_body())
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_agent_effort_max_fails(tmp_path):
+    p = write_agent(tmp_path, "backend-developer-sonnet",
+                    agent_fm(effort="max") + agent_body())
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_agent_missing_roles_reference_fails(tmp_path):
+    # Body without reference to .claude/roles/backend-developer.md
+    p = write_agent(tmp_path, "backend-developer-sonnet",
+                    agent_fm() + "\n# Shell\nNo roles ref here.\n")
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_agent_fixed_role_wrong_model_fails(tmp_path):
+    # application-director must be opus
+    p = write_agent(tmp_path, "application-director",
+                    agent_fm(name="application-director", model="sonnet",
+                             description="|\n  Director shell.") +
+                    agent_body(role_ref="application-director"))
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_agent_fixed_role_correct_model_passes(tmp_path):
+    p = write_agent(tmp_path, "application-director",
+                    agent_fm(name="application-director", model="opus",
+                             description="|\n  Director shell.") +
+                    agent_body(role_ref="application-director"))
+    r = run(str(p))
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_agent_dynamic_role_variant_mismatch_fails(tmp_path):
+    # File name says -opus but model says sonnet
+    p = write_agent(tmp_path, "backend-developer-opus",
+                    agent_fm(name="backend-developer-opus", model="sonnet") + agent_body())
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_agent_dynamic_all_three_variants_pass(tmp_path):
+    for m in ("opus", "sonnet", "haiku"):
+        p = write_agent(tmp_path, f"backend-developer-{m}",
+                        agent_fm(name=f"backend-developer-{m}", model=m) + agent_body())
+        r = run(str(p))
+        assert r.returncode == 0, f"{m}: {r.stdout + r.stderr}"
+
+
+def test_pm_agent_shell_rejected(tmp_path):
+    # project-manager is Skill-only; an agent shell must fail
+    p = write_agent(tmp_path, "project-manager",
+                    agent_fm(name="project-manager", model="opus",
+                             description="|\n  PM shell (should not exist).") +
+                    agent_body(role_ref="project-manager"))
+    r = run(str(p))
+    assert r.returncode != 0
+    assert "Skill-only" in r.stdout
+
+
+# ---------- Skill tests ---------------------------------------------------
+
+def test_valid_skill_passes(tmp_path):
+    p = write_skill(tmp_path, "project-manager", skill_fm() + skill_body())
+    r = run(str(p))
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_skill_wrong_model_fails(tmp_path):
+    p = write_skill(tmp_path, "project-manager",
+                    skill_fm(model="sonnet") + skill_body())
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_skill_wrong_effort_fails(tmp_path):
+    p = write_skill(tmp_path, "project-manager",
+                    skill_fm(effort="high") + skill_body())
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+def test_skill_missing_roles_ref_fails(tmp_path):
+    p = write_skill(tmp_path, "project-manager",
+                    skill_fm() + "\n# Skill\nNo roles ref.\n")
+    r = run(str(p))
+    assert r.returncode != 0
+
+
+# ---------- Misc ----------------------------------------------------------
+
+def test_file_not_found_fails(tmp_path):
+    missing = tmp_path / ".claude" / "roles" / "nope.md"
+    r = run(str(missing))
+    assert r.returncode != 0
 
 
 def test_missing_frontmatter_fails(tmp_path):
-    p = write(tmp_path, valid_body())  # body only, no ---
-    r = run([str(p)])
+    p = write_role(tmp_path, "application-director", role_body())  # no frontmatter
+    r = run(str(p))
     assert r.returncode != 0
 
 
-def test_file_not_found_fails(tmp_path):
-    missing = tmp_path / "does-not-exist.md"
-    r = run([str(missing)])
-    assert r.returncode != 0
-    assert "file not found" in r.stderr or "file not found" in r.stdout
+# ---------- Integration: real project files pass --------------------------
 
-
-def test_multi_file_cli_passes_all_valid(tmp_path):
-    # Write two valid agent files in two subdirs
-    (tmp_path / "p1").mkdir()
-    (tmp_path / "p2").mkdir()
-    p1 = tmp_path / "p1" / "agent.md"
-    p2 = tmp_path / "p2" / "agent.md"
-    p1.write_text(valid_frontmatter() + valid_body())
-    p2.write_text(valid_frontmatter(name="other-agent") + valid_body())
-    r = run([str(p1), str(p2)])
+def test_all_real_roles_pass():
+    """Drift-guard: every .claude/roles/*.md in the real repo must validate."""
+    r = run("--all")
     assert r.returncode == 0, r.stdout + r.stderr
-
-
-def test_crlf_line_endings_accepted(tmp_path):
-    content = (valid_frontmatter() + valid_body()).replace("\n", "\r\n")
-    p = tmp_path / "agent.md"
-    p.write_text(content, newline="")
-    r = run([str(p)])
-    assert r.returncode == 0, r.stdout + r.stderr
-
-
-def test_block_description_survives_blank_line(tmp_path):
-    # description as |-block with blank line inside
-    fm = (
-        "---\n"
-        "name: project-manager\n"
-        "description: |\n"
-        "  First line of description.\n"
-        "\n"
-        "  Second paragraph after blank line.\n"
-        "tools: [Read, Write, Edit, Glob, Grep, Bash, Agent, TaskCreate, TaskUpdate]\n"
-        "model: opus\n"
-        "effort: xhigh\n"
-        "---\n"
-    )
-    p = write(tmp_path, fm + valid_body())
-    r = run([str(p)])
-    assert r.returncode == 0, r.stdout + r.stderr
+    assert "OK:" in r.stdout

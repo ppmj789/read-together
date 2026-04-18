@@ -1,0 +1,32 @@
+---
+id: FIND-<seq>
+type: audit-finding
+audit-session: <01_analysis-audit | 02_design-audit | 03_closing-audit>
+audit-round: 1                      # 1 = 원 감리, 2+ = 재감리
+stage: <01_analysis | 02_design | 03_implementation | 04_test | 05_deployment>
+file-path:                           # 지적 대상 파일 경로 (정확히)
+line-numbers:                        # 파일 내 라인 번호 (예: "42-58" 또는 "42, 55, 91")
+related-ids: []                      # [REQ-xxx, DESIGN-xxx, PRG-xxx, UT-xxx, IT-xxx, UAT-xxx]
+status: raised | resolved | still-present
+version: v1
+---
+
+# FIND-<seq> — <감리 지적 제목>
+
+## 지적 사실
+
+<오직 사실만 기술. 심각도·개선안·담당 배정·rollback 판단 금지.
+예: "file X 의 line 42 에서 RQ-AUTH-03 의 '로그아웃 시 세션 무효화' 수용 기준이 확인되지 않음. 코드에 해당 처리가 부재함.">
+
+## 근거
+
+- 파일: `<절대 또는 프로젝트 상대 경로>`
+- 라인: `<N>` 또는 `<N-M>`
+- 관련 ID: `<REQ-xxx, DESIGN-xxx, ...>`
+- (인용) 해당 구간의 원문 또는 부재 확인
+
+## 재감리 판정 (재감리 시만)
+
+- [ ] 해소 (원 지적사항이 수정됨. 새 파일/라인 위치: ...)
+- [ ] 여전히 존재 (수정 시도됐으나 근본 해결 안 됨. 상세: ...)
+- [ ] 해소 불가 (시정조치 범위 밖 — PM 에스컬레이션)

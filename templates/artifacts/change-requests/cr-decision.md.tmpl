@@ -1,0 +1,38 @@
+---
+type: change-request-decision
+cr-id: CR-<seq>
+project: <프로젝트명>
+decided-by: user
+date: YYYY-MM-DD
+decision: approved | rejected | conditional
+related: []
+---
+
+# 변경 요청 (CR-<seq>) — 의사결정
+
+## 사용자 결정
+
+- 결정: <approved | rejected | conditional>
+- 조건 (조건부 승인 시): <...>
+- 결정 일자: YYYY-MM-DD
+
+## 반영 계획 (승인된 경우)
+
+- 복귀 단계: <01_analysis | 02_design | ...>
+- 갱신할 산출물 목록:
+  - `01_analysis/requirements/RQ-...` 의 ...
+  - `02_design/programs/PRG-...` 의 ...
+- 추가/수정할 RQ-ID: <...>
+- 수행 책임자: <application-director / infrastructure-director / 해당 실무자>
+- 예상 완료일: YYYY-MM-DD
+- rollback 필요 여부: <yes / no — PM 판단 근거>
+
+## RTM 반영
+
+- `RTM/index.md` 및 영향 받는 `by-stage/*.md` 를 CR 승인 즉시 갱신.
+- 이전 버전은 `RTM/_archived/<YYYYMMDD>-v<N>/` 로 스냅샷 후 갱신.
+
+## 커뮤니케이션
+
+- 사용자 승인 회신: <날짜·경로>
+- 관련 총괄 통보: <날짜·경로>

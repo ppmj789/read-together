@@ -1,0 +1,35 @@
+---
+project: <프로젝트명>
+type: agent-call-log
+started: YYYY-MM-DD
+---
+
+# Agent Call Log
+
+모든 Track A (`claude -p --append-system-prompt ...`) 및 Track B (Agent 툴 `subagent_type=...`) 호출을 이 파일에 append 한다 (설계서 §2-3, §2-6).
+
+## 포맷
+
+각 호출마다 아래 표에 한 행 추가.
+
+| Timestamp (UTC) | Caller | Target | Track | Model | Effort | Stage | Reason / Context |
+|-----------------|--------|--------|-------|-------|--------|-------|------------------|
+| YYYY-MM-DD HH:MM | project-manager | application-director | A | opus | xhigh | 00_kickoff | 01_analysis 진입 준비 — application-director 에게 요구사항·AS-IS·TO-BE 주도 위임 |
+| YYYY-MM-DD HH:MM | project-manager | business-manager | B | opus (Skill) | xhigh | 00_kickoff | 예산 가이드 자문 (§2-6 필수 경유) |
+
+## 단계별 집계 (사업관리가 단계 종료 시 갱신)
+
+| Stage | Track A 호출 수 | Track B 호출 수 | 누적 토큰 추정 | 누적 비용 추정 | 비고 |
+|-------|--------------|--------------|---------------|---------------|------|
+| 00_kickoff | | | | | |
+| 01_analysis | | | | | |
+| 02_design | | | | | |
+| 03_implementation | | | | | |
+| 04_test | | | | | |
+| 05_deployment | | | | | |
+
+## 비고
+
+- Model 컬럼에 `(Skill)` 표기가 있으면 Skill 경로(Opus·xhigh 고정)로 호출된 것.
+- Track A 재시도 시 동일 Caller→Target 조합으로 연속 행을 남기고 Reason 에 retry 차수 명시.
+- 호출 실패 → ESCALATION 인 경우 Reason 컬럼에 `ESCALATION: ...` 접두.

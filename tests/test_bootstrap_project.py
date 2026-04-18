@@ -1,100 +1,196 @@
+"""Tests for scripts/bootstrap_project.py (v2 hierarchical bootstrap)."""
+import shutil
 import subprocess
 import sys
 import pathlib
 
-SCRIPT = pathlib.Path(__file__).parent.parent / "scripts" / "bootstrap_project.py"
-TEMPLATES_DIR = pathlib.Path(__file__).parent.parent / ".claude" / "agents" / "templates" / "artifacts"
+ROOT = pathlib.Path(__file__).parent.parent
+SCRIPT = ROOT / "scripts" / "bootstrap_project.py"
 
 
 def run(*args, **kwargs):
-    return subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True, **kwargs)
+    return subprocess.run([sys.executable, str(SCRIPT), *args],
+                          capture_output=True, text=True, cwd=ROOT, **kwargs)
 
 
-def test_bootstrap_rejects_empty_name(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    # Create a fake project root with templates
-    (tmp_path / ".claude" / "agents" / "templates" / "artifacts").mkdir(parents=True)
+def _cleanup(name):
+    d = ROOT / "projects" / name
+    if d.exists():
+        shutil.rmtree(d)
+
+
+# ---------- Validation ----------------------------------------------------
+
+def test_bootstrap_rejects_empty_name():
     r = run("", "--scale", "small")
     assert r.returncode != 0
 
 
-def test_bootstrap_rejects_unsafe_name(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    (tmp_path / ".claude" / "agents" / "templates" / "artifacts").mkdir(parents=True)
+def test_bootstrap_rejects_unsafe_name():
     r = run("../evil", "--scale", "small")
     assert r.returncode != 0
 
 
-def test_bootstrap_rejects_bad_scale(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    (tmp_path / ".claude" / "agents" / "templates" / "artifacts").mkdir(parents=True)
-    r = run("demo", "--scale", "huge")
+def test_bootstrap_rejects_bad_scale():
+    r = run("demo-x", "--scale", "huge")
     assert r.returncode != 0
 
 
 def test_bootstrap_refuses_existing_project():
-    # Use the real repo root; projects/ must have .gitkeep but no 'demo-existing' entry
-    # We'll create and then re-run to trigger the refuse
-    project_root = pathlib.Path(__file__).parent.parent
-    demo_dir = project_root / "projects" / "demo-bootstrap-test"
+    name = "demo-exist-guard"
     try:
-        r = run("demo-bootstrap-test", "--scale", "small", cwd=project_root)
-        assert r.returncode == 0, r.stdout + r.stderr
-        # Run again — should refuse
-        r2 = run("demo-bootstrap-test", "--scale", "small", cwd=project_root)
+        r1 = run(name, "--scale", "small")
+        assert r1.returncode == 0, r1.stdout + r1.stderr
+        r2 = run(name, "--scale", "small")
         assert r2.returncode != 0
+        assert "already exists" in r2.stderr or "already exists" in r2.stdout
     finally:
-        # Cleanup the demo directory regardless
-        import shutil
-        if demo_dir.exists():
-            shutil.rmtree(demo_dir)
+        _cleanup(name)
 
 
-def test_bootstrap_creates_full_tree_small():
-    project_root = pathlib.Path(__file__).parent.parent
-    demo_dir = project_root / "projects" / "demo-small"
+# ---------- Small-mode structure -----------------------------------------
+
+def test_bootstrap_small_creates_expected_stage_dirs():
+    name = "demo-small"
+    demo = ROOT / "projects" / name
     try:
-        r = run("demo-small", "--scale", "small", cwd=project_root)
+        r = run(name, "--scale", "small")
         assert r.returncode == 0, r.stdout + r.stderr
-        expected_dirs = [
-            "00_kickoff", "00_kickoff/reviews",
-            "01_analysis", "01_analysis/reviews",
-            "02_design", "02_design/reviews",
-            "03_implementation", "03_implementation/reviews",
-            "04_test", "04_test/reviews",
-            "05_deployment", "05_deployment/reviews",
-            "99_audit", "99_audit/02_design-audit", "99_audit/03_closing-audit",
-            "change-requests", "RTM/_archived",
-        ]
-        for d in expected_dirs:
-            assert (demo_dir / d).is_dir(), f"missing dir: {d}"
-        # Small mode: NO 01_analysis-audit
-        assert not (demo_dir / "99_audit" / "01_analysis-audit").exists()
-        # Seeded files
-        for f in ("00_kickoff/statement-of-work.md", "00_kickoff/project-plan.md",
-                  "00_kickoff/rollback-history.md", "project-state.md",
-                  "RTM.md", "escalations.md"):
-            assert (demo_dir / f).is_file(), f"missing file: {f}"
-        # project-state.md has scale and project name filled in
-        state = (demo_dir / "project-state.md").read_text()
-        assert "project: demo-small" in state
-        assert "scale: small" in state
+
+        # Stage root directories
+        for d in ("00_kickoff", "01_analysis", "02_design",
+                  "03_implementation", "04_test", "05_deployment",
+                  "99_audit", "change-requests", "RTM"):
+            assert (demo / d).is_dir(), f"missing dir: {d}"
+
+        # Representative area sub-directories
+        for d in ("00_kickoff/project-plan",
+                  "01_analysis/requirements",
+                  "02_design/architecture",
+                  "02_design/db/logical",
+                  "02_design/db/physical",
+                  "02_design/screens",
+                  "02_design/programs",
+                  "03_implementation/unit-test-results",
+                  "04_test/qa-report",
+                  "05_deployment/deployment-plan",
+                  "99_audit/02_design-audit",
+                  "99_audit/03_closing-audit",
+                  "RTM/by-stage"):
+            assert (demo / d).is_dir(), f"missing area dir: {d}"
+
+        # Small mode: NO analysis audit
+        assert not (demo / "99_audit" / "01_analysis-audit").exists()
     finally:
-        import shutil
-        if demo_dir.exists():
-            shutil.rmtree(demo_dir)
+        _cleanup(name)
 
 
-def test_bootstrap_large_mode_adds_analysis_audit():
-    project_root = pathlib.Path(__file__).parent.parent
-    demo_dir = project_root / "projects" / "demo-large"
+def test_bootstrap_areas_have_index_md():
+    name = "demo-idx"
+    demo = ROOT / "projects" / name
     try:
-        r = run("demo-large", "--scale", "large", cwd=project_root)
+        run(name, "--scale", "small")
+        # Every area root must have index.md
+        for d in ("00_kickoff/project-plan",
+                  "01_analysis/requirements",
+                  "02_design/architecture",
+                  "02_design/db/physical",
+                  "02_design/screens",
+                  "02_design/programs",
+                  "04_test/qa-report",
+                  "99_audit/02_design-audit"):
+            assert (demo / d / "index.md").is_file(), f"missing index: {d}/index.md"
+    finally:
+        _cleanup(name)
+
+
+def test_bootstrap_top_level_files_seeded():
+    name = "demo-seed"
+    demo = ROOT / "projects" / name
+    try:
+        run(name, "--scale", "small")
+        for f in ("00_kickoff/statement-of-work.md",
+                  "00_kickoff/rollback-history.md",
+                  "escalations.md",
+                  "project-state.md",
+                  "agent-call-log.md",
+                  "RTM/index.md",
+                  "RTM/by-stage/analysis.md",
+                  "RTM/by-stage/design.md",
+                  "RTM/by-stage/implementation.md",
+                  "RTM/by-stage/test.md",
+                  "RTM/by-stage/deployment.md"):
+            assert (demo / f).is_file(), f"missing seed file: {f}"
+    finally:
+        _cleanup(name)
+
+
+def test_bootstrap_project_state_filled_in():
+    name = "demo-state"
+    demo = ROOT / "projects" / name
+    try:
+        run(name, "--scale", "small")
+        text = (demo / "project-state.md").read_text()
+        assert f"project: {name}" in text
+        assert "scale: small" in text
+    finally:
+        _cleanup(name)
+
+
+def test_bootstrap_agent_call_log_filled_in():
+    name = "demo-log"
+    demo = ROOT / "projects" / name
+    try:
+        run(name, "--scale", "small")
+        text = (demo / "agent-call-log.md").read_text()
+        assert f"project: {name}" in text
+    finally:
+        _cleanup(name)
+
+
+def test_bootstrap_archived_dir_has_gitkeep():
+    name = "demo-archive"
+    demo = ROOT / "projects" / name
+    try:
+        run(name, "--scale", "small")
+        assert (demo / "RTM" / "_archived" / ".gitkeep").is_file()
+    finally:
+        _cleanup(name)
+
+
+# ---------- Large-mode structure -----------------------------------------
+
+def test_bootstrap_large_adds_analysis_audit_and_by_part():
+    name = "demo-large"
+    demo = ROOT / "projects" / name
+    try:
+        r = run(name, "--scale", "large")
         assert r.returncode == 0, r.stdout + r.stderr
-        assert (demo_dir / "99_audit" / "01_analysis-audit").is_dir()
-        state = (demo_dir / "project-state.md").read_text()
+        # Analysis audit tree
+        for d in ("99_audit/01_analysis-audit",
+                  "99_audit/01_analysis-audit/audit-report",
+                  "99_audit/01_analysis-audit/corrective-action-plan",
+                  "99_audit/01_analysis-audit/corrective-action-result"):
+            assert (demo / d).is_dir(), f"missing large-only dir: {d}"
+            assert (demo / d / "index.md").is_file(), f"missing index: {d}/index.md"
+        # by-part RTM slot
+        assert (demo / "RTM" / "by-part").is_dir()
+        assert (demo / "RTM" / "by-part" / "index.md").is_file()
+
+        state = (demo / "project-state.md").read_text()
         assert "scale: large" in state
     finally:
-        import shutil
-        if demo_dir.exists():
-            shutil.rmtree(demo_dir)
+        _cleanup(name)
+
+
+def test_bootstrap_hierarchy_passes_validate_hierarchy():
+    name = "demo-hier"
+    try:
+        run(name, "--scale", "small")
+        validator = ROOT / "scripts" / "validate_artifact_hierarchy.py"
+        r = subprocess.run([sys.executable, str(validator), name],
+                           capture_output=True, text=True, cwd=ROOT)
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert "OK:" in r.stdout
+    finally:
+        _cleanup(name)
