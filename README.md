@@ -16,6 +16,21 @@ Claude Code multi-subagent system that replicates an enterprise SI
 4. When PM signals an audit is due, start a session with the
    **audit-team** agent (external auditor, isolated in `audit/`).
 
+## Bootstrapping a new project
+
+Before talking to `project-manager`, scaffold the project directory:
+
+```bash
+python3 scripts/bootstrap_project.py <project-name> --scale small|large
+```
+
+This creates `projects/<project-name>/` with the full stage directory tree,
+seeds `00_kickoff/statement-of-work.md` from a template, and initializes
+`project-state.md`, `RTM.md`, and supporting log files.
+
+Next, fill in `00_kickoff/statement-of-work.md` with your actual SOW,
+then invoke the `project-manager` agent.
+
 ## Agent Catalog
 
 ### Fixed-model agents (7)
