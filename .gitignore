@@ -23,3 +23,7 @@ projects/*/
 !projects/.gitkeep
 src/
 infra/
+meta-tests/
+
+# Phase 7 Part B ephemeral kickoff briefs (used once to launch the session)
+.phase7-part-b-kickoff.txt
