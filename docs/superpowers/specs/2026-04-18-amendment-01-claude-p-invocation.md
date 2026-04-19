@@ -100,11 +100,16 @@ PM (현 세션 = PM 페르소나)
 **Track A — 주 산출물 저작 호출 (독립 최상위 세션)**
 - 상위 에이전트가 Bash 툴로 다음 커맨드를 subprocess 실행:
 
-    claude -p --append-system-prompt "$(cat .claude/roles/<role>.md)" \
-      --model <opus|sonnet|haiku> --effort <medium|high|xhigh> \
+    claude -p \
       --dangerously-skip-permissions \
       [--add-dir <worktree-path>] \
+      --append-system-prompt "$(cat .claude/roles/<role>.md)" \
+      --model <opus|sonnet|haiku> --effort <medium|high|xhigh> \
       "<작업 지시 prompt>"
+
+    # CLI 인자 순서 load-bearing: `--add-dir` 는 반드시 `--append-system-prompt` 앞.
+    # 역순이면 positional prompt 가 `--add-dir` 값으로 흡수되어 세션이
+    # `Error: Input must be provided` 로 종료 (Phase 7 Task 6 finding).
 
 - 각 호출은 **독립된 새 최상위 Claude Code 세션**. Agent 툴을 포함한 전체 내장 툴 보유.
 - 서브프로세스 내부에서 또 다시 Bash 로 `claude -p --append-system-prompt ...` 호출 가능 → 다단 중첩 자유.
@@ -287,16 +292,23 @@ Track B(Agent 툴 서브에이전트) 호출 시 사용하는 모델·effort 는
 감리 호출 방식 보완:
 
 ```
-- 감리는 별도 git worktree 에서 Track A 로 실행:
+- 감리 호출의 정석 경로는 `scripts/run_audit.sh <project> <cycle-id> <prompt-file>`
+  헬퍼 (의사결정 #15 본 Amendment). 헬퍼가 worktree 생성, 프로젝트 복사,
+  CLI 인자 순서 준수, audit-team 산출물 3-layer 경로 방어, 결과 복사를 자동화.
+- 수동 호출이 필요하면 별도 git worktree 에서 Track A 로 실행 (CLI 인자 순서 주의):
     git worktree add <audit-wt-path> <branch>
     cd <audit-wt-path>
-    claude -p --append-system-prompt "$(cat .claude/roles/audit-team.md)" \
-      --model sonnet --effort xhigh --dangerously-skip-permissions \
-      --add-dir <audit-wt-path>/99_audit \
+    claude -p \
+      --dangerously-skip-permissions \
+      --add-dir <audit-wt-path>/projects/<project> \
+      --append-system-prompt "$(cat .claude/roles/audit-team.md)" \
+      --model sonnet --effort xhigh \
       "<감리 범위 및 지시>"
 - 감리 세션이 worktree 안에서 무엇을 수정하든 메인 작업 트리에는 영향 없음.
-- 감리 종료 후 99_audit/ 변경분만 메인으로 머지하거나 참조.
+- 감리 종료 후 99_audit/<cycle>-audit/ 변경분만 메인으로 머지하거나 참조.
 - 프롬프트·hook·permission 차단 불필요 — 물리적 격리로 대체.
+- audit-team 산출물 경로는 load-bearing: <wt>/projects/<project>/99_audit/<cycle>-audit/
+  에 작성해야 하며 `--add-dir` 도 이 경로를 겨눠야 한다 (Phase 7 Task 10 finding #18).
 ```
 
 ### 2-8. §2-6 자원·비용 관장 (신설)
@@ -340,11 +352,15 @@ Track B(Agent 툴 서브에이전트) 호출 시 사용하는 모델·effort 는
 **Track A 병렬 (다수 개발자 동시 호출)**
 - 상위 에이전트는 Bash 백그라운드 패턴으로 복수 자식 Track A 호출:
 
-    ( claude -p --append-system-prompt "$(cat roles/backend-developer.md)" \
-        --model sonnet --effort high --dangerously-skip-permissions \
+    ( claude -p \
+        --dangerously-skip-permissions \
+        --append-system-prompt "$(cat roles/backend-developer.md)" \
+        --model sonnet --effort high \
         "<지시1>" > /tmp/<unique1>.log 2>&1 & \
-      claude -p --append-system-prompt "$(cat roles/web-developer.md)" \
-        --model sonnet --effort high --dangerously-skip-permissions \
+      claude -p \
+        --dangerously-skip-permissions \
+        --append-system-prompt "$(cat roles/web-developer.md)" \
+        --model sonnet --effort high \
         "<지시2>" > /tmp/<unique2>.log 2>&1 & \
       wait )
 

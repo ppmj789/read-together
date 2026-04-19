@@ -78,6 +78,9 @@ Your session is always the top-level interactive Claude Code session (not a subp
 - Always verify all `templates/stage-gates.md` conditions before stage transitions. If any condition fails, fix it or redirect work; never paper over gaps.
 - Always use parallel Track A invocations in Bash background pattern for independent artifacts within the same stage (§7-2).
 - Your own effort is always `xhigh`; subordinate effort adjustments must remain in the range `medium | high | xhigh` (§2-4). Always `xhigh` for security, auth, payments, data-modeling, architecture, or any corrective-action work.
+- **Track A vs Track B selection rule** (Phase 7 patch #6): use Track A for authoring tasks (any Write to `projects/<name>/`), Track B for consulting / reviewing / analyzing. If a Track B consultation returns artifact body text that would be copy-written into a file by the caller, re-issue as Track A — the `author:` frontmatter and review pairing belong to the authoring role, not to the caller.
+- **2-Wave dispatch pattern** (Phase 7 patch #12): for the design and implementation stages, Wave 1 delivers the common module / cross-cutting concern sequentially; Wave 2 dispatches domain-specific deliverables in parallel with Wave 1 artifacts already referenced. Propagate this pattern to both directors in stage-entry dispatch prompts.
+- **03→04 MOCK→real gate** (Phase 7 patch #11): verify `03_implementation/mock-to-real-transition.md` exists and every checklist item is marked complete (DB connectivity, secrets wiring, outbound reachability, feature-flag defaults) before approving 04_test entry. If the project skipped MOCK mode, record "N/A — authored against real environment from day 1" in `project-state.md` for traceability.
 
 ## Escalation Protocol
 

@@ -1,0 +1,40 @@
+---
+type: change-request-index
+cr-id: CR-<seq>
+project: <프로젝트명>
+status: open | impact-analyzed | decided | in-progress | CLOSED
+opened: YYYY-MM-DD
+closed: YYYY-MM-DD            # 미확정 시 비움
+owner:                        # 시정 책임자 role-name (승인 후)
+---
+
+# 변경 요청 (CR-<seq>) — Index
+
+## 요약
+
+- 한 줄 요약: <...>
+- 원 요청 일자: YYYY-MM-DD
+- 최종 상태: <open | impact-analyzed | decided | in-progress | CLOSED>
+
+## 사이클 타임라인 (Phase 7 Task 8 실측 패턴)
+
+| 단계 | 파일 | 작성자 | 일자 | 상태 |
+|------|------|-------|------|------|
+| 1. 요청 | `cr-request.md` | user | YYYY-MM-DD | completed |
+| 2. 영향 분석 | `cr-impact-analysis.md` | application-director + infrastructure-director + business-manager | YYYY-MM-DD | completed |
+| 3. 의사결정 | `cr-decision.md` | user | YYYY-MM-DD | completed |
+| 4. 시정 결과 | `cr-action-result.md` | <owner> | YYYY-MM-DD | completed / in-progress |
+| 5. 종결 | — (본 index 의 `status: CLOSED` 전환) | project-manager | YYYY-MM-DD | CLOSED / open |
+
+## 영향 받은 산출물 (CLOSED 시점 기준)
+
+- RQ: <...>
+- DESIGN: <...>
+- PRG: <...>
+- IT / UAT / UT: <...>
+
+## 관련 링크
+
+- `project-state.md` Audit Log 의 CR 행
+- `RTM/_archived/YYYYMMDD-v<N>/` 스냅샷 (변경 반영 직전 상태)
+- `agent-call-log.md` 의 시정 Track A 행(들)

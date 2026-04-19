@@ -173,3 +173,82 @@ def test_audit_allows_one_extra_level():
         assert r.returncode == 0, r.stdout + r.stderr
     finally:
         _cleanup(name)
+
+
+# ---------- Group / index ID references (Phase 7 patches #2, #17) ---------
+
+def test_child_can_reference_index_group_id():
+    """A child's depends-on may point to an index.md group ID; no back-ref required."""
+    name = "hv-group-ref"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        group = demo / "01_analysis" / "requirements" / "RQ-GRP"
+        group.mkdir(parents=True)
+        # Index declares group-level id
+        (group / "index.md").write_text(
+            "---\nid: RQ-GRP\ntitle: group\n---\n# grp\n"
+        )
+        # Three children so the directory qualifies as ≥3
+        for i in range(1, 4):
+            (group / f"RQ-GRP-0{i}.md").write_text(
+                f"---\nid: RQ-GRP-0{i}\ntitle: t{i}\ndepends-on: []\nreferenced-by: []\n---\n# t\n"
+            )
+        # External review file references the GROUP id, not each child
+        reviews = demo / "01_analysis" / "reviews"
+        reviews.mkdir(parents=True, exist_ok=True)
+        (reviews / "rq-grp-review-v1.md").write_text(
+            "---\nid: REV-RQ-GRP-V1\ntitle: review\ndepends-on: [RQ-GRP]\nreferenced-by: []\n---\n# review\n"
+        )
+        r = _validate(name)
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert "group(s)" in r.stdout
+    finally:
+        _cleanup(name)
+
+
+def test_unknown_group_id_reference_fails():
+    """A child referencing a nonexistent group ID still fails."""
+    name = "hv-group-bad"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        reviews = demo / "01_analysis" / "reviews"
+        reviews.mkdir(parents=True, exist_ok=True)
+        (reviews / "ghost-review.md").write_text(
+            "---\nid: REV-GHOST\ntitle: r\ndepends-on: [NON-EXISTENT-GRP]\nreferenced-by: []\n---\n# r\n"
+        )
+        r = _validate(name)
+        assert r.returncode != 0
+        assert "does not exist" in r.stdout
+    finally:
+        _cleanup(name)
+
+
+# ---------- Audit-authored advisory (Phase 7 patch #19) -------------------
+
+def test_audit_finding_drift_is_advisory_only():
+    """Bidirectional drift inside 99_audit/<cycle>-audit/audit-report/ is advisory."""
+    name = "hv-audit-advisory"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        # audit-team-authored finding references a real RQ id but the RQ does
+        # not back-reference the finding (audit-team can't edit outside
+        # 99_audit/, so drift is unavoidable).
+        req_group = demo / "01_analysis" / "requirements" / "RQ-AD"
+        req_group.mkdir(parents=True)
+        (req_group / "RQ-AD-01.md").write_text(
+            "---\nid: RQ-AD-01\ntitle: r\ndepends-on: []\nreferenced-by: []\n---\n# r\n"
+        )
+        audit_dir = demo / "99_audit" / "02_design-audit" / "audit-report"
+        audit_dir.mkdir(parents=True, exist_ok=True)
+        (audit_dir / "FIND-ADV-01.md").write_text(
+            "---\nid: FIND-ADV-01\ntitle: f\ndepends-on: [RQ-AD-01]\nreferenced-by: []\n---\n# f\n"
+        )
+        r = _validate(name)
+        # Should PASS — the drift is advisory, printed to stderr as WARN
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert "WARN (audit-authored" in r.stderr
+    finally:
+        _cleanup(name)

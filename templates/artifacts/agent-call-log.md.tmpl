@@ -6,7 +6,7 @@ started: YYYY-MM-DD
 
 # Agent Call Log
 
-모든 Track A (`claude -p --append-system-prompt ...`) 및 Track B (Agent 툴 `subagent_type=...`) 호출을 이 파일에 append 한다 (설계서 §2-3, §2-6).
+모든 Track A (`claude -p --dangerously-skip-permissions [--add-dir <p>] --append-system-prompt ...`) 및 Track B (Agent 툴 `subagent_type=...`) 호출을 이 파일에 append 한다 (설계서 §2-3, §2-6). Track A CLI 인자 순서는 load-bearing — `--add-dir` 은 반드시 `--append-system-prompt` 앞에 (Phase 7 Task 6 finding).
 
 ## 포맷
 

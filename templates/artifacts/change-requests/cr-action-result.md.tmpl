@@ -1,0 +1,35 @@
+---
+type: change-request-action-result
+cr-id: CR-<seq>
+project: <프로젝트명>
+owner:                              # 시정 책임자 role-name (예: application-director)
+date: YYYY-MM-DD
+status: in-progress | completed
+related: []                         # 영향 받은 산출물 ID (RQ/DESIGN/PRG/IT/UAT/UT 등)
+---
+
+# 변경 요청 (CR-<seq>) — 시정 결과
+
+## 시정 범위
+
+- 의사결정 파일: `change-requests/CR-<seq>/cr-decision.md`
+- 승인된 조건 (있는 경우): <...>
+- 복귀 단계: <01_analysis | 02_design | ...>
+
+## 실제 수행 내역
+
+| # | 대상 산출물 | 변경 요지 | 실행자 | 완료일 |
+|---|-----------|----------|-------|--------|
+| 1 | `<경로>` | <요지> | <role> | YYYY-MM-DD |
+| 2 | ... | ... | ... | ... |
+
+## 재검증 결과
+
+- 재실행한 테스트·검증: <...>
+  - 예: `IT-RES-<seq>` 재실행 → PASS (또는 구체적 로그 경로)
+- drift-guard: `validate_artifact_hierarchy.py <project>` → `OK: ... clean (<N> child file(s))`
+- RTM 갱신: `RTM/by-stage/<stage>.md` 해당 행 상태 반영, `RTM/_archived/YYYYMMDD-v<N>/` 스냅샷 완료
+
+## 미해결·후속 사항
+
+- 없음 | <있으면 후속 액션·담당·기한>

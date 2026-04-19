@@ -16,9 +16,11 @@
 
 | 트랙 | 커맨드 | 용도 | 툴셋 |
 |------|-------|-----|------|
-| **Track A** | `claude -p --append-system-prompt "$(cat .claude/roles/<role>.md)" --model <m> --effort <e> ...` | 주 산출물 저작·하위 호출·자문 dispatch | 전체 (Read/Write/Edit/Glob/Grep/Bash/Agent) |
+| **Track A** | `claude -p --dangerously-skip-permissions [--add-dir <p>] --append-system-prompt "$(cat .claude/roles/<role>.md)" --model <m> --effort <e> ...` | 주 산출물 저작·하위 호출·자문 dispatch | 전체 (Read/Write/Edit/Glob/Grep/Bash/Agent) |
 | **Track B** | 현 세션의 Agent 툴로 `subagent_type=<agent-name>` dispatch | 자문·리뷰·분석 응답만 | `Read, Glob, Grep` (읽기 전용) |
 | **Skill** | 현 세션에서 `project-manager` 등 Skill invoke | PM 세션 개시 · 경량 자문 | 세션 툴 계승 (PM Skill 은 Opus·xhigh 고정) |
+
+> ⚠️ **Track A CLI 인자 순서는 load-bearing**: `--add-dir` 은 반드시 `--append-system-prompt` 앞에. 역순이면 positional prompt 가 `--add-dir` 값으로 흡수되어 세션이 `Error: Input must be provided` 로 종료 (Phase 7 Task 6 finding). 감리 호출은 `scripts/run_audit.sh` 헬퍼가 이 순서를 자동 보장.
 
 ---
 

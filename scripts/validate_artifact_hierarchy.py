@@ -10,7 +10,15 @@ Checks:
    (per spec §3-1 §2-13-7 "자식이 1–2개뿐인 디렉토리는 index.md 생략 허용").
 2. Every child file's frontmatter `depends-on` and `referenced-by` lists point
    to real IDs found elsewhere in the project (bidirectional drift-guard).
+   Group / index IDs (captured from `index.md` frontmatter `id:` of a directory
+   with ≥3 children) are valid reference targets — this supports review /
+   meeting artifacts that naturally reference a whole group rather than every
+   child (Phase 7 patch #17).
 3. 3-hop path limit: <stage>/<area>/<group>/<id>.md maximum depth.
+4. Audit-authored artifacts under 99_audit/: bidirectional checks are advisory
+   only, because audit-team is forbidden from editing artifacts outside
+   99_audit/ and therefore cannot inject back-references into peer
+   corrective-action files (Phase 7 patch #19).
 
 Returns exit 0 if no drift, 1 otherwise.
 """
@@ -27,8 +35,6 @@ except ImportError:  # pragma: no cover
 
 ROOT = pathlib.Path(__file__).parent.parent
 
-# Directories that do not need index.md (reviews, _archived, src, infra, top-level,
-# and some leaf-only areas like change-requests root)
 INDEX_EXEMPT_DIRS = {
     "_archived",
     "reviews",
@@ -37,17 +43,31 @@ INDEX_EXEMPT_DIRS = {
 }
 
 
-def load_child_files(project_dir: pathlib.Path) -> dict:
-    """Walk project tree, collect frontmatter 'id' -> (path, fm) for child files.
+def _as_list(value):
+    """Normalize a frontmatter scalar/list value into a Python list of str."""
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
+    if isinstance(value, str):
+        return [s.strip() for s in value.strip("[]").split(",") if s.strip()]
+    return []
 
-    Index files (filename == 'index.md') are excluded from the ID map.
+
+def load_child_files(project_dir: pathlib.Path):
+    """Walk project tree, collect both child files and index-level group IDs.
+
+    Returns (id_map, group_id_map) where:
+    - id_map maps child `id:` → (path, fm) for every non-index md file.
+    - group_id_map maps index.md `id:` → (path, fm) for directories that act
+      as a group (≥3 children via subdirs/files). Group IDs live in a
+      *separate* namespace but are acceptable targets for depends-on /
+      referenced-by references, since review and cross-cutting artifacts
+      naturally reference a group instead of listing every child.
     """
     id_map = {}
+    group_id_map = {}
     for md in project_dir.rglob("*.md"):
-        if md.name == "index.md":
-            continue
-        # Skip root-level single files (project-state.md, escalations.md, agent-call-log.md)
-        # those aren't in the ID system.
         try:
             rel = md.relative_to(project_dir)
         except ValueError:
@@ -60,13 +80,27 @@ def load_child_files(project_dir: pathlib.Path) -> dict:
         cid = fm.get("id")
         if not cid:
             continue
+
+        if md.name == "index.md":
+            if cid in group_id_map:
+                print(
+                    f"DUPLICATE GROUP ID: '{cid}' in {rel} and "
+                    f"{group_id_map[cid][0].relative_to(project_dir)}",
+                    file=sys.stderr,
+                )
+                continue
+            group_id_map[cid] = (md, fm)
+            continue
+
         if cid in id_map:
-            # Duplicate ID
-            print(f"DUPLICATE ID: '{cid}' in {rel} and {id_map[cid][0].relative_to(project_dir)}",
-                  file=sys.stderr)
+            print(
+                f"DUPLICATE ID: '{cid}' in {rel} and "
+                f"{id_map[cid][0].relative_to(project_dir)}",
+                file=sys.stderr,
+            )
             continue
         id_map[cid] = (md, fm)
-    return id_map
+    return id_map, group_id_map
 
 
 def check_index_presence(project_dir: pathlib.Path) -> list:
@@ -77,76 +111,113 @@ def check_index_presence(project_dir: pathlib.Path) -> list:
             continue
         if d.name in INDEX_EXEMPT_DIRS:
             continue
-        # Skip dirs whose path contains an exempt segment
         if any(seg in INDEX_EXEMPT_DIRS for seg in d.relative_to(project_dir).parts):
             continue
         children = [p for p in d.iterdir() if p.is_file() and p.suffix == ".md"]
-        # Subdirectories count too — a section root with only subdirs still benefits from index
         subdirs = [p for p in d.iterdir() if p.is_dir() and p.name not in INDEX_EXEMPT_DIRS]
         total = len(children) + len(subdirs)
         index_path = d / "index.md"
         if total >= 3 and not index_path.exists():
-            issues.append(f"missing index.md (child-count={total}): {d.relative_to(project_dir)}")
+            issues.append(
+                f"missing index.md (child-count={total}): {d.relative_to(project_dir)}"
+            )
     return issues
 
 
-def check_bidirectional_deps(project_dir: pathlib.Path, id_map: dict) -> list:
-    """Check depends-on / referenced-by bidirectional consistency."""
+def _is_audit_authored(rel: pathlib.PurePath) -> bool:
+    """Return True for artifacts authored by audit-team (cannot edit peers)."""
+    parts = rel.parts
+    if len(parts) < 2:
+        return False
+    if parts[0] != "99_audit":
+        return False
+    # corrective-action-* and re-audit-report-* are PM-authored — peer editing
+    # is permitted. audit-plan.md and audit-report/ are audit-team-authored.
+    audit_segment = parts[-2] if len(parts) >= 2 else ""
+    filename = parts[-1]
+    if filename == "audit-plan.md":
+        return True
+    if audit_segment == "audit-report":
+        return True
+    if audit_segment.startswith("re-audit-report"):
+        return True
+    return False
+
+
+def check_bidirectional_deps(project_dir: pathlib.Path, id_map: dict,
+                             group_id_map: dict) -> list:
+    """Check depends-on / referenced-by bidirectional consistency.
+
+    Group IDs from `group_id_map` are accepted as reference targets but skip
+    the back-reference check (an index's summary table expresses the
+    back-reference narratively, not via frontmatter).
+    Audit-authored artifacts are checked advisory-only (warnings to stderr).
+    """
     issues = []
+    valid_targets = set(id_map.keys()) | set(group_id_map.keys())
+
     for cid, (path, fm) in id_map.items():
-        deps = fm.get("depends-on", [])
-        if isinstance(deps, str):
-            # Normalize: flow-list not parsed? fallback split
-            deps = [d.strip() for d in deps.strip("[]").split(",") if d.strip()]
-        refs = fm.get("referenced-by", [])
-        if isinstance(refs, str):
-            refs = [r.strip() for r in refs.strip("[]").split(",") if r.strip()]
-
+        deps = _as_list(fm.get("depends-on"))
+        refs = _as_list(fm.get("referenced-by"))
         rel = path.relative_to(project_dir)
+        advisory = _is_audit_authored(rel)
 
-        # Verify depends-on targets exist and list back-reference to us
         for dep in deps:
-            if dep not in id_map:
-                issues.append(f"{rel}: depends-on '{dep}' does not exist in project")
+            if dep not in valid_targets:
+                msg = f"{rel}: depends-on '{dep}' does not exist in project"
+                if advisory:
+                    print(f"WARN (audit-authored, advisory): {msg}", file=sys.stderr)
+                else:
+                    issues.append(msg)
+                continue
+            # Back-reference check only applies to child-level targets
+            if dep in group_id_map:
                 continue
             _dep_path, dep_fm = id_map[dep]
-            dep_refs = dep_fm.get("referenced-by", [])
-            if isinstance(dep_refs, str):
-                dep_refs = [r.strip() for r in dep_refs.strip("[]").split(",") if r.strip()]
+            dep_refs = _as_list(dep_fm.get("referenced-by"))
             if cid not in dep_refs:
-                issues.append(
-                    f"{rel}: depends-on '{dep}' but '{dep}' is missing '{cid}' in its "
-                    "referenced-by (bidirectional drift)"
+                msg = (
+                    f"{rel}: depends-on '{dep}' but '{dep}' is missing '{cid}' "
+                    "in its referenced-by (bidirectional drift)"
                 )
+                if advisory:
+                    print(f"WARN (audit-authored, advisory): {msg}", file=sys.stderr)
+                else:
+                    issues.append(msg)
 
-        # Verify referenced-by targets exist and list forward-reference to us
         for ref in refs:
-            if ref not in id_map:
-                issues.append(f"{rel}: referenced-by '{ref}' does not exist in project")
+            if ref not in valid_targets:
+                msg = f"{rel}: referenced-by '{ref}' does not exist in project"
+                if advisory:
+                    print(f"WARN (audit-authored, advisory): {msg}", file=sys.stderr)
+                else:
+                    issues.append(msg)
+                continue
+            if ref in group_id_map:
                 continue
             _ref_path, ref_fm = id_map[ref]
-            ref_deps = ref_fm.get("depends-on", [])
-            if isinstance(ref_deps, str):
-                ref_deps = [d.strip() for d in ref_deps.strip("[]").split(",") if d.strip()]
+            ref_deps = _as_list(ref_fm.get("depends-on"))
             if cid not in ref_deps:
-                issues.append(
-                    f"{rel}: referenced-by '{ref}' but '{ref}' is missing '{cid}' in its "
-                    "depends-on (bidirectional drift)"
+                msg = (
+                    f"{rel}: referenced-by '{ref}' but '{ref}' is missing '{cid}' "
+                    "in its depends-on (bidirectional drift)"
                 )
+                if advisory:
+                    print(f"WARN (audit-authored, advisory): {msg}", file=sys.stderr)
+                else:
+                    issues.append(msg)
 
     return issues
 
 
 def check_depth_limit(project_dir: pathlib.Path) -> list:
-    """3-hop path limit: <stage>/<area>/<group>/<id>.md max depth (4 path segments)."""
+    """3-hop path limit: <stage>/<area>/<group>/<id>.md max depth (4 segments)."""
     issues = []
     for md in project_dir.rglob("*.md"):
         rel = md.relative_to(project_dir)
         parts = rel.parts
-        # Allow root-level single files (statement-of-work etc. under 00_kickoff or root)
         if len(parts) <= 1:
             continue
-        # 99_audit can go 5 deep (99_audit/<stage>-audit/<area>/<group>/<id>) — permit 5
         if parts[0] == "99_audit":
             max_depth = 5
         else:
@@ -168,9 +239,9 @@ def main():
 
     all_issues = []
 
-    id_map = load_child_files(project_dir)
+    id_map, group_id_map = load_child_files(project_dir)
     all_issues.extend(check_index_presence(project_dir))
-    all_issues.extend(check_bidirectional_deps(project_dir, id_map))
+    all_issues.extend(check_bidirectional_deps(project_dir, id_map, group_id_map))
     all_issues.extend(check_depth_limit(project_dir))
 
     if all_issues:
@@ -178,9 +249,11 @@ def main():
             print(msg)
         print(f"\n{len(all_issues)} issue(s) found.")
         sys.exit(1)
-    print(f"OK: projects/{args.project}/ hierarchy is clean "
-          f"({len(id_map)} child file(s), index presence & bi-directional "
-          "dependencies validated)")
+    print(
+        f"OK: projects/{args.project}/ hierarchy is clean "
+        f"({len(id_map)} child file(s), {len(group_id_map)} group(s), "
+        "index presence & bi-directional dependencies validated)"
+    )
 
 
 if __name__ == "__main__":

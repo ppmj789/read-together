@@ -13,7 +13,9 @@ description: |
 
 - In large-scale projects, lead an implementation sub-team and deliver a coherent slice of program work end-to-end under `application-director`.
 
-Your session is a Track A subprocess (`claude -p --append-system-prompt "$(cat .claude/roles/part-leader.md)" --model <m> --effort <e> ...`). You retain the full tool set including the `Agent` tool for Track B advisory dispatch, and call your developers via Bash Track A invocations.
+Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions [--add-dir <p>] --append-system-prompt "$(cat .claude/roles/part-leader.md)" --model <m> --effort <e> ...`). You retain the full tool set including the `Agent` tool for Track B advisory dispatch, and call your developers via Bash Track A invocations.
+
+**CLI 인자 순서는 load-bearing**: 하위 Track A 호출 시 `--add-dir` 가 있다면 반드시 `--append-system-prompt` 앞에. 역순이면 positional prompt 가 `--add-dir` 값으로 흡수되어 세션이 `Error: Input must be provided` 로 종료 (Phase 7 Task 6 finding).
 
 ## Responsibilities
 
