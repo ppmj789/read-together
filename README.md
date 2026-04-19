@@ -4,89 +4,190 @@ Claude Code multi-subagent system that replicates an enterprise SI
 (System Integration) project execution organization.
 
 - Spec: `docs/superpowers/specs/2026-04-17-ai-si-team-design.md`
-- Plan: `docs/superpowers/plans/2026-04-17-ai-si-team-build.md`
+  (+ Amendment `2026-04-18-amendment-01-claude-p-invocation.md`)
+- Build plan: `docs/superpowers/plans/2026-04-17-ai-si-team-build.md`
+- Phase 7 E2E: `docs/superpowers/plans/2026-04-18-phase7-e2e.md`
+- Call matrix: `docs/call-playbook.md` — per-role Track A/B invocation rules (drift-guarded)
 
-## Quick Start (once the system is in place)
+## Quick Start
 
-1. As the client (user), drop a statement-of-work into
+1. Bootstrap a project directory (see next section).
+2. Drop your statement-of-work into
    `projects/<name>/00_kickoff/statement-of-work.md`.
-2. Talk to the **project-manager** agent. PM is the single contact
-   point; it orchestrates everything else.
-3. At each stage gate, PM reports to you and waits for your approval.
-4. When PM signals an audit is due, start a session with the
-   **audit-team** agent (external auditor, isolated in `audit/`).
+3. Launch a Claude Code session from the repo root — `SessionStart` hook
+   auto-loads the `project-manager` Skill; the session itself is the PM.
+4. Talk to PM. PM is the single contact point; it orchestrates
+   everything else via **Track A** (Bash `claude -p` subprocesses) and
+   **Track B** (Agent-tool subagents).
+5. At each stage gate PM reports to you and waits for your approval.
+6. When an audit is due, PM runs `scripts/run_audit.sh` which spins up
+   the `audit-team` in an isolated git worktree.
 
 ## Bootstrapping a new project
-
-Before talking to `project-manager`, scaffold the project directory:
 
 ```bash
 python3 scripts/bootstrap_project.py <project-name> --scale small|large
 ```
 
-This creates `projects/<project-name>/` with the full stage directory tree,
-seeds `00_kickoff/statement-of-work.md` from a template, and initializes
-`project-state.md`, `RTM.md`, and supporting log files.
+Creates `projects/<project-name>/` with the full v2 hierarchical tree:
 
-Next, fill in `00_kickoff/statement-of-work.md` with your actual SOW,
-then invoke the `project-manager` agent.
+- per-stage directories with `index.md` + `<ID>.md` children
+- `project-plan/` directory (index + overview/scope/organization/schedule/budget/wbs children)
+- `RTM/` directory (`index.md` + `by-stage/*.md` + `_archived/`; `by-part/` when `scale == large`)
+- top-level logs: `project-state.md`, `agent-call-log.md`, `escalations.md`,
+  `00_kickoff/statement-of-work.md`, `00_kickoff/rollback-history.md`
+- `99_audit/` skeleton for design-audit + closing-audit (+ analysis-audit when `large`)
+- `index.md` `child-count` fields auto-synced to actual contents
+
+**Project artifacts are gitignored** (`projects/*/` in `.gitignore`).
+The platform is what this repo versions; a specific project's output is
+not. Run the generator on a fresh checkout to regenerate the skeleton.
+
+### Using a separate git repo per project (optional)
+
+After PM declares the project `closed`, push the artifacts to a client
+repo with a nested `git init` — the parent `.gitignore` keeps the two
+histories independent:
+
+```bash
+cd projects/<name>
+git init && git add -A && git commit -m "initial delivery"
+git remote add origin <client-repo-url>
+git push -u origin master
+```
+
+## Invocation tracks (spec §1-2)
+
+| Track | Command | Purpose | Tool set |
+|-------|---------|---------|----------|
+| **Track A** | `claude -p --dangerously-skip-permissions [--add-dir <p>] --append-system-prompt "$(cat .claude/roles/<role>.md)" --model <m> --effort <e> ...` | Primary authoring · nested dispatch · advisory dispatch | Full (Read/Write/Edit/Glob/Grep/Bash/Agent) |
+| **Track B** | `Agent` tool with `subagent_type=<agent-shell-name>` | Advisory / review / analysis only | `Read, Glob, Grep` (read-only, runtime-fixed) |
+| **Skill** | `project-manager` Skill loaded by SessionStart hook | PM persona on the user-facing top-level session | Inherits session tools (Opus · xhigh fixed) |
+
+> **CLI argument order is load-bearing**: `--add-dir` must precede
+> `--append-system-prompt`. The reverse order silently consumes the
+> positional prompt as the `--add-dir` value and aborts the session
+> with `Error: Input must be provided` (Phase 7 Task 6 finding).
+> `scripts/run_audit.sh` enforces the correct order automatically.
 
 ## Agent Catalog
 
-### Fixed-model agents (7)
-- `project-manager` — Opus, xhigh, the user-facing orchestrator.
-- `application-director` — Opus, xhigh, application track leader.
-- `infrastructure-director` — Opus, xhigh, infrastructure track leader.
-- `business-manager` — Sonnet, xhigh, schedule/cost/CR impact.
-- `quality-assurance` — Sonnet, xhigh, quality criteria and QA report.
-- `tester` — Sonnet, xhigh, UAT/IT/UT design & execution.
-- `audit/audit-team` — Sonnet, xhigh, external auditor (independent).
+**Fixed-model roles (7)**
+- `project-manager` — Opus · xhigh · **Skill only** (sessionstart-loaded, never `claude -p`)
+- `application-director` · `infrastructure-director` — Opus · xhigh
+- `business-manager` · `quality-assurance` · `tester` — Sonnet · xhigh
+- `audit-team` — Sonnet · xhigh · invoked only via `scripts/run_audit.sh`
 
-### Dynamic-model agents (13 × 3 = 39)
-Each role has `-opus`, `-sonnet`, `-haiku` variants. The upstream caller
-picks the variant based on the task's difficulty (spec §2-3).
-
-- `application-architect` (AA)
-- `software-architect` (SWA)
-- `technical-architect` (TA)
-- `data-modeler`
-- `part-leader` (activated in large-scale projects; has Agent tool)
+**Dynamic-model roles (13 × opus/sonnet/haiku = 39 shells)**
+- `application-architect` (AA), `software-architect` (SWA),
+  `technical-architect` (TA), `data-modeler`
+- `part-leader` (activated only when `scale == large`)
 - `backend-developer`, `batch-developer`, `web-developer`,
   `web-publisher`, `designer`
-- `database-administrator` (DBA)
-- `security-specialist`
-- `infrastructure-engineer`
+- `database-administrator` (DBA), `security-specialist`,
+  `infrastructure-engineer`
+
+The upstream caller picks the variant based on the task's difficulty
+(spec §2-3 difficulty guide). Never dictate a model more than one level
+down the delegation chain.
+
+Source of truth layout:
+- `.claude/roles/<role>.md` — single-source persona (one per role, no model suffix)
+- `.claude/agents/<role>-<variant>.md` — Track B shells derived from roles
+- `.claude/skills/project-manager/SKILL.md` — PM skill shell
 
 ## Artifact Templates
 
-See `.claude/agents/templates/artifacts/`. Every stage's expected
-deliverables have a template with the required frontmatter and body
-skeleton.
+See `templates/artifacts/` for stage and role deliverable skeletons:
+
+- `_common/` — `index.md.tmpl` + `child.md.tmpl` (every hierarchical area uses these)
+- `change-requests/` — `cr-request` / `cr-impact-analysis` / `cr-decision` / `cr-action-result` / `index`
+- `audit/` — `audit-plan` + `finding` (with `pm-classification` A/B/C/D field)
+- `rtm/` — `index` + `by-stage` templates
+- top-level logs — `project-state` / `agent-call-log` / `escalations` / `review-meeting` / `rollback-history` / `statement-of-work`
+
+Every template carries the required frontmatter schema; violations are
+caught by the validators below.
 
 ## Stage Gates
 
-`.claude/agents/templates/stage-gates.md` lists the mandatory artifacts,
-reviews, audits, and approvals required to close each stage.
+`templates/stage-gates.md` lists, per stage, the mandatory artifacts,
+reviews, advisory gates (`business-manager` + `quality-assurance`
+consultations logged in `agent-call-log.md`), RTM population, audit,
+hierarchy gate, and approval gate.
 
-## Validation Scripts
+The "Hierarchy gate" line requires `validate_artifact_hierarchy.py` to
+exit 0 and — when back-references changed — `sync_back_references.py`
+to report clean.
+
+## Validation & helper scripts
 
 ```bash
-# Validate a single agent file
-python3 scripts/validate_agent.py .claude/agents/project-manager.md
+# Agent-frontmatter schema + role/playbook drift-guard
+python3 scripts/validate_agent.py --all
 
-# Validate every agent file
-python3 scripts/validate_agent.py $(ls .claude/agents/*.md)
+# v2 hierarchy: index.md presence, bidirectional deps, 3-hop depth,
+# group-ID references, orphan advisory, audit-advisory relaxation
+python3 scripts/validate_artifact_hierarchy.py <project>
 
-# Re-derive the 39 dynamic variants from templates
+# Frontmatter completeness (id/title/owner/depends-on/referenced-by + version regex + duplicate-key detection)
+python3 scripts/check_frontmatter.py <project>
+
+# Change-request cycle completeness (CR-<seq>/ five files, schema per template)
+python3 scripts/validate_cr.py <project>
+
+# Sync referenced-by back-refs from depends-on declarations
+python3 scripts/sync_back_references.py <project>
+
+# Sync index.md child-count fields to reality (run automatically by bootstrap)
+python3 scripts/sync_child_count.py <project>            # write
+python3 scripts/sync_child_count.py <project> --check    # dry-run, exit 1 on drift
+
+# Transition FIND-*.md status raised → resolved for Type-A classifications
+python3 scripts/close_audit_findings.py <project> <cycle-id>
+
+# Bootstrap new project (auto-syncs child-count on exit)
+python3 scripts/bootstrap_project.py <name> --scale small|large
+
+# Regenerate the 39 dynamic-variant agent shells from role templates
 python3 scripts/derive_dynamic_agents.py
 
-# Run tests
-python3 -m pytest tests/ -v
+# Audit launcher (creates worktree + enforces CLI order + 3-layer output-path defense)
+scripts/run_audit.sh <project> <cycle-id> <prompt-file>
+
+# Rollback helper (MOVE vs SNAPSHOT modes — §4-3)
+scripts/execute_rollback.sh <project> <stage> <mode>
+
+# Run the full test suite
+python3 -m pytest -q
 ```
 
-## Unresolved items (see spec §10)
+At time of writing: **139 tests passing · `validate_agent --all` 66/66 clean**.
 
-- Sample project domain (for future meta-test E2E).
-- Parallel-write file locking strategy (currently convention-only).
-- Part-leader count in large mode (one vs. per-domain).
-- Audit session kickoff UX (slash command vs. natural language).
+## Phase 7 E2E outcome (2026-04-19)
+
+Phase 7 ran the full `book-mgmt-api` sample project end-to-end against
+this system, audited it twice (D-AUDIT-1 pass, C-AUDIT-1 pass), then
+ran five meta-tests (Tasks 14-18). 42 systemic improvements were
+identified and merged to master across three waves:
+
+- 14 from the Phase 7 residual findings list (`#1`–`#19`)
+- 20 from a raw-log / review / artifact meta-data scan (`N1`–`N20`)
+- 8 from the Part B meta-tests (`C-18-1/2`, `C-17-1/2`, `C-14-1/2/3`, `C-18-3`)
+
+Notable structural additions:
+- **Shared-file single-writer rule** (spec §7-2) — `project-state.md`,
+  `RTM/`, `agent-call-log.md`, `escalations.md`, and directory index
+  files are PM-only; subprocesses escalate instead of editing directly.
+- **`--add-dir` scope limit** (call-playbook §0) — subprocesses receive
+  only their own authored directory, eliminating parallel-write races.
+- **Rollback MOVE/SNAPSHOT modes** (`scripts/execute_rollback.sh`).
+- **Audit finding classification** A/B/C/D on the `pm-classification`
+  frontmatter field; type-A transitions to `resolved` via
+  `scripts/close_audit_findings.py`.
+- **Nested Track A depth guard** — 4-level chain recommended; deeper
+  chains must pass a `condensed-brief.md` (95 % cache-hit is not
+  enough to preserve context past 4 levels).
+
+Full report: `docs/superpowers/findings/2026-04-18-phase7-findings.md`
+and `docs/superpowers/findings/2026-04-19-phase7-part-b-findings.md`.
