@@ -221,3 +221,50 @@
 ### Phase 7 patches 후보 추가
 11. **MOCK→실 환경 전이 가이드 (med)**: 03_implementation MOCK 와 04_test 실 환경 전이 시 어떤 검증이 필수인지 spec 에 명시 필요. 현 spec 은 04_test 시험 케이스 작성만 명시, 환경 전이 게이트 없음.
 12. **2-Wave dispatch 패턴 정착 (low-med)**: appdir 가 자체 판단으로 2-Wave 구조 (선행 1 + 병렬 N) 채택. 일반화 가능 — application-director.md 의 "How You Invoke" 에 "공통 모듈/암호화 선행, 도메인 병렬" 패턴 명시 가능.
+
+## Task 8: 04_test (tester + QA 직렬, 정식 CR 사이클 첫 실행)
+
+### 진행
+- §2-6 gate: business-manager 자문 — 직렬(tester→QA→PM), IT-09 CR-001 시정 사이클, plausible FAIL 시뮬레이션 권고 (agentId aadebfeab0fc83563)
+- tester Track A (Skill, sonnet/xhigh) — W-T-01 IT 14건 + W-T-02 ST 3건 + W-T-03 UAT 9건 + carry-forward 3건 처리 (CR-001 등재, audit.py 수정, IT-04/IT-13 G/W/T 재구성)
+- QA Track A (Skill, sonnet/xhigh) — W-T-04 qa-report 5 자식 작성, 25 RQ 100% 추적
+- security-specialist Track B 자문 — IT-RES-02/13 보안 합격 검토 + C-AUDIT-1 진입 전 보강 권고 (SEC-CF-01/02)
+- PM W-T-05 리뷰 (4인: tester + QA + PM + security) + W-T-06 RTM/by-stage/test.md 자동 추출
+
+### 핵심 발견 (Task 4·5·7 보강 효과 4차 검증 + 신규 발견)
+- **🟢 양 단독 역할 모두 sync + validate self-check 준수, verbatim 인용**:
+  - tester: 276 child clean
+  - QA: 281 child clean
+  - PM: 최종 282 child clean
+- **🟢 Prompt cache 효과 (4차 검증)**: tester cache_read 9.0M / 98% hit, QA 1.7M / 96% hit
+- **🟢 비용 절감**: 추정 $0.4-1.0 → 실측 ~$1.9 (BM 추정 약간 초과 — security 자문 + multi-line 정정 작업 추가됨)
+- **🟢 정식 CR 사이클 첫 가동**: tester 가 carry-forward (batch audit CR) 를 받아 CR-001 신설 → 시정 → 재실행 → CLOSED 사이클 정상 동작. defect-cycle 증적 (QA-REPORT-DEFECT-CYCLE) 보존.
+- **🟢 cross-track 보안 자문**: PM 이 security-specialist Track B 로 보안 IT 케이스 합격 판정 보강. C-AUDIT-1 진입 전 보강 항목 2건 사전 식별.
+- **🔴 NEW finding: multi-line YAML 리스트 파싱 누락 (HIGH)**:
+  - QA 가 작성한 4 자식 (QA-REPORT-COVERAGE/RESULTS/DEFECT-CYCLE/SECURITY) 의 frontmatter 가 `depends-on:\n  - X\n  - Y` 다중 행 YAML 리스트 형식 사용
+  - `scripts/_frontmatter.py` 는 inline `[...]` 형식만 지원 → 리스트 값이 빈 문자열로 인식되어 drift-guard 가 의존성을 검증하지 못함 (silent miss)
+  - PM 이 inline 형식으로 정정해야 했음 (4 파일 + VERDICT 정정)
+  - **함의**: spec/role 어디에도 frontmatter 리스트 형식 강제 없음 → 에이전트가 문법적으로 유효한 multi-line YAML 사용 가능하나 검증기 미지원. spec §3-1 자식 frontmatter 표준에 "리스트는 inline `[a, b, c]` 형식만 사용" 명시 필요. 또는 _frontmatter.py 에 multi-line 지원 추가.
+- **🟢 가상 시뮬레이션 PASS 합리성**: spec §Task 8 MOCK NOTE 대로 "code stub + pass criteria align → simulated PASS" 가능. 단, ST-RES-03 (RQ-NFR-05 단일 서버 graceful shutdown) 은 mock 시뮬레이션이라 05_deployment 게이트에서 실제 단일 컨테이너 배포 후 재확인 필요 (PM 이 carry-forward 명시).
+
+### 산출물 (45 파일)
+| 영역 | 파일 |
+|---|---|
+| 04_test/integration-test-results | 14 IT-RES + 1 index |
+| 04_test/system-test-results | 3 ST-RES + 1 index |
+| 04_test/uat-results | 9 UAT-RES + 1 index |
+| 04_test/qa-report | 5 자식 + 1 index |
+| 04_test/reviews | 1 REV-TEST-RESULTS-V1 + (1 index 기존) |
+| change-requests/CR-001 | 4 파일 (cr-request, cr-impact, cr-decision, index) |
+| RTM/by-stage/test.md | 1 (PM 자동 추출) |
+| src/backend/common/audit.py | 1 (CR-001 시정 — OVERDUE_NOTICE_SENT 추가) |
+
+### Carry-forward → 05_deployment / C-AUDIT-1
+- **CF-01**: RQ-MEMBER-03 IT/UAT 미검증 — 종료감리에서 audit-team 명시적 검토 (PM 위험 수용)
+- **CF-02**: 03_implementation MOCK 한계 — 종료감리에서 명시
+- **SEC-CF-01**: IT-RES-02 DB 잠금 컬럼 직접 검증 누락 — 05_deployment 진입 전 보강
+- **SEC-CF-02**: IT-13 토큰 유효기간 중 역할 변경 시나리오 미커버 — C-AUDIT-1 진입 전 신규 IT 또는 위험 수용 기록
+
+### Phase 7 patches 후보 추가
+13. **frontmatter multi-line YAML 리스트 지원 (HIGH)**: 두 가지 옵션 — (a) `_frontmatter.py` 에 multi-line list 파서 추가, (b) spec §3-1 에 "리스트는 inline `[...]` 만 허용" 명시. (a) 가 사용성 좋고 (b) 가 단순. 우선순위 high — 에이전트 출력 중 silent miss 발생 위험.
+14. **CR (Change Request) 사이클 첫 실증 — 정식 패턴 정착 (med)**: Task 8 에서 CR-001 사이클 정상 동작. cr-request → cr-impact-analysis → cr-decision → 시정 → audit.py 수정 → 재실행 PASS → CR-CLOSED. Phase 7 plan 의 Task 8 MOCK 흐름 외 실증 케이스로 spec/templates 의 change-requests/ 사용 예시 보강.
