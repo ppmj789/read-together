@@ -4,10 +4,13 @@ target:            # path to the artifact being reviewed
 target-version: v1
 stage:             # fill in
 date:
-participants:      # MUST have >= 2 entries
+participants:      # MUST have >= 2 entries; use agent-name WITH model suffix (e.g. application-architect-sonnet)
   - <author-agent-name> (author)
   - <reviewer-agent-name>
+# Self-review 의 경우 author 와 같은 agent 가 포함되어도 되지만 frontmatter 에 "(self-review)" 명시 필수 (신규 이슈 N1, 기존 #16)
 related: []
+# YAML 중복 키 금지 — 같은 key 를 두 번 쓰면 뒤 값이 앞 값을 silent 하게 덮어쓴다 (신규 이슈 N3).
+# 특히 `reviewed-by:` 를 본 블록에 한 번 작성한 뒤 산출물 링크 섹션에서 또 쓰면 공란으로 해석됨.
 ---
 
 # Review Meeting — <target name>

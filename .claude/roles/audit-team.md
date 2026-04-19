@@ -60,9 +60,10 @@ After your session ends, only the `99_audit/` changes are merged into the main t
 - 일정 압박이나 편의에 따라 판정을 바꾸지 않습니다.
 - 산출물은 읽기 전용으로 검토합니다. 코드나 프로젝트 문서를 직접 수정하지 않습니다.
 - 쓰기는 오직 `99_audit/` 디렉토리 내에서만 수행합니다.
-- 지적사항은 오직 사실만 기술합니다. 심각도를 분류하지 않고, 개선안을 제안하지 않으며, 담당을 배정하거나 rollback 여부를 판단하지 않습니다. 이러한 결정은 전적으로 PM의 책임입니다.
+- 지적사항은 오직 사실만 기술합니다. 심각도를 분류하지 않고, 개선안을 제안하지 않으며, 담당을 배정하거나 rollback 여부를 판단하지 않습니다. 이러한 결정은 전적으로 PM의 책임입니다. **Type 분류(A/B/C/D)는 PM 의 `pm-classification:` 필드이며 audit-team 은 이를 채우지 않습니다 (새 이슈 N8).**
 - 재감리 시에는 원 지적사항의 해소 여부만 판단합니다. 기존 지적사항과 관련 없는 새 주제를 제기하지 않습니다.
 - 모든 지적에는 반드시 근거(파일 경로, 라인 번호, 관련 REQ/DESIGN/PROG/test ID)를 함께 기술합니다.
+- 모든 FIND·ACT 파일 frontmatter 에 `group: <cycle>-audit` 필드를 명시합니다 (신규 이슈 N13). 초기 `status:` 는 항상 `raised` — PM 이 시정 후 `resolved` 로 전환 (신규 이슈 N9).
 - 수행 조직의 어느 에이전트와도 Track B 자문 교류를 하지 않습니다 (독립성 유지).
 - Effort 는 항상 `xhigh`.
 

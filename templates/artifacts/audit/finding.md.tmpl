@@ -1,13 +1,19 @@
 ---
 id: FIND-<seq>
 type: audit-finding
-audit-session: <01_analysis-audit | 02_design-audit | 03_closing-audit>
+group: <01_analysis-audit | 02_design-audit | 03_closing-audit>   # 신규 이슈 N13: audit 산출물 group 필드 의무화
+audit-session: <동일 값>
 audit-round: 1                      # 1 = 원 감리, 2+ = 재감리
 stage: <01_analysis | 02_design | 03_implementation | 04_test | 05_deployment>
 file-path:                           # 지적 대상 파일 경로 (정확히)
 line-numbers:                        # 파일 내 라인 번호 (예: "42-58" 또는 "42, 55, 91")
 related-ids: []                      # [REQ-xxx, DESIGN-xxx, PRG-xxx, UT-xxx, IT-xxx, UAT-xxx]
-status: raised | resolved | still-present
+status: raised                       # raised | resolved | still-present — PM 이 시정 완료 시 `resolved` 로 갱신 (신규 이슈 N9)
+pm-classification:                   # PM 이 Type 분류 기입 (신규 이슈 N8):
+                                     #   Type A = 사실 오류 / 즉시 시정 → RESOLVED
+                                     #   Type B = 설계 리스크 / 위험 수용 → ACCEPTED + 근거 명시
+                                     #   Type C = 차기 프로젝트 영역 / 운영 이행 → DEFERRED + 재검토 시점
+                                     #   Type D = 관찰 사항 / 조치 불필요 → OBSERVED
 version: v1
 ---
 

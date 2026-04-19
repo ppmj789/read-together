@@ -28,10 +28,16 @@ import pathlib
 import sys
 
 try:
-    from scripts._frontmatter import split_frontmatter, parse_frontmatter  # type: ignore[reportMissingImports]
+    from scripts._frontmatter import (  # type: ignore[reportMissingImports]
+        split_frontmatter, parse_frontmatter, find_duplicate_keys,
+    )
 except ImportError:  # pragma: no cover
     sys.path.insert(0, str(pathlib.Path(__file__).parent))
-    from _frontmatter import split_frontmatter, parse_frontmatter  # type: ignore
+    from _frontmatter import (  # type: ignore
+        split_frontmatter, parse_frontmatter, find_duplicate_keys,
+    )
+
+VERSION_RE = __import__("re").compile(r"^v\d+(\.\d+)?$")
 
 
 ROOT = pathlib.Path(__file__).parent.parent
@@ -73,6 +79,13 @@ def scan(project_dir: pathlib.Path) -> list:
         if fm_text is None:
             issues.append(f"{rel}: missing frontmatter block")
             continue
+
+        # N3: duplicate-key detection — a later `key:` silently overwrites the
+        # first under YAML semantics, losing the first value (observed in
+        # Phase 7 review artifacts).
+        for dup in find_duplicate_keys(fm_text):
+            issues.append(f"{rel}: duplicate frontmatter key '{dup}' (later value silently overwrites earlier)")
+
         fm = parse_frontmatter(fm_text)
 
         for field in REQUIRED_FIELDS_CHILD:
@@ -83,12 +96,19 @@ def scan(project_dir: pathlib.Path) -> list:
                 continue
             val = fm[field]
             if field in ("depends-on", "referenced-by"):
-                # list may be empty but must be present as a list/str form
                 if val is None:
                     issues.append(f"{rel}: '{field}' is null (use [] for empty)")
                 continue
             if val is None or (isinstance(val, str) and not val.strip()):
                 issues.append(f"{rel}: '{field}' is empty")
+
+        # N14: version format regex (v1, v1.1, v2 — not "3.9" Docker Compose strings)
+        version = fm.get("version")
+        if isinstance(version, str) and version.strip():
+            if not VERSION_RE.match(version.strip()):
+                issues.append(
+                    f"{rel}: version '{version}' does not match ^v\\d+(\\.\\d+)?$"
+                )
 
     return issues
 

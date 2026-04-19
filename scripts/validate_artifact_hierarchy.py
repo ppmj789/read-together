@@ -227,6 +227,32 @@ def check_depth_limit(project_dir: pathlib.Path) -> list:
     return issues
 
 
+def report_orphans(project_dir: pathlib.Path, id_map: dict) -> None:
+    """Print advisory WARN lines for orphan child files (referenced-by empty).
+
+    Orphans are not always bugs — closing-audit findings and leaf deliverables
+    often have no downstream consumers. The signal is still useful during
+    stage-gate review (new issue N6).
+    """
+    count = 0
+    for cid, (path, fm) in id_map.items():
+        refs = _as_list(fm.get("referenced-by"))
+        if refs:
+            continue
+        rel = path.relative_to(project_dir)
+        # 99_audit findings and qa-report leaves are commonly terminal.
+        if rel.parts and rel.parts[0] == "99_audit":
+            continue
+        print(
+            f"WARN (orphan advisory): {rel} has empty referenced-by — confirm "
+            "this is a terminal deliverable, not a missing back-reference.",
+            file=sys.stderr,
+        )
+        count += 1
+    if count:
+        print(f"WARN: {count} orphan advisory message(s) above.", file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("project", help="project name under projects/")
@@ -243,6 +269,7 @@ def main():
     all_issues.extend(check_index_presence(project_dir))
     all_issues.extend(check_bidirectional_deps(project_dir, id_map, group_id_map))
     all_issues.extend(check_depth_limit(project_dir))
+    report_orphans(project_dir, id_map)
 
     if all_issues:
         for msg in all_issues:

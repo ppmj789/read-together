@@ -12,10 +12,14 @@ started: YYYY-MM-DD
 
 각 호출마다 아래 표에 한 행 추가.
 
-| Timestamp (UTC) | Caller | Target | Track | Model | Effort | Stage | Reason / Context |
-|-----------------|--------|--------|-------|-------|--------|-------|------------------|
-| YYYY-MM-DD HH:MM | project-manager | application-director | A | opus | xhigh | 00_kickoff | 01_analysis 진입 준비 — application-director 에게 요구사항·AS-IS·TO-BE 주도 위임 |
-| YYYY-MM-DD HH:MM | project-manager | business-manager | B | opus (Skill) | xhigh | 00_kickoff | 예산 가이드 자문 (§2-6 필수 경유) |
+| Timestamp (UTC) | Caller | Target | Track | Model | Effort | Retry | Stage | Reason / Context |
+|-----------------|--------|--------|-------|-------|--------|-------|-------|------------------|
+| YYYY-MM-DD HH:MM | project-manager | application-director | A | opus | xhigh | 1 | 00_kickoff | 01_analysis 진입 준비 — application-director 에게 요구사항·AS-IS·TO-BE 주도 위임 |
+| YYYY-MM-DD HH:MM | project-manager | business-manager | B | opus (Skill) | xhigh | 1 | 00_kickoff | 예산 가이드 자문 (§2-6 필수 경유) |
+
+**Timestamp**: UTC, `YYYY-MM-DD HH:MM` 형식. append 순서는 실행 완료 시각 기준 단조 증가 — 시간 역행이 발생하면 로그 무결성 문제 (신규 이슈 N5). 단계 종료 전 `sort` 로 정렬 점검 권장.
+
+**Retry**: 동일 Caller→Target→Stage 조합의 차수 (1=최초, 2=1차 재시도...). 재호출은 새 행으로 추가하며 Reason 에 "RETRY from <timestamp>, cause: <...>" 명시 (신규 이슈 N5).
 
 ## 단계별 집계 (사업관리가 단계 종료 시 갱신)
 
@@ -28,8 +32,19 @@ started: YYYY-MM-DD
 | 04_test | | | | | |
 | 05_deployment | | | | | |
 
+## 모델별 비용 분해 (사업관리가 단계 종료 시 갱신, 신규 이슈 N18)
+
+| Stage | Opus ($) | Sonnet ($) | Haiku ($) | 합계 | 비고 |
+|-------|---------:|-----------:|----------:|-----:|------|
+| 00_kickoff | | | | | |
+| 01_analysis | | | | | |
+| 02_design | | | | | |
+| 03_implementation | | | | | |
+| 04_test | | | | | |
+| 05_deployment | | | | | |
+
 ## 비고
 
 - Model 컬럼에 `(Skill)` 표기가 있으면 Skill 경로(Opus·xhigh 고정)로 호출된 것.
-- Track A 재시도 시 동일 Caller→Target 조합으로 연속 행을 남기고 Reason 에 retry 차수 명시.
-- 호출 실패 → ESCALATION 인 경우 Reason 컬럼에 `ESCALATION: ...` 접두.
+- Track A 재시도 시 `Retry` 컬럼을 증가하고 Reason 에 "RETRY from <timestamp>, cause: ..." 명시. ESCALATION 발생 시 Reason 컬럼 `ESCALATION: ...` 접두.
+- cache-hit 실측 ~95% 기준, 비용 추정은 cache-hit 엔벨로프 사용 (§3 budget.md 갱신 — Phase 7 patch #7).

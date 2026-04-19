@@ -10,7 +10,9 @@ import textwrap
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from _frontmatter import parse_frontmatter, split_frontmatter  # type: ignore  # noqa: E402
+from _frontmatter import (  # type: ignore  # noqa: E402
+    parse_frontmatter, split_frontmatter, find_duplicate_keys,
+)
 
 
 # --- split_frontmatter ---------------------------------------------------
@@ -180,3 +182,52 @@ def test_parse_block_list_with_complex_values():
     )
     fm = parse_frontmatter(text)
     assert fm == {"depends-on": ["RQ-MEMBER-03", "QA-REPORT-RESULTS", "IT-RES-09"]}
+
+
+# --- find_duplicate_keys (new issue N3) -----------------------------------
+
+
+def test_no_duplicate_keys():
+    text = "---\nid: A\ntitle: t\ndepends-on: []\n---\n"
+    fm, _body = split_frontmatter(text)
+    assert find_duplicate_keys(fm) == []
+
+
+def test_detect_duplicate_reviewed_by():
+    """Phase 7 N3 regression: reviewed-by listed twice silently drops first value."""
+    text = textwrap.dedent(
+        """\
+        type: review-meeting
+        reviewed-by: [project-manager, quality-assurance]
+        referenced-by: []
+        reviewed-by: []
+        """
+    )
+    assert find_duplicate_keys(text) == ["reviewed-by"]
+
+
+def test_duplicates_skip_inside_block_literal():
+    """Keys inside `|` blocks should not be reported as duplicates."""
+    text = textwrap.dedent(
+        """\
+        description: |
+          id: X
+          title: Y
+        id: REAL
+        """
+    )
+    # Only the top-level `id:` at the bottom counts; the `id:` inside the
+    # block literal is a line of the description body, not a new key.
+    assert find_duplicate_keys(text) == []
+
+
+def test_duplicates_skip_inside_block_list():
+    text = textwrap.dedent(
+        """\
+        depends-on:
+          - item1
+          - item2
+        referenced-by: []
+        """
+    )
+    assert find_duplicate_keys(text) == []

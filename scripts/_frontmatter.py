@@ -31,6 +31,46 @@ def split_frontmatter(text: str):
     return text[4:end], text[end + 5:]
 
 
+def find_duplicate_keys(fm) -> list:
+    """Return the list of keys that appear more than once at top level.
+
+    Detecting duplicates is important because a second assignment silently
+    overwrites the first under YAML semantics — in this repo that has shown up
+    as `reviewed-by: [...]` followed by `reviewed-by: []` on a later line,
+    which parses to an empty list and loses the reviewer data (Phase 7
+    findings agent-review scan, new issue N3).
+    """
+    if fm is None:
+        return []
+    seen: dict = {}
+    dupes: list = []
+    current_block_key = None
+    current_list_key = None
+    for line in fm.splitlines():
+        if current_block_key is not None:
+            if KEY_LINE_RE.match(line):
+                current_block_key = None
+            else:
+                continue
+        if current_list_key is not None:
+            if LIST_ITEM_RE.match(line):
+                continue
+            current_list_key = None
+        if KEY_LINE_RE.match(line):
+            key, _, value = line.partition(":")
+            key = key.strip()
+            value = value.strip()
+            value = re.sub(r"\s+#.*$", "", value)
+            if key in seen and key not in dupes:
+                dupes.append(key)
+            seen[key] = True
+            if value == "|":
+                current_block_key = key
+            elif value == "" and not (value.startswith("[") and value.endswith("]")):
+                current_list_key = key
+    return dupes
+
+
 def parse_frontmatter(fm) -> dict:
     """Parse one-level frontmatter into a dict.
 

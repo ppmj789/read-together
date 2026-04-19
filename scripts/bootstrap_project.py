@@ -88,6 +88,7 @@ STAGE_AREAS = {
     # RTM
     "RTM": "RTM — 요구사항추적매트릭스",
     "RTM/by-stage": "RTM 단계별 상세",
+    "RTM/by-artifact": "RTM 산출물 역색인 — 설계→RQ 매핑 (신규 이슈 N15)",
 }
 
 LARGE_ONLY_AREAS = {
@@ -256,6 +257,16 @@ def main() -> int:
     # Post-process: project-state and agent-call-log
     fill_project_state(project_dir / "project-state.md", args.name, args.scale)
     fill_agent_call_log(project_dir / "agent-call-log.md", args.name)
+
+    # Sync index.md child-count fields so freshly bootstrapped trees have
+    # accurate metadata (new issue N12). Done in-process to avoid relying on
+    # an external subprocess.
+    try:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        from sync_child_count import scan as _sync_child_count  # type: ignore
+        _sync_child_count(project_dir, check_only=False, verbose=False)
+    except Exception as exc:  # pragma: no cover
+        print(f"warning: child-count sync skipped: {exc}", file=sys.stderr)
 
     # Report
     print(f"Bootstrapped projects/{args.name}/ (scale={args.scale})")
