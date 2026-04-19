@@ -22,6 +22,15 @@
 
 > ⚠️ **Track A CLI 인자 순서는 load-bearing**: `--add-dir` 은 반드시 `--append-system-prompt` 앞에. 역순이면 positional prompt 가 `--add-dir` 값으로 흡수되어 세션이 `Error: Input must be provided` 로 종료 (Phase 7 Task 6 finding). 감리 호출은 `scripts/run_audit.sh` 헬퍼가 이 순서를 자동 보장.
 
+> 📁 **`--add-dir` 범위 한정 규칙 (Phase 7 Part B meta-test 6 도출, C-18-2)**: `--add-dir` 에는 **해당 subprocess 가 저작할 산출물 디렉토리만** 지정한다. 병렬 Track A 호출 시 공용 디렉토리 전체를 다수 subprocess 에 중복 발급하면 동일 파일을 동시에 수정할 여지가 생겨 race 가 발생할 수 있다 (Task 18: 타이밍 우연 의존, 구조적 보장 없음).
+>
+> - 각 subprocess 가 쓸 수 있는 경로 = **(a) 자기 소유 산출물 디렉토리** + **(b) 프로젝트 루트 한정 Read 경로** (--add-dir 이 없어도 기본 cwd 로 Read 가능).
+> - 공유 파일(`project-state.md`, `RTM/`, `agent-call-log.md`, `00_kickoff/rollback-history.md`, `escalations.md`) 이 있는 경로를 `--add-dir` 로 발급하지 말 것. 이들은 PM 단독 수정 영역 (설계서 §7-2 "공유 파일 단독 수정 규칙" 참조).
+> - 감리 호출은 `scripts/run_audit.sh` 가 `--add-dir <project>/99_audit` 로 한정해 자동 발급.
+
+> 📝 **산출물 경로 표기 관행 (Phase 7 Part B meta-test 2 도출, C-14-3)**: 각 역할의 산출물 경로는 **프로젝트 상대 경로** (`projects/<project>/<stage>/...` 또는 단순히 `<stage>/...`) 로 기술한다. 절대 경로 (`/home/earth/ai_team_meta/...`) 나 worktree-특정 경로는 사용하지 않는다. persona probe 응답, Role 파일 `## Artifacts You Own` 섹션, 산출물 frontmatter 의 `related:` 리스트에 동일하게 적용.
+> - 근거: 동일 프로젝트가 다수 worktree 에서 실행될 수 있고(예: master, audit worktree, meta-test worktree), 절대 경로는 worktree 이동 시 유효성을 잃음. 상대 경로는 모든 worktree 에서 동일하게 해석.
+
 ---
 
 ## 1. 단계별 호출 매트릭스 (V-Model)

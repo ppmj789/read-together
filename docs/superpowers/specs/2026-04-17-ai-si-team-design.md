@@ -635,14 +635,23 @@ audit-team: re-audit-report-v<N>.md — 원 지적사항 해소 여부만 확인
 
 **트리거**: PM이 감리결과 검토 후 "중대 결함"이라 판단하는 경우 — 예: 설계감리에서 요구사항 단계까지 영향이 있는 결함. 자동 실행.
 
+**원본 처리 방식 (Phase 7 Part B meta-test 5 도출, C-17-1)**:
+
+- **기본(MOVE 모드)**: 원본 산출물을 `_archived/<YYYYMMDD>-v<seq>/` 로 **이동** 후 stage 디렉토리를 빈 상태로 되돌린다. rework 시 새 버전을 동일 경로에 작성하면 archive 와 현행본이 구분되어 혼동 없다. 이것이 §4-3 의 표준 동작.
+- **SNAPSHOT 모드(예외)**: 원본을 `_archived/` 에 **복사** 만 수행하고 stage 디렉토리 내용은 유지. rework 가 기존 파일을 덮어쓰는 방식으로 진행. 이 모드는 rework 범위가 지극히 일부 파일(RQ 1~2건 보강 등) 에 국한되어 전체 재작성이 아닌 경우에만 허용. 선택 사유를 `rollback-history.md` Reason 컬럼에 `[SNAPSHOT 모드: <사유>]` 로 명시.
+
+MOVE 모드가 기본이며, SNAPSHOT 모드 선택은 PM 의 판단이자 책임이다. 두 모드 모두 archive 경로와 파일 계층은 동일 구조(`_archived/<YYYYMMDD>-v<seq>/<원본 계층 그대로>`) 를 유지한다.
+
 **절차**:
-1. 되돌아갈 단계 N 및 이후 모든 단계의 산출물을 각 단계 내 `_archived/<YYYYMMDD>-v<seq>/` 로 이동.
+1. 되돌아갈 단계 N 및 이후 모든 단계의 산출물을 각 단계 내 `_archived/<YYYYMMDD>-v<seq>/` 로 처리 (기본 MOVE).
 2. 해당 단계의 감리 디렉토리도 동일 원칙으로 아카이브.
-3. `RTM/` 디렉토리 전체 → `RTM/_archived/<YYYYMMDD>-v<seq>/` 로 스냅샷 보존 (index · by-stage · by-part 파일 통째).
+3. `RTM/` 디렉토리 전체 → `RTM/_archived/<YYYYMMDD>-v<seq>/` 로 스냅샷 보존 (index · by-stage · by-part 파일 통째; RTM 은 rework 중에도 참조가 빈번하므로 SNAPSHOT 모드 적용).
 4. rollback 대상 구간 이후의 감리이력·결과 컬럼은 공란 초기화 (요구사항 ID는 보존).
 5. `00_kickoff/rollback-history.md` 에 이벤트 로그:
-   | Date | Trigger | Rolled-back to | Archived versions | Reason |
+   | Date | Trigger | Rolled-back to | Archived versions | Mode | Reason |
 6. 단계 N부터 재수행 시작.
+
+**헬퍼**: `scripts/execute_rollback.sh <project> <target-stage> [--mode=move|snapshot] [--date=YYYYMMDD]` 가 위 절차를 자동화한다 (C-17-2). PM 은 감리 결과 판단 후 헬퍼를 호출하고 결과(archive 경로, rollback-history 행) 를 project-state.md 에 반영한다.
 
 ---
 
@@ -843,6 +852,22 @@ PM: stage-gates.md 기반 자동 검증
 - 각 산출물 frontmatter `depends-on:` 으로 DAG 구성.
 - 동일 파일을 여러 Track A 자식이 동시 수정 금지 (프롬프트 수준 원칙). 향후 `.locks/` 디렉토리 또는 호출자의 사전 DAG 분석으로 강화(§10).
 - 리뷰(Track B 읽기) 는 병렬 안전.
+
+#### 공유 파일 단독 수정 규칙 (Phase 7 Part B meta-test 6 도출, C-18-1)
+
+다음 파일들은 **PM(또는 해당 영역의 단일 상위 에이전트) 만이 직렬로 수정**한다. subprocess(Track A 자식) 가 직접 수정해서는 안 된다.
+
+| 파일 | 단독 수정자 | 근거 |
+|------|------------|-----|
+| `project-state.md` | PM | §6-1 명시 (PM 단독 소유·갱신) |
+| `RTM/index.md`, `RTM/by-stage/*.md`, `RTM/by-part/*.md` | PM | §5-3 명시 (PM 단독 수정자) |
+| `agent-call-log.md` | PM | append-only, PM 이 모든 Track A/B 호출 기록 |
+| `00_kickoff/rollback-history.md` | PM | §4-3 rollback 수행자 = PM |
+| `escalations.md` | PM | §7-3 에스컬레이션 수신자 = PM |
+| 각 디렉토리의 `index.md` (artifact 집계용) | 해당 디렉토리 상위 에이전트 | `child-count` 갱신이 다수 subprocess 에 분산되면 race 위험 |
+| `change-requests/CR-*/` 등록 엔트리 | PM | §8-2 CR 처리 주체 = PM |
+
+subprocess 가 공유 파일 갱신이 필요한 경우 **에스컬레이션** 으로 PM 에 전달해 PM 이 직렬 반영한다. 이는 Track A 병렬 호출 시 last-writer-wins race 를 프롬프트 수준에서 구조적으로 회피하는 정책이다 (Phase 7 Part B Task 18 결과: 병렬 쓰기 안전은 타이밍 우연에 의존, 정책 기반 직렬화 필요).
 
 ### 7-3. 에스컬레이션 프로토콜
 
