@@ -352,3 +352,68 @@ CMT-02/04, T-1, R-1/2, S-1/2/3, TR-3/4
 
 남은 단계 추정: C-AUDIT-1 $0.5-1 + Part B 메타테스트 $1-2 + Part C 종합 $0.5 = **~$2-3.5**
 **예상 총비용 ~$15.6-17.6** (BM 초기 추정 $20-40 보수 시나리오 대비 ~44-57% 절감 예상, cache hit ~95% + haiku/sonnet 적절 활용)
+
+## Task 10: C-AUDIT-1 (종료감리) + 시정조치
+
+### 진행
+- PM 이 `scripts/run_audit.sh book-mgmt-api 03_closing <prompt>` 실행 (Phase 7 Task 6 에서 신설한 도구 활용)
+- 격리 worktree `/home/earth/ai_team_e2e_audit_03_closing`, 브랜치 `phase7-e2e-audit-03_closing-20260419-101153`
+- audit-team 12 findings (FIND-C-01~12) 작성 완료, 단 **출력 경로 오적재 이슈**로 PM 수동 복사 필요
+- PM 분류: Type A 4건 RESOLVED, Type B 5건 ACCEPTED, Type C 2건 DEFERRED, Type D 1건 OBSERVED
+- 최종 판정: **PASS**, rollback 불필요, 재감리 생략
+- drift-guard clean 319 child files (감리 산출물 15 추가 포함)
+
+### 핵심 발견 (5차 Track A audit + 메타 관찰)
+
+- **🟢 audit-team 독립성 준수**: 12 findings 모두 사실 기술, 파일/라인/ID 인용, 심각도 분류·개선안 제안·담당 배정·rollback 판단 없음. spec §2-5 감리 독립성 완벽 준수.
+- **🟢 감리 범위 완결**: 전 단계 산출물 + RTM + 리뷰 정족수 + carry-forward 귀결 + 드리프트 + CR 사이클 + Phase 7 시스템 보강 관찰 모두 커버.
+- **🟢 Prompt cache 효과**: audit-team 단일 세션에서 cache_read ~2M / 95% hit. 비용 ~$0.5.
+- **🔴 NEW finding #18 (HIGH): `scripts/run_audit.sh` audit-team 출력 경로 오적재**:
+  - audit-team 이 `<audit-wt-root>/99_audit/03_closing-audit/...` 에 산출물 작성 (worktree 루트 기준)
+  - run_audit.sh 후처리 복사 로직은 `<audit-wt-root>/projects/<project>/99_audit/<cycle>-audit/` 만 스캔 → 빈 index.md 만 복사
+  - 결과: main worktree 에 실 산출물 0개 복사, PM 이 수동 `cp` 로 12 FIND-C + audit-plan + audit-report/index 복사 필요
+  - **원인**: audit-team.md Mission 의 경로 기술이 "99_audit/<cycle>-audit/" 로만 쓰여 있어 루트·프로젝트 구분 모호. run_audit.sh 는 `--add-dir <audit-wt>/projects/<project>` 로 주입하지만 CWD 는 worktree 루트.
+  - **해결 방안**: (a) audit-team.md Mission 에 "audit 산출물은 `<audit-wt>/projects/<project>/99_audit/<cycle>-audit/` 에 작성 필수" 명시 (절대 경로 또는 `$PROJECT_ROOT` 변수), (b) run_audit.sh 에 경로 환경변수 주입, (c) 후처리에서 양 경로 모두 복사 시도.
+  - **우선순위**: HIGH — PM 수동 개입 없이는 감리 산출물이 main tree 에 반영되지 않음.
+- **🔴 NEW finding #19 (med): drift-guard 가 감리 산출물 frontmatter 스키마를 공유**:
+  - PM 이 ACT-SUMMARY/RES-SUMMARY 의 depends-on 에 FIND-C-01~12 참조 → audit-report 원본 파일의 referenced-by 수정 필요
+  - 그러나 audit-team.md 는 "PM 이 99_audit/ 수정 금지" 규정 → bi-directional sync 가 audit-report 에 writes 를 시도하면 이 원칙과 충돌
+  - 본 세션에서 실용 처리: ACT-SUMMARY/RES-SUMMARY 의 `depends-on` 에서 FIND-C-* 제거, 본문 표로만 참조 유지
+  - **함의**: 감리 산출물은 drift-guard 검증에서 제외되거나, 감리 전용 스키마로 분리되어야 함 (현재는 통일 스키마가 감리 독립성 규정과 충돌)
+- **🟢 PM 조치 체계적 수행**: 12 findings → Type A-D 분류 → 각 타입별 기준 기반 처리 (사실 시정 vs 위험 수용 vs DEFERRED vs 관찰). spec §2-5 "PM 이 심각도·rollback 판정" 원칙 준수.
+- **🟢 Type B 위험 수용 체계**: CF-01/CF-02/SEC-CF-01/SEC-CF-02 등 이전 단계 carry-forward 가 본 감리에서 공식 기록으로 확정됨. 이는 본 Phase 7 가 MOCK 기반 가상 프로젝트라는 특성의 자연스러운 귀결 — 실 프로젝트에서는 각 단계 출구 게이트에서 차단되어야 할 이슈들.
+
+### 산출물 (15 파일)
+| 영역 | 파일 |
+|---|---|
+| 99_audit/03_closing-audit/audit-plan.md | 1 |
+| 99_audit/03_closing-audit/audit-report/ | index + FIND-C-01~12 = 13 |
+| 99_audit/03_closing-audit/corrective-action-plan/ | index + ACT-SUMMARY-C1 = 2 |
+| 99_audit/03_closing-audit/corrective-action-result/ | index + RES-SUMMARY-C1 = 2 |
+| 99_audit/03_closing-audit/index.md | 1 (v1.1 갱신) |
+
+### C-AUDIT-1 최종 판정
+- **PASS** (12/12 findings 처리 완료)
+- rollback 불필요
+- 재감리 생략
+- 사용자 최종 승인 대기
+
+### Phase 7 patches 후보 추가 (누적 #18, #19)
+18. **scripts/run_audit.sh audit-team 출력 경로 명시 주입 (HIGH)**: 본 Task 10 에서 audit 산출물 복사 누락 발생. audit-team.md Mission 또는 run_audit.sh 환경변수로 `$PROJECT_ROOT/99_audit/<cycle>-audit/` 절대 경로 명시 필요.
+19. **감리 산출물 drift-guard 스키마 분리 (med)**: 감리 산출물은 audit-team 독립성으로 PM 이 referenced-by 수정 금지. bi-directional 검증을 99_audit/ 에는 완화된 규칙 적용. PM 의 corrective-action 파일 depends-on 에서 FIND 참조는 본문 링크로만 유지하도록 스키마 설계.
+
+### 총 비용 누적 (Task 0-10)
+| Stage | 비용 |
+|-------|------|
+| 00_kickoff | ~$0.4 |
+| 01_analysis | ~$0.7-0.9 |
+| 02_design | ~$3.0 |
+| D-AUDIT-1 + 시정 | ~$0.5 |
+| 03_implementation | ~$5.0 |
+| 04_test | ~$1.9 |
+| 05_deployment | ~$2.1-2.4 |
+| C-AUDIT-1 + 시정 | ~$0.5 |
+| **합계 (Task 0-10)** | **~$14.1-14.6** |
+
+남은 단계 추정: Part B 메타테스트 $1-2 + Part C 종합 $0.5 = **~$1.5-2.5**
+**예상 총비용 ~$15.6-17.1** (BM 초기 추정 $20-40 보수 시나리오 대비 ~40-57% 절감, cache hit ~95% + haiku/sonnet 적절 활용)
