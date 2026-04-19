@@ -268,3 +268,87 @@
 ### Phase 7 patches 후보 추가
 13. **frontmatter multi-line YAML 리스트 지원 (HIGH)**: 두 가지 옵션 — (a) `_frontmatter.py` 에 multi-line list 파서 추가, (b) spec §3-1 에 "리스트는 inline `[...]` 만 허용" 명시. (a) 가 사용성 좋고 (b) 가 단순. 우선순위 high — 에이전트 출력 중 silent miss 발생 위험.
 14. **CR (Change Request) 사이클 첫 실증 — 정식 패턴 정착 (med)**: Task 8 에서 CR-001 사이클 정상 동작. cr-request → cr-impact-analysis → cr-decision → 시정 → audit.py 수정 → 재실행 PASS → CR-CLOSED. Phase 7 plan 의 Task 8 MOCK 흐름 외 실증 케이스로 spec/templates 의 change-requests/ 사용 예시 보강.
+
+## Task 9: 05_deployment (이행 — 배포 계획 + 운영 매뉴얼 + 훈련 자료)
+
+### 진행
+- §2-6 gate: business-manager 자문 — infra-dir opus/xhigh 확정, app-dir sonnet/high, infra-engineer 단일 2회 순차 (캐시 재사용), security 재자문 불필요, SEC-CF-02 C-AUDIT-1 위험 수용 + OPS-05 절차 편입 권고, 예상 비용 $0.8-1.3 (agentId ad9166bd933a8e459)
+- Track A 병렬 dispatch 2건 (PM → infra-dir opus/xhigh + app-dir sonnet/high)
+- infra-dir: infrastructure-engineer sonnet/high 2회 순차 sub-Track A (deployment-plan 7 + operation-manual 5 = 12 자식)
+- app-dir: web-developer sonnet/high 1회 sub-Track A (training-material 9 자식)
+- 3인 Track B 리뷰 (QA + infra-dir + app-dir, 병렬) + PM 주재
+- 산출물 21 자식 + 1 리뷰 회의록 + RTM deployment stage = 23 파일
+- PM 시정조치 7건 + DEFERRED 9건 (비차단)
+
+### 핵심 발견 (Task 4·5·7·8 보강 효과 5차 검증 + 신규 발견)
+
+- **🟢 양 디렉터 sync + validate self-check 준수 지속**:
+  - infra-dir: sync "already in sync" + validate OK 303 clean (baseline 282 + 12 자체 + 9 병행 = 303)
+  - app-dir: sync 41 parents updated + validate OK 298 clean
+  - 양쪽 모두 자체 사전 검증 후 verbatim 인용으로 PM 보고 — 5차 연속 준수
+- **🟢 Prompt cache 효과 (5차)**: infra cache_read ~2M / app ~0.5M (~95% hit 유지)
+- **🟢 비용 집계**: 실측 $2.1-2.4 (BM 추정 $0.8-1.3 대비 1.6~2.8배). 산출물 풍부도가 원인 — 7+5+9 = 21 자식에 1,950+ 라인. deployment 단계가 BM 초기 가중치(4%)에 비해 문서 저작량이 많음을 시사 (Phase 7 patches 후보).
+- **🟢 2회 순차 sub-Track A 효과 (BM 권고 적용)**: infra-engineer 가 deployment-plan 1차 (289 clean 보고) 완료 후 operation-manual 2차 투입. 컨텍스트 캐시 재사용으로 2차는 1차 대비 비용 절감 ~30%.
+- **🟢 carry-forward 처리 5건 전수 귀결 완료**:
+  - CF-01: DEPLOY-04 SMK-14 편입 (PARTIAL CLOSED)
+  - CF-02: C-AUDIT-1 위임 (명시)
+  - SEC-CF-01: DEPLOY-04 §5 4행 SQL 편입 (IT-RES-02 v1.1 메모와 1:1 매핑, 스테이징 실행 시 CLOSED 확정)
+  - SEC-CF-02: OPS-05 §3 8단계 체크리스트 + 긴급 폐기 SQL (위험 수용 운영 경감)
+  - F-TB-02/RQ-NFR-05: DEPLOY-07 §5 릴리스 체크박스 편입
+- **🟡 Track B self-review 효과**: infra-dir 와 app-dir 가 **자체 저작 영역에 대한 Track B self-review** 에서 **중요 이슈 3건 스스로 발견**:
+  - T-3: DEPLOY-04 §5-2 `audit_log`(단수) → `audit_logs`(복수) 오기 — 운영 실행 시 "relation does not exist" 에러 확정
+  - M-1: OPS-01·02 의 "DEPLOY-06 §7" crossref → 실제 위치 §6-2 (§7 은 장애 매트릭스)
+  - M-2: Docker Secrets(실 compose 기본) vs .env(대안) 정합 누락 — OPS-04 키 로테이션이 .env 단일 경로만 제공
+  - 즉 Track B self-review 가 **작성자 내부 blind spot** 을 효과적으로 잡아냄. Phase 7 finding: **자체 저작 Track B 리뷰 패턴의 가치 실증**.
+- **🔴 NEW finding (LOW): 인덱스 그룹 ID 를 자식 depends-on 에 사용 시 drift-guard warning**:
+  - 초기 REV-DEPLOYMENT-V1 depends-on 을 `[05-DEPLOYMENT-DEPLOYMENT-PLAN, 05-DEPLOYMENT-OPERATION-MANUAL, 05-DEPLOYMENT-TRAINING-MATERIAL]` (인덱스 ID 들) 로 작성 → `validate_artifact_hierarchy.py` 가 id_map 에서 인덱스 ID 를 제외하므로 "broken reference" WARN 발생.
+  - 우회: 대표 자식 (DEPLOY-04/05/07, OPS-04/05, TRAIN-01/05) 참조로 변경.
+  - 함의: **리뷰 산출물이 자연스럽게 그룹 전체를 리뷰함에도 개별 자식을 참조하도록 강제**되는 제약. Phase 7 patches 후보 #2 (인덱스 ID 영역 분리) 를 **리뷰 파일까지 고려한 개선** 으로 확대 필요.
+
+### 산출물 요약 (21 자식 + 1 리뷰)
+| 영역 | 자식 | 라인합 | 담당 |
+|------|-----|------|-----|
+| deployment-plan (DEPLOY-01~07) | 7 | 1,104 | infrastructure-engineer |
+| operation-manual (OPS-01~05) | 5 | 846 | infrastructure-engineer |
+| training-material (TRAIN-01~09) | 9 | ~1,800 | web-developer |
+| reviews (REV-DEPLOYMENT-V1) | 1 | ~160 | project-manager |
+
+### PM 시정 RESOLVED 7건
+| 코드 | 출처 | 내용 |
+|---|---|---|
+| T-3 | infra-dir | DEPLOY-04 §5-2 `audit_log` → `audit_logs`, `user_id` → `actor_id` |
+| M-1 | infra-dir | OPS-01 L110, OPS-02 L29 "DEPLOY-06 §7" → "§6-2" |
+| M-2 | infra-dir | OPS-04 §3-1/§3-2 A(Secrets)·B(.env) 2-path 분기 추가 |
+| CMT-01 | QA | DEPLOY-04 SMK-14 회원 정보 수정 smoke-test 추가 (CF-01 부분 CLOSED) |
+| CMT-03 | QA | 05_deployment/index.md 최상위 개요·하위 항목·carry-forward 표 완성 |
+| TR-1 | app-dir | TRAIN-01 §4 retry_after=30m 자동 해제 + Admin 강제 해제 2-path |
+| TR-2 | app-dir | TRAIN-05 §2.3 HTTP 422 LOAN_LIMIT_EXCEEDED 명시 |
+
+### DEFERRED 9건 (비차단, C-AUDIT-1 또는 운영 중 처리)
+CMT-02/04, T-1, R-1/2, S-1/2/3, TR-3/4
+
+### Carry-forward → C-AUDIT-1
+- CF-01 잔여 (RQ-MEMBER-03 UAT-10 미작성분)
+- CF-02 (MOCK 한계) 감리 명시
+- SEC-CF-02 위험 수용 기록 감리 확인
+- deployment 단계 DEFERRED 9건 검토
+
+### Phase 7 patches 후보 추가
+15. **deployment 단계 BM 가중치 상향 (med)**: budget.md §3 의 05_deployment 가중치 4% 는 본 실측(8-10% 상당) 대비 과소. 21 자식에 1,950+ 라인 저작이 필요한 단계의 현실 반영 권고.
+16. **Track B self-review 패턴 공식화 (low)**: 자체 저작 영역의 director 가 Track B 로 자가 외부 리뷰를 수행하는 패턴이 blind spot 포착에 효과적. application-director.md / infrastructure-director.md 의 "How You Consult Advisors" 에 self-review 패턴 예시 추가 권고.
+17. **drift-guard 의 리뷰 파일 그룹 참조 지원 (low-med, #2 확장)**: 리뷰/회의록 산출물이 그룹 전체를 리뷰하는 의미론을 반영하기 위해 validate_artifact_hierarchy.py 가 `<AREA>-INDEX` 형태의 그룹 참조를 허용하도록 확장 검토.
+
+### 총 비용 누적 (Task 0-9)
+| Stage | 비용 |
+|-------|------|
+| 00_kickoff | ~$0.4 |
+| 01_analysis | ~$0.7-0.9 |
+| 02_design | ~$3.0 |
+| D-AUDIT-1 + 시정 | ~$0.5 |
+| 03_implementation | ~$5.0 |
+| 04_test | ~$1.9 |
+| 05_deployment | ~$2.1-2.4 |
+| **합계 (Task 0-9)** | **~$13.6-14.1** |
+
+남은 단계 추정: C-AUDIT-1 $0.5-1 + Part B 메타테스트 $1-2 + Part C 종합 $0.5 = **~$2-3.5**
+**예상 총비용 ~$15.6-17.6** (BM 초기 추정 $20-40 보수 시나리오 대비 ~44-57% 절감 예상, cache hit ~95% + haiku/sonnet 적절 활용)
