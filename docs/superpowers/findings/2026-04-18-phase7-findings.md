@@ -417,3 +417,87 @@ CMT-02/04, T-1, R-1/2, S-1/2/3, TR-3/4
 
 남은 단계 추정: Part B 메타테스트 $1-2 + Part C 종합 $0.5 = **~$1.5-2.5**
 **예상 총비용 ~$15.6-17.1** (BM 초기 추정 $20-40 보수 시나리오 대비 ~40-57% 절감, cache hit ~95% + haiku/sonnet 적절 활용)
+
+---
+
+# Part A 종합 (Synthesis, Tasks 0-10)
+
+## 1. 산출물 및 프로세스 통계
+
+| 항목 | 값 |
+|---|---|
+| 전 단계 산출물 child files (최종) | **319** (이행·감리 포함, drift-guard clean) |
+| 단계별 승인 | 00_kickoff ✓ / 01_analysis ✓ / 02_design ✓ (D-AUDIT-1 PASS) / 03_implementation ✓ / 04_test ✓ (CR-001 CLOSED) / 05_deployment ✓ / **C-AUDIT-1 PASS** |
+| RQ 수 (analysis 확정) | 25 RQ (AUTH 4 / BOOK 5 / MEMBER 4 / LOAN 3 / SEARCH 2 / BATCH 2 / NFR 5) |
+| Track A 호출 수 누적 | ~32 (PM → director → sub-dev 계층 포함) |
+| Track B 자문 호출 누적 | ~35 (BM gates 6 + 단계 리뷰 ≥2인 정족수) |
+| 리뷰 회의록 (REV + audit) | 9 reviews + 2 audits (D-AUDIT-1, C-AUDIT-1) |
+| 누적 비용 | **~$14.1-14.6** (BM $20-40 초기 추정의 **35-73%**) |
+| Prompt cache 평균 hit | ~95% (측정 5회 일관) |
+| pytest 증가 | 80 → **111** (기존 + sync_back_references 7 + frontmatter multi-line 15 + run_audit 9 개 포함) |
+
+## 2. Meta-Test 2 (agent persona sanity, 연속 관찰 종합)
+
+Task 3-10 전반의 관찰:
+
+- **🟢 한국어 역할 일관성**: PM 세션 + 모든 Track A subprocess + Track B advisor 가 전수 한국어 응답. role file `## Language` 지시 준수 100%.
+- **🟢 역할 경계 준수**: 각 director 가 자기 도메인(application/infrastructure) 외 산출물 수정 없음. tester 가 감사 자료 수정 시도 없음. audit-team 이 99_audit/ 외 쓰기 없음.
+- **🟢 delegation chain 모델·effort 준수**: PM 이 direct reports (director, BM, QA, tester) 만 모델 지정, director 가 산하 sub-dev 모델 결정 — spec §2-3·§2-5-3 완벽 준수. BM 가이드 (01_analysis W-A-01·03 xhigh, 05_deployment app-dir sonnet/high 등) 이 director 프롬프트까지 정확히 전파.
+- **🟢 Escalation Protocol**: Phase 7 에서 ESCALATION 1건 발생 없음 (PM 가 자체 판단 가능한 범위 내 해결). 프로토콜 형식 자체는 skip (발동되지 않음).
+- **🟢 Track A subprocess persona 준수**: `--append-system-prompt` 가 Track A 경로에서 정상 동작. subprocess 응답이 role 고유 language·세부 의무 (sync+validate self-check, verbatim 인용 등) 준수. 일반 Claude 응답 drift 관찰 없음.
+- **🟢 spec §2-6 BM mandatory gate**: 6개 단계 (00_kickoff budget, 01_analysis/02_design/03_implementation/04_test/05_deployment entry) 모두에서 PM 이 business-manager 자문 선행 → 방침 확정 후 Track A dispatch. 100% 준수.
+- **🟢 리뷰 정족수 ≥2인**: 전 단계 리뷰 (5 analysis + 9 design + 2 impl + 1 test + 1 deployment = 18 reviews) 모두 reviewed-by 2-4인. D-AUDIT-1 리뷰 정족수 감리 점검 결과 전단계 준수.
+- **🟡 false positive (가설 reliability)**: 00_kickoff QA 리뷰에서 grep-verified false claim 2건, 01_analysis appdir 의 self-check 누락 1건 → Phase 7 에서 프롬프트 보강 후 02_design 부터 재발 없음. 프롬프트 강화 효과 실증.
+- **🟡 Track B self-review 유용성**: 05_deployment 에서 director 가 자체 저작 영역을 Track B 로 외부 관점 검토 → 중요 이슈 3건 자체 포착 (T-3/M-1/M-2). 이는 spec 에 없는 관찰된 긍정 패턴 (Phase 7 patches 후보 #16).
+
+**Meta-Test 2 판정: PASS (연속 관찰)** — 전 단계에서 agent persona·역할 경계·delegation chain 모두 준수. 프롬프트 강화가 초기 false positive 를 감소시킨 실증. dedicated probe (Task 14) 는 선택적이되, Part A 관찰만으로도 sanity 확보.
+
+## 3. 단계별 하이라이트
+
+| 단계 | 하이라이트 | finding #|
+|---|---|---|
+| 00_kickoff | BM gate 최초 작동, QA false positive 2건 (이후 감소) | #1 |
+| 01_analysis | 4-tier nested Track A, drift-guard 48건 → 0 (PM 보강 도구 신설) | #4·#5 (sync_back_references·AS-IS author 가이드) |
+| 02_design | 양 총괄 Track A 병렬, 200 child clean, cache 95%+ 효과 첫 측정 | #6 (Track A vs B 가이드) |
+| D-AUDIT-1 | CLI 인자 순서 finding (silent failure), run_audit.sh 신설 | #8·#9 (arg order, decision #15 amendment) |
+| 03_implementation | 2-Wave 구조, P0 7건 전수 반영, haiku 활용 | #11·#12 (MOCK 전이, 2-Wave 패턴) |
+| 04_test | 정식 CR 사이클, multi-line YAML 파서 누락 발견 | #13·#14 (frontmatter YAML, CR templates) |
+| 05_deployment | 3인 Track B self-review, 중요 3건 자체 포착 | #15·#16·#17 (BM 가중치, self-review, index 리뷰 참조) |
+| C-AUDIT-1 | 12 findings PASS, audit 출력 경로 오적재 발견 + 즉시 수정 | #18 (HIGH, 즉시 반영) · #19 (감리 스키마 분리) |
+
+## 4. Phase 7 master patches 후보 누적 (19건)
+
+| # | 제목 | 우선순위 | 본 세션 처리 |
+|---|---|---|---|
+| 1 | QA 자문 false positive 자동 감지 | low | Task 19/20 |
+| 2 | validate_artifact_hierarchy 인덱스 ID 영역 분리 | med | Task 19/20 |
+| 3 | stage-gates.md v2 재작성 | HIGH | Task 19/20 |
+| 4 | SessionStart hook stage-gate 자동 차단 | low | 프롬프트 보강으로 갈음 |
+| 5 | AS-IS 자식 author 가이드 | low | Task 19/20 |
+| 6 | Track A vs B 선택 가이드 | low-med | Task 19/20 |
+| 7 | budget USD 갱신 (cache 반영) | med | Task 19/20 |
+| 8 | `claude -p` CLI 인자 순서 | HIGH | **본 세션 부분 반영** (run_audit.sh, audit-team.md) |
+| 9 | decision #15 amendment (PM run_audit.sh) | med | **본 세션 반영** (role) |
+| 10 | 인덱스 의존성 요약 표 자동 검증 | low-med | Task 19/20 |
+| 11 | MOCK→실 환경 전이 가이드 | med | Task 19/20 |
+| 12 | 2-Wave dispatch 패턴 정착 | low-med | Task 19/20 |
+| 13 | frontmatter multi-line YAML 파서 | HIGH | **본 세션 RESOLVED** (_frontmatter.py + 15 tests) |
+| 14 | CR 사이클 templates 보강 | med | Task 19/20 |
+| 15 | deployment 단계 BM 가중치 상향 | med | Task 19/20 |
+| 16 | Track B self-review 패턴 공식화 | low | Task 19/20 |
+| 17 | drift-guard 리뷰 그룹 참조 지원 | low-med | Task 19/20 |
+| 18 | run_audit.sh audit 출력 경로 3-layer 방어 | HIGH | **본 세션 RESOLVED** (run_audit.sh + audit-team.md + 3 tests) |
+| 19 | 감리 산출물 drift-guard 스키마 분리 | med | Task 19/20 |
+
+본 세션에서 **3건 RESOLVED** (#13, #18), **2건 부분 반영** (#8, #9). 나머지 14건 Task 19/20 에서 일괄 정리.
+
+## 5. Part A 총평
+
+**목표 달성**: 전 V-Model 단계 (00_kickoff → 05_deployment + C-AUDIT-1) end-to-end 실행, 25 RQ 전수 추적, 319 자식 산출물 drift-guard clean, 감리 2회 PASS, 4 carry-forward 전수 귀결, CR 1건 정식 사이클.
+
+**시스템 검증**: v2 (hierarchical + Track A/B + Skill PM + 동적 모델) 아키텍처 실전 검증 완료. 주요 미흡은 `stage-gates.md` v2 재작성 (#3) 과 audit 경로 규정 (#18, 본 세션 해소) 외 전체적 설계 건전.
+
+**비용 효율**: BM 초기 추정 $20-40 의 35-73% 수준에서 종결. Prompt cache 95% hit + haiku/sonnet 적절 활용으로 대폭 절감.
+
+**Part B/C 진입 준비 완료**: 14건 Phase 7 patches 후보를 Task 19/20 master 반영으로 소화할 수 있는 상태.
+
