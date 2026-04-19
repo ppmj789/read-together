@@ -20,10 +20,15 @@
 #        path:   <parent>/<main-name>_audit_<cycle>
 #        branch: <current-branch>-audit-<cycle>-<timestamp>
 #   4. Copy <main>/projects/<project>/ into the audit worktree.
-#   5. Invoke `claude -p` with the audit-team role and CORRECT argument order:
+#   5. Prepend an explicit output-path header to the prompt (Phase 7 Task 10 finding #18
+#      — audit-team was writing to <wt-root>/99_audit/ instead of
+#      <wt-root>/projects/<project>/99_audit/; the header + Mission update + fallback
+#      copy below form a 3-layer defense).
+#   6. Invoke `claude -p` with the audit-team role and CORRECT argument order:
 #         --add-dir <path>  ← MUST come before --append-system-prompt (Phase 7 finding).
-#   6. Copy 99_audit/<cycle>-audit/ back to the main worktree.
-#   7. Print the absolute path of the audit-report directory.
+#   7. Copy 99_audit/<cycle>-audit/ back to the main worktree from the expected path.
+#      If absent, fall back to <wt-root>/99_audit/<cycle>-audit/ (root-level) and warn.
+#   8. Print the absolute path of the audit-report directory.
 #
 # Exit codes:
 #   0   success
@@ -83,8 +88,27 @@ git -C "$MASTER_PATH" worktree add "$WT_PATH" -b "$WT_BRANCH" "$CUR_BRANCH" >"$L
 
 cp -r "$MAIN_ROOT/projects" "$WT_PATH/"
 
-PROMPT="$(cat "$PROMPT_FILE")"
+USER_PROMPT="$(cat "$PROMPT_FILE")"
 ROLE="$(cat "$ROLE_FILE")"
+
+# Phase 7 Task 10 finding #18: prepend explicit output-path header so the
+# audit-team writes to <wt>/projects/<project>/99_audit/<cycle>-audit/ instead
+# of <wt>/99_audit/<cycle>-audit/ (the latter lies outside --add-dir and will
+# not be copied back by default).
+PATH_HEADER="[AUDIT OUTPUT PATH — load-bearing]
+산출물 작성 절대 경로 (반드시 준수):
+  - $WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/audit-plan.md
+  - $WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/audit-report/index.md
+  - $WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/audit-report/FIND-*.md
+  - (재감리 시) $WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/re-audit-report-v<N>/
+
+worktree root ($WT_PATH/99_audit/...) 에 작성하면 메인 트리로 자동 복사되지 않음.
+Write 도구 호출 시 반드시 위 절대 경로를 사용하세요.
+
+---
+
+"
+PROMPT="${PATH_HEADER}${USER_PROMPT}"
 
 cd "$WT_PATH"
 set +e
@@ -99,14 +123,39 @@ RC=$?
 set -e
 
 SRC="$WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit"
+SRC_FALLBACK="$WT_PATH/99_audit/${CYCLE}-audit"
 DST="$MAIN_ROOT/projects/$PROJECT/99_audit/${CYCLE}-audit"
 
-if [ -d "$SRC" ]; then
+copied_from=""
+if [ -d "$SRC" ] && [ -n "$(ls -A "$SRC" 2>/dev/null | grep -v '^index.md$' || true)" ]; then
+  # Expected path has content beyond the seed index.md — use it.
   mkdir -p "$DST"
   cp -r "$SRC"/. "$DST"/
+  copied_from="$SRC"
+elif [ -d "$SRC_FALLBACK" ]; then
+  # Fallback path (Phase 7 Task 10 finding #18): audit-team wrote to worktree root.
+  echo "WARNING: audit output found at fallback path $SRC_FALLBACK" >&2
+  echo "         expected $SRC. run_audit.sh will copy from fallback — please confirm." >&2
+  mkdir -p "$DST"
+  cp -r "$SRC_FALLBACK"/. "$DST"/
+  # Also merge any partial content from the expected path (e.g. seed index.md).
+  if [ -d "$SRC" ]; then
+    cp -rn "$SRC"/. "$DST"/ 2>/dev/null || true
+  fi
+  copied_from="$SRC_FALLBACK"
+elif [ -d "$SRC" ]; then
+  # Only seed files exist — copy them but warn that no real audit output landed.
+  mkdir -p "$DST"
+  cp -r "$SRC"/. "$DST"/
+  echo "WARNING: audit output at $SRC appears to be only seed files — audit may have failed (exit $RC)" >&2
+  copied_from="$SRC (seed-only)"
+fi
+
+if [ -n "$copied_from" ]; then
   echo "audit results copied to: $DST"
+  echo "  (source: $copied_from)"
 else
-  echo "WARNING: no audit results at $SRC — audit may have failed (exit $RC)" >&2
+  echo "WARNING: no audit results found at $SRC nor $SRC_FALLBACK — audit may have failed (exit $RC)" >&2
 fi
 
 echo "audit-team exit code: $RC"

@@ -4,8 +4,12 @@ description: |
   External independent auditor. Conducts analysis/design/closing audits and
   re-audits in a separate git worktree (physical isolation per §2-5).
   Records findings only as facts; never judges severity, assigns work, or
-  edits artifacts outside 99_audit/. Invoked by the user directly via Track A
-  inside an audit worktree — never dispatched by PM or any other agent.
+  edits artifacts outside 99_audit/. Invoked via `scripts/run_audit.sh`
+  (by PM or user) — the helper creates the worktree, copies project
+  artifacts, dispatches the Track A session with the correct CLI argument
+  order (`--add-dir` BEFORE `--append-system-prompt`; the reverse order
+  silently drops the positional prompt — Phase 7 finding), and merges
+  `99_audit/<cycle>-audit/` back to the main tree.
 tools: [Read, Glob, Grep]
 model: sonnet
 effort: xhigh

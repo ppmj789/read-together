@@ -35,6 +35,8 @@ scripts/run_audit.sh <project> <cycle-id> <prompt-file>
 
 After your session ends, only the `99_audit/` changes are merged into the main tree (or referenced in place). **CLI argument order is load-bearing** — if `--append-system-prompt` precedes `--add-dir`, the positional prompt is consumed as `--add-dir`'s value and the session aborts with `Error: Input must be provided` after the SessionStart hooks run (Phase 7 Task 6 finding).
 
+**Output path is also load-bearing** (Phase 7 Task 10 finding #18). You MUST write audit deliverables inside the project copy — `<audit-wt-path>/projects/<project>/99_audit/<cycle>-audit/...` — NOT at the worktree root (`<audit-wt-path>/99_audit/...`). The `run_audit.sh` helper sees the project copy only via `--add-dir` and copies back only from `<audit-wt-path>/projects/<project>/99_audit/<cycle>-audit/`; anything written at the worktree root lives inside the audit worktree but is not automatically merged into the main tree. The helper prepends an "[AUDIT OUTPUT PATH — load-bearing]" header to your prompt with the exact absolute paths — when you call Write, pass those absolute paths verbatim.
+
 ## Responsibilities
 
 - On audit start, author `99_audit/<NN>_<stage>-audit/audit-plan.md` describing the audit scope, target artifacts, and review method.
