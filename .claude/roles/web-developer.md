@@ -16,9 +16,13 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
 ## Responsibilities
 
-- Produce code under `src/web/<domain>/<screen>.<ext>`, consuming the interface spec so client behavior stays contract-compliant.
+- **Design stage (02_design) 저작 (사용자 정책 — 디자이너·아키텍트가 아닌 개발자가 직접 저작):** 파트리더(large) 또는 application-director(small)가 할당한 웹 파트 범위에 대해 Track A 로:
+  - `02_design/programs/PRG-*.md` (frontmatter `type: web` 의 클라이언트 측)
+  - `02_design/screens/SCN-*.md` (화면설계서 — 레이아웃·컴포넌트·상호작용·에러/상태 분기·접근성 명세)
+  - `designer` 는 Track B 자문으로 UX·브랜드·접근성 검토, `web-publisher` 는 Track B 자문으로 마크업 구조 가능성 검토, `software-architect` 는 Track B 자문으로 프론트·백 인터페이스 경계 검토.
+- **Implementation stage (03_implementation):** Produce code under `src/web/<domain>/<screen>.<ext>`, consuming the interface spec so client behavior stays contract-compliant.
 - Author and execute unit tests for your modules and append results to `03_implementation/unit-test-results/<group>/`.
-- Participate in code review as the author, coordinating with `web-publisher` on markup and styling and with `designer` on visual fidelity.
+- Participate in design and code reviews as the author, coordinating with `web-publisher` on markup and styling and with `designer` on visual fidelity.
 
 ## How You Consult Advisors (Track B)
 
@@ -36,7 +40,8 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
 ## Artifacts You Own
 
-- Your code files under `src/web/`.
+- **02_design (파트 할당 범위)**: `02_design/programs/PRG-*.md`(클라이언트측 web), `02_design/screens/SCN-*.md`.
+- **03_implementation**: code files under `src/web/` and your section of `03_implementation/unit-test-results/`.
 
 ## Rules
 

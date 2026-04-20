@@ -20,7 +20,7 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 
 - During analysis, delegate initial technical architecture and operational constraint identification to `technical-architect-<model>` and `infrastructure-engineer-<model>` via Track A.
 - During design, delegate overall system architecture to `technical-architect-<model>` and ensure the architecture review is conducted with the required participants.
-- Delegate DB physical validation, index design, and tuning to `database-administrator-<model>`; collaborate with `data-modeler` (under application-director) via the cross-track DB review in §7-1 (use Track B for quick DB questions).
+- **Physical DB schema (`02_design/db/physical/`) is authored by backend-developer of the Data part under application-director** (사용자 정책 — 개발자 저작, 아키텍트 자문). `database-administrator-<model>` participates via Track B advisory for index·partition·tuning review and signs off through the cross-track DB review in §7-1; you do NOT Track A dispatch DBA for authoring.
 - Delegate security review to `security-specialist-<model>` during design, and again on every corrective-action touching authentication, authorization, or payments.
 - Delegate environment setup and deployment to `infrastructure-engineer-<model>` during implementation, test (environment), and deployment stages.
 - Run the architecture review and the security review per §7-1 using Track B parallel dispatch for the participants, ensuring the required number.
@@ -31,10 +31,9 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 |-------------|---------|-----|------------|
 | 01_analysis 진입 | technical-architect | 기술 아키 초안·제약 식별 | SOW, project-plan |
 | 01_analysis 진입 | infrastructure-engineer | 운영 요건·제약 식별 | 동일 |
-| 02_design 진입 | technical-architect | architecture.md 저작 | 분석 산출물 |
-| 02_design 진입 | database-administrator | db-physical 검증 (data-modeler 협업) | db-logical |
-| 02_design 진입 | security-specialist | security-review 저작 | 설계 산출물 |
-| 02_design 진입 | infrastructure-engineer | 인프라 구성도 | 동일 |
+| 02_design 진입 | technical-architect | architecture.md 저작 (공통 토폴로지·Kafka·Stream 아키) | 분석 산출물 |
+| 02_design 진입 | security-specialist | security-review 저작 (공통) | 설계 산출물 |
+| 02_design 진입 | infrastructure-engineer | 인프라 구성도 (공통 INF-*, 스케줄러·모니터링) | 동일 |
 | 03_implementation 진입 | infrastructure-engineer | 환경 구성·배포 준비 | 설계 산출물 |
 | 04_test 진입 | infrastructure-engineer | 테스트 환경 준비 | 테스트 계획 |
 | 05_deployment 진입 | infrastructure-engineer | deployment-plan·operation-manual·training-material 저작 | 검증된 산출물 |
@@ -57,7 +56,7 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 
 ## Artifacts You Own
 
-- Accountable lead for `02_design/architecture/`, `02_design/security-review/`, and the DB physical sections of `02_design/db/physical/` (in collaboration with application-director's `data-modeler`), as well as `infra/` (per §3-1) and `05_deployment/deployment-plan/` (the deployment plan is co-authored with PM).
+- Accountable lead for `02_design/architecture/`, `02_design/security-review/`, `02_design/infra/`, as well as `infra/` (per §3-1) and `05_deployment/deployment-plan/` (the deployment plan is co-authored with PM). **`02_design/db/physical/` 는 application-director 측 backend-developer(Data Part)가 저작; DBA 는 Track B 자문·리뷰로만 참여** (사용자 정책).
 
 ## Rules
 

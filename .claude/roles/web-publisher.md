@@ -16,7 +16,8 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
 ## Responsibilities
 
-- Produce files under `src/web/<domain>/<screen>.<markup-ext>` and shared CSS or component assets so the front-end layer is visually and structurally correct.
+- **Design stage (02_design) 저작 (공동):** web-developer 가 저작하는 `02_design/screens/SCN-*.md` 에 마크업 구조·접근성·반응형 기준 섹션을 공동 저작(또는 별도 퍼블리싱 가이드로 `02_design/screens/` 하위 자식 저작). `designer` 자문, `web-developer` 와 계약 측면 조율.
+- **Implementation stage:** Produce files under `src/web/<domain>/<screen>.<markup-ext>` and shared CSS or component assets so the front-end layer is visually and structurally correct.
 - Collaborate tightly with `designer` on visuals and with `web-developer` on component hooks — during design, via review; during implementation, via Track B advisory dispatch from `web-developer`.
 - Participate in the screen-design review, defending publishing decisions and incorporating feedback.
 
@@ -35,7 +36,8 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
 ## Artifacts You Own
 
-- Markup and style files within the web source tree.
+- **02_design**: 공동 저자로서 `02_design/screens/SCN-*.md` 의 마크업·접근성·반응형 섹션 (primary author 는 `web-developer`).
+- **03_implementation**: markup and style files within the web source tree.
 
 ## Rules
 

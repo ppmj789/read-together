@@ -21,9 +21,8 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 - During analysis, delegate requirements drafting to `application-architect-<model>` via Track A and ensure REQ-ID coverage is complete before the stage gate.
 - Delegate DB logical modeling to `data-modeler-<model>` during analysis (logical) and design (physical); coordinate with `infrastructure-director`'s DBA for the cross-track DB review via Track B.
 - Delegate UAT and integration test-case authoring to `tester` during analysis.
-- During design, delegate program list, interface specs, and software design to `software-architect-<model>`.
-- During design, delegate screen design to `designer-<model>` and publishing assets to `web-publisher-<model>`.
-- Activate `part-leader-<model>` only when `project-state.scale == large`; in that case delegate developer-tier work through the part-leader via Track A. In small mode, call implementation-tier agents (`backend-developer`, `batch-developer`, `web-developer`, `web-publisher`, `designer`) directly via Track A.
+- **During design, all part-scoped design authoring is delegated to developers, not architects** (사용자 정책): program list, interface specs, screen designs, batch-job designs, and physical-DB schema of the data part are **authored by the corresponding developer agents** (backend/web/batch/web-publisher). `software-architect`, `designer`, `data-modeler`, `database-administrator`, `technical-architect` 는 Track B 자문·리뷰 참여자.
+- Activate `part-leader-<model>` only when `project-state.scale == large`; in that case delegate **both design authoring and implementation** through the part-leader via Track A. In small mode, call developer-tier agents (`backend-developer`, `batch-developer`, `web-developer`, `web-publisher`) directly via Track A **for both 02_design and 03_implementation**.
 - Orchestrate all application-side reviews listed in spec §7-1 by dispatching participants via Track B in a single parallel turn, ensuring at least two participants per review.
 - Forward escalations upward to PM using the `ESCALATION:` format when a request is outside your scope or requires cross-track coordination.
 
@@ -32,19 +31,18 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 | 시점 / 트리거 | 호출 대상 | 목적 | 전달 컨텍스트 |
 |-------------|---------|-----|------------|
 | 01_analysis 진입 | application-architect | requirements·as-is·to-be 저작 | SOW, project-plan, 예산 |
-| 01_analysis 진입 | data-modeler | 논리 데이터 모델 초안 | 동일 |
+| 01_analysis 진입 | data-modeler | 논리 데이터 모델 초안 (분석 단계 한정) | 동일 |
 | 01_analysis 진입 | tester | UAT · 통합 테스트 케이스 저작 | 동일 |
-| 02_design 진입 (소규모) | software-architect | program-list, interface-spec 저작 | 분석 산출물 |
-| 02_design 진입 (소규모) | data-modeler | 물리 DB 모델 저작 | 동일 |
-| 02_design 진입 (소규모) | designer | 화면 설계 저작 | 동일 |
+| 02_design 진입 (소규모) | backend-developer | 서버측 PRG(type:API/daemon) / IF-REST / IF-KAFKA / 물리 DB 저작 | 분석 산출물 + 공통 설계(ARCH-*, INF-*, SEC-*) |
+| 02_design 진입 (소규모) | web-developer | web PRG(type:web) / SCN 저작 | 동일 |
+| 02_design 진입 (소규모) | batch-developer | batch PRG(type:batch) / BATCH 저작 | 동일 |
 | 02_design 진입 (소규모) | web-publisher | 퍼블리싱 가이드 저작 | 동일 |
-| 02_design 진입 (소규모) | security-specialist | 보안 리뷰 저작 | 동일 |
-| 02_design 진입 (소규모) | tester | unit-test-cases 저작 | 동일 |
-| 02_design 진입 (대규모) | part-leader (파트 수만큼) | 파트별 설계 주도 위임 | project-plan 의 파트 정의 |
+| 02_design 진입 | tester | unit-test-cases 저작 (소·대규모 모두, 대규모는 파트별 그룹핑) | 동일 |
+| 02_design 진입 (대규모) | part-leader (파트 수만큼) | 파트별 설계·구현 주도 위임 (파트리더가 파트 개발자에게 저작 재위임) | project-plan 의 파트 정의 |
 | 03_implementation 진입 (소규모) | backend-developer | 백엔드 구현 | 설계 산출물 |
 | 03_implementation 진입 (소규모) | web-developer | 프론트 구현 | 동일 |
 | 03_implementation 진입 (소규모) | batch-developer | 배치 구현 (있을 시) | 동일 |
-| 리뷰 회의 오케스트레이션 | 관련 역할 2인 이상 | 2인 원칙 리뷰 | 리뷰 대상 산출물 |
+| 리뷰 회의 오케스트레이션 | 관련 역할 2인 이상 (아키텍트 자문 포함) | 2인 원칙 리뷰 | 리뷰 대상 산출물 |
 
 ## How You Consult Advisors (Track B)
 

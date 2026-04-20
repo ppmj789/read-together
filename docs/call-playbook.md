@@ -39,8 +39,8 @@
 |------|-------|-----------------------------|-------------------------|
 | 00_kickoff | PM (Skill, 사용자 세션) | — (PM 직접 저작) | business-manager(예산 가이드), quality-assurance(계획 리뷰) |
 | 01_analysis | application-director | application-architect, data-modeler, tester | technical-architect, quality-assurance |
-| 02_design (소규모) | application-director + infrastructure-director | software-architect, designer, web-publisher, data-modeler(물리), technical-architect, database-administrator, security-specialist | quality-assurance |
-| 02_design (대규모) | application-director (파트 분할) | part-leader × N + 공통 설계 역할 | (동일) |
+| 02_design (소규모) | application-director + infrastructure-director | 개발자(backend/web/batch/web-publisher)가 파트별 설계 저작 + tester(unit-test-cases) + technical-architect(공통 아키) + security-specialist(보안) + infrastructure-engineer(인프라) | quality-assurance, software-architect(모듈 경계 자문), designer(UI/UX 자문), data-modeler(모델 자문), database-administrator(DB 자문) |
+| 02_design (대규모) | application-director (파트 분할) | part-leader × N → 파트 소속 개발자에게 저작 재위임 + tester + 공통 설계(technical-architect / security-specialist / infrastructure-engineer) | (동일) |
 | 03_implementation (소규모) | application-director | backend-developer, web-developer, batch-developer | security-specialist, database-administrator, software-architect 수시 |
 | 03_implementation (대규모) | part-leader | 파트별 개발자들 | (동일) + tester 수시 |
 | 04_test | tester (PM 감독) | tester(통합·시스템·UAT 실행), infrastructure-engineer(테스트 환경) | quality-assurance |
@@ -194,19 +194,18 @@ Request to: <해결 요청 대상/내용>
 | 시점 / 트리거 | 호출 대상 | 목적 | 전달 컨텍스트 |
 |-------------|---------|-----|------------|
 | 01_analysis 진입 | application-architect | requirements·as-is·to-be 저작 | SOW, project-plan, 예산 |
-| 01_analysis 진입 | data-modeler | 논리 데이터 모델 초안 | 동일 |
+| 01_analysis 진입 | data-modeler | 논리 데이터 모델 초안 (분석 단계 한정) | 동일 |
 | 01_analysis 진입 | tester | UAT · 통합 테스트 케이스 저작 | 동일 |
-| 02_design 진입 (소규모) | software-architect | program-list, interface-spec 저작 | 분석 산출물 |
-| 02_design 진입 (소규모) | data-modeler | 물리 DB 모델 저작 | 동일 |
-| 02_design 진입 (소규모) | designer | 화면 설계 저작 | 동일 |
+| 02_design 진입 (소규모) | backend-developer | 서버측 PRG(type:API/daemon) / IF-REST / IF-KAFKA / 물리 DB 저작 | 분석 산출물 + 공통 설계(ARCH-*, INF-*, SEC-*) |
+| 02_design 진입 (소규모) | web-developer | web PRG(type:web) / SCN 저작 | 동일 |
+| 02_design 진입 (소규모) | batch-developer | batch PRG(type:batch) / BATCH 저작 | 동일 |
 | 02_design 진입 (소규모) | web-publisher | 퍼블리싱 가이드 저작 | 동일 |
-| 02_design 진입 (소규모) | security-specialist | 보안 리뷰 저작 | 동일 |
-| 02_design 진입 (소규모) | tester | unit-test-cases 저작 | 동일 |
-| 02_design 진입 (대규모) | part-leader (파트 수만큼) | 파트별 설계 주도 위임 | project-plan 의 파트 정의 |
+| 02_design 진입 | tester | unit-test-cases 저작 (소·대규모 모두, 대규모는 파트별 그룹핑) | 동일 |
+| 02_design 진입 (대규모) | part-leader (파트 수만큼) | 파트별 설계·구현 주도 위임 (파트리더가 파트 개발자에게 저작 재위임) | project-plan 의 파트 정의 |
 | 03_implementation 진입 (소규모) | backend-developer | 백엔드 구현 | 설계 산출물 |
 | 03_implementation 진입 (소규모) | web-developer | 프론트 구현 | 동일 |
 | 03_implementation 진입 (소규모) | batch-developer | 배치 구현 (있을 시) | 동일 |
-| 리뷰 회의 오케스트레이션 | 관련 역할 2인 이상 | 2인 원칙 리뷰 | 리뷰 대상 산출물 |
+| 리뷰 회의 오케스트레이션 | 관련 역할 2인 이상 (아키텍트 자문 포함) | 2인 원칙 리뷰 | 리뷰 대상 산출물 |
 
 #### 5-2-2. Track B 자문 호출 규칙
 
@@ -229,10 +228,9 @@ Request to: <해결 요청 대상/내용>
 |-------------|---------|-----|------------|
 | 01_analysis 진입 | technical-architect | 기술 아키 초안·제약 식별 | SOW, project-plan |
 | 01_analysis 진입 | infrastructure-engineer | 운영 요건·제약 식별 | 동일 |
-| 02_design 진입 | technical-architect | architecture.md 저작 | 분석 산출물 |
-| 02_design 진입 | database-administrator | db-physical 검증 (data-modeler 협업) | db-logical |
-| 02_design 진입 | security-specialist | security-review 저작 | 설계 산출물 |
-| 02_design 진입 | infrastructure-engineer | 인프라 구성도 | 동일 |
+| 02_design 진입 | technical-architect | architecture.md 저작 (공통 토폴로지·Kafka·Stream 아키) | 분석 산출물 |
+| 02_design 진입 | security-specialist | security-review 저작 (공통) | 설계 산출물 |
+| 02_design 진입 | infrastructure-engineer | 인프라 구성도 (공통 INF-*, 스케줄러·모니터링) | 동일 |
 | 03_implementation 진입 | infrastructure-engineer | 환경 구성·배포 준비 | 설계 산출물 |
 | 04_test 진입 | infrastructure-engineer | 테스트 환경 준비 | 테스트 계획 |
 | 05_deployment 진입 | infrastructure-engineer | deployment-plan·operation-manual·training-material 저작 | 검증된 산출물 |
@@ -372,15 +370,18 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 | 시점 / 트리거 | 호출 대상 | 목적 | 전달 컨텍스트 |
 |-------------|---------|-----|------------|
-| 02_design 진입 (파트별 설계) | 파트 소속 software-architect / designer / web-publisher / data-modeler | 파트 내 설계 산출물 저작 | 응용총괄의 파트 분담 |
-| 03_implementation 진입 | 파트 소속 backend-developer / web-developer / batch-developer | 파트 구현 | 파트 설계 산출물 |
-| 파트 내 리뷰 오케스트레이션 | 파트 관련 역할 2인 이상 | 2인 원칙 리뷰 | 리뷰 대상 |
+| 02_design 진입 (파트별 설계) | 파트 소속 backend-developer / web-developer / batch-developer / web-publisher | 파트 내 설계 산출물 저작 (아키텍트는 Track B 자문 전용) | 응용총괄의 파트 분담 + 공통 설계(ARCH-*, INF-*, SEC-*) 참조 |
+| 03_implementation 진입 | 파트 소속 backend-developer / web-developer / batch-developer / web-publisher | 파트 구현 | 파트 설계 산출물 |
+| 파트 내 리뷰 오케스트레이션 (설계·코드) | 파트 관련 역할 2인 이상 (저자 + 파트리더 또는 아키텍트) | 2인 원칙 리뷰 | 리뷰 대상 |
 
 #### 5-11-2. Track B 자문 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
 | 파트 간 경계 이슈 | application-director | 조정 자문 |
+| 모듈 경계·인터페이스 호환성 | software-architect | 설계 자문 |
+| 데이터 모델·정합성 | data-modeler | 모델링 자문 |
+| UI/UX·접근성 | designer | UX 자문 |
 | 보안·DB·아키 자문 (파트 내 판단 난해) | security-specialist / database-administrator / technical-architect | 전문 자문 |
 | 예산 초과 우려 | business-manager | 재할당 요청 |
 | 테스트 케이스 이슈 | tester | 테스트 확인 |

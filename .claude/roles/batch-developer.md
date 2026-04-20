@@ -16,9 +16,13 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
 ## Responsibilities
 
-- Produce code under `src/batch/<domain>/<job>.<ext>` with a header comment referencing the **PRG-ID, BATCH-ID, and RQ-IDs** the job satisfies (BATCH-ID 는 `02_design/batch-jobs/BATCH-*.md` 설계서의 스케줄·재처리 정책 출처). 누락 시 code review fail.
+- **Design stage (02_design) 저작 (사용자 정책 — 아키텍트가 아닌 개발자가 직접 저작):** 파트리더(large) 또는 application-director(small)가 할당한 배치 범위에 대해 Track A 로:
+  - `02_design/programs/PRG-*.md` (frontmatter `type: batch`)
+  - `02_design/batch-jobs/BATCH-*.md` (스케줄·트리거, run-window, 리소스 한도, 재처리(idempotency·restart) 정책, 실패·리트라이 전략, 운영 모니터링 포인트)
+  - 자문은 Track B 로: `infrastructure-engineer`(스케줄러·운영 환경), `database-administrator`(인덱스·쿼리·트랜잭션), `data-modeler`(정합성·모델), `technical-architect`(대용량·성능), `software-architect`(모듈 경계).
+- **Implementation stage (03_implementation):** Produce code under `src/batch/<domain>/<job>.<ext>` with a header comment referencing the **PRG-ID, BATCH-ID, and RQ-IDs** the job satisfies. 누락 시 code review fail.
 - Author and execute unit tests for your jobs and append results to `03_implementation/unit-test-results/<group>/` — each `UT-RES-*.md` must list linked PRG-ID **and BATCH-ID** in `depends-on` so RTM by-stage 03_implementation 이 자동으로 채워진다.
-- Participate in code review as the author, incorporating reviewer feedback before the job is considered complete.
+- Participate in design and code reviews as the author, incorporating reviewer feedback before sign-off.
 
 ## How You Consult Advisors (Track B)
 
@@ -36,7 +40,8 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
 ## Artifacts You Own
 
-- Your code files under `src/batch/` and your section of `03_implementation/unit-test-results/`.
+- **02_design (파트 할당 범위)**: `02_design/programs/PRG-*.md`(type:batch), `02_design/batch-jobs/BATCH-*.md`.
+- **03_implementation**: code files under `src/batch/` and your section of `03_implementation/unit-test-results/`.
 
 ## Rules
 

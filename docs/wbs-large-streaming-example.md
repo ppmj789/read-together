@@ -25,11 +25,12 @@
 - **인프라 팀** (`infrastructure-director` 산하):
   - `technical-architect`, `database-administrator`, `security-specialist`, `infrastructure-engineer`
 - **검증**: `tester`, `audit-team`(분석·설계·종료 각 3 회)
-- **실무 role 매핑** (파트별):
-  - P1: `application-architect`, `software-architect`, `designer`, `web-publisher`, `web-developer`, `backend-developer`
-  - P2: `software-architect`, `batch-developer`, `data-modeler`(자문)
-  - P3: `software-architect`, `backend-developer`(Kafka 담당), `technical-architect`(자문)
-  - P4: `data-modeler`, `database-administrator`(공동), `backend-developer`(마이그레이션)
+- **파트별 저작/자문 구성 (사용자 정책 — 설계·구현은 개발자가 저작, 아키텍트·디자이너·DBA·data-modeler 는 Track B 자문 전용)**:
+  - **P1 Web**: 저작 = `web-developer(P1)` + `backend-developer(P1)` + `web-publisher(P1)` / 자문 = `software-architect`, `designer`, `application-architect`
+  - **P2 Batch**: 저작 = `batch-developer(P2)` / 자문 = `software-architect`, `data-modeler`, `technical-architect`, `database-administrator`, `infrastructure-engineer`
+  - **P3 Stream**: 저작 = `backend-developer(P3)` (Kafka producer/consumer/daemon) / 자문 = `software-architect`, `technical-architect`, `database-administrator`, `security-specialist`
+  - **P4 Data**: 저작 = `backend-developer(P4)` (ENT 세밀화, TBL-RDB, COLL-NOSQL, 마이그레이션) / 자문 = `data-modeler`, `database-administrator`, `technical-architect`
+- **공통 설계 저작 (P0, 인프라·아키텍처 트랙, 파트 착수 선행)**: `technical-architect` (ARCH), `security-specialist` (SEC), `infrastructure-engineer` (INF)
 
 ## 컬럼 정의
 
@@ -81,25 +82,64 @@
 
 ## 02_design
 
+**재편 원칙 (사용자 정책)**: 아키텍트·디자이너·DBA·data-modeler 는 **Track B 자문 전용**. 파트별 세부 설계(프로그램·인터페이스·화면·배치잡·물리 DB) 는 **각 파트의 개발자가 Track A 로 저작**한다. 공통 설계(ARCH·SEC·INF) 만 technical-architect / security-specialist / infrastructure-engineer 가 Track A 저작.
+
+### (A) 공통 설계 트랙 (P0 — 인프라/아키텍처, 파트별 착수 선행 조건)
+
 | 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |--------|------|-----------|-------------|-------|--------|------|
-| W-D-01 | 시스템 아키텍처 (토폴로지) | technical-architect | application-director, security-specialist | RQ-NFR, AS-*, TB-* | `02_design/architecture/ARCH-TOPO-*` | W-A-13 |
-| W-D-02 | RDB 물리 설계 | database-administrator | data-modeler | ENT-* | `02_design/db/physical/TBL-RDB-*` | W-A-04 |
-| W-D-03 | NoSQL 물리 설계 (컬렉션·샤드키·인덱스) | database-administrator | data-modeler | ENT-* | `02_design/db/physical/COLL-NOSQL-*` | W-A-04 |
-| W-D-04 | Kafka·Stream 아키텍처 설계 | technical-architect | infrastructure-engineer, software-architect | TB-STREAM-events, ARCH-TOPO | `02_design/architecture/ARCH-STREAM-*` + `02_design/infra/INF-KAFKA-*` | W-D-01 |
-| W-D-05 | 프로그램 목록 (type: web/batch/daemon) | software-architect | 파트리더 P1~P3 | RQ-*, ARCH-* | `02_design/programs/PRG-*` (frontmatter `type` 필수) | W-D-01 |
-| W-D-06 | 인터페이스 설계 (REST + Kafka 토픽 스키마) | software-architect | DBA, security-specialist | PRG-*, ARCH-STREAM | `02_design/interfaces/IF-REST-*, IF-KAFKA-*` | W-D-05 |
-| W-D-07 | 화면 설계 (web PRG 용) | designer | web-publisher, application-architect | PRG-web(type:web), RQ-WEB | `02_design/screens/SCN-*` (PRG-web 과 양방향 연결) | W-D-05 |
-| W-D-08 | 배치잡 설계 (batch PRG 용) | software-architect | infrastructure-engineer, DBA | PRG-batch(type:batch), BATCH 정책 | `02_design/batch-jobs/BATCH-*` (PRG-batch 양방향 연결) | W-D-05 |
-| W-D-09 | 데몬/스트림 컨슈머 내부 설계 | software-architect | technical-architect, DBA | PRG-daemon(type:daemon), IF-KAFKA | `02_design/programs/PRG-daemon-*` 확장 (오프셋·백프레셔·DLQ 정책 포함) | W-D-06 |
-| W-D-10 | 단위 테스트 케이스 | tester | QA | PRG-*, SCN-*, BATCH-*, IF-* | `02_design/unit-test-cases/UT-*` (유형별 SCN/BATCH 커버 필수) | W-D-05~09 |
-| W-D-11 | 보안 리뷰 | security-specialist | technical-architect | ARCH-*, IF-*, PRG-* | `02_design/security-review/SEC-*` | W-D-06 |
-| W-D-12 | 인프라 상세 설계 | infrastructure-engineer | technical-architect, DBA | ARCH-*, BATCH-* | `02_design/infra/INF-*` (스케줄러·모니터링·알림, BATCH-ID depends-on 필수) | W-D-08 |
-| W-D-13 | 파트별 설계 리뷰 (P1~P4) | 각 파트리더 | director + 저자 | 각 영역 | `02_design/reviews/design-<area>-v1.md` | W-D-10~12 |
-| W-D-14 | 설계 감리 | audit-team | — | 02_design/* 전체 + RTM design | `99_audit/02_design-audit/audit-report/*` | W-D-13 |
-| W-D-15 | 감리 시정조치 | PM (분배) | 해당 저자 | FIND-* | corrective-action-* + re-audit PASS | W-D-14 |
-| W-D-16 | RTM 갱신 (REQ↔PRG·SCN·BATCH·IF·UT 매핑) | PM | 각 저자 | 모든 설계 산출물 | `RTM/by-stage/design.md`, `RTM/by-artifact/*` | W-D-15 |
-| W-D-17 | 설계 승인 | user | PM | 감리 PASS + RTM | Approval Log | W-D-16 |
+| W-D-01 | 시스템 아키텍처 (토폴로지) | technical-architect | application-director, security-specialist, software-architect | RQ-NFR, AS-*, TB-* | `02_design/architecture/ARCH-TOPO-*` | W-A-13 |
+| W-D-02 | Kafka·Stream 아키텍처 | technical-architect | infrastructure-engineer, software-architect, security-specialist | TB-STREAM-events, ARCH-TOPO | `02_design/architecture/ARCH-STREAM-*` + `02_design/infra/INF-KAFKA-*` | W-D-01 |
+| W-D-03 | 보안 리뷰 (공통) | security-specialist | technical-architect, application-director | ARCH-*, RQ-NFR | `02_design/security-review/SEC-*` | W-D-01 |
+| W-D-04 | 인프라 상세 (공통) | infrastructure-engineer | technical-architect, DBA, security-specialist | ARCH-*, RQ-NFR | `02_design/infra/INF-*` (스케줄러·모니터링·알림 골격) | W-D-01 |
+
+### (B) 파트별 세부 설계 트랙 (P1~P4, W-D-04 완료 후 병렬 착수)
+
+각 파트리더가 자기 파트의 개발자에게 Track A 로 저작 위임. 아키텍트·디자이너·DBA·data-modeler 는 담당자(자문) 컬럼으로만 등장.
+
+**P1 Web Part** (파트리더 P1 주관, `backend-developer(P1)` + `web-developer(P1)` + `web-publisher(P1)` 소환):
+
+| 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
+|--------|------|-----------|-------------|-------|--------|------|
+| W-D-P1-01 | web PRG 설계 (클라이언트측) | web-developer (P1) | software-architect, designer, application-architect | RQ-WEB, ARCH-*, TB-* | `02_design/programs/PRG-WEB-*.md` (type: web) | W-D-04 |
+| W-D-P1-02 | API PRG 설계 (서버측) | backend-developer (P1) | software-architect, DBA(쿼리), security-specialist | RQ-WEB, ARCH-*, TBL-RDB(draft) | `02_design/programs/PRG-API-*.md` (type: web 서버) | W-D-04 |
+| W-D-P1-03 | REST 인터페이스 설계 | backend-developer (P1) | software-architect, security-specialist | PRG-API-* | `02_design/interfaces/IF-REST-*.md` | W-D-P1-02 |
+| W-D-P1-04 | 화면설계서 | web-developer (P1) | designer (UI/UX·접근성), application-architect | RQ-WEB, PRG-WEB-* | `02_design/screens/SCN-*.md` | W-D-P1-01 |
+| W-D-P1-05 | 화면 마크업·접근성 공동 저작 | web-publisher (P1) | designer | SCN-* | `02_design/screens/SCN-*.md` 마크업·접근성 섹션 co-author | W-D-P1-04 |
+
+**P2 Batch Part** (파트리더 P2 주관, `batch-developer(P2)` 소환):
+
+| 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
+|--------|------|-----------|-------------|-------|--------|------|
+| W-D-P2-01 | batch PRG 설계 | batch-developer (P2) | software-architect, technical-architect, data-modeler | RQ-BAT, ARCH-* | `02_design/programs/PRG-BAT-*.md` (type: batch) | W-D-04 |
+| W-D-P2-02 | 배치잡 설계 (스케줄·재처리·실패전략) | batch-developer (P2) | infrastructure-engineer, DBA, data-modeler | PRG-BAT-*, TBL-RDB/COLL-NOSQL(draft) | `02_design/batch-jobs/BATCH-*.md` | W-D-P2-01 |
+
+**P3 Stream Part** (파트리더 P3 주관, `backend-developer(P3)` 소환):
+
+| 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
+|--------|------|-----------|-------------|-------|--------|------|
+| W-D-P3-01 | daemon PRG 설계 (오프셋·백프레셔·DLQ) | backend-developer (P3) | technical-architect, software-architect, DBA | RQ-STR, ARCH-STREAM | `02_design/programs/PRG-DMN-*.md` (type: daemon) | W-D-04 |
+| W-D-P3-02 | Kafka 토픽 스키마·계약 설계 | backend-developer (P3) | software-architect, security-specialist | ARCH-STREAM, PRG-DMN-* | `02_design/interfaces/IF-KAFKA-*.md` | W-D-P3-01 |
+
+**P4 Data Part** (파트리더 P4 주관, `backend-developer(P4)` 소환):
+
+| 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
+|--------|------|-----------|-------------|-------|--------|------|
+| W-D-P4-01 | 논리 데이터 모델 세밀화 | backend-developer (P4) | data-modeler, DBA, application-architect | ENT-* (분석 단계 초안, W-A-04) | `02_design/db/logical/ENT-*.md` 확장 | W-D-04 |
+| W-D-P4-02 | RDB 물리 설계 (테이블·인덱스·파티션) | backend-developer (P4) | DBA (운영·튜닝), data-modeler | ENT-* | `02_design/db/physical/TBL-RDB-*.md` | W-D-P4-01 |
+| W-D-P4-03 | NoSQL 물리 설계 (샤드키·인덱스) | backend-developer (P4) | DBA, technical-architect, data-modeler | ENT-* | `02_design/db/physical/COLL-NOSQL-*.md` | W-D-P4-01 |
+
+### (C) 공통 후행 작업 (파트 산출물 수렴)
+
+| 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
+|--------|------|-----------|-------------|-------|--------|------|
+| W-D-05 | 단위 테스트 케이스 (파트별 그룹핑) | tester | QA, 각 파트리더 | 전 PRG·SCN·BATCH·IF | `02_design/unit-test-cases/UT-{WEB,BAT,STR,DAT}-*` | 각 파트별 설계 완료분부터 순차·병렬 |
+| W-D-06 | 파트별 설계 리뷰 (P1~P4) | 각 파트리더 | software-architect / designer / data-modeler / DBA / security-specialist / application-director | 각 파트 산출물 | `02_design/reviews/design-P<N>-v1.md` (≥2인) | W-D-P*-* |
+| W-D-07 | 교차 파트 인터페이스 합의 (IF-REST 소비자·IF-KAFKA 생산자↔소비자) | 생산자 측 파트리더 주관 | software-architect, 소비자 측 파트리더, technical-architect | IF-REST-*, IF-KAFKA-* | `02_design/reviews/cross-part-interface-v1.md` | W-D-06 |
+| W-D-08 | 설계 감리 | audit-team (worktree) | — | 02_design 전체 + RTM design | `99_audit/02_design-audit/audit-report/*` | W-D-07 |
+| W-D-09 | 감리 시정조치 | PM (분배) → 해당 저자(개발자) | 파트리더 | FIND-* | corrective-action-* + re-audit PASS | W-D-08 |
+| W-D-10 | RTM 갱신 (REQ↔PRG·SCN·BATCH·IF·UT / by-artifact 역색인) | PM | 각 저자, 파트리더 | 모든 설계 산출물 | `RTM/by-stage/design.md`, `RTM/by-artifact/*` | W-D-09 |
+| W-D-11 | 설계 승인 | user | PM | 감리 PASS + RTM | Approval Log | W-D-10 |
 
 ---
 
@@ -108,37 +148,37 @@
 ### Web Part (P1)
 | 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |--------|------|-----------|-------------|-------|--------|------|
-| W-I-W-01 | API 백엔드 구현 | backend-developer (P1) | part-leader P1, SWA | PRG-web, IF-REST, TBL-RDB | `src/api/*` (헤더에 PRG-*, RQ-*) | W-D-17 |
-| W-I-W-02 | 프런트 구현 | web-developer (P1) | designer, web-publisher | PRG-web, SCN-*, IF-REST | `src/web/*` + `UT-RES-WEB-FE-*` | W-D-17 |
+| W-I-W-01 | API 백엔드 구현 | backend-developer (P1) | part-leader P1, SWA | PRG-web, IF-REST, TBL-RDB | `src/api/*` (헤더에 PRG-*, RQ-*) | W-D-11 |
+| W-I-W-02 | 프런트 구현 | web-developer (P1) | designer, web-publisher | PRG-web, SCN-*, IF-REST | `src/web/*` + `UT-RES-WEB-FE-*` | W-D-11 |
 | W-I-W-03 | 마크업·스타일 | web-publisher (P1) | designer | SCN-* | `src/web/styles/*`, `src/web/components/*` | W-I-W-02 (동시) |
 | W-I-W-04 | P1 단위 테스트 실행 | backend-developer/web-developer | tester(해석 자문) | UT-* | `03_implementation/unit-test-results/UT-RES-WEB-*` | W-I-W-01~03 |
 
 ### Batch Part (P2)
 | 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |--------|------|-----------|-------------|-------|--------|------|
-| W-I-B-01 | 배치잡 구현 | batch-developer (P2) | part-leader P2, DBA, infra-engineer | PRG-batch, BATCH-*, TBL-RDB/COLL-NOSQL | `src/batch/<domain>/*` (**헤더에 PRG-*, BATCH-*, RQ-* 3종 필수**) | W-D-17 |
+| W-I-B-01 | 배치잡 구현 | batch-developer (P2) | part-leader P2, DBA, infra-engineer | PRG-batch, BATCH-*, TBL-RDB/COLL-NOSQL | `src/batch/<domain>/*` (**헤더에 PRG-*, BATCH-*, RQ-* 3종 필수**) | W-D-11 |
 | W-I-B-02 | P2 단위 테스트 실행 | batch-developer | tester | UT-* | `03_implementation/unit-test-results/UT-RES-BAT-*` (depends-on: BATCH-*) | W-I-B-01 |
 
 ### Stream Part (P3) — Kafka consumer/producer, daemon
 | 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |--------|------|-----------|-------------|-------|--------|------|
-| W-I-S-01 | Kafka producer 구현 | backend-developer (P3) | part-leader P3, technical-architect | PRG-daemon, IF-KAFKA (produce) | `src/stream/producer/*` | W-D-17 |
-| W-I-S-02 | Kafka consumer 구현 (오프셋·DLQ·백프레셔) | backend-developer (P3) | technical-architect, DBA | PRG-daemon, IF-KAFKA (consume), COLL-NOSQL | `src/stream/consumer/*` | W-D-17 |
+| W-I-S-01 | Kafka producer 구현 | backend-developer (P3) | part-leader P3, technical-architect | PRG-daemon, IF-KAFKA (produce) | `src/stream/producer/*` | W-D-11 |
+| W-I-S-02 | Kafka consumer 구현 (오프셋·DLQ·백프레셔) | backend-developer (P3) | technical-architect, DBA | PRG-daemon, IF-KAFKA (consume), COLL-NOSQL | `src/stream/consumer/*` | W-D-11 |
 | W-I-S-03 | 데몬 헬스체크·메트릭 | backend-developer (P3) | infrastructure-engineer | PRG-daemon | `src/stream/health/*` | W-I-S-01, W-I-S-02 |
 | W-I-S-04 | P3 단위 테스트 실행 | backend-developer | tester | UT-* | `03_implementation/unit-test-results/UT-RES-STR-*` | W-I-S-01~03 |
 
 ### Data Part (P4)
 | 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |--------|------|-----------|-------------|-------|--------|------|
-| W-I-D-01 | RDB 마이그레이션 스크립트 | backend-developer (P4) | DBA | TBL-RDB-* | `src/migrations/*` (+ 롤백 스크립트) | W-D-17 |
-| W-I-D-02 | NoSQL 초기 스키마·인덱스 | backend-developer (P4) | DBA | COLL-NOSQL-* | `src/nosql-init/*` | W-D-17 |
+| W-I-D-01 | RDB 마이그레이션 스크립트 | backend-developer (P4) | DBA | TBL-RDB-* | `src/migrations/*` (+ 롤백 스크립트) | W-D-11 |
+| W-I-D-02 | NoSQL 초기 스키마·인덱스 | backend-developer (P4) | DBA | COLL-NOSQL-* | `src/nosql-init/*` | W-D-11 |
 | W-I-D-03 | 데이터 정합성 검증 스크립트 | backend-developer (P4) | data-modeler, DBA | ENT-*, TBL-*, COLL-* | `src/data-checks/*` | W-I-D-01, W-I-D-02 |
 | W-I-D-04 | P4 단위 테스트 실행 | backend-developer | tester | UT-* | `03_implementation/unit-test-results/UT-RES-DAT-*` | W-I-D-01~03 |
 
 ### 공통 인프라
 | 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |--------|------|-----------|-------------|-------|--------|------|
-| W-I-C-01 | 컨테이너·IaC | infrastructure-engineer | technical-architect | INF-* | `infra/{Dockerfile,compose,IaC}` | W-D-17 |
+| W-I-C-01 | 컨테이너·IaC | infrastructure-engineer | technical-architect | INF-* | `infra/{Dockerfile,compose,IaC}` | W-D-11 |
 | W-I-C-02 | Kafka 브로커 운영 구성 | infrastructure-engineer | technical-architect | INF-KAFKA, IF-KAFKA | `infra/kafka/*` (IF-KAFKA-* depends-on) | W-I-C-01 |
 | W-I-C-03 | 스케줄러 (cron/timer/cloud scheduler) | infrastructure-engineer | — | BATCH-*, INF-* | `infra/schedulers/*` (**BATCH-* depends-on 필수**) | W-I-C-01 |
 | W-I-C-04 | 모니터링·알림 | infrastructure-engineer | security-specialist | ARCH-*, INF-* | `infra/monitoring/*`, `infra/alerts/*` | W-I-C-01 |
@@ -195,7 +235,9 @@
 - [ ] 데몬·배치·웹 각 유형이 프로그램 목록(PRG type)·UT·IT·OPS 까지 일관되게 흘러가는가?
 
 ### 2. 담당자 배치 적정성
-- [ ] 파트리더 P1~P4 가 각 파트의 구현·리뷰·운영매뉴얼·CR 대응을 모두 커버?
+- [ ] 파트리더 P1~P4 가 각 파트의 **설계·구현·리뷰·운영매뉴얼·CR 대응**을 모두 커버?
+- [ ] **파트별 설계 산출물(PRG / SCN / BATCH / IF / 파트별 TBL·COLL)의 주 저자가 모두 개발자 역할**이고, 아키텍트(`software-architect`, `technical-architect`)·`designer`·`database-administrator`·`data-modeler` 는 **담당자(자문) 컬럼에만** 등장?
+- [ ] 공통 설계(ARCH / SEC / INF) 만 `technical-architect`·`security-specialist`·`infrastructure-engineer` 가 주 저자?
 - [ ] 인프라(스케줄러·Kafka·모니터링) 는 `infrastructure-engineer` 단독 저자, `technical-architect`·`security-specialist`·DBA 는 자문?
 - [ ] 테스트 케이스 저작과 실행은 모두 `tester` 단일화(QA 는 리뷰·기준만)?
 - [ ] 감리(audit-team) 는 별도 worktree 에서만 작동하고 프로젝트 산출물 직접 수정 없음?
@@ -209,8 +251,11 @@
 
 ### 4. 순서(Precedence)
 - [ ] 논리 DB(ENT-*)는 분석 단계에서 시작(W-A-04), 물리 DB(TBL-RDB/COLL-NOSQL)는 설계 단계에서만 시작?
-- [ ] 배치잡 설계(BATCH-*)는 PRG 목록(W-D-05) 이후에만 시작?
-- [ ] 구현 착수(W-I-\*-01)는 설계 승인(W-D-17) 이후에만 허용? (파트별 동시 착수 가능)
+- [ ] 배치잡 설계(BATCH-*)는 해당 파트 PRG 설계(W-D-P2-01) 이후에만 시작?
+- [ ] 파트별 세부 설계(W-D-P*-*)는 공통 설계(W-D-04 완료) 이후에만 착수?
+- [ ] 파트별 설계 저작은 모두 개발자(backend/web/batch/web-publisher)가 수행하고, 아키텍트·디자이너·DBA·data-modeler 는 "담당자(자문)" 컬럼에만 등장?
+- [ ] 교차 파트 인터페이스(IF-REST 소비자·IF-KAFKA) 합의 회의(W-D-07) 가 설계 감리(W-D-08) 앞에 배치됨?
+- [ ] 구현 착수(W-I-\*-01)는 설계 승인(W-D-11) 이후에만 허용? (파트별 동시 착수 가능)
 - [ ] 테스트 환경(W-T-01)은 MOCK→real checklist(W-I-C-07) 이후?
 - [ ] 배포(W-R-08)는 종료 감리 PASS(W-R-07) 이후?
 
