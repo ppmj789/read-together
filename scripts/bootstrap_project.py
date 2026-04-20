@@ -278,8 +278,17 @@ def main() -> int:
         "  1. `00_kickoff/statement-of-work.md` 에 과업지시서 작성.\n"
         "  2. PM 세션 시작 (`cd ai_team && claude`) — SessionStart hook 이 "
         "`.claude/roles/project-manager.md` 자동 주입.\n"
-        "  3. PM 이 business-manager 자문으로 `00_kickoff/project-plan/budget.md` "
-        "예산 가이드를 확정한 뒤 01_analysis 진입."
+        "  3. PM 이 project-plan 을 3-wave 순서로 저작:\n"
+        "     (a) plan skeleton — overview·scope·organization·schedule,\n"
+        "     (b) budget — business-manager Track B 자문 후 `budget.md`,\n"
+        "     (c) WBS — `wbs/index.md` + `wbs/W-*.md` children (8 컬럼: 단계·\n"
+        "         작업 ID·해야할 작업·담당자(주)·담당자(자문)·Input·Output·\n"
+        "         선행). 참조 형식: `docs/wbs-large-streaming-example.md`.\n"
+        "  4. **WBS Validation gate** — user 가 체크리스트 6 섹션으로 검증,\n"
+        "     결과는 `project-state.md` WBS Validation Log 에 기록. `ok` 전까지\n"
+        "     project-plan review · Approval · 01_analysis 진입 금지.\n"
+        "  5. WBS ok → project-plan review (≥2) → Approval Log 00_kickoff →\n"
+        "     01_analysis 진입."
     )
     return 0
 

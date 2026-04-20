@@ -22,14 +22,14 @@ introduced or modified child-file back-references —
 
 Required artifacts (directory or file per §3-1):
 - `00_kickoff/statement-of-work.md` (provided by the user; PM must confirm presence and completeness)
-- `00_kickoff/project-plan/` directory:
-  - `index.md`
-  - `overview.md`, `scope.md`, `organization.md`, `schedule.md`, `budget.md`
-  - `wbs/index.md` + `wbs/W-<letter>-<seq>.md` children
+- `00_kickoff/project-plan/` directory — authored in three ordered waves:
+  - **Wave 1 (plan skeleton)**: `index.md`, `overview.md`, `scope.md`, `organization.md`, `schedule.md`
+  - **Wave 2 (budget)**: `budget.md` authored after `business-manager` Track B advisory
+  - **Wave 3 (WBS)**: `wbs/index.md` + `wbs/W-<letter>-<seq>.md` children, authored after Waves 1–2 as input. WBS rows must cover every stage (00–05) with columns: 단계 · 작업 ID · 해야할 작업 · 담당자(주) · 담당자(자문) · Input · Output · 선행. See `docs/wbs-large-streaming-example.md` for the reference form applied to a large-scale project.
 - `00_kickoff/rollback-history.md` (empty file with heading and table skeleton)
 
 Review requirement:
-- `00_kickoff/reviews/project-plan-review-v<N>.md` with ≥2 participants, using `templates/artifacts/review-meeting.md.tmpl`
+- `00_kickoff/reviews/project-plan-review-v<N>.md` with ≥2 participants, using `templates/artifacts/review-meeting.md.tmpl`. Review must take place **after WBS validation gate passes** so the reviewed plan already contains user-ok'd WBS.
 
 Advisory gates (mandatory per §2-6):
 - `business-manager` Track B advisory for `budget.md` logged in `agent-call-log.md`
@@ -41,8 +41,21 @@ Project-state requirement:
 Hierarchy gate:
 - `python3 scripts/validate_artifact_hierarchy.py <project>` exits 0
 
+WBS validation gate (MANDATORY, precedes project-plan review and Approval):
+- `00_kickoff/project-plan/wbs/` 전 child (W-*.md) 가 8 컬럼 필드를 모두 채우고 있어야 한다.
+- User가 WBS 전체를 직접 검토하고 다음 6 섹션 체크리스트에 PASS 해야 한다 (참조: `docs/wbs-large-streaming-example.md` "사용자 점검 체크리스트"):
+  1. 파이프라인 완전성 (단계·승인·감리 누락 없음)
+  2. 담당자 배치 적정성 (저작자 vs 자문 분리, 개발자 저작·아키텍트/디자이너/DBA/data-modeler 자문 원칙)
+  3. 산출물 매핑 (I/O 연속성, PRG type·SCN·BATCH·IF·UT 체인)
+  4. 순서(Precedence) 무결성 (`선행` 컬럼의 DAG 정합성)
+  5. 도메인 파트 분할 적정성 (large 모드 해당; 기술 유형 편중·DB 쏠림 없음)
+  6. 규모별 필수 요소 (large 모드면 분석 감리 포함, 파트리더 실제 등장 등)
+- 검증 결과는 `project-state.md` **WBS Validation Log** 표에 기록: `Date · Reviewed By (user) · Result (ok | 수정요청) · Notes (수정요청 사유)`.
+- 결과가 `수정요청` 이면 PM 이 WBS 를 재저작한 뒤 동일 표에 다음 줄(`ok`) 을 추가해야 한다. 마지막 행이 `ok` 가 아니면 Approval gate 진입 불가.
+- WBS Validation 통과 없이 project-plan review 또는 01_analysis 진입을 시도하는 것은 stage-gate 위반.
+
 Approval gate:
-- `Approval Log` entry for `00_kickoff` by `user`
+- `Approval Log` entry for `00_kickoff` by `user` (선행: WBS Validation Log 마지막 행 = `ok`)
 
 ---
 
