@@ -21,7 +21,7 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 - During analysis, delegate requirements drafting to `application-architect-<model>` via Track A and ensure REQ-ID coverage is complete before the stage gate.
 - Delegate DB logical modeling to `data-modeler-<model>` during analysis (logical) and design (physical); coordinate with `infrastructure-director`'s DBA for the cross-track DB review via Track B.
 - Delegate UAT and integration test-case authoring to `tester` during analysis.
-- **During design, all part-scoped design authoring is delegated to developers, not architects** (사용자 정책): program list, interface specs, screen designs, batch-job designs, and physical-DB schema of the data part are **authored by the corresponding developer agents** (backend/web/batch/web-publisher). `software-architect`, `designer`, `data-modeler`, `database-administrator`, `technical-architect` 는 Track B 자문·리뷰 참여자.
+- **During design, all domain-part-scoped design authoring is delegated to developers, not architects** (사용자 정책): program list, interface specs, screen designs, batch-job designs, **domain-specific logical·physical DB (ENT/TBL/COLL), and unit-test cases** are **authored by the corresponding developer agents** (backend/web/batch/web-publisher) within each domain part (회원·결제·구매·카탈로그 등). `software-architect`, `designer`, `data-modeler`, `database-administrator`, `technical-architect`, `tester` 는 Track B 자문·리뷰 참여자.
 - Activate `part-leader-<model>` only when `project-state.scale == large`; in that case delegate **both design authoring and implementation** through the part-leaders via Track A, one per **도메인 파트** (business-domain boundary, 예: 회원관리 / 결제관리 / 구매관리 / 카탈로그관리 — 기술 유형 web/batch/daemon 으로 파트를 나누지 않는다). 도메인 개수·분할은 SOW 분석 결과(`01_analysis/to-be-workflow/part-allocation-matrix.md`)에 따라 결정. In small mode, call developer-tier agents (`backend-developer`, `batch-developer`, `web-developer`, `web-publisher`) directly via Track A **for both 02_design and 03_implementation**.
 - Orchestrate all application-side reviews listed in spec §7-1 by dispatching participants via Track B in a single parallel turn, ensuring at least two participants per review.
 - Forward escalations upward to PM using the `ESCALATION:` format when a request is outside your scope or requires cross-track coordination.
@@ -37,7 +37,7 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 | 02_design 진입 (소규모) | web-developer | web PRG(type:web) / SCN 저작 | 동일 |
 | 02_design 진입 (소규모) | batch-developer | batch PRG(type:batch) / BATCH 저작 | 동일 |
 | 02_design 진입 (소규모) | web-publisher | 퍼블리싱 가이드 저작 | 동일 |
-| 02_design 진입 | tester | unit-test-cases 저작 (소·대규모 모두, 대규모는 파트별 그룹핑) | 동일 |
+| 02_design 진입 | tester (Track B 자문) | unit-test-cases 는 각 파트/도메인 개발자가 저작; tester 는 케이스 설계·커버리지 자문 | 동일 |
 | 02_design 진입 (대규모) | part-leader (파트 수만큼) | 파트별 설계·구현 주도 위임 (파트리더가 파트 개발자에게 저작 재위임) | project-plan 의 파트 정의 |
 | 03_implementation 진입 (소규모) | backend-developer | 백엔드 구현 | 설계 산출물 |
 | 03_implementation 진입 (소규모) | web-developer | 프론트 구현 | 동일 |

@@ -16,7 +16,7 @@
 
 - **파트는 기술 유형(web/batch/daemon)이 아니라 업무 도메인(회원·결제·구매·카탈로그 등) 기준으로 분할한다.** SOW 분석 결과에 따라 도메인별 규모가 크면 한 도메인이 여러 파트로 세분될 수 있고, 규모가 작으면 여러 도메인이 묶일 수 있다. 파트 개수 N 은 가변.
 - **각 도메인 파트는 cross-functional 팀**이다 — 해당 도메인의 web 화면, batch 잡, daemon/Kafka 컨슈머, 자기 도메인의 RDB 테이블·NoSQL 컬렉션을 **모두 자체 저작**한다. "Data Part" 같은 기술 중심 수평 파트는 두지 않는다 — 데이터 설계가 한쪽에 쏠리면 파트 분할 검증이 무력화되기 때문.
-- **공유 엔티티(여러 도메인이 참조하는 엔티티)** 는 "소유 파트"(가장 책임 있는 도메인) 가 주 저자, 소비 파트들은 `depends-on` 으로 참조 + 교차 파트 인터페이스 합의 회의(W-D-07)에서 최종 승인.
+- **공유 엔티티(여러 도메인이 참조하는 엔티티)** 는 "소유 파트"(가장 책임 있는 도메인) 가 주 저자, 소비 파트들은 `depends-on` 으로 참조 + 교차 파트 합의 회의(W-D-05)에서 최종 승인.
 - 분석 단계에서 `application-architect` 가 **도메인 분할 매트릭스**를 저작해 각 RQ·엔티티·BATCH·토픽을 어느 파트가 소유하는지 결정한다 (`01_analysis/to-be-workflow/part-allocation-matrix.md`).
 
 ## 조직 구성
@@ -122,8 +122,10 @@
 | W-D-\<DOM\>-10 | 도메인 엔티티 세밀화 | backend-developer(\<P\>) | data-modeler (공유 엔티티 조정), DBA, application-architect | ENT-\<DOM\>-*(분석 단계 초안, W-A-04) | `02_design/db/logical/ENT-\<DOM\>-*.md` 확장 | W-D-04 |
 | W-D-\<DOM\>-11 | 도메인 RDB 테이블 (인덱스·파티션) | backend-developer(\<P\>) | DBA (운영·튜닝), data-modeler | ENT-\<DOM\>-* | `02_design/db/physical/TBL-RDB-\<DOM\>-*.md` | W-D-\<DOM\>-10 |
 | W-D-\<DOM\>-12 | 도메인 NoSQL 컬렉션 (샤드키·인덱스) | backend-developer(\<P\>) | DBA, technical-architect, data-modeler | ENT-\<DOM\>-* | `02_design/db/physical/COLL-NOSQL-\<DOM\>-*.md` | W-D-\<DOM\>-10 |
+| W-D-\<DOM\>-13 | 도메인 단위 테스트 케이스 저작 (자기 저작 산출물 매핑) | 각 개발자(\<P\>) — web-developer: SCN/PRG-WEB 대응 UT, backend-developer: PRG-API/DMN·IF·TBL/COLL 대응 UT, batch-developer: BATCH·PRG-BAT 대응 UT | tester (케이스 설계 방법론·커버리지·엣지 케이스 Track B 자문), QA | PRG-\<DOM\>-*·SCN-\<DOM\>-*·BATCH-\<DOM\>-*·IF-\<DOM\>-*·TBL-RDB-\<DOM\>·COLL-NOSQL-\<DOM\> | `02_design/unit-test-cases/UT-\<DOM\>-*.md` (저작자별 산출물에 `depends-on` 으로 매핑) | W-D-\<DOM\>-01~12 (저작자 완료분부터 부분 착수 가능) |
+| W-D-\<DOM\>-14 | 도메인 파트 설계 리뷰 (≥2인) | 파트리더(\<P\>) 주관, 저자(개발자) 참여 | software-architect / designer / data-modeler / DBA / security-specialist / application-director / 인접 도메인 파트리더 | 해당 파트 전 설계 산출물 (01~13) | `02_design/reviews/design-\<DOM\>-v1.md` | W-D-\<DOM\>-01~13 |
 
-> 도메인별로 모든 12 작업이 필요한 것은 아니다. 해당 도메인에 배치가 없으면 06·07 생략, daemon/Kafka 가 없으면 08·09 생략, NoSQL 을 쓰지 않으면 12 생략.
+> 도메인별로 모든 14 작업이 필요한 것은 아니다. 해당 도메인에 배치가 없으면 06·07 생략, daemon/Kafka 가 없으면 08·09 생략, NoSQL 을 쓰지 않으면 12 생략. 13·14 는 모든 도메인 파트 필수.
 
 #### 본 샘플 4 도메인 파트 특이사항
 
@@ -134,15 +136,15 @@
 
 ### (C) 공통 후행 작업 (파트 산출물 수렴)
 
+> 단위 테스트 케이스 저작(W-D-\<DOM\>-13)과 파트 설계 리뷰(W-D-\<DOM\>-14)는 파트별 작업으로 (B) 에 편입되었다. (C) 에는 교차 합의·감리·RTM·승인만 남는다.
+
 | 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |--------|------|-----------|-------------|-------|--------|------|
-| W-D-05 | 단위 테스트 케이스 (도메인별 그룹핑) | tester | QA, 각 파트리더 | 전 PRG·SCN·BATCH·IF | `02_design/unit-test-cases/UT-{MEM,PAY,ORD,CAT}-*` | 각 도메인 파트 설계 완료분부터 순차·병렬 |
-| W-D-06 | 도메인 파트별 설계 리뷰 | 각 파트리더 | software-architect / designer / data-modeler / DBA / security-specialist / application-director | 각 파트 산출물 | `02_design/reviews/design-<DOM>-v1.md` (≥2인) | W-D-\<DOM\>-* |
-| W-D-07 | 교차 파트 합의 (IF-REST 소비자·IF-KAFKA 토픽 계약·**공유 엔티티 소유권·depends-on 매트릭스**) | 생산자/소유 측 파트리더 주관 | software-architect, data-modeler (공유 엔티티 조정), 소비자/참조 측 파트리더, technical-architect | IF-REST-*, IF-KAFKA-*, ENT-* (공유 엔티티 후보) | `02_design/reviews/cross-part-interface-v1.md` + `01_analysis/to-be-workflow/part-allocation-matrix.md` 갱신 | W-D-06 |
-| W-D-08 | 설계 감리 | audit-team (worktree) | — | 02_design 전체 + RTM design | `99_audit/02_design-audit/audit-report/*` | W-D-07 |
-| W-D-09 | 감리 시정조치 | PM (분배) → 해당 저자(개발자) | 파트리더 | FIND-* | corrective-action-* + re-audit PASS | W-D-08 |
-| W-D-10 | RTM 갱신 (REQ↔PRG·SCN·BATCH·IF·UT / by-artifact 역색인) | PM | 각 저자, 파트리더 | 모든 설계 산출물 | `RTM/by-stage/design.md`, `RTM/by-artifact/*` | W-D-09 |
-| W-D-11 | 설계 승인 | user | PM | 감리 PASS + RTM | Approval Log | W-D-10 |
+| W-D-05 | 교차 파트 합의 (IF-REST 소비자·IF-KAFKA 토픽 계약·**공유 엔티티 소유권·depends-on 매트릭스**) | 생산자/소유 측 파트리더 주관 | software-architect, data-modeler (공유 엔티티 조정), 소비자/참조 측 파트리더, technical-architect | IF-REST-*, IF-KAFKA-*, ENT-* (공유 엔티티 후보) | `02_design/reviews/cross-part-interface-v1.md` + `01_analysis/to-be-workflow/part-allocation-matrix.md` 갱신 | W-D-\<DOM\>-14 (모든 파트 리뷰 완료) |
+| W-D-06 | 설계 감리 | audit-team (worktree) | — | 02_design 전체 + RTM design | `99_audit/02_design-audit/audit-report/*` | W-D-05 |
+| W-D-07 | 감리 시정조치 | PM (분배) → 해당 저자(개발자) | 파트리더 | FIND-* | corrective-action-* + re-audit PASS | W-D-06 |
+| W-D-08 | RTM 갱신 (REQ↔PRG·SCN·BATCH·IF·UT / by-artifact 역색인) | PM | 각 저자, 파트리더 | 모든 설계 산출물 | `RTM/by-stage/design.md`, `RTM/by-artifact/*` | W-D-07 |
+| W-D-09 | 설계 승인 | user | PM | 감리 PASS + RTM | Approval Log | W-D-08 |
 
 ---
 
@@ -154,17 +156,17 @@
 
 | 작업 ID (패턴) | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |---------------|------|-----------|-------------|-------|--------|------|
-| W-I-\<DOM\>-01 | 화면 프런트 구현 | web-developer(\<P\>) | designer, web-publisher | PRG-\<DOM\>-WEB, SCN-\<DOM\>-*, IF-REST-\<DOM\> | `src/\<dom\>/web/*` | W-D-11 |
-| W-I-\<DOM\>-02 | API 백엔드 구현 | backend-developer(\<P\>) | 파트리더(\<P\>), software-architect, security-specialist | PRG-\<DOM\>-API, IF-REST-\<DOM\>, TBL-RDB-\<DOM\> | `src/\<dom\>/api/*` (헤더 PRG-*·RQ-*) | W-D-11 |
+| W-I-\<DOM\>-01 | 화면 프런트 구현 | web-developer(\<P\>) | designer, web-publisher | PRG-\<DOM\>-WEB, SCN-\<DOM\>-*, IF-REST-\<DOM\> | `src/\<dom\>/web/*` | W-D-09 |
+| W-I-\<DOM\>-02 | API 백엔드 구현 | backend-developer(\<P\>) | 파트리더(\<P\>), software-architect, security-specialist | PRG-\<DOM\>-API, IF-REST-\<DOM\>, TBL-RDB-\<DOM\> | `src/\<dom\>/api/*` (헤더 PRG-*·RQ-*) | W-D-09 |
 | W-I-\<DOM\>-03 | 마크업·스타일 | web-publisher(\<P\>) | designer | SCN-\<DOM\>-* | `src/\<dom\>/web/styles/*`, components | W-I-\<DOM\>-01 (동시) |
-| W-I-\<DOM\>-04 | 배치잡 구현 | batch-developer(\<P\>) | 파트리더(\<P\>), DBA, infra-engineer | PRG-\<DOM\>-BAT, BATCH-\<DOM\>-*, TBL-RDB-\<DOM\>/COLL-NOSQL-\<DOM\> | `src/\<dom\>/batch/*` (**헤더 PRG-* + BATCH-* + RQ-* 3종**) | W-D-11 |
-| W-I-\<DOM\>-05 | Kafka producer 구현 | backend-developer(\<P\>) | technical-architect, security-specialist | PRG-\<DOM\>-DMN, IF-KAFKA-\<DOM\> (produce) | `src/\<dom\>/stream/producer/*` | W-D-11 |
-| W-I-\<DOM\>-06 | Kafka consumer 구현 (오프셋·DLQ·백프레셔) | backend-developer(\<P\>) | technical-architect, DBA | PRG-\<DOM\>-DMN, IF-KAFKA-\<소비대상\> (consume), COLL-NOSQL-\<DOM\> | `src/\<dom\>/stream/consumer/*` | W-D-11 |
+| W-I-\<DOM\>-04 | 배치잡 구현 | batch-developer(\<P\>) | 파트리더(\<P\>), DBA, infra-engineer | PRG-\<DOM\>-BAT, BATCH-\<DOM\>-*, TBL-RDB-\<DOM\>/COLL-NOSQL-\<DOM\> | `src/\<dom\>/batch/*` (**헤더 PRG-* + BATCH-* + RQ-* 3종**) | W-D-09 |
+| W-I-\<DOM\>-05 | Kafka producer 구현 | backend-developer(\<P\>) | technical-architect, security-specialist | PRG-\<DOM\>-DMN, IF-KAFKA-\<DOM\> (produce) | `src/\<dom\>/stream/producer/*` | W-D-09 |
+| W-I-\<DOM\>-06 | Kafka consumer 구현 (오프셋·DLQ·백프레셔) | backend-developer(\<P\>) | technical-architect, DBA | PRG-\<DOM\>-DMN, IF-KAFKA-\<소비대상\> (consume), COLL-NOSQL-\<DOM\> | `src/\<dom\>/stream/consumer/*` | W-D-09 |
 | W-I-\<DOM\>-07 | 데몬 헬스체크·메트릭 | backend-developer(\<P\>) | infrastructure-engineer | PRG-\<DOM\>-DMN | `src/\<dom\>/stream/health/*` | W-I-\<DOM\>-05~06 |
-| W-I-\<DOM\>-08 | 도메인 RDB 마이그레이션 | backend-developer(\<P\>) | DBA | TBL-RDB-\<DOM\>-* | `src/\<dom\>/migrations/*` (+ 롤백) | W-D-11 |
-| W-I-\<DOM\>-09 | 도메인 NoSQL 초기화·인덱스 | backend-developer(\<P\>) | DBA | COLL-NOSQL-\<DOM\>-* | `src/\<dom\>/nosql-init/*` | W-D-11 |
+| W-I-\<DOM\>-08 | 도메인 RDB 마이그레이션 | backend-developer(\<P\>) | DBA | TBL-RDB-\<DOM\>-* | `src/\<dom\>/migrations/*` (+ 롤백) | W-D-09 |
+| W-I-\<DOM\>-09 | 도메인 NoSQL 초기화·인덱스 | backend-developer(\<P\>) | DBA | COLL-NOSQL-\<DOM\>-* | `src/\<dom\>/nosql-init/*` | W-D-09 |
 | W-I-\<DOM\>-10 | 도메인 정합성 검증 스크립트 | backend-developer(\<P\>) | data-modeler, DBA | ENT-\<DOM\>-*, TBL-\<DOM\>-*, COLL-\<DOM\>-* | `src/\<dom\>/data-checks/*` | W-I-\<DOM\>-08~09 |
-| W-I-\<DOM\>-11 | 파트 단위 테스트 실행 | 각 개발자(\<P\>) | tester | UT-\<DOM\>-* | `03_implementation/unit-test-results/UT-RES-\<DOM\>-*` (batch 는 BATCH-* depends-on 필수) | W-I-\<DOM\>-01~10 |
+| W-I-\<DOM\>-11 | 파트 단위 테스트 실행 | 각 개발자(\<P\>) | tester (케이스 해석 자문) | UT-\<DOM\>-* | `03_implementation/unit-test-results/UT-RES-\<DOM\>-*` (batch 는 BATCH-* depends-on 필수) | W-I-\<DOM\>-01~10 |
 
 > 파트별로 모든 11 작업이 필요한 건 아니다. 해당 도메인에 화면이 없으면 01·03 생략, 배치 없으면 04, daemon/Kafka 없으면 05~07, NoSQL 없으면 09 생략. W-I-\<DOM\>-02 (API) 와 W-I-\<DOM\>-08 (RDB 마이그레이션) 은 사실상 전 도메인 필수.
 
@@ -178,7 +180,7 @@
 ### 공통 인프라
 | 작업 ID | 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |--------|------|-----------|-------------|-------|--------|------|
-| W-I-C-01 | 컨테이너·IaC | infrastructure-engineer | technical-architect | INF-* | `infra/{Dockerfile,compose,IaC}` | W-D-11 |
+| W-I-C-01 | 컨테이너·IaC | infrastructure-engineer | technical-architect | INF-* | `infra/{Dockerfile,compose,IaC}` | W-D-09 |
 | W-I-C-02 | Kafka 브로커 운영 구성 | infrastructure-engineer | technical-architect | INF-KAFKA, IF-KAFKA | `infra/kafka/*` (IF-KAFKA-* depends-on) | W-I-C-01 |
 | W-I-C-03 | 스케줄러 (cron/timer/cloud scheduler) | infrastructure-engineer | — | BATCH-*, INF-* | `infra/schedulers/*` (**BATCH-* depends-on 필수**) | W-I-C-01 |
 | W-I-C-04 | 모니터링·알림 | infrastructure-engineer | security-specialist | ARCH-*, INF-* | `infra/monitoring/*`, `infra/alerts/*` | W-I-C-01 |
@@ -239,7 +241,7 @@
 - [ ] **파트별 설계 산출물(PRG / SCN / BATCH / IF / 파트별 TBL·COLL)의 주 저자가 모두 개발자 역할**이고, 아키텍트(`software-architect`, `technical-architect`)·`designer`·`database-administrator`·`data-modeler` 는 **담당자(자문) 컬럼에만** 등장?
 - [ ] 공통 설계(ARCH / SEC / INF) 만 `technical-architect`·`security-specialist`·`infrastructure-engineer` 가 주 저자?
 - [ ] 인프라(스케줄러·Kafka·모니터링) 는 `infrastructure-engineer` 단독 저자, `technical-architect`·`security-specialist`·DBA 는 자문?
-- [ ] 테스트 케이스 저작과 실행은 모두 `tester` 단일화(QA 는 리뷰·기준만)?
+- [ ] **단위 테스트 케이스(02_design UT)는 각 도메인 파트의 개발자가 자기 저작 산출물에 매핑하여 저작**하고, tester 는 Track B 자문·리뷰로만 참여? 상위 테스트(통합·시스템·UAT)의 저작·실행은 여전히 `tester`(QA 리뷰·기준만)?
 - [ ] 감리(audit-team) 는 별도 worktree 에서만 작동하고 프로젝트 산출물 직접 수정 없음?
 
 ### 3. 산출물 매핑(I/O)
@@ -254,8 +256,9 @@
 - [ ] 각 도메인 파트의 배치잡 설계(BATCH-\<DOM\>-*)는 그 파트의 batch PRG 설계(W-D-\<DOM\>-06) 이후에만 시작?
 - [ ] 파트별 세부 설계(W-D-\<DOM\>-*)는 공통 설계(W-D-04 완료) 이후에만 착수?
 - [ ] 파트별 설계 저작은 모두 개발자(backend/web/batch/web-publisher)가 수행하고, 아키텍트·디자이너·DBA·data-modeler 는 "담당자(자문)" 컬럼에만 등장?
-- [ ] 교차 파트 합의(W-D-07, 공유 엔티티·IF-REST 소비자·IF-KAFKA) 가 설계 감리(W-D-08) 앞에 배치됨?
-- [ ] 구현 착수(W-I-\<DOM\>-01~10)는 설계 승인(W-D-11) 이후에만 허용? (도메인 파트 동시 착수 가능)
+- [ ] 단위 테스트 케이스(W-D-\<DOM\>-13)와 파트 설계 리뷰(W-D-\<DOM\>-14)가 각 도메인 파트의 내부 작업으로 들어가 있고, tester 는 "담당자(자문)" 컬럼에만 등장?
+- [ ] 교차 파트 합의(W-D-05, 공유 엔티티·IF-REST 소비자·IF-KAFKA) 가 **모든 파트 설계 리뷰(W-D-\<DOM\>-14) 완료 후**, 설계 감리(W-D-06) 앞에 배치됨?
+- [ ] 구현 착수(W-I-\<DOM\>-01~10)는 설계 승인(W-D-09) 이후에만 허용? (도메인 파트 동시 착수 가능)
 - [ ] 테스트 환경(W-T-01)은 MOCK→real checklist(W-I-C-07) 이후?
 - [ ] 배포(W-R-08)는 종료 감리 PASS(W-R-07) 이후?
 

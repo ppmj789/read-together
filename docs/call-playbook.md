@@ -200,7 +200,7 @@ Request to: <해결 요청 대상/내용>
 | 02_design 진입 (소규모) | web-developer | web PRG(type:web) / SCN 저작 | 동일 |
 | 02_design 진입 (소규모) | batch-developer | batch PRG(type:batch) / BATCH 저작 | 동일 |
 | 02_design 진입 (소규모) | web-publisher | 퍼블리싱 가이드 저작 | 동일 |
-| 02_design 진입 | tester | unit-test-cases 저작 (소·대규모 모두, 대규모는 파트별 그룹핑) | 동일 |
+| 02_design 진입 | tester (Track B 자문) | unit-test-cases 는 각 파트/도메인 개발자가 저작; tester 는 케이스 설계·커버리지 자문 | 동일 |
 | 02_design 진입 (대규모) | part-leader (파트 수만큼) | 파트별 설계·구현 주도 위임 (파트리더가 파트 개발자에게 저작 재위임) | project-plan 의 파트 정의 |
 | 03_implementation 진입 (소규모) | backend-developer | 백엔드 구현 | 설계 산출물 |
 | 03_implementation 진입 (소규모) | web-developer | 프론트 구현 | 동일 |
