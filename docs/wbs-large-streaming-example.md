@@ -52,14 +52,20 @@
 
 ## 00_kickoff
 
+> **WBS 저작·검증 게이트**: 본 샘플 문서의 "00~05 단계 WBS 표 + 사용자 점검 체크리스트 6 섹션" 자체가 W-K-05 의 저작 형식 예시이며, W-K-06 사용자 검증에서 그 체크리스트를 그대로 사용한다. WBS 가 **사용자 ok** 를 받지 못하면 `01_analysis` 로 진입할 수 없다.
+
 | 작업 ID | 해야할 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |--------|------|-----------|-------------|-------|--------|------|
 | W-K-01 | SOW 수령·검토 | PM | — | 사용자 제공 SOW | `00_kickoff/statement-of-work.md` | — |
 | W-K-02 | 규모·파트 구성 결정 (large, 도메인 파트 수 N) | PM | application-director, infrastructure-director (Track B) | SOW | `project-state.md` (scale: large) | W-K-01 |
-| W-K-03 | 프로젝트 계획 저작 | PM | — | SOW, 조직안 | `00_kickoff/project-plan/{overview,scope,organization,schedule,budget,wbs}.md` | W-K-02 |
-| W-K-04 | 예산·일정 자문 (모델·effort 가이드 확정) | business-manager (Track B) | — | project-plan 초안 | `agent-call-log.md` + `budget.md` 확정 | W-K-03 |
-| W-K-05 | 계획 리뷰 (≥2 참여) | PM | QA, 총괄 2 명 | project-plan | `00_kickoff/reviews/project-plan-review-v1.md` | W-K-04 |
-| W-K-06 | 착수 승인 | user | PM | review 결과 | `project-state.md` Approval Log | W-K-05 |
+| W-K-03 | 프로젝트 계획 저작 (overview·scope·organization·schedule 만; budget/WBS 는 후속) | PM | — | SOW, 조직안 | `00_kickoff/project-plan/{index,overview,scope,organization,schedule}.md` | W-K-02 |
+| W-K-04 | 예산·일정 자문 (모델·effort 가이드 확정) | business-manager (Track B) | — | project-plan 초안 | `agent-call-log.md` + `00_kickoff/project-plan/budget.md` 확정 | W-K-03 |
+| W-K-05 | **WBS 저작** (단계·작업 ID·해야할 작업·담당자(주)·담당자(자문)·Input·Output·선행 8 컬럼 + 본 샘플 형식 적용) | PM | application-director, infrastructure-director, 파트리더 후보, QA (Track B) | SOW, project-plan, budget, 도메인 파트 초안, part-allocation 후보 | `00_kickoff/project-plan/wbs/index.md` + `wbs/W-<단계>-<seq>.md` children (전 단계 00~05 망라) | W-K-04 |
+| W-K-06 | **WBS 사용자 검증 (ok 게이트)** — 본 문서 "사용자 점검 체크리스트" 6 섹션(파이프라인 완전성·담당자 배치·I/O 매핑·순서·도메인 파트 분할·large 필수) 전 항목 PASS 확인 | user | PM, QA, 총괄 2 명, 파트리더 후보 | WBS 전체 + 체크리스트 | `project-state.md` **WBS-Validation Log** 항목 (결과: ok / 수정요청 + 사유 + 타임스탬프). 수정요청 시 W-K-05 재저작 → W-K-06 재검증 루프 | W-K-05 |
+| W-K-07 | 계획 리뷰 (≥2 참여, **검증 완료 WBS 포함 전체 plan**) | PM | QA, 총괄 2 명 | project-plan + ok 받은 WBS | `00_kickoff/reviews/project-plan-review-v1.md` | W-K-06 |
+| W-K-08 | 착수 승인 (전 단계 전환 Approval Log) | user | PM | review 결과 + WBS 검증 완료 | `project-state.md` Approval Log (`00_kickoff → 01_analysis`) | W-K-07 |
+
+> **게이트 의미 분리**: W-K-06 = WBS **내용 건전성** (파이프라인·담당자·매핑·순서) 에 대한 사용자 ok. W-K-08 = 프로젝트 착수에 대한 사용자 최종 승인. 둘이 분리되어야 WBS 결함을 review 이전에 잡아 재작성 비용을 최소화한다.
 
 ---
 
@@ -67,7 +73,7 @@
 
 | 작업 ID | 해야할 작업 | 담당자(주) | 담당자(자문) | Input | Output | 선행 |
 |--------|------|-----------|-------------|-------|--------|------|
-| W-A-01 | 요구사항 수집·분해 (**도메인 기준**) | application-architect | 파트리더 후보들 (Track B) | SOW, 현업 인터뷰 | `01_analysis/requirements/RQ-{MEM,PAY,ORD,CAT,NFR}-*` | W-K-06 |
+| W-A-01 | 요구사항 수집·분해 (**도메인 기준**) | application-architect | 파트리더 후보들 (Track B) | SOW, 현업 인터뷰 | `01_analysis/requirements/RQ-{MEM,PAY,ORD,CAT,NFR}-*` | W-K-08 |
 | W-A-02 | AS-IS 분석 | application-architect | technical-architect (인프라 현황) | 현행 시스템 조사 | `01_analysis/as-is-analysis/AS-*` | W-A-01 |
 | W-A-03 | TO-BE 워크플로우 | application-architect | 파트리더 후보들 | RQ-*, AS-* | `01_analysis/to-be-workflow/TB-*` | W-A-02 |
 | W-A-03b | **도메인 분할 매트릭스 저작** (도메인 → 파트·엔티티·BATCH·토픽 소유권 매핑, 공유 엔티티 식별) | application-architect | data-modeler, technical-architect, application-director | RQ-\<DOM\>, TB-*, ENT-*(초안) | `01_analysis/to-be-workflow/part-allocation-matrix.md` | W-A-03 |
