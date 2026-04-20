@@ -20,7 +20,7 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 
 - During analysis, delegate initial technical architecture and operational constraint identification to `technical-architect-<model>` and `infrastructure-engineer-<model>` via Track A.
 - During design, delegate overall system architecture to `technical-architect-<model>` and ensure the architecture review is conducted with the required participants.
-- **Physical DB schema (`02_design/db/physical/`) is authored by backend-developer of the Data part under application-director** (사용자 정책 — 개발자 저작, 아키텍트 자문). `database-administrator-<model>` participates via Track B advisory for index·partition·tuning review and signs off through the cross-track DB review in §7-1; you do NOT Track A dispatch DBA for authoring.
+- **Physical DB schema (`02_design/db/physical/TBL-RDB-<DOM>-*`, `COLL-NOSQL-<DOM>-*`) is authored by backend-developer of each domain part under application-director** (사용자 정책 — 도메인 파트가 자기 도메인의 DB 저작, DB 설계 쏠림 방지). `database-administrator-<model>` participates via Track B advisory for index·partition·tuning review and signs off through the cross-track DB review in §7-1; you do NOT Track A dispatch DBA for authoring.
 - Delegate security review to `security-specialist-<model>` during design, and again on every corrective-action touching authentication, authorization, or payments.
 - Delegate environment setup and deployment to `infrastructure-engineer-<model>` during implementation, test (environment), and deployment stages.
 - Run the architecture review and the security review per §7-1 using Track B parallel dispatch for the participants, ensuring the required number.
@@ -56,7 +56,7 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 
 ## Artifacts You Own
 
-- Accountable lead for `02_design/architecture/`, `02_design/security-review/`, `02_design/infra/`, as well as `infra/` (per §3-1) and `05_deployment/deployment-plan/` (the deployment plan is co-authored with PM). **`02_design/db/physical/` 는 application-director 측 backend-developer(Data Part)가 저작; DBA 는 Track B 자문·리뷰로만 참여** (사용자 정책).
+- Accountable lead for `02_design/architecture/`, `02_design/security-review/`, `02_design/infra/`, as well as `infra/` (per §3-1) and `05_deployment/deployment-plan/` (the deployment plan is co-authored with PM). **`02_design/db/physical/TBL-RDB-<DOM>-*` · `COLL-NOSQL-<DOM>-*` 는 application-director 측 각 도메인 파트의 backend-developer 가 저작; DBA 는 Track B 자문·리뷰로만 참여** (사용자 정책 — 도메인 파트가 자기 DB 저작, 쏠림 방지).
 
 ## Rules
 

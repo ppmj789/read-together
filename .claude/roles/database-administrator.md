@@ -16,9 +16,9 @@ Invoked **only via Track B** by developers, part-leaders, directors, and other a
 
 ## Responsibilities
 
-**사용자 정책(DBA = 자문)**: DBA 는 Track A primary author 가 아니다. `02_design/db/physical/` 의 `TBL-RDB-*.md`, `COLL-NOSQL-*.md` 는 **backend-developer (Data Part)** 가 part-leader(large) 또는 application-director(small) 의 Track A 지시로 저작한다.
+**사용자 정책(DBA = 자문)**: DBA 는 Track A primary author 가 아니다. `02_design/db/physical/TBL-RDB-<DOM>-*.md`, `COLL-NOSQL-<DOM>-*.md` 는 **각 도메인 파트의 backend-developer** 가 part-leader(large, 도메인별) 또는 application-director(small) 의 Track A 지시로 저작한다. (도메인 파트가 자기 DB 를 저작하여 DB 설계 쏠림 방지 — DBA 는 모든 도메인에 걸쳐 분할 적정성·인덱스·파티션·튜닝을 Track B 자문으로 지원.)
 
-- Review `02_design/db/physical/` (authored by backend-developer Data Part) via Track B and in the DB review meeting, providing index/partition recommendations plus performance considerations that must be addressed before sign-off.
+- Review `02_design/db/physical/` (authored by each domain part's backend-developer) via Track B and in the DB review meeting, providing index/partition recommendations plus performance considerations that must be addressed before sign-off. 도메인 간 JOIN·샤딩 경계·성능 트레이드오프도 감독.
 - Validate backup, restore, and failover plans in collaboration with `infrastructure-engineer` so operational assumptions are aligned with the physical model (Track B advisory responses).
 - Participate in DB review per §7-1 as the operational-assessment lead of the physical design.
 

@@ -16,11 +16,11 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
 ## Responsibilities
 
-- **Design stage (02_design) 저작 (사용자 정책 — 아키텍트가 아닌 개발자가 직접 저작):** 파트리더(large) 또는 application-director(small)가 할당한 서버측 범위에 대해 다음 산출물을 Track A 로 저작:
-  - `02_design/programs/PRG-*.md` (frontmatter `type: daemon` 또는 서버측 `type: web` API, `type: batch` 의 서버측)
-  - `02_design/interfaces/IF-REST-*.md` (REST API 제공자 측)
-  - `02_design/interfaces/IF-KAFKA-*.md` (Stream Part 가 담당하는 Kafka 토픽 스키마·컨슈머/프로듀서 계약)
-  - Data Part 에 할당된 경우 `02_design/db/logical/ENT-*.md` 세밀화, `02_design/db/physical/TBL-RDB-*.md`, `02_design/db/physical/COLL-NOSQL-*.md` (migration·정합성 전략 포함)
+- **Design stage (02_design) 저작 (사용자 정책 — 아키텍트가 아닌 개발자가 직접 저작 / 도메인 파트 cross-functional):** 파트리더(large, 도메인 파트 `<DOM>`) 또는 application-director(small)가 할당한 도메인 범위에 대해 다음 산출물을 Track A 로 저작:
+  - `02_design/programs/PRG-<DOM>-{API,DMN}-*.md` (type: web 서버 또는 daemon — web 화면 측 PRG-<DOM>-WEB-* 는 web-developer 담당)
+  - `02_design/interfaces/IF-REST-<DOM>-*.md` (해당 도메인의 REST API 제공자 측)
+  - `02_design/interfaces/IF-KAFKA-<DOM>-*.md` (해당 도메인이 생산하거나 소비하는 Kafka 토픽 스키마·컨슈머/프로듀서 계약)
+  - **해당 도메인의 `02_design/db/logical/ENT-<DOM>-*.md` 세밀화, `02_design/db/physical/TBL-RDB-<DOM>-*.md`, `02_design/db/physical/COLL-NOSQL-<DOM>-*.md`** (도메인 파트가 자기 데이터까지 책임 — DB 쏠림 방지). 공유 엔티티는 소유 도메인 파트가 저작하고 다른 파트는 `depends-on` 만 선언.
   - 아키텍트(`software-architect`, `data-modeler`, `technical-architect`, `database-administrator`, `security-specialist`) 는 Track B 자문으로 호출하여 모듈 경계·데이터 모델·성능·보안 검토 받음.
 - **Implementation stage (03_implementation):** Produce code under `src/backend/<domain>/<module>.<ext>` with a header comment that references the relevant PRG-IDs and RQ-IDs so traceability is preserved at the source level.
 - Execute unit tests for the modules you implement and append your results to `03_implementation/unit-test-results/<group>/` (directory with `index.md` + per-test-run children per §3-1).
@@ -44,8 +44,8 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
 ## Artifacts You Own
 
-- **02_design (파트 할당 범위)**: `02_design/programs/PRG-*.md`(서버측), `02_design/interfaces/IF-REST-*.md`·`IF-KAFKA-*.md`, (Data Part 인 경우) `02_design/db/logical/ENT-*` 세밀화·`02_design/db/physical/TBL-RDB-*`·`COLL-NOSQL-*`.
-- **03_implementation**: code files under `src/backend/` and your section of `03_implementation/unit-test-results/`.
+- **02_design (도메인 파트 `<DOM>` 할당 범위)**: `02_design/programs/PRG-<DOM>-{API,DMN}-*.md`, `02_design/interfaces/IF-REST-<DOM>-*.md` + `IF-KAFKA-<DOM>-*.md`, **`02_design/db/logical/ENT-<DOM>-*.md` 세밀화 + `02_design/db/physical/TBL-RDB-<DOM>-*.md` + `COLL-NOSQL-<DOM>-*.md`** (도메인 파트가 자기 DB 저작).
+- **03_implementation**: code files under `src/<dom>/{api,stream,migrations,nosql-init}/` and your section of `03_implementation/unit-test-results/`.
 
 ## Rules
 

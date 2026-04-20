@@ -40,7 +40,7 @@
 | 00_kickoff | PM (Skill, 사용자 세션) | — (PM 직접 저작) | business-manager(예산 가이드), quality-assurance(계획 리뷰) |
 | 01_analysis | application-director | application-architect, data-modeler, tester | technical-architect, quality-assurance |
 | 02_design (소규모) | application-director + infrastructure-director | 개발자(backend/web/batch/web-publisher)가 파트별 설계 저작 + tester(unit-test-cases) + technical-architect(공통 아키) + security-specialist(보안) + infrastructure-engineer(인프라) | quality-assurance, software-architect(모듈 경계 자문), designer(UI/UX 자문), data-modeler(모델 자문), database-administrator(DB 자문) |
-| 02_design (대규모) | application-director (파트 분할) | part-leader × N → 파트 소속 개발자에게 저작 재위임 + tester + 공통 설계(technical-architect / security-specialist / infrastructure-engineer) | (동일) |
+| 02_design (대규모) | application-director (**도메인 파트** 분할 — 기술 유형이 아니라 업무 도메인 기준; 예: 회원·결제·구매·카탈로그) | part-leader × N (N = 도메인 수, SOW 분석 결과) → 파트 소속 cross-functional 개발자(web+batch+backend)에게 저작 재위임 + tester + 공통 설계(technical-architect / security-specialist / infrastructure-engineer). 각 도메인 파트가 자기 도메인의 TBL-RDB·COLL-NOSQL 까지 자체 저작 (DB 쏠림 방지) | (동일) |
 | 03_implementation (소규모) | application-director | backend-developer, web-developer, batch-developer | security-specialist, database-administrator, software-architect 수시 |
 | 03_implementation (대규모) | part-leader | 파트별 개발자들 | (동일) + tester 수시 |
 | 04_test | tester (PM 감독) | tester(통합·시스템·UAT 실행), infrastructure-engineer(테스트 환경) | quality-assurance |
