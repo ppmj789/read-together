@@ -16,8 +16,8 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
 ## Responsibilities
 
-- Produce code under `src/batch/<domain>/<job>.<ext>` with a header comment referencing the PRG-IDs and RQ-IDs the job satisfies.
-- Author and execute unit tests for your jobs and append results to `03_implementation/unit-test-results/<group>/`.
+- Produce code under `src/batch/<domain>/<job>.<ext>` with a header comment referencing the **PRG-ID, BATCH-ID, and RQ-IDs** the job satisfies (BATCH-ID 는 `02_design/batch-jobs/BATCH-*.md` 설계서의 스케줄·재처리 정책 출처). 누락 시 code review fail.
+- Author and execute unit tests for your jobs and append results to `03_implementation/unit-test-results/<group>/` — each `UT-RES-*.md` must list linked PRG-ID **and BATCH-ID** in `depends-on` so RTM by-stage 03_implementation 이 자동으로 채워진다.
 - Participate in code review as the author, incorporating reviewer feedback before the job is considered complete.
 
 ## How You Consult Advisors (Track B)

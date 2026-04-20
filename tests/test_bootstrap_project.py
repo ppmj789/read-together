@@ -70,6 +70,7 @@ def test_bootstrap_small_creates_expected_stage_dirs():
                   "02_design/db/logical",
                   "02_design/db/physical",
                   "02_design/screens",
+                  "02_design/batch-jobs",
                   "02_design/programs",
                   "03_implementation/unit-test-results",
                   "04_test/qa-report",
@@ -96,6 +97,7 @@ def test_bootstrap_areas_have_index_md():
                   "02_design/architecture",
                   "02_design/db/physical",
                   "02_design/screens",
+                  "02_design/batch-jobs",
                   "02_design/programs",
                   "04_test/qa-report",
                   "99_audit/02_design-audit"):

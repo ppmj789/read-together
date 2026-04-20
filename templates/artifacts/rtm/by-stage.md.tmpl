@@ -17,14 +17,20 @@ version: v1
 | | | | | | | | |
 
 ### 02_design (설계 단계의 경우)
-| REQ-ID | DESIGN-ID | 설계 파일 | PRG-ID | UT-UNIT-ID | 담당 | 상태 |
-|--------|----------|----------|--------|-----------|-----|-----|
-| | | | | | | |
+| REQ-ID | PRG-ID | 프로그램유형 | SCN-ID | BATCH-ID | IF-ID | UT-UNIT-ID | 담당 | 상태 |
+|--------|--------|-------------|--------|----------|-------|-----------|-----|-----|
+| | | web \| batch \| daemon | (web 이면 필수) | (batch 이면 필수) | | | | |
+
+주기:
+- `프로그램유형` 은 `PRG-*.md` frontmatter `type` 과 일치해야 함 (web / batch / daemon).
+- `SCN-ID` 는 `type: web` PRG 행에 반드시 기재 (다수일 경우 쉼표 구분).
+- `BATCH-ID` 는 `type: batch` PRG 행에 반드시 기재.
+- `type: daemon` 은 SCN-ID·BATCH-ID 모두 비워도 무방 (관리콘솔 노출 시 SCN-ID 기재 허용).
 
 ### 03_implementation (구현 단계의 경우)
-| REQ-ID | PRG-ID | 소스 경로 | UT-RES-ID | 담당 | 상태 |
-|--------|--------|---------|-----------|-----|-----|
-| | | | | | |
+| REQ-ID | PRG-ID | 프로그램유형 | 소스 경로 | UT-RES-ID | 담당 | 상태 |
+|--------|--------|-------------|---------|-----------|-----|-----|
+| | | web \| batch \| daemon | | | | |
 
 ### 04_test (시험 단계의 경우)
 | REQ-ID | UT-RES | IT-RES | ST-RES | UAT-RES | 결과 | 상태 |

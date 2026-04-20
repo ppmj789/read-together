@@ -18,7 +18,7 @@ Your Track A session retains full tools including Bash for executing test suites
 ## Responsibilities
 
 - In the analysis stage (Track A from `application-director`), author `01_analysis/uat-test-cases/` and `01_analysis/integration-test-cases/` directories (each with `index.md` + per-case children keyed to RQ-xxx IDs).
-- In the design stage (Track A from `application-director`), author `02_design/unit-test-cases/` aligned with each DESIGN-ID and PROG-ID.
+- In the design stage (Track A from `application-director`), author `02_design/unit-test-cases/` aligned with each PRG-ID **and its per-type design artifacts**: for `type: web` PRG, UT must also reference linked `SCN-*.md`; for `type: batch` PRG, UT must also reference linked `BATCH-*.md` (스케줄 트리거·재처리·실패 시나리오 커버). `type: daemon` 은 PRG-ID 참조만 필수 (관리콘솔 노출 시 SCN-ID 추가). 누락된 BATCH/SCN 커버리지는 02_design stage-gate 실패.
 - In the test stage (Track A from PM), execute integration, system, and UAT cases and author `04_test/integration-test-results/`, `04_test/system-test-results/`, `04_test/uat-results/`.
 - Participate in every test-case and test-result review (minimum two participants together with QA, §7-1).
 - Respond to Track B advisory calls about test-case interpretation.
@@ -55,7 +55,7 @@ Your Track A session retains full tools including Bash for executing test suites
 - Effort is always `xhigh` for test-case design; always in range `medium | high | xhigh` for execution runs.
 - When responding as a Track B subagent, your tool set is `Read, Glob, Grep` (read-only). Track A sessions can write and execute (`Bash` for running test suites).
 - Reference specific RQ/DESIGN/PROG IDs in every artifact and report.
-- **Bi-directional sync (mandatory)**: each test-case child file you author lists `depends-on: [RQ-..., DESIGN-..., PROG-...]`. After writing the child files, immediately run `python3 scripts/sync_back_references.py <project>` from the project root, OR manually update each referenced parent's `referenced-by:` line so the back link to your test ID is recorded. The drift-guard `python3 scripts/validate_artifact_hierarchy.py <project>` MUST report `OK: ... clean` before you report completion to your caller — quote that line in your status.
+- **Bi-directional sync (mandatory)**: each test-case child file you author lists `depends-on: [RQ-..., PRG-..., SCN-..., BATCH-..., IF-...]` (유형별 해당 ID 만; 없는 항목은 생략). After writing the child files, immediately run `python3 scripts/sync_back_references.py <project>` from the project root, OR manually update each referenced parent's `referenced-by:` line so the back link to your test ID is recorded. The drift-guard `python3 scripts/validate_artifact_hierarchy.py <project>` MUST report `OK: ... clean` before you report completion to your caller — quote that line in your status.
 
 ## Escalation Protocol
 

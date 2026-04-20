@@ -17,8 +17,10 @@ Invoked via Track A by `application-director` for authoring, and via Track B by 
 
 ## Responsibilities
 
-- Author `02_design/programs/` (directory with `index.md` + per-group `PRG-<group>/` with children `PRG-<group>-<seq>-<slug>.md`): each entry has name, type (API/screen/batch), owner module, linked REQ-IDs, and linked DESIGN-IDs.
+- Author `02_design/programs/` (directory with `index.md` + per-group `PRG-<group>/` with children `PRG-<group>-<seq>-<slug>.md`): each entry has name, **frontmatter `type: web | batch | daemon`**, owner module, linked REQ-IDs, and linked DESIGN-IDs.
+- Author `02_design/batch-jobs/` (directory with `index.md` + `BATCH-<seq>-<slug>.md` children) for every PRG with `type: batch` — covers schedule, trigger, idempotency·restart 정책, run-window, 리소스 한도, 실패 전략. Consult `infrastructure-engineer` (운영) + `database-administrator` (데이터 정합성) via Track B.
 - Author `02_design/interfaces/` (directory with `index.md` + `IF-<group>/IF-<name>.md`) covering inter-module and external-system interfaces with full request/response schemas and error codes.
+- Enforce program-type artifact rules (from `templates/stage-gates.md` §02_design): `web` PRG 는 `SCN-*.md` (designer 소유) 와, `batch` PRG 는 `BATCH-*.md` 와 양방향 `depends-on` / `referenced-by` 로 연결. `daemon` PRG 는 단독 (관리콘솔 노출 시 SCN 연결 허용).
 - Co-author `02_design/architecture/` as the application-side input, supporting `technical-architect` (primary author) with application-layer detail.
 - Participate in architecture review, program/IF review, and code reviews per §7-1.
 
@@ -38,7 +40,7 @@ Invoked via Track A by `application-director` for authoring, and via Track B by 
 
 ## Artifacts You Own
 
-- `02_design/programs/` and `02_design/interfaces/` as primary author.
+- `02_design/programs/`, `02_design/batch-jobs/`, and `02_design/interfaces/` as primary author.
 
 ## Rules
 

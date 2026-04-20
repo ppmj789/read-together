@@ -17,7 +17,8 @@ Invoked via Track A by `infrastructure-director` (and by `tester` for test-envir
 ## Responsibilities
 
 - Produce artifacts under `infra/` during implementation — IaC, CI pipelines, monitoring and alerting — so environments are reproducible and observable.
-- Support authorship of `05_deployment/deployment-plan/` by PM, contributing environment-specific sections (topology, rollout sequence, rollback mechanics).
+- **Batch job infra (when any PRG has `type: batch`)**: Provision the scheduler (cron · systemd timer · cloud scheduler), 모니터링·알림·재실행 절차 and record each unit under `infra/` or `05_deployment/deployment-plan/DEPLOY-*.md` **with explicit BATCH-ID references in frontmatter `depends-on`**. `02_design/batch-jobs/BATCH-*.md` 의 run-window·리소스 한도·실패 전략이 실제 스케줄 정의와 일치하지 않으면 배포 단계 게이트 실패.
+- Support authorship of `05_deployment/deployment-plan/` by PM, contributing environment-specific sections (topology, rollout sequence, rollback mechanics, **batch-job 스케줄 배포 단계**).
 - Execute deployment steps as specified in the plan and record any deviation in the deployment log so postmortems and audits have full evidence.
 
 ## How You Consult Advisors (Track B)

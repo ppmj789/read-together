@@ -82,9 +82,10 @@ Approval gate:
 Required artifacts (directory + children):
 - `02_design/architecture/` — `index.md` + ARCH-<seq> children
 - `02_design/db/` — `index.md` + `db-logical/` + `db-physical/` subdirs (logical delivered by data-modeler, physical co-designed with DBA)
-- `02_design/screens/` — `index.md` + SCN-<seq> children
+- `02_design/screens/` — `index.md` + SCN-<seq> children (required when any PRG has `type: web`)
+- `02_design/batch-jobs/` — `index.md` + BATCH-<seq> children (required when any PRG has `type: batch`; covers 스케줄·트리거·재처리 정책·리소스 한도)
 - `02_design/interfaces/` — `index.md` + IF-<seq> children
-- `02_design/programs/` — `index.md` + PRG-<seq> children (every program in the list)
+- `02_design/programs/` — `index.md` + PRG-<seq> children (every program in the list, each with frontmatter `type: web | batch | daemon`)
 - `02_design/unit-test-cases/` — `index.md` + UT-<seq> children (all UT-xxx IDs registered in RTM)
 - `02_design/security-review/` — `index.md` + SEC-<seq> children
 - `02_design/infra/` — `index.md` + INF-<seq> children (when infrastructure design is in scope)
@@ -95,11 +96,22 @@ Advisory gates (mandatory):
 - `quality-assurance` review of design artifacts
 
 RTM requirement:
-- `RTM/by-stage/02_design.md` populated: DESIGN-ID, 설계문서, PROG-ID, UT-ID for every child
+- `RTM/by-stage/02_design.md` populated for every PRG-ID with columns: REQ-ID, PRG-ID, 프로그램유형(web|batch|daemon), SCN-ID(web 필수), BATCH-ID(batch 필수), IF-ID, UT-UNIT-ID, 담당, 상태. `프로그램유형` 은 해당 `PRG-*.md` frontmatter `type` 과 일치해야 함.
+- `RTM/by-artifact/` 역색인: `SCN-*.md`, `PRG-*.md`, `BATCH-*.md`, `IF-*.md` 각각의 ID → 그 산출물이 만족하는 REQ-ID 목록을 기록 (신규 이슈 N15 설계→RQ 역매핑; 배치잡설계서도 동일 원칙 적용).
 
 Audit gate (MANDATORY regardless of scale):
 - `99_audit/02_design-audit/audit-report/index.md` + `FIND-*.md` final result = PASS
 - Invoked via `scripts/run_audit.sh <project> 02_design <prompt-file>` (helper guarantees CLI arg order and output path)
+
+Program-type artifact rules (per PRG-ID):
+
+| PRG `type` | 필수 산출물 | depends-on 연결 |
+|-----------|------------|-----------------|
+| `web` | `PRG-*.md` 프로그램설계서 + `SCN-*.md` 화면설계서 | PRG ↔ SCN (양방향) |
+| `batch` | `PRG-*.md` 프로그램설계서 + `BATCH-*.md` 배치잡설계서 | PRG ↔ BATCH (양방향) |
+| `daemon` | `PRG-*.md` 프로그램설계서 단독 | 연결 없음 (관리콘솔 노출 시 SCN 연결 허용) |
+
+Hybrid 프로그램(예: 배치 트리거 + 관리화면)은 PRG 하나에 주력 `type` 을 기록하고, 필요한 보조 설계서(SCN, BATCH) 를 모두 `depends-on` 으로 연결한다. 검증은 `validate_artifact_hierarchy.py` 의 양방향 drift-guard 가 자동 수행.
 
 Hierarchy gate:
 - `sync_back_references.py <project>` clean
@@ -113,10 +125,10 @@ Approval gate:
 ## 03_implementation
 
 Required artifacts:
-- Source code in `src/<layer>/` matching every PRG-ID in RTM
-- `03_implementation/unit-test-results/` — `index.md` + `UT-RES-<group>.md` children. Each result PASS for every UT-ID, or explicit exemption cited
+- Source code in `src/<layer>/` matching every PRG-ID in RTM. **Batch-type PRG** 는 `src/batch/<domain>/<job>.<ext>` 의 헤더 주석에 `PRG-<id>`, `BATCH-<id>`, 관련 `RQ-<id>` 를 모두 명시 (grep 가능한 고정 포맷).
+- `03_implementation/unit-test-results/` — `index.md` + `UT-RES-<group>.md` children. Each result PASS for every UT-ID, or explicit exemption cited. `UT-RES-*.md` frontmatter `depends-on` 은 해당 UT-ID 뿐 아니라 **커버하는 PRG-ID 및 (batch 유형이면) BATCH-ID** 를 모두 포함.
 - Code review records in `03_implementation/reviews/` for each implemented module (≥2 participants; author + part-leader or SWA)
-- `infra/` artifacts (Dockerfile, docker-compose.yml, migrations/, scripts/, README.md, .env.example, .github/workflows/) if infrastructure scope is in this stage
+- `infra/` artifacts (Dockerfile, docker-compose.yml, migrations/, scripts/, README.md, .env.example, .github/workflows/) if infrastructure scope is in this stage. **Batch 스케줄러·모니터링 구성 파일** (cron·systemd timer·cloud scheduler 정의, 알림 룰) 은 해당 `BATCH-*.md` 를 frontmatter `depends-on` 또는 주석 헤더로 참조해야 하며, 배치잡 없이 방치된 인프라 파일 / 인프라 없이 방치된 BATCH-ID 는 모두 stage-gate fail.
 
 Advisory gates:
 - `business-manager` stage-entry advisory
@@ -143,7 +155,7 @@ Approval gate:
 ## 04_test
 
 Required artifacts:
-- `04_test/integration-test-results/` — `index.md` + `IT-RES-<seq>.md` children (PASS/FAIL per IT-ID)
+- `04_test/integration-test-results/` — `index.md` + `IT-RES-<seq>.md` children (PASS/FAIL per IT-ID). **모든 BATCH-ID 는 최소 1개 이상의 IT-ID 로 커버** (스케줄 트리거·실패 재처리·run-window 초과 시나리오 포함); 미커버 BATCH 는 `qa-report/` 에 미시험 리스크로 명시 후 carry-forward 가능.
 - `04_test/system-test-results/` — `index.md` + `ST-RES-<seq>.md` children
 - `04_test/uat-results/` — `index.md` + `UAT-RES-<seq>.md` children (PASS/FAIL per UAT-ID)
 - `04_test/qa-report/` — `index.md` + topic children
@@ -175,9 +187,9 @@ Approval gate:
 ## 05_deployment
 
 Required artifacts:
-- `05_deployment/deployment-plan/` — `index.md` + `DEPLOY-<seq>.md` children
-- `05_deployment/operation-manual/` — `index.md` + `OPS-<seq>.md` children
-- `05_deployment/training-material/` — `index.md` + `TRAIN-<seq>.md` children
+- `05_deployment/deployment-plan/` — `index.md` + `DEPLOY-<seq>.md` children. **Batch 스케줄러 배포 단계** (cron·timer 활성화, 모니터링·알림 연결, 첫 실행 검증) 를 포함하고 관련 BATCH-ID 를 `depends-on` 으로 참조.
+- `05_deployment/operation-manual/` — `index.md` + `OPS-<seq>.md` children. **모든 BATCH-ID 에 대해 OPS-* 하나 이상**이 존재해야 하며(정상 실행 확인, 장애 탐지 경로, 수동 재실행 절차, run-window 초과 대응), `depends-on: [BATCH-...]` 를 기재.
+- `05_deployment/training-material/` — `index.md` + `TRAIN-<seq>.md` children. 운영자 교육 자료는 배치잡 일상 운영 섹션 포함.
 - Review record in `05_deployment/reviews/` with ≥2 participants (director self-review via Track B encouraged)
 
 Advisory gates:
