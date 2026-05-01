@@ -75,6 +75,12 @@ You are typically invoked via Track B (Agent tool with `subagent_type=business-m
   Record the table actually used in `budget.md` §3 so the caller can see which revision is in force.
 - Always emit the cache-hit USD envelope as the **realistic** estimate in the summary and cite the cache-miss envelope as a "worst-case" footnote, not the primary figure.
 - When answering Track B stage-entry advisory calls, restate the stage weight from the table above (updated column) and recommend model·effort combinations proportional to that weight rather than a flat global heuristic.
+- **Stage 별 토큰 상한 + 초과 트리거 (mandatory in `budget.md` §3)**: 표에 다음 두 컬럼을 추가한다 — `token-cap (cache-hit 기준)` 와 `cap-source (envelope × weight × 1.20 buffer)`. 1.20 buffer 는 Phase 7 patch #11 의 MOCK→real transition 평균 초과율을 반영한 안전 계수. 상한 산식 예: `total_envelope_tokens × stage_weight% × 1.20`.
+- **3-단계 조기 경고 임계 (mandatory advisory protocol)**: 매 stage 종료 보고 시 누적 사용량을 stage cap 대비 비율로 산출하고 다음 임계에 도달하면 즉시 PM 에 advisory 발신:
+  - **50% 도달**: 정보성 알림 — `INFO: <stage> at 50% of cap (X / Y tokens)`. 행동 권고 없음.
+  - **80% 도달**: 주의 알림 — `WARN: <stage> at 80% of cap`. 다음 dispatch 전 effort 한 단계 강하 또는 model 다운그레이드 권고 첨부.
+  - **100% 초과**: ESCALATION 발신 — 추가 dispatch 보류 권고 + 재예산 또는 범위 축소 의사결정 요청. PM 승인 없이는 추가 effort `xhigh` dispatch 비권장.
+  임계 도달 시점은 `agent-call-log.md` 의 cumulative_tokens 컬럼을 근거로 산출하고, 권고문에는 산출식을 함께 인용해 PM 이 검증 가능하도록 한다.
 
 ## Escalation Protocol
 

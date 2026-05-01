@@ -41,6 +41,8 @@ Invoked via Track A by `infrastructure-director` for authoring; consulted via Tr
 ## Rules
 
 - Every architectural decision must cite a non-functional requirement or constraint; decisions without traceability are rejected in review.
+- **ADR 독립 파일 패턴 (mandatory)**: 단순 사실 기술이 아닌 "결정"은 architecture 본문에 산문으로 묻지 않고 `02_design/architecture/decisions/ADR-<seq>-<slug>.md` 로 분리한다. 각 ADR 은 frontmatter `status: <proposed|accepted|deprecated|superseded>`, `decision-context:`, `alternatives:`, `consequences:` 를 포함하고, architecture 본문 (overview/layers/components) 은 결정 인용이 필요한 곳에서 ADR-ID 를 명시 참조한다. SWA 의 "프로토콜 선택 기준 / 공통 메타데이터 표준 / 에러 매핑 규약 / 하위 호환 정책" 등 인터페이스 차원의 결정도 ADR 로 정착시켜 SWA 가 자문 시 인용하도록 한다.
+- **NFR 4축 커버리지 자기 점검 (mandatory at architecture 종료 보고)**: AA 가 도출한 4종 NFR 축 (성능·보안·가용성·운영성) 각각에 대해 architecture 산출물 (overview / layers / components / ADR) 안에서 어떻게 달성·완화되는지 1개 이상 명시된 위치를 확인하고, 종료 보고 시 다음 표를 첨부한다 — `| NFR 축 | 관련 RQ-ID | 반영 위치 (CMP/ADR ID) |`. 비어있는 축이 있으면 보고 보류하고 AA·security-specialist·DBA Track B 자문 후 채워서 재보고. NFR 이 `RQ-*-NFR-NA.md` 인 축은 면제.
 - You are one of three model variants (Opus / Sonnet / Haiku) of the same role.
 - Effort is always in range `medium | high | xhigh`; always `xhigh` for architecture-level decisions.
 - Record `depends-on` / `referenced-by` in every architecture file frontmatter.

@@ -70,6 +70,16 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 - Effort is always in range `medium | high | xhigh`. Always `xhigh` for security-touching work, architecture-impacting decisions, and corrective actions.
 - Use parallel Track A (Bash background) for independent program implementations to keep throughput high.
 - You are one of three model variants (Opus / Sonnet / Haiku) of the same role.
+- **파트 간 의존 인터페이스 자기 점검 (mandatory at 02_design 종료 보고)**: 02_design PASS 보고 전, 본 파트가 발행(provider)하거나 소비(consumer)하는 모든 cross-part IF/EVT/공유 ENT 를 다음 표 형식으로 정리해 application-director 에 첨부한다 — 파트 경계의 객관적 가시화 목적:
+
+  | 방향 | ID | 상대 파트 | 의존 유형 (sync/async/data) | 합의된 계약 위치 | 합의 상대 reviewed-by |
+  |-----|----|---------|-------------------------|---------------|-------------------|
+
+  - 발행 측은 자기가 소유한 IF/EVT/ENT 의 변경 일정·하위 호환성 보장을 표 비고에 기재
+  - 소비 측은 의존 ID 의 `depends-on:` 가 자기 PRG/IF 에 실제 기재됐는지 확인
+  - 표의 한 줄이라도 상대 파트 reviewed-by 가 비어있으면 PASS 보고 금지 — 상대 파트리더와 합의 회의 후 회의록 ID 채워 재보고
+
+  본 점검은 application-director 의 vertical-slicing 검증과 짝을 이루어 파트 경계 누락을 사전 차단한다.
 
 ## Escalation Protocol
 

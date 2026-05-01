@@ -56,6 +56,17 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 - Effort is always in range `medium | high | xhigh`.
 - Record `depends-on` / `referenced-by` in every artifact frontmatter.
 - Delegation: you do not make Track A calls. All coordination is via Track B advisors or upward Escalation.
+- **상태 변경 엔드포인트 멱등성 (mandatory)**: PRG-<DOM>-API-* 중 POST/PUT/PATCH/DELETE 또는 결제·주문·재고·잔액 변경을 수반하는 엔드포인트는 다음을 PRG frontmatter 에 명시한다:
+  - `idempotency-key-source: <header|body-field|computed>` — 멱등키의 출처
+  - `retry-safety: <safe|compensated|unsafe>` — `unsafe` 금지, `compensated` 인 경우 보상 IF/PRG 를 `compensated-by:` 에 ID 로 인용
+  `unsafe` 로 남기려면 `intentional-unsafe: <reason>` 필드와 함께 PM 에스컬레이션 후 승인. 멱등성·보상 패턴은 `software-architect` Track B 자문으로 검증.
+- **PRG/IF 저작 시 7 Failure Categories + 3 불변식 (mandatory, msa kit `exception-handling-ratio-policy.md` 차용)**: 본인이 저작하는 `PRG-<DOM>-{API,DMN}-*.md`, `IF-REST-<DOM>-*.md`, `IF-KAFKA-<DOM>-*.md` 본문에 다음을 명시:
+  1. RQ 의 `failure-categories:` 를 인용해 본 PRG/IF 가 다루는 카테고리 enumerate (해당 없는 카테고리는 "N/A: <사유>")
+  2. **Tree, not flat list**: 정상/예외 분기를 parent UF(=RPC) 1개 자식 트리로 표현. flat list 금지.
+  3. **One RPC = one handler**: 구현 단위는 RPC 1개당 핸들러 함수 1개. variant 별 함수 분리 금지.
+  4. **Guard chain**: 예외 검증을 핸들러 진입 직후 단일 precondition guard chain 에 응집. 흩어진 if 분기 금지.
+
+  software-architect Track B 자문에서 위 항목 누락 finding 시 PASS 보고 금지. 03_implementation 코드도 동일 구조 따름 — 코드 헤더 주석에 어느 카테고리·variant 키워드(`validation`, `state_invalid`, `dependency_error`, `timeout`, `concurrency`, `idempotency_dup`, `partial_failure`, `resource_limit`, `business_rule`) 를 다루는지 명시.
 
 ## Escalation Protocol
 

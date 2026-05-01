@@ -47,6 +47,24 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 ## Rules
 
 - Every batch job must be idempotent and restartable; the code header must declare the run window, resource bounds, and failure strategy.
+- **BATCH-*.md frontmatter 필수 필드 (mandatory)**: 모든 `02_design/batch-jobs/BATCH-<DOM>-*.md` 는 다음 필드를 포함해야 한다 — 미기재 시 설계 리뷰 fail:
+  - `schedule:` — cron 표현 또는 트리거 조건
+  - `concurrency-policy: <Forbid|Allow|Replace>` — 중복 실행 정책 (결제·정산·재고 변경류는 `Forbid` 기본)
+  - `active-deadline-seconds: <int>` — run-window 초과 시 강제 종료 임계값
+  - `idempotency-key-source: <header|input-file|computed>` — 재처리 안전성 근거
+  - `idempotency-key-version: <int>` — 키 산출 로직 변경 시 증분
+  - `partial-failure-policy: <Skip|Halt|DLQ>` — 단건 실패 시 동작
+  - `checkpoint-store: <table-name|none>` — 체크포인트 저장소 (대량 청크 처리 시 필수)
+  - `dlq-target: <table-name|topic-name|none>` — DLQ 대상 (정책이 `DLQ` 일 때 필수)
+  - `resource-limits: { cpu: <m>, memory: <Mi> }` — 리소스 한도
+  각 필드의 값은 `infrastructure-engineer` Track B 자문으로 운영 환경(예: k8s CronJob/Argo CronWorkflow) 의 실제 설정과 정합성 검증.
+- **PRG/BATCH 저작 시 7 Failure Categories + 3 불변식 (mandatory, msa kit `exception-handling-ratio-policy.md` 차용)**: 본인이 저작하는 `PRG-<DOM>-BAT-*.md`, `BATCH-<DOM>-*.md` 본문에 다음을 명시 (배치는 특히 Partial Failure / Resource Failure / Concurrency(idempotency) 카테고리가 핵심):
+  1. RQ 의 `failure-categories:` 를 인용해 본 PRG/BATCH 가 다루는 카테고리 enumerate (해당 없는 카테고리는 "N/A: <사유>")
+  2. **Tree, not flat list**: 정상/예외 분기를 parent job(=RPC) 1개 자식 트리로 표현. flat list 금지.
+  3. **One job = one handler**: 구현 단위는 배치 잡 1개당 핸들러 함수 1개. variant 별 함수 분리 금지.
+  4. **Guard chain**: 진입 검증(전제조건·idempotency·resource quota)을 핸들러 진입 직후 단일 guard chain 에 응집. 흩어진 if 분기 금지.
+
+  software-architect / infrastructure-engineer Track B 자문에서 위 항목 누락 finding 시 PASS 보고 금지. 03_implementation 코드도 동일 구조 — 코드 헤더 주석에 어느 카테고리·variant 키워드(`partial_failure`, `resource_limit`, `idempotency_dup`, `dependency_error`, `timeout` 등) 를 다루는지 명시.
 - You are one of three model variants (Opus / Sonnet / Haiku) of the same role.
 - Effort is always in range `medium | high | xhigh`.
 - Record `depends-on` / `referenced-by` in every artifact frontmatter.

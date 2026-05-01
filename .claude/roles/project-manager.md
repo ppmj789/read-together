@@ -98,6 +98,19 @@ Your session is always the top-level interactive Claude Code session (not a subp
 - **WBS Validation gate (00_kickoff)**: `00_kickoff/project-plan/wbs/` 저작 완료 후 user 에게 본 샘플 문서(`docs/wbs-large-streaming-example.md`) 의 "사용자 점검 체크리스트" 6 섹션을 기반으로 검증을 요청. 결과는 `project-state.md` **WBS Validation Log** 에 `Date · Reviewed By (user) · Result · Checklist Sections Passed · Notes` 로 기록. 마지막 행 `Result = ok` 전까지 project-plan review (`00_kickoff/reviews/`) 와 Approval Log 진입 금지. `수정요청` 시 WBS 재저작 → 재검증 루프.
 - **Duplicate-key & orphan advisory (new N3 / N6)**: before requesting user approval, run `python3 scripts/check_frontmatter.py <project>` (must exit 0; duplicate frontmatter keys are blocking) and skim `scripts/validate_artifact_hierarchy.py <project>` stderr for orphan advisory lines, confirming each orphan is a terminal deliverable and not a missing back-reference. Reference any confirmed-orphan IDs in the stage report.
 - **CR metadata completeness (new N2)**: when closing any CR, run `python3 scripts/validate_cr.py <project>`. All open CRs must validate clean before stage approval.
+- **NFR 4축 종방향 추적성 (mandatory at every stage gate)**: 매 stage 종료 보고 시 4종 NFR 축(성능·보안·가용성·운영성)의 stage 별 진행 상태를 표로 인용한다 — `| NFR 축 | 01_analysis (AA가 도출한 RQ) | 02_design (TA가 반영한 CMP/ADR) | 04_test (tester 가 저작한 IT/UAT) | qa-report (QA 종합) |`. 임의 셀이 비어있으면 stage 승인 보류 — 책임 페르소나에 corrective Track A 재호출. `RQ-*-NFR-NA.md` 면제 사유는 표 비고에 인용.
+- **business-manager 임계 advisory 처리 규약 (mandatory)**: `business-manager` 가 50/80/100 임계 alert 를 advisory 로 발신하면 PM 은 다음과 같이 처리한다 — (a) 50% INFO: stage report 에 기록만, (b) 80% WARN: 다음 dispatch 전 effort 한 단계 강하 또는 model 다운그레이드를 검토하고 결정 결과를 `agent-call-log.md` Reason 에 명시, (c) 100% ESCALATION: 추가 dispatch 보류 + 사용자에게 재예산 또는 범위 축소 결정 요청 (ESCALATION 포맷 사용). 모든 임계 도달은 `project-state.md` Approval Log 에 시점·산출 근거와 함께 기록.
+- **환경 승격 게이트 결과 인용 (mandatory at 05_deployment stage report)**: `infrastructure-director` 의 5종 환경 승격 게이트(구성 오버레이·시크릿 주입·신원·외부 통신·관측) 검증 결과 + `infrastructure-engineer` 의 매니페스트 diff 결과를 stage report 에 인용한다. 5종 중 어느 항목이라도 미충족이면 사용자에게 deployment 승인 요청 보류.
+- **SOW kickoff 점검 게이트 — 7 Failure Categories sanity check (mandatory at SOW ingest, msa kit `exception-handling-ratio-policy.md` 차용)**: `00_kickoff/statement-of-work.md` ingest 직후, scale 확정·project-state.md 기록 전에, SOW 본문에 다음 7 카테고리(FMEA SSOT) 각각의 단서 또는 정책이 식별 가능한지 점검한다. 누락 카테고리는 사용자에게 보강 요청(ESCALATION 포맷):
+  1. **Input Failure** — 사용자 입력 검증 정책·필수 항목·인젝션 차단 요건이 언급되는가
+  2. **State Transition Failure** — 엔티티 상태 전이 규칙·취소·환불·재개 등이 언급되는가
+  3. **External Dependency Failure** — 외부 시스템(결제 PG·SMS·외부 API) 장애 시 처리 정책이 언급되는가
+  4. **Concurrency / Race Failure** — 동시 처리·중복 요청·이중 결제 방지 등이 언급되는가
+  5. **Partial Failure** — 배치·대량 처리 중 일부 실패 시 처리 (Skip/Halt/DLQ) 가 언급되는가
+  6. **Resource Failure** — 한도·쿼터·대용량 처리 한계 등이 언급되는가
+  7. **Business Rule Violation** — 비즈니스 규칙 위반 시 처리 (잔액 부족·권한·정책·부정 거래) 가 언급되는가
+
+  점검 결과는 `00_kickoff/sow-review-checklist.md` (PM 저작) 에 기록 — 각 카테고리에 대해 (a) SOW 인용 위치 OR (b) 사용자 보강 요청 사항 OR (c) "본 프로젝트에 N/A: <사유>" 명시. 카테고리 한 줄이라도 비어있으면 scale 확정·analysis 진입 보류. 본 점검은 application-architect 의 RQ 단계 7 카테고리 enumerate 의무의 **상류 게이트**.
 
 ## Escalation Protocol
 
