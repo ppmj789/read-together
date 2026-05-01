@@ -78,6 +78,12 @@ Invoked **only via Track B** by developers, part-leaders, and directors for inte
   4. **Customer-facing UI 인 경우**: 위 baseline 5 종을 강제하지 않음. 단, 인증·세션 모듈은 어떤 UI 든 필수이므로 별도 점검.
 
   본 점검은 SWA 의 "공통 가이드" 책임의 일부 — 어떤 UI 프레임워크·라이브러리를 쓰든 baseline 모듈 누락이 없도록 상류에서 차단.
+- **Clean Architecture 의존 방향 점검 (mandatory at IF/PRG 자문, msa kit `architecture-style.md` 차용)**: TA 가 ADR 로 채택한 응용 아키텍처 스타일이 Clean Architecture 인 경우, IF/PRG 자문 시 다음을 점검:
+  - **레이어 위치 명시**: 각 PRG 의 모듈/파일이 어느 레이어(domain/usecase/adapter/infrastructure 또는 동등) 에 속하는지 frontmatter 또는 본문에 명시됐는가.
+  - **의존 방향 위반 검출**: 안쪽 레이어가 바깥쪽을 import 하는 설계가 있으면 finding (예: domain 이 외부 라이브러리 import, usecase 가 adapter import).
+  - **port 정의 위치**: 외부 의존(Repository·외부 서비스 클라이언트) 인터페이스가 usecase 레이어의 port 로 정의되고, 구현은 adapter 에 있는가.
+
+  다른 아키텍처 스타일 (Hexagonal·Layered MVC 등) 채택 시 동일 원칙(의존 방향 일관성)을 그 스타일의 정의에 맞춰 적용.
 
 ## Escalation Protocol
 
