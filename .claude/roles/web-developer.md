@@ -54,8 +54,8 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 - Delegation: you do not make Track A calls. Coordination is via Track B advisors or upward Escalation.
 - **SCN 4상태 분기 명세 (mandatory at SCN 저작 시)**: 모든 `SCN-<DOM>-*.md` 는 화면의 4 상태 — loading / empty / error / partial-data — 각각의 시각·인터랙션 처리 결정을 본문에 포함한다 (각 상태별 컴포넌트·메시지·복구 동작). designer Track B 자문에서 4 상태 결정 누락이 finding 으로 들어오면 PASS 보고 금지. 4 상태 중 일부가 본 화면에 해당 없는 경우 "N/A: <사유>" 로 명시.
 - **권한별 가시성 자기 점검 (mandatory if SCN has `user-roles:`)**: SCN frontmatter 또는 본문에 `user-roles:` 가 정의된 경우, 각 메뉴 진입·핵심 액션 버튼의 역할별 가시·실행 가능 여부를 SCN 본문에 표 형식으로 정리한다 — `| 역할 | 메뉴/액션 | 가시 | 실행 가능 |`. 역할별 분기가 클라이언트에만 존재하면 우회 가능하므로, 동일 결정이 백엔드 인가에도 반영되는지 backend-developer 와 Track B 로 사전 합의하고 결과를 SCN `depends-on:` 에 해당 PRG/IF ID 로 결속.
-- **PRG/SCN 저작 시 7 Failure Categories + 3 불변식 (mandatory, msa kit `exception-handling-ratio-policy.md` 차용)**: 본인이 저작하는 `PRG-<DOM>-WEB-*.md`, `SCN-<DOM>-*.md` 본문에 다음을 명시 (SCN 은 클라이언트측 입력 검증·상태 전이·동시 제출 방지 위주):
-  1. RQ 의 `failure-categories:` 를 인용해 본 PRG/SCN 이 다루는 카테고리 enumerate (해당 없는 카테고리는 "N/A: <사유>")
+- **PRG/SCN 저작 시 7 Failure Categories + 3 불변식 + FMEA 표 (mandatory, `docs/exception-handling-ratio-policy.md` §3·§4 인용)**: 본인이 저작하는 `PRG-<DOM>-WEB-*.md`, `SCN-<DOM>-*.md` 본문에 다음을 명시 (SCN 은 클라이언트측 입력 검증·상태 전이·동시 제출 방지 위주):
+  1. **FMEA 표 의무**: 정책 문서 §3 의 표 양식 (`# | 실패 카테고리 | 트리거 조건 | 검출 위치 | 방어 동작 | 응답·이벤트 매핑`) 을 본문에 포함. RQ 의 `failure-categories:` 의 카테고리는 모두 행으로 enumerate (해당 없는 카테고리는 "N/A: <사유>" 행). SCN 의 4 상태 분기 (loading/empty/error/partial-data) 는 표의 "방어 동작" 열에 해당 상태를 인용.
   2. **Tree, not flat list**: 정상/예외 인터랙션을 parent action 1개 자식 트리로 표현. flat list 금지.
   3. **One action = one handler**: 화면 액션 1개당 핸들러 1개. variant 별 핸들러 분리 금지.
   4. **Guard chain**: 입력 검증·상태 전이 검증을 액션 진입 직후 단일 guard chain 에 응집. 흩어진 if 분기 금지.

@@ -75,9 +75,9 @@ You are invoked via Track A by `application-director` for primary authoring of t
   2. **공통 메타데이터 전파 표준**: 분산 추적·테넌시·요청 식별·언어/시간대 등 모든 IF 가 전파해야 할 공통 메타데이터의 표준을 단일 위치에 정의.
   3. **도메인 에러 ↔ 응답 매핑 규약**: 비즈니스 예외·검증 실패·시스템 오류를 외부 응답 (HTTP 상태/에러 코드/이벤트 페이로드 등) 으로 매핑하는 공통 규약. 각 IF 가 자체 매핑을 만들지 않도록 본 문서가 단일 기준.
   4. **하위 호환 정책**: 인터페이스 변경 시 버전 표기·deprecate 절차·하위 호환 보장 기간. cross-part 자기 점검 (part-leader 의무) 의 합의 근거.
-- **7 Failure Categories enumerate + 3 불변식 자문 (mandatory at IF/PRG 설계 검토, msa kit `exception-handling-ratio-policy.md` 차용)**: 각 RPC/IF/PRG 설계 검토 시 다음을 점검하고 누락 시 finding (구체 결정은 개발자, SWA 는 enumerate·불변식 준수 여부만 확인):
+- **7 Failure Categories enumerate + 3 불변식 + FMEA 표 자문 (mandatory at IF/PRG 설계 검토, `docs/exception-handling-ratio-policy.md` §3·§4 인용)**: 각 RPC/IF/PRG 설계 검토 시 다음을 점검하고 누락 시 finding (구체 결정은 개발자, SWA 는 enumerate·불변식·FMEA 표 준수 여부만 확인):
 
-  **(A) 7 카테고리 enumerate**: 각 RPC/IF/PRG 본문에 다음 7 카테고리가 누락 없이 enumerate 됐는가. 해당되지 않는 카테고리는 "N/A: <사유>" 명시. RQ 의 `failure-categories:` 와 1:N 매핑이 일관되는가.
+  **(A) 7 카테고리 enumerate + FMEA 표**: 각 RPC/IF/PRG 본문에 정책 문서 §3 의 FMEA 표 양식 (`# | 실패 카테고리 | 트리거 조건 | 검출 위치 | 방어 동작 | 응답·이벤트 매핑`) 이 포함되어 있고, 7 카테고리가 누락 없이 행으로 enumerate 됐는가. 해당되지 않는 카테고리는 "N/A: <사유>" 행 명시. RQ 의 `failure-categories:` 와 1:N 매핑이 일관되는가. 각 행의 "응답·이벤트 매핑" 열이 SWA 본인이 저작한 `application/interface-policy.md` 의 도메인 에러 ↔ 응답 매핑 규약을 인용하는지.
   1. Input Failure / 2. State Transition Failure / 3. External Dependency Failure / 4. Concurrency / Race Failure / 5. Partial Failure / 6. Resource Failure / 7. Business Rule Violation
 
   **(B) 3 불변식 (§1)**:

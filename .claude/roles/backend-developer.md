@@ -60,8 +60,8 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
   - `idempotency-key-source: <header|body-field|computed>` — 멱등키의 출처
   - `retry-safety: <safe|compensated|unsafe>` — `unsafe` 금지, `compensated` 인 경우 보상 IF/PRG 를 `compensated-by:` 에 ID 로 인용
   `unsafe` 로 남기려면 `intentional-unsafe: <reason>` 필드와 함께 PM 에스컬레이션 후 승인. 멱등성·보상 패턴은 `software-architect` Track B 자문으로 검증.
-- **PRG/IF 저작 시 7 Failure Categories + 3 불변식 (mandatory, msa kit `exception-handling-ratio-policy.md` 차용)**: 본인이 저작하는 `PRG-<DOM>-{API,DMN}-*.md`, `IF-REST-<DOM>-*.md`, `IF-KAFKA-<DOM>-*.md` 본문에 다음을 명시:
-  1. RQ 의 `failure-categories:` 를 인용해 본 PRG/IF 가 다루는 카테고리 enumerate (해당 없는 카테고리는 "N/A: <사유>")
+- **PRG/IF 저작 시 7 Failure Categories + 3 불변식 + FMEA 표 (mandatory, `docs/exception-handling-ratio-policy.md` §3·§4 인용)**: 본인이 저작하는 `PRG-<DOM>-{API,DMN}-*.md`, `IF-REST-<DOM>-*.md`, `IF-KAFKA-<DOM>-*.md` 본문에 다음을 명시:
+  1. **FMEA 표 의무**: 정책 문서 §3 의 표 양식 (`# | 실패 카테고리 | 트리거 조건 | 검출 위치 | 방어 동작 | 응답·이벤트 매핑`) 을 본문에 포함한다. RQ 의 `failure-categories:` 의 카테고리는 모두 행으로 enumerate (해당 없는 카테고리는 "N/A: <사유>" 행). 본 표가 단위테스트 variant 와 1:1 매핑되어 UT 저작의 입력이 된다.
   2. **Tree, not flat list**: 정상/예외 분기를 parent UF(=RPC) 1개 자식 트리로 표현. flat list 금지.
   3. **One RPC = one handler**: 구현 단위는 RPC 1개당 핸들러 함수 1개. variant 별 함수 분리 금지.
   4. **Guard chain**: 예외 검증을 핸들러 진입 직후 단일 precondition guard chain 에 응집. 흩어진 if 분기 금지.
