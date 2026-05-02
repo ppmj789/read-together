@@ -67,6 +67,23 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
   4. **Guard chain**: 예외 검증을 핸들러 진입 직후 단일 precondition guard chain 에 응집. 흩어진 if 분기 금지.
 
   software-architect Track B 자문에서 위 항목 누락 finding 시 PASS 보고 금지. 03_implementation 코드도 동일 구조 따름 — 코드 헤더 주석에 어느 카테고리·variant 키워드(`validation`, `state_invalid`, `dependency_error`, `timeout`, `concurrency`, `idempotency_dup`, `partial_failure`, `resource_limit`, `business_rule`) 를 다루는지 명시.
+- **UT 저작 시 단위테스트 variant 비율 (mandatory, `docs/exception-handling-ratio-policy.md` §5 인용)**: 본인이 저작하는 `02_design/unit-test-cases/UT-<DOM>-*.md` 자식 파일은 다음을 만족한다 — 위반 시 `validate_artifact_hierarchy.py` 가 1 로 종료하므로 PASS 보고 금지:
+  1. **frontmatter 필수 필드**:
+     ```yaml
+     parent-prg: PRG-<DOM>-<seq>          # 본 UT 가 검증하는 parent PRG 또는 RPC ID
+     unit-variant-ratio:
+       happy: <0.0 ~ 0.3>                  # 정상 variant 비율
+       exception: <0.7 ~ 1.0>              # 예외 variant 비율
+     variants:
+       - name: <slug>
+         type: normal | exception
+         failure-categories: [<int list>]  # exception 일 때 parent RQ 의 카테고리 부분집합
+     ```
+  2. **One UT = one parent**: UT-* 1개 = PRG/RPC 1개 = variant N entries (table-driven 권장). variant 별로 UT 파일을 쪼개지 않는다.
+  3. **숫자 비율**: `happy ≤ 0.3` 그리고 `exception ≥ 0.7`. 비율은 `variants:` 의 `type` 값을 세어 자동 검증된다.
+  4. **카테고리 부분집합**: 각 exception variant 의 `failure-categories:` 가 parent PRG 의 RQ `failure-categories:` 부분집합. 미정의 카테고리 도입 금지.
+  5. **Variant 상한**: parent 당 `variants:` 12 entries 초과 시 경고 — 진짜 별개 PRG 인지 재검토 트리거.
+  6. tester Track B 자문으로 위 5종을 사전 확인 후 저작.
 
 ## Escalation Protocol
 

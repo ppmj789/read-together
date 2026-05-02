@@ -68,6 +68,14 @@ Your Track A session retains full tools including Bash for executing test suites
   - Business Rule → `business_rule`
 
   해당 RQ 의 `failure-categories:` 가 비어있거나 N/A 인 경우 면제. 카테고리는 enumerate 됐는데 variant 가 1건도 없는 RQ 는 PASS 보고 보류 → AA Track A 재호출 또는 본 페르소나의 추가 저작.
+- **단위테스트 variant 비율 자문 (mandatory at 02_design UT Track B 자문 응답 시, `docs/exception-handling-ratio-policy.md` §5 인용)**: 개발자가 저작하는 `02_design/unit-test-cases/UT-<DOM>-*.md` 자식 파일에 대해 다음 5종을 점검하고 누락 시 finding 으로 회신:
+  1. **숫자 비율**: frontmatter `unit-variant-ratio:` 가 `happy ≤ 0.3` 그리고 `exception ≥ 0.7` 인지. 위반 시 PASS 자문 보류.
+  2. **One UT = one parent**: UT-*.md 1개 = parent PRG/RPC 1개 = `variants:` 리스트 N entries. variant 마다 UT 파일 분리 (flat list) 발견 시 finding.
+  3. **카테고리 정합**: 각 exception variant 의 `failure-categories:` 가 parent PRG 의 RQ `failure-categories:` 부분집합인지. 미정의 카테고리 도입은 finding.
+  4. **Variant 상한**: parent 당 `variants:` 12 entries 초과 시 경고 — 진짜 별개 기능인지 재검토 트리거.
+  5. **트리 구조 (Tree, not flat list)**: `variants:` 가 parent 1개의 자식 노드로 표현됐는지. parent 가 다른 PRG 인 variant 가 같은 UT-* 에 섞여 있으면 finding.
+
+  본 페르소나는 UT Track A 저작자가 아니므로 자문·리뷰 응답으로만 위 항목을 점검한다. 수정·재저작은 책임 개발자(backend/web/batch)의 Track A 재호출로 처리.
 
 ## Escalation Protocol
 
