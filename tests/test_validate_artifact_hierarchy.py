@@ -294,7 +294,7 @@ def test_architecture_owner_wrong_fails():
         )
         r = _validate(name)
         assert r.returncode != 0
-        assert "architecture owner mismatch" in r.stdout
+        assert "architecture/technology owner mismatch" in r.stdout
     finally:
         _cleanup(name)
 
@@ -312,5 +312,44 @@ def test_architecture_owner_index_md_skipped():
         )
         r = _validate(name)
         assert r.returncode == 0, r.stdout + r.stderr
+    finally:
+        _cleanup(name)
+
+
+# ---------- design-system owner check -------------------------------------
+
+def test_design_system_owner_correct_passes():
+    name = "hv-ds-ok"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        ds = demo / "02_design" / "design-system"
+        (ds / "colors.md").write_text(
+            "---\nid: DS-COLORS\ntitle: t\nowner: designer\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        (ds / "typography.md").write_text(
+            "---\nid: DS-TYPO\ntitle: t\nauthor: designer-sonnet\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode == 0, r.stdout + r.stderr
+    finally:
+        _cleanup(name)
+
+
+def test_design_system_owner_wrong_fails():
+    name = "hv-ds-bad"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        bad = demo / "02_design" / "design-system" / "colors.md"
+        bad.write_text(
+            "---\nid: DS-COLORS\ntitle: t\nowner: web-publisher\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode != 0
+        assert "02_design/design-system owner mismatch" in r.stdout
     finally:
         _cleanup(name)

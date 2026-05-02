@@ -18,7 +18,8 @@ Checks:
 4. 02_design/architecture/<subdomain>/ 자식 파일의 owner/author 페르소나가
    해당 subdomain 의 책임 페르소나와 일치 (application→AA·SWA,
    technology→TA, data→data-modeler, security→security-specialist).
-5. Audit-authored artifacts under 99_audit/: bidirectional checks are advisory
+5. 02_design/<area>/ 단일 페르소나 영역 owner 정합 (design-system→designer).
+6. Audit-authored artifacts under 99_audit/: bidirectional checks are advisory
    only, because audit-team is forbidden from editing artifacts outside
    99_audit/ and therefore cannot inject back-references into peer
    corrective-action files (Phase 7 patch #19).
@@ -247,6 +248,11 @@ ARCHITECTURE_OWNERS = {
     "security":    {"security-specialist"},
 }
 
+# 02_design/<area>/ 단일 페르소나 owner 정합. index.md 는 검증 제외.
+DESIGN_AREA_OWNERS = {
+    "design-system": {"designer"},
+}
+
 _MODEL_SUFFIXES = ("-opus", "-sonnet", "-haiku")
 
 
@@ -255,6 +261,32 @@ def _strip_model_suffix(role: str) -> str:
         if role.endswith(suffix):
             return role[: -len(suffix)]
     return role
+
+
+def _check_owner_dir(project_dir: pathlib.Path, base: pathlib.Path,
+                    allowed: set, label: str) -> list:
+    issues = []
+    if not base.is_dir():
+        return issues
+    for md in base.rglob("*.md"):
+        if md.name == "index.md":
+            continue
+        text = md.read_text()
+        fm_text, _body = split_frontmatter(text)
+        if fm_text is None:
+            continue
+        fm = parse_frontmatter(fm_text)
+        raw = fm.get("owner") or fm.get("author")
+        if not raw:
+            continue
+        owner = _strip_model_suffix(str(raw).strip())
+        if owner not in allowed:
+            rel = md.relative_to(project_dir)
+            issues.append(
+                f"{label} owner mismatch: {rel} has owner/author='{raw}', "
+                f"expected one of {sorted(allowed)}"
+            )
+    return issues
 
 
 def check_architecture_owner(project_dir: pathlib.Path) -> list:
@@ -271,26 +303,23 @@ def check_architecture_owner(project_dir: pathlib.Path) -> list:
     issues = []
     for subdomain, allowed in ARCHITECTURE_OWNERS.items():
         base = project_dir / "02_design" / "architecture" / subdomain
-        if not base.is_dir():
-            continue
-        for md in base.rglob("*.md"):
-            if md.name == "index.md":
-                continue
-            text = md.read_text()
-            fm_text, _body = split_frontmatter(text)
-            if fm_text is None:
-                continue
-            fm = parse_frontmatter(fm_text)
-            raw = fm.get("owner") or fm.get("author")
-            if not raw:
-                continue
-            owner = _strip_model_suffix(str(raw).strip())
-            if owner not in allowed:
-                rel = md.relative_to(project_dir)
-                issues.append(
-                    f"architecture owner mismatch: {rel} has owner/author='{raw}', "
-                    f"expected one of {sorted(allowed)} under architecture/{subdomain}/"
-                )
+        issues.extend(
+            _check_owner_dir(project_dir, base, allowed,
+                             f"architecture/{subdomain}")
+        )
+    return issues
+
+
+def check_design_area_owner(project_dir: pathlib.Path) -> list:
+    """02_design/<area>/ 단일 페르소나 owner 정합 검증 (예: design-system →
+    designer 단독).
+    """
+    issues = []
+    for area, allowed in DESIGN_AREA_OWNERS.items():
+        base = project_dir / "02_design" / area
+        issues.extend(
+            _check_owner_dir(project_dir, base, allowed, f"02_design/{area}")
+        )
     return issues
 
 
@@ -337,6 +366,7 @@ def main():
     all_issues.extend(check_bidirectional_deps(project_dir, id_map, group_id_map))
     all_issues.extend(check_depth_limit(project_dir))
     all_issues.extend(check_architecture_owner(project_dir))
+    all_issues.extend(check_design_area_owner(project_dir))
     report_orphans(project_dir, id_map)
 
     if all_issues:
