@@ -56,6 +56,7 @@ STAGE_AREAS = {
     "02_design/db": "데이터베이스",
     "02_design/db/logical": "논리 데이터 모델",
     "02_design/db/physical": "물리 데이터 모델",
+    "02_design/design-system": "디자인 시스템 (designer)",
     "02_design/screens": "화면 설계",
     "02_design/batch-jobs": "배치잡 설계",
     "02_design/interfaces": "인터페이스 설계",
