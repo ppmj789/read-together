@@ -102,7 +102,8 @@ Required artifacts (directory + children):
   - `02_design/architecture/data/` (data-modeler 저작) — 응용 차원 데이터 아키 (논리 모델은 `02_design/db/logical/` 와 별도, 큰 그림 측면)
   - `02_design/architecture/security/` (security-specialist 저작) — 응용·기술 차원 보안 아키 (보안 리뷰 산출물 `02_design/security-review/` 와 별도)
 - `02_design/db/` — `index.md` + `db-logical/` + `db-physical/` subdirs (logical delivered by data-modeler, physical co-designed with DBA)
-- `02_design/screens/` — `index.md` + SCN-<seq> children (required when any PRG has `type: web`)
+- `02_design/design-system/` — `index.md` + designer 저작 5종 (overview·colors·typography·layout·logo-brand). `type: web` PRG 가 1개 이상 있는 프로젝트는 필수. SCN 과 마크업이 인용할 단일 디자인 출처.
+- `02_design/screens/` — `index.md` + SCN-<seq> children (required when any PRG has `type: web`). web-developer 단독 저작; SCN 본문은 design-system 토큰을 인용한다.
 - `02_design/batch-jobs/` — `index.md` + BATCH-<seq> children (required when any PRG has `type: batch`; covers 스케줄·트리거·재처리 정책·리소스 한도)
 - `02_design/interfaces/` — `index.md` + IF-<seq> children
 - `02_design/programs/` — `index.md` + PRG-<seq> children (every program in the list, each with frontmatter `type: web | batch | daemon`)
