@@ -54,8 +54,17 @@ WBS validation gate (MANDATORY, precedes project-plan review and Approval):
 - 결과가 `수정요청` 이면 PM 이 WBS 를 재저작한 뒤 동일 표에 다음 줄(`ok`) 을 추가해야 한다. 마지막 행이 `ok` 가 아니면 Approval gate 진입 불가.
 - WBS Validation 통과 없이 project-plan review 또는 01_analysis 진입을 시도하는 것은 stage-gate 위반.
 
+Project-fit Hook Generation gate (MANDATORY, WBS Validation 직후, project-plan review·Approval 직전):
+- PM 이 SOW·WBS·project-plan/scope 분석으로 본 프로젝트에 fit 한 검증 hook 후보 5–8 건을 추천 (예: 7 카테고리 RQ enumerate 완전성, 외부 의존 RQ → IT variant 4종 매핑, 도메인 파트 owner 화이트리스트, RQ↔PRG↔UT 매핑 완전성, FMEA 표 카테고리 정합, large mode by-part 강제 등 — 후보 종류는 사용자 협의 시점에 동적 결정).
+- PM 이 사용자에게 후보 제시 → 사용자 선택·추가·제외 → 합의 명세를 prompt 로 묶어 `policy-engineer-opus` Track A dispatch.
+- `policy-engineer` 가 `projects/<name>/scripts/` 에 `run_project_hooks.sh` 디스패처 + `hook_<stage>_<purpose>.py` 개별 hook + `hooks-manifest.md` 저작.
+- PM 이 dry-run 으로 모든 stage 에 대해 `bash projects/<name>/scripts/run_project_hooks.sh <stage>` 실행하고 exit 0 (hook 부재 stage 는 INFO + exit 0) 확인.
+- 결과를 `project-state.md` **Hook Generation Log** 표에 기록: `Date · Hooks Authored (count) · Manifest Path · Dry-run Result · Notes`.
+- 사용자가 "hook 협의 skip" 을 명시 선택한 경우는 매니페스트에 그 사실을 기재하고 통과 (placeholder 디스패처는 모든 stage 에서 INFO + exit 0 으로 동작).
+- 본 게이트 PASS 없이 Approval Log 진입 시도는 stage-gate 위반.
+
 Approval gate:
-- `Approval Log` entry for `00_kickoff` by `user` (선행: WBS Validation Log 마지막 행 = `ok`)
+- `Approval Log` entry for `00_kickoff` by `user` (선행: WBS Validation Log 마지막 행 = `ok` AND Hook Generation Log 1건 이상)
 
 ---
 
@@ -84,6 +93,10 @@ Audit gate (if `project-state.scale == large`):
 Hierarchy gate:
 - `python3 scripts/sync_back_references.py <project>` reports clean (apply mode if drift)
 - `python3 scripts/validate_artifact_hierarchy.py <project>` exits 0
+
+Project-fit hook gate (PM stage-gate self-check):
+- `bash projects/<project>/scripts/run_project_hooks.sh 01_analysis` exits 0
+- 디스패처 부재 시 stage 종결 보고 자체 금지 (00_kickoff Hook Generation gate 미완)
 
 Approval gate:
 - `Approval Log` entry for `01_analysis` by `user`
@@ -144,6 +157,9 @@ Hierarchy gate:
 - `sync_back_references.py <project>` clean
 - `validate_artifact_hierarchy.py <project>` exits 0
 
+Project-fit hook gate (PM stage-gate self-check):
+- `bash projects/<project>/scripts/run_project_hooks.sh 02_design` exits 0
+
 Approval gate:
 - `Approval Log` entry for `02_design` by `user`
 
@@ -180,6 +196,9 @@ Hierarchy gate:
 - `sync_back_references.py <project>` clean
 - `validate_artifact_hierarchy.py <project>` exits 0
 
+Project-fit hook gate (PM stage-gate self-check):
+- `bash projects/<project>/scripts/run_project_hooks.sh 03_implementation` exits 0
+
 Approval gate:
 - `Approval Log` entry for `03_implementation` by `user`
 
@@ -210,6 +229,9 @@ Hierarchy gate:
 - `sync_back_references.py <project>` clean
 - `validate_artifact_hierarchy.py <project>` exits 0
 
+Project-fit hook gate (PM stage-gate self-check):
+- `bash projects/<project>/scripts/run_project_hooks.sh 04_test` exits 0
+
 Approval gate:
 - `Approval Log` entry for `04_test` by `user` (CONDITIONAL PASS with carry-forward findings is acceptable when PM
   records each carry-forward's owner and deadline; unresolved items must appear in `04_test/qa-report/` and be
@@ -236,6 +258,9 @@ Audit gate (MANDATORY regardless of scale):
 Hierarchy gate:
 - `sync_back_references.py <project>` clean
 - `validate_artifact_hierarchy.py <project>` exits 0
+
+Project-fit hook gate (PM stage-gate self-check):
+- `bash projects/<project>/scripts/run_project_hooks.sh 05_deployment` exits 0
 
 Approval gate:
 - `Approval Log` entry for `05_deployment` by `user` (final project approval → `current-stage: closed`)
