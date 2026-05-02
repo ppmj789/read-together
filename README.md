@@ -162,7 +162,7 @@ scripts/execute_rollback.sh <project> <stage> <mode>
 python3 -m pytest -q
 ```
 
-At time of writing: **139 tests passing · `validate_agent --all` 66/66 clean**.
+At time of writing: **144 tests passing · `validate_agent --all` 66/66 clean**.
 
 ## Phase 7 E2E outcome (2026-04-19)
 
@@ -191,3 +191,29 @@ Notable structural additions:
 
 Full report: `docs/superpowers/findings/2026-04-18-phase7-findings.md`
 and `docs/superpowers/findings/2026-04-19-phase7-part-b-findings.md`.
+
+## Role realignment (2026-05-02)
+
+한국 SI 통념 정합을 위해 두 차례 페르소나·디렉토리·dispatch 재정비를 진행
+(2 × 5-commit 시리즈). 현재 master 는 다음 흐름이 반영된 상태:
+
+**아키텍트 3종 분담** (`02_design/architecture/`) — application-architect 가
+`application/` (overview·domain-model·business-flow·components/CMP-* + ADR)
+을, software-architect 가 같은 application/ 안에 code-architecture·module-
+patterns·interface-policy + ADR 을, technical-architect 가 좁은 `technology/`
+(overview·middleware·deployment-topology·nfr-technology + ADR) 을 저작.
+data-modeler 는 `data/`, security-specialist 는 `security/`. Clean
+Architecture 기본 채택 ADR 은 SWA 단독 책임. validate_artifact_hierarchy.py
+가 subdomain 별 owner 정합을 검증한다.
+
+**웹 직군 흐름** (`02_design/design-system/`, screens, src/web/) —
+designer 가 `design-system/` (overview·colors·typography·layout·logo-brand)
+단독 저작, web-developer 가 `screens/SCN-*.md` 단독 저작 (한국 SI 통념),
+web-publisher 는 02_design 저작 책임 없이 03_implementation 단계에서
+SCN+design-system 을 입력받아 `src/web/` HTML 마크업·CSS 껍데기를 단독
+저작 (web-developer 의 동적 기능·API 연동 추가 전 선행). validator 가
+design-system owner=designer 정합을 검증한다.
+
+상세는 `git log --oneline 3c23e5e..HEAD` 의 `feat(roles)` /
+`feat(architecture)` / `feat(design-system)` / `feat(directors)` /
+`feat(validator)` 커밋 시리즈를 참고.
