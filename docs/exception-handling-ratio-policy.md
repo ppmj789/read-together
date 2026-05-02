@@ -125,46 +125,47 @@ fn validate_preconditions(ctx, req) -> Error?:
 `02_design/unit-test-cases/UT-<DOM>-<seq>.md` 자식 파일은 다음
 frontmatter 와 본문 구조를 강제한다.
 
-### Frontmatter 필수 필드
+### Frontmatter 필수 필드 (flat key 형식 — 단일 레벨 frontmatter 파서 정합)
 
 ```yaml
 ---
 id: UT-<DOM>-<seq>
 title: <한국어 제목>
 parent-prg: PRG-<DOM>-<seq>          # 본 UT 가 검증하는 parent PRG·RPC ID
-unit-variant-ratio:
-  happy: 0.2          # 정상 variant 비율 (0.0 ~ 0.3 허용)
-  exception: 0.8      # 예외 variant 비율 (0.7 ~ 1.0 강제)
-variants:
-  - name: happy_KRW
-    type: normal
-    failure-categories: []
-  - name: insufficient_balance
-    type: exception
-    failure-categories: [7]
-  # ... (parent 당 12 entries 초과 시 경고: 진짜 별개 기능인지 재검토)
+variant-count: 10                    # 총 variant 수 (parent 당 12 초과 시 경고)
+variant-happy-count: 2               # type=normal variant 수
+variant-exception-count: 8           # type=exception variant 수
+exception-categories: [1, 2, 4, 7]   # exception variant 들이 다루는 카테고리 (parent RQ failure-categories 부분집합)
 depends-on: [RQ-..., PRG-..., SCN-...]
 referenced-by: []
 ---
 ```
 
+본문에는 다음 표로 variants 를 명세 (트리 표현은 indent 로 — flat list 금지):
+
+```
+| Variant | Type | Failure Category | 설명 |
+|---------|------|------------------|------|
+| happy_KRW | normal | - | <조건·기대 결과> |
+| happy_FX | normal | - | <조건·기대 결과> |
+| insufficient_balance | exception | 7 | <트리거·기대 응답> |
+| ... | ... | ... | ... |
+```
+
 ### 강제 규칙
 
-1. **숫자 비율**: `happy ≤ 0.3` 그리고 `exception ≥ 0.7`. 한 변수가
-   조건을 위반하면 stage-gate fail.
-2. **One UT = one parent**: UT-*.md 1개 = PRG/RPC 1개 = variant N entries.
-   variant 마다 UT 파일 분리 금지 (산출물 폭증 방지).
-3. **카테고리 정합**: 각 exception variant 의 `failure-categories:` 가
-   parent PRG 의 RQ `failure-categories:` 부분집합이어야 한다 — 미정의
-   카테고리 도입 금지.
-4. **variant 상한**: parent 당 variant 12 entries 초과 시 경고 — 진짜
-   별개 기능인지 재검토 트리거.
-
-### 비율 계산
-
-`unit-variant-ratio` 의 `happy` / `exception` 합은 1.0 이며, validator 는
-`variants` 리스트의 `type` 값을 세어 frontmatter 비율과 일치하는지
-교차 검증한다.
+1. **숫자 비율**: `variant-happy-count / variant-count ≤ 0.3` 그리고
+   `variant-exception-count / variant-count ≥ 0.7`. 위반 시 stage-gate
+   fail (`validate_artifact_hierarchy.py` exit 1).
+2. **합계 일관성**: `variant-happy-count + variant-exception-count ==
+   variant-count`. 위반 시 fail.
+3. **One UT = one parent**: UT-*.md 1개 = PRG/RPC 1개 = `variant-count` N
+   entries. variant 마다 UT 파일 분리 금지 (산출물 폭증 방지).
+4. **카테고리 정합**: `exception-categories` 가 parent PRG 의 RQ
+   `failure-categories:` 부분집합. 미정의 카테고리 도입 금지 (advisory —
+   parent RQ 추적이 정착된 후 strict 전환).
+5. **variant 상한**: `variant-count > 12` 일 때 경고 — 진짜 별개
+   기능인지 재검토 트리거.
 
 ---
 

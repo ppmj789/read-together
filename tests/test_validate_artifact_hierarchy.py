@@ -353,3 +353,101 @@ def test_design_system_owner_wrong_fails():
         assert "02_design/design-system owner mismatch" in r.stdout
     finally:
         _cleanup(name)
+
+
+# ---------- UT variant ratio check ----------------------------------------
+
+def test_ut_variant_ratio_correct_passes():
+    name = "hv-ut-ok"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        ut_dir = demo / "02_design" / "unit-test-cases" / "UT-OK"
+        ut_dir.mkdir(parents=True)
+        (ut_dir / "UT-OK-01.md").write_text(
+            "---\nid: UT-OK-01\ntitle: t\nparent-prg: PRG-OK-01\n"
+            "variant-count: 10\nvariant-happy-count: 2\nvariant-exception-count: 8\n"
+            "exception-categories: [1, 7]\ndepends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode == 0, r.stdout + r.stderr
+    finally:
+        _cleanup(name)
+
+
+def test_ut_variant_ratio_too_many_happy_fails():
+    name = "hv-ut-happy"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        ut_dir = demo / "02_design" / "unit-test-cases" / "UT-BAD"
+        ut_dir.mkdir(parents=True)
+        # 5 happy + 5 exception → happy ratio 0.5 > 0.3
+        (ut_dir / "UT-BAD-01.md").write_text(
+            "---\nid: UT-BAD-01\ntitle: t\nparent-prg: PRG-BAD-01\n"
+            "variant-count: 10\nvariant-happy-count: 5\nvariant-exception-count: 5\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode != 0
+        assert "UT variant ratio violation" in r.stdout
+        assert "happy" in r.stdout
+    finally:
+        _cleanup(name)
+
+
+def test_ut_variant_ratio_sum_mismatch_fails():
+    name = "hv-ut-sum"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        ut_dir = demo / "02_design" / "unit-test-cases" / "UT-SUM"
+        ut_dir.mkdir(parents=True)
+        (ut_dir / "UT-SUM-01.md").write_text(
+            "---\nid: UT-SUM-01\ntitle: t\nparent-prg: PRG-SUM-01\n"
+            "variant-count: 10\nvariant-happy-count: 2\nvariant-exception-count: 7\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode != 0
+        assert "sum mismatch" in r.stdout
+    finally:
+        _cleanup(name)
+
+
+def test_ut_variant_ratio_undefined_skipped():
+    # frontmatter 에 ratio 필드가 전혀 없으면 advisory skip (단계적 도입)
+    name = "hv-ut-skip"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        ut_dir = demo / "02_design" / "unit-test-cases" / "UT-SKIP"
+        ut_dir.mkdir(parents=True)
+        (ut_dir / "UT-SKIP-01.md").write_text(
+            "---\nid: UT-SKIP-01\ntitle: t\ndepends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode == 0, r.stdout + r.stderr
+    finally:
+        _cleanup(name)
+
+
+def test_ut_variant_ratio_advisory_warns_over_12():
+    name = "hv-ut-warn"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        ut_dir = demo / "02_design" / "unit-test-cases" / "UT-WARN"
+        ut_dir.mkdir(parents=True)
+        # 15 variants total — over 12, but ratio still valid
+        (ut_dir / "UT-WARN-01.md").write_text(
+            "---\nid: UT-WARN-01\ntitle: t\nparent-prg: PRG-WARN-01\n"
+            "variant-count: 15\nvariant-happy-count: 3\nvariant-exception-count: 12\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        # advisory only — should still pass
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert "variant advisory" in r.stderr
+    finally:
+        _cleanup(name)

@@ -66,12 +66,13 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
   software-architect / infrastructure-engineer Track B 자문에서 위 항목 누락 finding 시 PASS 보고 금지. 03_implementation 코드도 동일 구조 — 코드 헤더 주석에 어느 카테고리·variant 키워드(`partial_failure`, `resource_limit`, `idempotency_dup`, `dependency_error`, `timeout` 등) 를 다루는지 명시.
 - **UT 저작 시 단위테스트 variant 비율 (mandatory, `docs/exception-handling-ratio-policy.md` §5 인용)**: 본인이 저작하는 `02_design/unit-test-cases/UT-<DOM>-*.md` 자식 파일은 다음을 만족한다 — 위반 시 `validate_artifact_hierarchy.py` 가 1 로 종료하므로 PASS 보고 금지:
-  1. **frontmatter 필수 필드**: `parent-prg: PRG-<DOM>-BAT-<seq>` + `unit-variant-ratio: { happy: <0.0~0.3>, exception: <0.7~1.0> }` + `variants:` 리스트(각 entry: `name`·`type: normal|exception`·`failure-categories: [<int list>]`).
-  2. **One UT = one parent**: UT-* 1개 = PRG-BAT / BATCH 잡 1개 = variant N entries. variant 별 UT 파일 분리 금지.
-  3. **숫자 비율**: `happy ≤ 0.3` 그리고 `exception ≥ 0.7`. 배치는 특히 Partial Failure / Resource / Concurrency(idempotency) 카테고리가 exception variant 의 핵심.
-  4. **카테고리 부분집합**: 각 exception variant 의 `failure-categories:` 가 parent PRG/BATCH 의 RQ `failure-categories:` 부분집합.
-  5. **Variant 상한**: parent 당 `variants:` 12 entries 초과 시 경고.
-  6. tester Track B 자문으로 위 5종을 사전 확인 후 저작.
+  1. **frontmatter flat key 형식**: `parent-prg: PRG-<DOM>-BAT-<seq>` + `variant-count: N` + `variant-happy-count: <int>` + `variant-exception-count: <int>` + `exception-categories: [<int list>]` (parent RQ 부분집합).
+  2. **본문 variants 표**: 정책 문서 §5 의 표 양식 (`Variant | Type | Failure Category | 설명`) 으로 명세. 배치는 Partial Failure / Resource / Concurrency(idempotency) 카테고리가 exception variant 의 핵심.
+  3. **숫자 비율**: `variant-happy-count / variant-count ≤ 0.3` 그리고 `variant-exception-count / variant-count ≥ 0.7`.
+  4. **합계 일관성**: `variant-happy-count + variant-exception-count == variant-count`.
+  5. **One UT = one parent**: UT-* 1개 = PRG-BAT / BATCH 잡 1개 = `variant-count` N entries. variant 별 UT 파일 분리 금지.
+  6. **Variant 상한**: `variant-count > 12` 일 때 경고.
+  7. tester Track B 자문으로 위 6종을 사전 확인 후 저작.
 - You are one of three model variants (Opus / Sonnet / Haiku) of the same role.
 - Effort is always in range `medium | high | xhigh`.
 - Record `depends-on` / `referenced-by` in every artifact frontmatter.

@@ -19,7 +19,11 @@ Checks:
    해당 subdomain 의 책임 페르소나와 일치 (application→AA·SWA,
    technology→TA, data→data-modeler, security→security-specialist).
 5. 02_design/<area>/ 단일 페르소나 영역 owner 정합 (design-system→designer).
-6. Audit-authored artifacts under 99_audit/: bidirectional checks are advisory
+6. 02_design/unit-test-cases/UT-*.md 의 variant 비율 (정책 §5):
+   variant-happy-count / variant-count <= 0.3,
+   variant-exception-count / variant-count >= 0.7,
+   합계 일관성, variant-count > 12 advisory.
+7. Audit-authored artifacts under 99_audit/: bidirectional checks are advisory
    only, because audit-team is forbidden from editing artifacts outside
    99_audit/ and therefore cannot inject back-references into peer
    corrective-action files (Phase 7 patch #19).
@@ -310,6 +314,87 @@ def check_architecture_owner(project_dir: pathlib.Path) -> list:
     return issues
 
 
+def _to_int(value):
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def check_ut_variant_ratio(project_dir: pathlib.Path) -> list:
+    """02_design/unit-test-cases/UT-*.md 자식 파일의 variant 비율 검증.
+
+    정책 (`docs/exception-handling-ratio-policy.md` §5):
+    - variant-happy-count / variant-count <= 0.3
+    - variant-exception-count / variant-count >= 0.7
+    - variant-happy-count + variant-exception-count == variant-count
+    - variant-count > 12 일 때 advisory warning (issue 아님)
+
+    UT-*.md 파일 중 frontmatter 에 위 필드가 모두 비어있는 경우는 advisory
+    skip (단계적 도입을 위해 — 모든 필드가 정의된 UT 만 strict 검증).
+    """
+    issues = []
+    base = project_dir / "02_design" / "unit-test-cases"
+    if not base.is_dir():
+        return issues
+    for md in base.rglob("*.md"):
+        if md.name == "index.md":
+            continue
+        if not md.name.startswith("UT-"):
+            continue
+        text = md.read_text()
+        fm_text, _body = split_frontmatter(text)
+        if fm_text is None:
+            continue
+        fm = parse_frontmatter(fm_text)
+        total = _to_int(fm.get("variant-count"))
+        happy = _to_int(fm.get("variant-happy-count"))
+        exception = _to_int(fm.get("variant-exception-count"))
+        # 모두 미정의 → advisory skip (단계 도입)
+        if total is None and happy is None and exception is None:
+            continue
+        rel = md.relative_to(project_dir)
+        # 부분 정의 → fail (전부 정의하거나 전부 생략)
+        if total is None or happy is None or exception is None:
+            issues.append(
+                f"UT variant ratio incomplete: {rel} requires all three of "
+                f"variant-count / variant-happy-count / variant-exception-count"
+            )
+            continue
+        if total <= 0:
+            issues.append(
+                f"UT variant ratio invalid: {rel} variant-count={total} must be > 0"
+            )
+            continue
+        if happy + exception != total:
+            issues.append(
+                f"UT variant ratio sum mismatch: {rel} "
+                f"happy({happy}) + exception({exception}) != count({total})"
+            )
+            continue
+        happy_ratio = happy / total
+        exception_ratio = exception / total
+        if happy_ratio > 0.3 + 1e-9:
+            issues.append(
+                f"UT variant ratio violation: {rel} "
+                f"variant-happy-count {happy}/{total}={happy_ratio:.2f} > 0.3 "
+                f"(정책 §5: happy <= 0.3)"
+            )
+        if exception_ratio < 0.7 - 1e-9:
+            issues.append(
+                f"UT variant ratio violation: {rel} "
+                f"variant-exception-count {exception}/{total}={exception_ratio:.2f} < 0.7 "
+                f"(정책 §5: exception >= 0.7)"
+            )
+        if total > 12:
+            print(
+                f"WARN (variant advisory): {rel} variant-count={total} > 12 — "
+                f"진짜 별개 PRG 인지 재검토 (정책 §5 variant 상한)",
+                file=sys.stderr,
+            )
+    return issues
+
+
 def check_design_area_owner(project_dir: pathlib.Path) -> list:
     """02_design/<area>/ 단일 페르소나 owner 정합 검증 (예: design-system →
     designer 단독).
@@ -367,6 +452,7 @@ def main():
     all_issues.extend(check_depth_limit(project_dir))
     all_issues.extend(check_architecture_owner(project_dir))
     all_issues.extend(check_design_area_owner(project_dir))
+    all_issues.extend(check_ut_variant_ratio(project_dir))
     report_orphans(project_dir, id_map)
 
     if all_issues:
