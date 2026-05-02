@@ -72,9 +72,9 @@ git push -u origin master
 
 ## Agent Catalog
 
-**Fixed-model roles (7)**
+**Fixed-model roles (8)**
 - `project-manager` — Opus · xhigh · **Skill only** (sessionstart-loaded, never `claude -p`)
-- `application-director` · `infrastructure-director` — Opus · xhigh
+- `application-director` · `infrastructure-director` · `policy-engineer` — Opus · xhigh
 - `business-manager` · `quality-assurance` · `tester` — Sonnet · xhigh
 - `audit-team` — Sonnet · xhigh · invoked only via `scripts/run_audit.sh`
 
@@ -162,7 +162,7 @@ scripts/execute_rollback.sh <project> <stage> <mode>
 python3 -m pytest -q
 ```
 
-At time of writing: **149 tests passing · `validate_agent --all` 66/66 clean**.
+At time of writing: **153 tests passing · `validate_agent --all` 68/68 clean**.
 
 ## Phase 7 E2E outcome (2026-04-19)
 
@@ -235,3 +235,24 @@ SSOT: `docs/exception-handling-ratio-policy.md`.
 비율 강제의 진앙지는 단위테스트 설계 — 요구사항 단계에 숫자를 들이대면
 "가짜 예외" 양산. parent-variant 트리 구조 (1 UT = 1 PRG = N variants)
 로 산출물 폭증을 차단하면서 enumeration 은 보존.
+
+## Project-fit hook generation (2026-05-02)
+
+하네스의 통제력은 자연어 가이드보다 코드(validator)가 강력하다는
+원칙에 따라, **WBS 승인 시점에 프로젝트 fit 한 검증 hook 을 자동 생성**
+하는 메커니즘을 도입. 단계:
+
+1. PM 이 SOW·WBS·project-plan 을 분석해 후보 hook 5–8 건을 추천
+2. PM 이 사용자에게 후보 제시 → 사용자 선택·추가·제외 합의
+3. PM 이 합의 명세를 `policy-engineer-opus` 에 Track A dispatch
+4. policy-engineer 가 `projects/<name>/scripts/` 에 디스패처 + 개별
+   hook + manifest 저작 (Python 표준 라이브러리만, 결정론, 읽기 전용,
+   exit 0/1/2 규약)
+5. PM 이 매 stage 종결 보고 직전 `bash projects/<name>/scripts/
+   run_project_hooks.sh <stage>` 자동 호출 — 비0 exit 시 PASS 보고 보류
+
+신규 페르소나 `policy-engineer` 는 fixed Opus·xhigh — 검증 hook 은 한
+번 잘못 만들면 stage-gate 전체가 망가지는 통제 장치라 모델 변동성을
+제거. bootstrap 은 placeholder 디스패처(INFO + exit 0) 와 빈 매니페스트를
+시드하므로, hook 미생성 상태에서도 stage-gate 가 동작 (Hook Generation
+gate 미완 시는 stage 종결 자체 금지).
