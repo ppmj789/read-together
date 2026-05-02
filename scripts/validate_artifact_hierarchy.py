@@ -321,6 +321,9 @@ def _to_int(value):
         return None
 
 
+VARIANT_RATIO_LENIENT_THRESHOLD = 5
+
+
 def check_ut_variant_ratio(project_dir: pathlib.Path) -> list:
     """02_design/unit-test-cases/UT-*.md 자식 파일의 variant 비율 검증.
 
@@ -329,6 +332,10 @@ def check_ut_variant_ratio(project_dir: pathlib.Path) -> list:
     - variant-exception-count / variant-count >= 0.7
     - variant-happy-count + variant-exception-count == variant-count
     - variant-count > 12 일 때 advisory warning (issue 아님)
+
+    Lenient mode: variant-count <= 5 (단순 CRUD·조회 등 작은 단위기능)
+    인 경우 비율 검증을 면제하고 합계 일관성만 강제. 도메인 신뢰도가
+    낮을 때 비현실적 비율 강제로 인한 가짜 예외 양산을 방지.
 
     UT-*.md 파일 중 frontmatter 에 위 필드가 모두 비어있는 경우는 advisory
     skip (단계적 도입을 위해 — 모든 필드가 정의된 UT 만 strict 검증).
@@ -370,6 +377,15 @@ def check_ut_variant_ratio(project_dir: pathlib.Path) -> list:
             issues.append(
                 f"UT variant ratio sum mismatch: {rel} "
                 f"happy({happy}) + exception({exception}) != count({total})"
+            )
+            continue
+        # Lenient mode: 단순 단위기능은 비율 검증 면제 (정책 §5)
+        if total <= VARIANT_RATIO_LENIENT_THRESHOLD:
+            print(
+                f"INFO (variant lenient): {rel} variant-count={total} "
+                f"≤ {VARIANT_RATIO_LENIENT_THRESHOLD} — 비율 강제 면제 "
+                f"(합계 일관성만 검증, 정책 §5 lenient mode)",
+                file=sys.stderr,
             )
             continue
         happy_ratio = happy / total

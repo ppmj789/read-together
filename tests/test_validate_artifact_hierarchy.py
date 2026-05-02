@@ -451,3 +451,64 @@ def test_ut_variant_ratio_advisory_warns_over_12():
         assert "variant advisory" in r.stderr
     finally:
         _cleanup(name)
+
+
+def test_ut_variant_ratio_lenient_small_unit_passes():
+    # variant-count <= 5 인 단순 단위기능은 비율 강제 면제 (정책 §5 lenient mode)
+    name = "hv-ut-lenient"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        ut_dir = demo / "02_design" / "unit-test-cases" / "UT-LEN"
+        ut_dir.mkdir(parents=True)
+        # 단순 조회: happy 1 + exception 2 = 3. ratio 0.33 > 0.3 인데 lenient 면제
+        (ut_dir / "UT-LEN-01.md").write_text(
+            "---\nid: UT-LEN-01\ntitle: t\nparent-prg: PRG-LEN-01\n"
+            "variant-count: 3\nvariant-happy-count: 1\nvariant-exception-count: 2\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert "variant lenient" in r.stderr
+    finally:
+        _cleanup(name)
+
+
+def test_ut_variant_ratio_lenient_still_checks_sum():
+    # lenient mode 에서도 합계 일관성은 강제
+    name = "hv-ut-lenient-sum"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        ut_dir = demo / "02_design" / "unit-test-cases" / "UT-LSM"
+        ut_dir.mkdir(parents=True)
+        (ut_dir / "UT-LSM-01.md").write_text(
+            "---\nid: UT-LSM-01\ntitle: t\nparent-prg: PRG-LSM-01\n"
+            "variant-count: 3\nvariant-happy-count: 1\nvariant-exception-count: 1\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode != 0
+        assert "sum mismatch" in r.stdout
+    finally:
+        _cleanup(name)
+
+
+def test_ut_variant_ratio_strict_at_threshold_boundary():
+    # variant-count = 6 (boundary) 부터 strict. happy 2/6 = 0.33 > 0.3 → fail
+    name = "hv-ut-boundary"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        ut_dir = demo / "02_design" / "unit-test-cases" / "UT-BND"
+        ut_dir.mkdir(parents=True)
+        (ut_dir / "UT-BND-01.md").write_text(
+            "---\nid: UT-BND-01\ntitle: t\nparent-prg: PRG-BND-01\n"
+            "variant-count: 6\nvariant-happy-count: 2\nvariant-exception-count: 4\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode != 0
+        assert "UT variant ratio violation" in r.stdout
+    finally:
+        _cleanup(name)

@@ -166,6 +166,12 @@ referenced-by: []
    parent RQ 추적이 정착된 후 strict 전환).
 5. **variant 상한**: `variant-count > 12` 일 때 경고 — 진짜 별개
    기능인지 재검토 트리거.
+6. **Lenient mode (variant 하한)**: `variant-count ≤ 5` (단순 CRUD·조회
+   등 작은 단위기능) 인 경우 비율 강제를 면제하고 합계 일관성만 검증한다.
+   사유: 변형 폭이 좁은 단순 단위기능에 0.3/0.7 컷오프를 강제하면
+   가짜 예외 양산 위험 — 비즈니스 로직이 풍부한 단위기능
+   (variant-count ≥ 6) 에서만 비율을 강제. validator 는 면제 시
+   `INFO (variant lenient): ...` 메시지를 stderr 로 출력.
 
 ---
 

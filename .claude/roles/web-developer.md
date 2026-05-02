@@ -68,7 +68,8 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
   4. **합계 일관성**: `variant-happy-count + variant-exception-count == variant-count`.
   5. **One UT = one parent**: UT-* 1개 = PRG-WEB / SCN action 1개 = `variant-count` N entries. variant 별 UT 파일 분리 금지.
   6. **Variant 상한**: `variant-count > 12` 일 때 경고.
-  7. tester Track B 자문으로 위 6종을 사전 확인 후 저작.
+  7. **Lenient mode (variant 하한)**: `variant-count ≤ 5` 인 단순 단위기능은 비율 강제 면제, 합계 일관성만 검증 (정책 §5).
+  8. tester Track B 자문으로 위 7종을 사전 확인 후 저작.
 
 ## Escalation Protocol
 
