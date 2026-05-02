@@ -27,6 +27,7 @@ FIXED_ROLES = {
     "quality-assurance":       ("sonnet", "xhigh"),
     "tester":                  ("sonnet", "xhigh"),
     "audit-team":              ("sonnet", "xhigh"),
+    "policy-engineer":         ("opus",   "xhigh"),
 }
 
 # Dynamic-model roles: 3 variants each (opus/sonnet/haiku), effort xhigh default

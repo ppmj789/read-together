@@ -20,6 +20,7 @@ DOCS_DIR = ROOT / "docs"
 FIXED_ROLES_WITH_SHELL = [
     "application-director", "infrastructure-director",
     "business-manager", "quality-assurance", "tester", "audit-team",
+    "policy-engineer",
 ]
 DYNAMIC_ROLES = [
     "application-architect", "software-architect", "data-modeler", "part-leader",
@@ -27,7 +28,7 @@ DYNAMIC_ROLES = [
     "technical-architect", "database-administrator", "security-specialist",
     "infrastructure-engineer",
 ]
-ALL_ROLE_NAMES = ["project-manager"] + FIXED_ROLES_WITH_SHELL + DYNAMIC_ROLES   # 20
+ALL_ROLE_NAMES = ["project-manager"] + FIXED_ROLES_WITH_SHELL + DYNAMIC_ROLES   # 21
 MODELS = ("opus", "sonnet", "haiku")
 
 
@@ -43,7 +44,7 @@ def test_no_stray_files_in_roles_dir():
     for p in ROLES_DIR.iterdir():
         assert p.is_file() and p.suffix == ".md", f"unexpected entry in roles/: {p}"
     md_files = list(ROLES_DIR.glob("*.md"))
-    assert len(md_files) == 20, f"expected exactly 20 role files, got {len(md_files)}"
+    assert len(md_files) == 21, f"expected exactly 21 role files, got {len(md_files)}"
 
 
 # ---------- agents/ -------------------------------------------------------
@@ -68,9 +69,9 @@ def test_dynamic_agent_shells_all_three_variants():
             assert p.exists(), f"missing dynamic agent shell: {p}"
 
 
-def test_total_agents_count_is_45():
+def test_total_agents_count_is_46():
     md_files = list(AGENTS_DIR.glob("*.md"))
-    assert len(md_files) == 45, f"expected 45 agent shells, got {len(md_files)}"
+    assert len(md_files) == 46, f"expected 46 agent shells, got {len(md_files)}"
 
 
 def test_no_nested_dirs_in_agents():

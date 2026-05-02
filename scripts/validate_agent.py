@@ -55,6 +55,7 @@ FIXED_ROLE_MODEL = {
     "quality-assurance":       ("sonnet", "xhigh"),
     "tester":                  ("sonnet", "xhigh"),
     "audit-team":              ("sonnet", "xhigh"),
+    "policy-engineer":         ("opus",   "xhigh"),
 }
 DYNAMIC_ROLE_NAMES = {
     "application-architect", "software-architect", "data-modeler", "part-leader",
@@ -117,7 +118,7 @@ def validate_role(path: pathlib.Path, fm: dict, body: str) -> list:
     all_known = set(FIXED_ROLE_MODEL.keys()) | DYNAMIC_ROLE_NAMES | SKILL_ONLY
     if role_name_from_file not in all_known:
         errs.append(f"role: unknown role-name '{role_name_from_file}' "
-                    "(expected one of the 20 defined roles)")
+                    "(expected one of the 21 defined roles)")
 
     # Must reference one of the 3 track-involvement sections
     # Exception: audit-team has neither (isolation principle — does not invoke

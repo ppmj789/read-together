@@ -34,7 +34,7 @@ def test_script_exists():
 def test_dry_run_succeeds():
     r = run("--dry-run")
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "generated 45 of 45 expected shell(s)" in r.stdout
+    assert "generated 46 of 46 expected shell(s)" in r.stdout
 
 
 def test_dry_run_skips_pm():
@@ -42,10 +42,10 @@ def test_dry_run_skips_pm():
     assert "skip (Skill-only): project-manager" in r.stdout
 
 
-def test_dry_run_lists_all_45_shells():
+def test_dry_run_lists_all_46_shells():
     r = run("--dry-run")
     count = sum(1 for line in r.stdout.splitlines() if line.startswith("would write:"))
-    assert count == 45, f"expected 45 would-write lines, got {count}"
+    assert count == 46, f"expected 46 would-write lines, got {count}"
 
 
 def test_generated_files_exist_on_disk():
@@ -115,7 +115,7 @@ def test_all_shells_pass_validation():
     """Every generated shell passes validate_agent.py."""
     validator = ROOT / "scripts" / "validate_agent.py"
     paths = [str(p) for p in sorted(AGENTS_DIR.glob("*.md"))]
-    assert len(paths) == 45
+    assert len(paths) == 46
     r = subprocess.run([sys.executable, str(validator), *paths],
                        capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr

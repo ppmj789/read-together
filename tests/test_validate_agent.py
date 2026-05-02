@@ -143,7 +143,7 @@ def test_audit_team_role_exempt_from_track_sections(tmp_path):
 
 
 def test_unknown_role_name_fails(tmp_path):
-    # 'random-name' is not one of the 20 defined roles
+    # 'random-name' is not one of the 21 defined roles
     p = write_role(tmp_path, "random-name", role_fm(name="random-name") + role_body())
     r = run(str(p))
     assert r.returncode != 0
