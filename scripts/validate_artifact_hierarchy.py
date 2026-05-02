@@ -15,7 +15,10 @@ Checks:
    meeting artifacts that naturally reference a whole group rather than every
    child (Phase 7 patch #17).
 3. 3-hop path limit: <stage>/<area>/<group>/<id>.md maximum depth.
-4. Audit-authored artifacts under 99_audit/: bidirectional checks are advisory
+4. 02_design/architecture/<subdomain>/ 자식 파일의 owner/author 페르소나가
+   해당 subdomain 의 책임 페르소나와 일치 (application→AA·SWA,
+   technology→TA, data→data-modeler, security→security-specialist).
+5. Audit-authored artifacts under 99_audit/: bidirectional checks are advisory
    only, because audit-team is forbidden from editing artifacts outside
    99_audit/ and therefore cannot inject back-references into peer
    corrective-action files (Phase 7 patch #19).
@@ -237,6 +240,60 @@ def check_depth_limit(project_dir: pathlib.Path) -> list:
     return issues
 
 
+ARCHITECTURE_OWNERS = {
+    "application": {"application-architect", "software-architect"},
+    "technology":  {"technical-architect"},
+    "data":        {"data-modeler"},
+    "security":    {"security-specialist"},
+}
+
+_MODEL_SUFFIXES = ("-opus", "-sonnet", "-haiku")
+
+
+def _strip_model_suffix(role: str) -> str:
+    for suffix in _MODEL_SUFFIXES:
+        if role.endswith(suffix):
+            return role[: -len(suffix)]
+    return role
+
+
+def check_architecture_owner(project_dir: pathlib.Path) -> list:
+    """02_design/architecture/<subdomain>/ 자식 파일의 owner/author 가 해당
+    subdomain 의 책임 페르소나와 일치하는지 검증.
+
+    - application/ → application-architect 또는 software-architect
+    - technology/  → technical-architect
+    - data/        → data-modeler
+    - security/    → security-specialist
+
+    index.md 는 director 공동 책임으로 검증에서 제외.
+    """
+    issues = []
+    for subdomain, allowed in ARCHITECTURE_OWNERS.items():
+        base = project_dir / "02_design" / "architecture" / subdomain
+        if not base.is_dir():
+            continue
+        for md in base.rglob("*.md"):
+            if md.name == "index.md":
+                continue
+            text = md.read_text()
+            fm_text, _body = split_frontmatter(text)
+            if fm_text is None:
+                continue
+            fm = parse_frontmatter(fm_text)
+            raw = fm.get("owner") or fm.get("author")
+            if not raw:
+                continue
+            owner = _strip_model_suffix(str(raw).strip())
+            if owner not in allowed:
+                rel = md.relative_to(project_dir)
+                issues.append(
+                    f"architecture owner mismatch: {rel} has owner/author='{raw}', "
+                    f"expected one of {sorted(allowed)} under architecture/{subdomain}/"
+                )
+    return issues
+
+
 def report_orphans(project_dir: pathlib.Path, id_map: dict) -> None:
     """Print advisory WARN lines for orphan child files (referenced-by empty).
 
@@ -279,6 +336,7 @@ def main():
     all_issues.extend(check_index_presence(project_dir))
     all_issues.extend(check_bidirectional_deps(project_dir, id_map, group_id_map))
     all_issues.extend(check_depth_limit(project_dir))
+    all_issues.extend(check_architecture_owner(project_dir))
     report_orphans(project_dir, id_map)
 
     if all_issues:

@@ -252,3 +252,65 @@ def test_audit_finding_drift_is_advisory_only():
         assert "WARN (audit-authored" in r.stderr
     finally:
         _cleanup(name)
+
+
+# ---------- Architecture owner check --------------------------------------
+
+def test_architecture_owner_correct_passes():
+    name = "hv-arch-ok"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        app = demo / "02_design" / "architecture" / "application"
+        (app / "overview.md").write_text(
+            "---\nid: ARCH-APP-OVR\ntitle: t\nowner: application-architect\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        (app / "code-architecture.md").write_text(
+            "---\nid: ARCH-APP-CODE\ntitle: t\nauthor: software-architect-sonnet\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        tech = demo / "02_design" / "architecture" / "technology"
+        (tech / "overview.md").write_text(
+            "---\nid: ARCH-TECH-OVR\ntitle: t\nowner: technical-architect\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode == 0, r.stdout + r.stderr
+    finally:
+        _cleanup(name)
+
+
+def test_architecture_owner_wrong_fails():
+    name = "hv-arch-bad"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        # technology/ subdomain should reject application-architect as owner
+        bad = demo / "02_design" / "architecture" / "technology" / "overview.md"
+        bad.write_text(
+            "---\nid: ARCH-TECH-OVR\ntitle: t\nowner: application-architect\n"
+            "depends-on: []\nreferenced-by: []\n---\n# t\n"
+        )
+        r = _validate(name)
+        assert r.returncode != 0
+        assert "architecture owner mismatch" in r.stdout
+    finally:
+        _cleanup(name)
+
+
+def test_architecture_owner_index_md_skipped():
+    # index.md is director-shared and not subject to subdomain owner rule.
+    name = "hv-arch-idx"
+    demo = ROOT / "projects" / name
+    try:
+        _bootstrap(name)
+        idx = demo / "02_design" / "architecture" / "application" / "index.md"
+        # bootstrap already wrote index.md; simulate a director-owned index
+        idx.write_text(
+            "---\nid: ARCH-APP-INDEX\ntitle: 응용 아키텍처\nowner: application-director\n---\n# 응용\n"
+        )
+        r = _validate(name)
+        assert r.returncode == 0, r.stdout + r.stderr
+    finally:
+        _cleanup(name)
