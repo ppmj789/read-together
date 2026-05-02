@@ -1,0 +1,33 @@
+---
+id: HOOKS-MANIFEST
+title: 검증 Hook 매니페스트
+owner: policy-engineer
+depends-on: []
+referenced-by: []
+related:
+  - 00_kickoff/project-plan/wbs/index.md
+  - project-state.md
+---
+
+# 검증 Hook 매니페스트
+
+본 파일은 본 프로젝트에 fit 한 검증 hook 의 단일 출처입니다. WBS Validation gate 통과 후 PM 이 사용자와 협의해 결정한 hook 들을 `policy-engineer-opus` 가 저작하면 본 매니페스트에 기록됩니다.
+
+본 파일이 실제 `hook_*.py` 목록과 일치하는지는 PM 의 stage-gate self-check 가 점검합니다 (drift 시 stage-gate fail). 변경은 PM 이 `policy-engineer` Track A 재호출로 처리하며, hook 코드를 직접 수정하지 않습니다.
+
+## 등록된 Hook 목록
+
+(아직 등록된 hook 없음 — 00_kickoff Hook Generation gate 미완)
+
+| 파일 | Stage | 검증 목적 | 대상 산출물 | 통과 조건 | 합의 출처 |
+|------|------|---------|-----------|---------|---------|
+
+## Hook 작성 원칙 (policy-engineer 페르소나 인용)
+
+- **단일 책임 원칙 (SRP)**: 1 hook = 1 검증 규칙. 한 파일에 무관한 검사 묶지 않음.
+- **Stage 매핑 일관성**: 파일명 prefix `hook_<stage>_*` 가 검증 대상 stage 와 일치. 디스패처는 prefix 로만 매핑.
+- **결정론**: 외부 네트워크·시간·랜덤 의존 금지. 동일 입력 → 동일 출력.
+- **표준 라이브러리만**: PyYAML 등 외부 의존 금지. `scripts/_frontmatter.py` 재사용 권장.
+- **읽기 전용**: 산출물 수정 금지 — 검증·보고만.
+- **Exit code 규약**: `0` 통과, `1` 위반, `2` 사용법 오류.
+- **기존 platform validator 와 중복 회피**: `validate_artifact_hierarchy.py` · `check_frontmatter.py` · `validate_cr.py` 가 검사하는 항목 중복 작성 금지.

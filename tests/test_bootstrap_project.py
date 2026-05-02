@@ -78,6 +78,7 @@ def test_bootstrap_small_creates_expected_stage_dirs():
                   "02_design/db/physical",
                   "02_design/design-system",
                   "02_design/screens",
+                  "scripts",
                   "02_design/batch-jobs",
                   "02_design/programs",
                   "03_implementation/unit-test-results",
@@ -134,8 +135,30 @@ def test_bootstrap_top_level_files_seeded():
                   "RTM/by-stage/design.md",
                   "RTM/by-stage/implementation.md",
                   "RTM/by-stage/test.md",
-                  "RTM/by-stage/deployment.md"):
+                  "RTM/by-stage/deployment.md",
+                  "scripts/run_project_hooks.sh",
+                  "scripts/hooks-manifest.md"):
             assert (demo / f).is_file(), f"missing seed file: {f}"
+        # Dispatcher must be executable
+        import stat
+        disp = demo / "scripts" / "run_project_hooks.sh"
+        mode = disp.stat().st_mode
+        assert mode & stat.S_IXUSR, "run_project_hooks.sh must be executable"
+    finally:
+        _cleanup(name)
+
+
+def test_bootstrap_dispatcher_handles_missing_hooks():
+    """Freshly bootstrapped dispatcher must exit 0 with INFO when no hooks exist."""
+    name = "demo-disp"
+    demo = ROOT / "projects" / name
+    try:
+        run(name, "--scale", "small")
+        disp = demo / "scripts" / "run_project_hooks.sh"
+        r = subprocess.run(["bash", str(disp), "01_analysis"],
+                           capture_output=True, text=True, cwd=ROOT)
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert "no hooks registered" in r.stderr
     finally:
         _cleanup(name)
 

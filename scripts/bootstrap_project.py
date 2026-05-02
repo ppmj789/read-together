@@ -131,6 +131,12 @@ RTM_FILES = [
     ("rtm/by-stage.md.tmpl", "RTM/by-stage/deployment.md"),
 ]
 
+# Project-fit hook scaffold files (template → destination, optional executable)
+SCRIPTS_FILES = [
+    ("scripts/run-project-hooks.sh.tmpl", "scripts/run_project_hooks.sh", True),
+    ("scripts/hooks-manifest.md.tmpl",    "scripts/hooks-manifest.md",    False),
+]
+
 
 def validate_name(name: str) -> None:
     if not name:
@@ -260,6 +266,22 @@ def main() -> int:
         dest = project_dir / dest_rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dest)
+        created_files.append(dest_rel)
+
+    # Project-fit hook scaffold (placeholder dispatcher + manifest seed).
+    # policy-engineer (Track A) 가 WBS Validation 직후 PM 에 의해 호출되어
+    # 본 디렉토리에 hook_<stage>_*.py 자식을 추가하면 디스패처가 자동 매핑.
+    for tmpl_rel, dest_rel, executable in SCRIPTS_FILES:
+        src = ARTIFACTS_TMPL / tmpl_rel
+        if not src.is_file():
+            print(f"error: missing template: {src}", file=sys.stderr)
+            shutil.rmtree(project_dir, ignore_errors=True)
+            return 3
+        dest = project_dir / dest_rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+        if executable:
+            dest.chmod(0o755)
         created_files.append(dest_rel)
 
     # Post-process: project-state and agent-call-log

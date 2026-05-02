@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Project-fit validation hook dispatcher.
+#
+# Generated as a placeholder by scripts/bootstrap_project.py.
+# Populated by policy-engineer (Track A) after the WBS Validation gate
+# of 00_kickoff is approved by the user.
+#
+# Usage:
+#   bash projects/<name>/scripts/run_project_hooks.sh <stage>
+#
+# Stages: 00_kickoff | 01_analysis | 02_design | 03_implementation | 04_test | 05_deployment
+#
+# Discovery rule:
+#   Looks for files named hook_<stage>_*.py in the same directory and
+#   runs each with the project name as the only argument.
+#
+# Exit codes:
+#   0 = all hooks for the given stage passed (or none exist for it)
+#   1 = at least one hook reported a violation
+#   2 = usage error
+
+set -euo pipefail
+
+if [ "$#" -ne 1 ]; then
+    echo "usage: $0 <stage>" >&2
+    exit 2
+fi
+
+STAGE="$1"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
+PROJECT_NAME="$( basename "$PROJECT_DIR" )"
+
+shopt -s nullglob
+HOOKS=( "$SCRIPT_DIR/hook_${STAGE}_"*.py )
+shopt -u nullglob
+
+if [ ${#HOOKS[@]} -eq 0 ]; then
+    echo "INFO: no hooks registered for stage '$STAGE' in $SCRIPT_DIR" >&2
+    exit 0
+fi
+
+failed=0
+for hook in "${HOOKS[@]}"; do
+    echo "→ running $(basename "$hook") on $PROJECT_NAME" >&2
+    if ! python3 "$hook" "$PROJECT_NAME"; then
+        echo "✗ hook failed: $(basename "$hook")" >&2
+        failed=$((failed + 1))
+    fi
+done
+
+if [ "$failed" -gt 0 ]; then
+    echo "FAILED: $failed hook(s) reported violations for stage '$STAGE'" >&2
+    exit 1
+fi
+
+echo "OK: all hooks for stage '$STAGE' passed" >&2
+exit 0
