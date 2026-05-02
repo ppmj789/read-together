@@ -37,14 +37,15 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 | 02_design 진입 | application-architect | `02_design/architecture/application/` 응용 아키 저작 (overview·domain-model·business-flow·components/CMP-*·decisions/ADR-*) | 분석 산출물 + project-plan |
 | 02_design 진입 | software-architect | `02_design/architecture/application/` SW 아키 저작 (code-architecture·module-patterns·interface-policy·decisions/ADR-*). Clean Architecture 기본 채택 ADR 포함 | 분석 산출물 + AA 응용 아키 초안 |
 | 02_design 진입 | data-modeler | `02_design/architecture/data/` 데이터 아키 저작 (응용 차원 큰 그림 — `02_design/db/logical/` 와 별도) + `02_design/db/logical/` 논리 모델 (소규모 한정) | 분석 산출물 |
+| 02_design 진입 | designer | `02_design/design-system/` 디자인 시스템 저작 (overview·colors·typography·layout·logo-brand). type:web PRG 가 1개 이상이면 필수 | 분석 산출물 + project-plan |
 | 02_design 진입 (소규모) | backend-developer | 서버측 PRG(type:API/daemon) / IF-REST / IF-KAFKA / 물리 DB 저작 | 분석 산출물 + 공통 설계(application·technology 아키, INF-*, SEC-*) |
-| 02_design 진입 (소규모) | web-developer | web PRG(type:web) / SCN 저작 | 동일 |
+| 02_design 진입 (소규모) | web-developer | web PRG(type:web) / SCN 저작. SCN 은 design-system 토큰 인용 | 분석 산출물 + design-system |
 | 02_design 진입 (소규모) | batch-developer | batch PRG(type:batch) / BATCH 저작 | 동일 |
-| 02_design 진입 (소규모) | web-publisher | 퍼블리싱 가이드 저작 | 동일 |
 | 02_design 진입 | tester (Track B 자문) | unit-test-cases 는 각 파트/도메인 개발자가 저작; tester 는 케이스 설계·커버리지 자문 | 동일 |
 | 02_design 진입 (대규모) | part-leader (파트 수만큼) | 파트별 설계·구현 주도 위임 (파트리더가 파트 개발자에게 저작 재위임) | project-plan 의 파트 정의 |
-| 03_implementation 진입 (소규모) | backend-developer | 백엔드 구현 | 설계 산출물 |
-| 03_implementation 진입 (소규모) | web-developer | 프론트 구현 | 동일 |
+| 03_implementation 진입 (소규모) | backend-developer | 백엔드 구현 (SWA 백엔드 공통 모듈 사전 세팅 결과 인용) | 설계 산출물 |
+| 03_implementation 진입 (소규모) | web-publisher | SCN + design-system → `src/web/` HTML 마크업·CSS 껍데기 저작 (web-developer 동적 기능 추가 전 선행) | SCN, design-system |
+| 03_implementation 진입 (소규모) | web-developer | publisher 마크업 위에 프론트엔드 동적 기능·API 연동 구현 | publisher 결과물 + SCN + IF |
 | 03_implementation 진입 (소규모) | batch-developer | 배치 구현 (있을 시) | 동일 |
 | 리뷰 회의 오케스트레이션 | 관련 역할 2인 이상 (아키텍트 자문 포함) | 2인 원칙 리뷰 | 리뷰 대상 산출물 |
 
