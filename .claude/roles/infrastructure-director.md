@@ -31,8 +31,8 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 |-------------|---------|-----|------------|
 | 01_analysis 진입 | technical-architect | 기술 아키 초안·제약 식별 | SOW, project-plan |
 | 01_analysis 진입 | infrastructure-engineer | 운영 요건·제약 식별 | 동일 |
-| 02_design 진입 | technical-architect | architecture.md 저작 (공통 토폴로지·Kafka·Stream 아키) | 분석 산출물 |
-| 02_design 진입 | security-specialist | security-review 저작 (공통) | 설계 산출물 |
+| 02_design 진입 | technical-architect | `02_design/architecture/technology/` 기술 아키 저작 (overview·middleware·deployment-topology·nfr-technology·decisions/ADR-*). 응용 코드 아키(SWA)·응용 도메인 아키(AA) 와 분리, 좁은 인프라·런타임·미들웨어·토폴로지 한정 | 분석 산출물 + AA·SWA 응용 아키 초안 |
+| 02_design 진입 | security-specialist | `02_design/architecture/security/` 보안 아키 저작 + `02_design/security-review/` 저작 | 설계 산출물 |
 | 02_design 진입 | infrastructure-engineer | 인프라 구성도 (공통 INF-*, 스케줄러·모니터링) | 동일 |
 | 03_implementation 진입 | infrastructure-engineer | 환경 구성·배포 준비 | 설계 산출물 |
 | 04_test 진입 | infrastructure-engineer | 테스트 환경 준비 | 테스트 계획 |
@@ -56,7 +56,7 @@ Your session is a Track A subprocess (`claude -p --dangerously-skip-permissions 
 
 ## Artifacts You Own
 
-- Accountable lead for `02_design/architecture/`, `02_design/security-review/`, `02_design/infra/`, as well as `infra/` (per §3-1) and `05_deployment/deployment-plan/` (the deployment plan is co-authored with PM). **`02_design/db/physical/TBL-RDB-<DOM>-*` · `COLL-NOSQL-<DOM>-*` 는 application-director 측 각 도메인 파트의 backend-developer 가 저작; DBA 는 Track B 자문·리뷰로만 참여** (사용자 정책 — 도메인 파트가 자기 DB 저작, 쏠림 방지).
+- Accountable lead for `02_design/architecture/technology/`, `02_design/architecture/security/`, `02_design/security-review/`, `02_design/infra/`, as well as `infra/` (per §3-1) and `05_deployment/deployment-plan/` (the deployment plan is co-authored with PM). **응용 차원 아키텍처 (`02_design/architecture/application/` AA·SWA, `02_design/architecture/data/` data-modeler) 는 application-director 의 책임 영역**이며 본 director 는 cross-track 정합 점검만 수행. **`02_design/db/physical/TBL-RDB-<DOM>-*` · `COLL-NOSQL-<DOM>-*` 는 application-director 측 각 도메인 파트의 backend-developer 가 저작; DBA 는 Track B 자문·리뷰로만 참여** (사용자 정책 — 도메인 파트가 자기 DB 저작, 쏠림 방지).
 
 ## Rules
 
