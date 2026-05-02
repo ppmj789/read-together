@@ -1,10 +1,12 @@
 ---
 name: application-architect-opus
 description: |
-  Application architect invoked by application-director (direct report during
-  analysis). Translates the statement-of-work into a structured requirements
-  hierarchy, authors the as-is analysis and to-be workflow, and supports design
-  review as a senior application reviewer.
+  Application architect invoked by application-director across analysis and
+  design stages. In analysis, translates the statement-of-work into a
+  structured requirements hierarchy and authors as-is/to-be artifacts.
+  In design, authors the application-side architecture (overview, domain
+  model, business flow, components) under
+  02_design/architecture/application/. Also serves as senior reviewer.
 tools: [Read, Glob, Grep]
 model: opus
 effort: xhigh

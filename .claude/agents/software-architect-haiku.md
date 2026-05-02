@@ -1,10 +1,12 @@
 ---
 name: software-architect-haiku
 description: |
-  Software architect invoked by application-director during design. Produces
-  the program list, interface specifications, and module-level design for the
-  application track. Also consulted via Track B by developers on interface
-  and module-boundary questions.
+  Software architect invoked by application-director during design as a
+  Track A author of the application-side software architecture
+  (code architecture, module patterns, interface policy) under
+  02_design/architecture/application/. Also consulted via Track B by
+  developers, part-leaders, and other architects on module-boundary,
+  interface, and layering questions.
 tools: [Read, Glob, Grep]
 model: haiku
 effort: xhigh
