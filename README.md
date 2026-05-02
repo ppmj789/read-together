@@ -162,7 +162,7 @@ scripts/execute_rollback.sh <project> <stage> <mode>
 python3 -m pytest -q
 ```
 
-At time of writing: **144 tests passing · `validate_agent --all` 66/66 clean**.
+At time of writing: **149 tests passing · `validate_agent --all` 66/66 clean**.
 
 ## Phase 7 E2E outcome (2026-04-19)
 
@@ -217,3 +217,21 @@ design-system owner=designer 정합을 검증한다.
 상세는 `git log --oneline 3c23e5e..HEAD` 의 `feat(roles)` /
 `feat(architecture)` / `feat(design-system)` / `feat(directors)` /
 `feat(validator)` 커밋 시리즈를 참고.
+
+## Exception-handling ratio policy (2:8 법칙, 2026-05-02)
+
+단위기능 차원에서 **정상 ≤ 2 : 비정상 예외 처리 ≥ 8** 비율을 자연스럽게
+도출하도록, 단계별 산출물 형태에 맞춰 강제하는 통합 정책을 신설.
+SSOT: `docs/exception-handling-ratio-policy.md`.
+
+| 단계 | 강제 강도 | 핵심 메커니즘 |
+|------|---------|----------|
+| 요구사항 | 약 (발견) | 7 Failure Categories 카테고리 커버리지 (AA RQ enumerate) |
+| 설계 | 중 (메커니즘) | PRG/IF/SCN/BATCH 본문 FMEA 표 의무 + 3 불변식 (Tree·One-handler·Guard chain) |
+| 단위테스트 | **강 (숫자)** | UT-*.md frontmatter `variant-happy-count / variant-count ≤ 0.3`, `variant-exception-count / variant-count ≥ 0.7`, `validate_artifact_hierarchy.py` 가 자동 검증 |
+| 구현 | 간접 | TDD 자연 도출 + One RPC = one handler + precondition guard chain + 코드 헤더 카테고리 명시 |
+| 통합테스트 | 기존 | Variant Multiplication |
+
+비율 강제의 진앙지는 단위테스트 설계 — 요구사항 단계에 숫자를 들이대면
+"가짜 예외" 양산. parent-variant 트리 구조 (1 UT = 1 PRG = N variants)
+로 산출물 폭증을 차단하면서 enumeration 은 보존.
