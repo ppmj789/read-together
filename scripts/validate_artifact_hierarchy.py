@@ -211,7 +211,15 @@ def check_bidirectional_deps(project_dir: pathlib.Path, id_map: dict,
 
 
 def check_depth_limit(project_dir: pathlib.Path) -> list:
-    """3-hop path limit: <stage>/<area>/<group>/<id>.md max depth (4 segments)."""
+    """3-hop path limit: <stage>/<area>/<group>/<id>.md max depth (4 segments).
+
+    Exceptions:
+    - 99_audit: 5 segments (audit subdirectory + corrective action breakdown).
+    - 02_design/architecture: 5 segments. The architecture area is split into
+      application/ + technology/ + data/ + security/ subdomains, each of which
+      may contain components/ and decisions/ groups; CMP-* and ADR-* leaves
+      therefore sit at 5 segments by design.
+    """
     issues = []
     for md in project_dir.rglob("*.md"):
         rel = md.relative_to(project_dir)
@@ -219,6 +227,8 @@ def check_depth_limit(project_dir: pathlib.Path) -> list:
         if len(parts) <= 1:
             continue
         if parts[0] == "99_audit":
+            max_depth = 5
+        elif len(parts) >= 2 and parts[0] == "02_design" and parts[1] == "architecture":
             max_depth = 5
         else:
             max_depth = 4
