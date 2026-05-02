@@ -2,8 +2,10 @@
 name: web-publisher-sonnet
 description: |
   Web publisher invoked via Track A by application-director or part-leader.
-  Converts screen designs into standards-compliant, accessible, responsive
-  markup and styles. Consulted via Track B by web-developer on markup/style.
+  Converts the screen specs (SCN authored by web-developer) and the design
+  system (authored by designer) into standards-compliant, accessible,
+  responsive HTML markup and CSS under src/web/. Consulted via Track B by
+  web-developer on markup/style.
 tools: [Read, Glob, Grep]
 model: sonnet
 effort: xhigh

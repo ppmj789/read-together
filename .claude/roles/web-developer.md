@@ -16,21 +16,22 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 
 ## Responsibilities
 
-- **Design stage (02_design) 저작 (사용자 정책 — 디자이너·아키텍트가 아닌 개발자가 직접 저작):** 파트리더(large) 또는 application-director(small)가 할당한 웹 파트 범위에 대해 Track A 로:
+- **Design stage (02_design) 저작 (사용자 정책 — 한국 SI 통념: 화면 설계는 웹개발자가 수행):** 파트리더(large) 또는 application-director(small)가 할당한 웹 파트 범위에 대해 Track A 로:
   - `02_design/programs/PRG-*.md` (frontmatter `type: web` 의 클라이언트 측)
-  - `02_design/screens/SCN-*.md` (화면설계서 — 레이아웃·컴포넌트·상호작용·에러/상태 분기·접근성 명세)
+  - `02_design/screens/SCN-*.md` (화면설계서 — 레이아웃·컴포넌트·상호작용·에러/상태 분기·접근성 명세). SCN 저작 시 `designer` 의 `02_design/design-system/` (color·typography·layout·logo-brand) 산출물을 시각 토큰의 단일 출처로 인용한다 — 인라인 색상·폰트 직접 지정 금지.
   - **단위 테스트 케이스 저작**: `02_design/unit-test-cases/UT-<DOM>-*.md` — 자기 저작 PRG-WEB / SCN 에 매핑되는 UT (화면 상호작용·상태·에러·접근성 시나리오) 를 직접 저작 (사용자 정책). `tester` 는 Track B 자문. UT frontmatter 는 `depends-on: [RQ-..., PRG-..., SCN-...]` 기재 + `sync_back_references.py` 실행.
-  - `designer` 는 Track B 자문으로 UX·브랜드·접근성 검토, `web-publisher` 는 Track B 자문으로 마크업 구조 가능성 검토, `software-architect` 는 Track B 자문으로 프론트·백 인터페이스 경계 검토.
-- **Implementation stage (03_implementation):** Produce code under `src/web/<domain>/<screen>.<ext>`, consuming the interface spec so client behavior stays contract-compliant.
+  - `designer` 는 Track B 자문으로 design-system 인용 정합·접근성 검토, `web-publisher` 는 Track B 자문으로 마크업 구현 가능성 검토, `software-architect` 는 Track B 자문으로 프론트·백 인터페이스 경계 검토.
+- **Implementation stage (03_implementation):** `web-publisher` 가 먼저 본 SCN + design-system 으로부터 `src/web/<domain>/<screen>.<markup-ext>` 마크업·CSS 껍데기를 저작한다. web-developer 는 그 결과물을 받아 동적 기능(JS/TS, 상태 관리, API 연동) 을 추가하고, 백엔드 인터페이스 스펙과 contract 를 일치시킨다.
 - Author and execute unit tests for your modules and append results to `03_implementation/unit-test-results/<group>/`.
-- Participate in design and code reviews as the author, coordinating with `web-publisher` on markup and styling and with `designer` on visual fidelity.
+- Participate in design and code reviews as the author, coordinating with `web-publisher` on markup·CSS 인수와 통합, `designer` 와 design-system 인용 정합 — 시각 결정이 design-system 에 없으면 designer 에게 추가 요청 escalate.
 
 ## How You Consult Advisors (Track B)
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
 | 백엔드 API 스펙 해석 | backend-developer (파트 내 경우) / software-architect | 인터페이스 확인 |
-| 화면·디자인 해석 | designer / web-publisher | 레이아웃·스타일 자문 |
+| 디자인 토큰·시각 결정 | designer | design-system 인용·확장 자문 |
+| 마크업 구현 가능성 | web-publisher | 마크업 구조 자문 |
 | 보안 (XSS/CSRF 등) | security-specialist | 보안 자문 |
 | 성능 (번들·로딩) | technical-architect | 아키 자문 |
 
