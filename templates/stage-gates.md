@@ -93,7 +93,14 @@ Approval gate:
 ## 02_design
 
 Required artifacts (directory + children):
-- `02_design/architecture/` — `index.md` + ARCH-<seq> children
+- `02_design/architecture/` — 4 subdomain 분할 (각각 `index.md` + 자식 산출물). 4 영역 모두 PASS 필수:
+  - `02_design/architecture/application/` (AA·SWA 공동 저작)
+    - AA 저작: `overview.md` · `domain-model.md` · `business-flow.md` · `components/CMP-<seq>-<slug>.md` · `decisions/ADR-<seq>-<slug>.md` (AA 결정)
+    - SWA 저작: `code-architecture.md` · `module-patterns.md` · `interface-policy.md` · `decisions/ADR-<seq>-<slug>.md` (SWA 결정)
+  - `02_design/architecture/technology/` (TA 저작)
+    - `overview.md` · `middleware.md` · `deployment-topology.md` · `nfr-technology.md` · `decisions/ADR-<seq>-<slug>.md`
+  - `02_design/architecture/data/` (data-modeler 저작) — 응용 차원 데이터 아키 (논리 모델은 `02_design/db/logical/` 와 별도, 큰 그림 측면)
+  - `02_design/architecture/security/` (security-specialist 저작) — 응용·기술 차원 보안 아키 (보안 리뷰 산출물 `02_design/security-review/` 와 별도)
 - `02_design/db/` — `index.md` + `db-logical/` + `db-physical/` subdirs (logical delivered by data-modeler, physical co-designed with DBA)
 - `02_design/screens/` — `index.md` + SCN-<seq> children (required when any PRG has `type: web`)
 - `02_design/batch-jobs/` — `index.md` + BATCH-<seq> children (required when any PRG has `type: batch`; covers 스케줄·트리거·재처리 정책·리소스 한도)
@@ -103,6 +110,7 @@ Required artifacts (directory + children):
 - `02_design/security-review/` — `index.md` + SEC-<seq> children
 - `02_design/infra/` — `index.md` + INF-<seq> children (when infrastructure design is in scope)
 - For each area above: a matching review in `02_design/reviews/` with ≥2 participants using `templates/artifacts/review-meeting.md.tmpl`. Directors may Track-B self-review their own authored areas to surface blind spots (Phase 7 Task 9 positive pattern).
+- **Architecture review participation (mandatory)**: `02_design/architecture/` 의 4 영역 통합 리뷰는 다음 참가자가 모두 포함되어야 PASS — application-architect (응용), software-architect (SW), technical-architect (기술), data-modeler (데이터), security-specialist (보안). 응용·기술 ADR 의 상호 인용 정합성 (AA `application/components/CMP-*` ↔ TA `technology/deployment-topology.md`, SWA `application/interface-policy.md` ↔ AA `application/business-flow.md`) 을 리뷰 본문에서 점검.
 
 Advisory gates (mandatory):
 - `business-manager` stage-entry advisory
