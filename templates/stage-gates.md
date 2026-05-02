@@ -125,6 +125,11 @@ Audit gate (MANDATORY regardless of scale):
 - `99_audit/02_design-audit/audit-report/index.md` + `FIND-*.md` final result = PASS
 - Invoked via `scripts/run_audit.sh <project> 02_design <prompt-file>` (helper guarantees CLI arg order and output path)
 
+Exception-handling ratio policy (`docs/exception-handling-ratio-policy.md`):
+- **PRG/IF/SCN/BATCH 본문 FMEA 표 의무** (정책 §3·§4) — 각 산출물에 7 Failure Categories enumerate + 표 양식. SWA Track B 자문 finding 시 corrective.
+- **UT-*.md frontmatter 비율 강제** (정책 §5) — `variant-happy-count / variant-count ≤ 0.3`, `variant-exception-count / variant-count ≥ 0.7`, 합계 일관성. `validate_artifact_hierarchy.py` 가 자동 검증 (Hierarchy gate 에 포함).
+- 변경 후 단계적 도입 — 기존 UT 가 frontmatter 비율 필드를 갖지 않으면 advisory skip 되며, 새로 저작·갱신되는 UT 는 strict 검증.
+
 Program-type artifact rules (per PRG-ID):
 
 | PRG `type` | 필수 산출물 | depends-on 연결 |
@@ -158,6 +163,12 @@ Advisory gates:
 
 RTM requirement:
 - `RTM/by-stage/03_implementation.md` 소스경로 column populated for every PRG-ID
+
+Exception-handling ratio policy (정책 §6):
+- **One RPC = one handler**: PRG/RPC 1개당 핸들러 함수 1개. variant 별 함수 분리 시 코드 리뷰 finding (SWA 자문).
+- **Precondition guard chain**: 핸들러 진입 직후 단일 검증 체인. 흩어진 if 분기 금지.
+- **예외 경로 누락 없음**: UT-*.md 의 모든 exception variant 가 코드의 guard chain 에 검증 분기로 존재. 누락은 finding.
+- **코드 헤더 주석에 카테고리·variant 키워드 명시**: 어느 7 카테고리·variant 를 다루는지 핸들러 헤더 주석에 enumerate.
 
 MOCK→real environment gate (Phase 7 patch #11):
 - If 03_implementation was authored in MOCK mode (no real DB / external API), PM must author a transition checklist in
