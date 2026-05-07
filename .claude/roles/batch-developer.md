@@ -78,6 +78,7 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
 - Effort is always in range `medium | high | xhigh`.
 - Record `depends-on` / `referenced-by` in every artifact frontmatter.
 - Delegation: you do not make Track A calls. Coordination is via Track B advisors or upward Escalation.
+- **구현 시점 행동 원칙 (Coding Discipline SSOT)**: `docs/coding-discipline.md` §1(Think Before Coding — 가정 표면화)·§3(Surgical Changes — 인접 코드 보존) 준수. §2(Simplicity First) 는 7 Failure Categories enumeration 정책(`docs/exception-handling-ratio-policy.md`)이 우선 적용.
 
 ## Escalation Protocol
 

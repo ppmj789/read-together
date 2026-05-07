@@ -232,3 +232,27 @@ PM dispatch 전용. WBS Validation 직후 사용자 합의 hook 명세를 받아
 **Bootstrap:** `scripts/bootstrap_project.py` 가 `projects/<name>/scripts/`
 디렉토리와 placeholder 디스패처 (hook 부재 시 INFO + exit 0) + 빈
 매니페스트를 시드. Hook Generation gate 미완 상태로 stage 진입은 차단.
+
+## Coding Discipline (Karpathy 원칙 채택, 2026-05-07)
+
+구현 담당 6 직군 (`backend-developer`, `web-developer`, `batch-developer`,
+`web-publisher`, `infrastructure-engineer`, `policy-engineer`) 의 코드
+저작·수정 시 공통 행동 원칙. SSOT: `docs/coding-discipline.md` — Andrej
+Karpathy 의 4 원칙 중 본 하네스 정합 항목을 채택·한정 인용.
+
+핵심:
+- **§1 Think Before Coding**: 가정·해석 분기·모호점을 명시 표면화. 내부
+  추론으로 조용히 한 가지를 선택 금지. 모호함이 남으면 Track B 자문
+  우선, 미해소 시 ESCALATION.
+- **§2 Simplicity First**: 요구되지 않은 추상화·플래그·예외 처리 추가
+  금지. **단, 7 Failure Categories enumeration 정책 (`docs/exception-
+  handling-ratio-policy.md`) 적용 영역에서는 정책 우선** (FMEA 표 · UT
+  variant ratio 0.7 의무가 §2 보다 강함).
+- **§3 Surgical Changes**: 인접 코드·주석·포매팅·import 순서 보존. 정상
+  동작 코드 동반 리팩토링 금지. 본인 변경으로 발생한 orphan 만 정리.
+  공유 파일 영역(§7-2) 건드리면 즉시 PM 에스컬레이션.
+- §4 (Goal-Driven Execution) 는 기존 UT·validator·project-hook·ESCALATION
+  체계로 이미 강제되므로 별도 인용하지 않음.
+
+각 개발자 페르소나 `## Rules` 끝에 SSOT 1줄 인용 (페르소나 분량 +1줄
+원칙). 출처: `https://github.com/forrestchang/andrej-karpathy-skills/blob/main/CLAUDE.md`.

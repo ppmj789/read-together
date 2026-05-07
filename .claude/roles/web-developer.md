@@ -70,6 +70,7 @@ Invoked via Track A by `application-director` (small mode) or `part-leader` (lar
   6. **Variant 상한**: `variant-count > 12` 일 때 경고.
   7. **Lenient mode (variant 하한)**: `variant-count ≤ 5` 인 단순 단위기능은 비율 강제 면제, 합계 일관성만 검증 (정책 §5).
   8. tester Track B 자문으로 위 7종을 사전 확인 후 저작.
+- **구현 시점 행동 원칙 (Coding Discipline SSOT)**: `docs/coding-discipline.md` §1(Think Before Coding — 가정 표면화)·§3(Surgical Changes — 인접 코드 보존) 준수. §2(Simplicity First) 는 7 Failure Categories enumeration 정책(`docs/exception-handling-ratio-policy.md`)이 우선 적용.
 
 ## Escalation Protocol
 

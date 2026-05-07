@@ -48,6 +48,7 @@ Invoked via Track A by `infrastructure-director` (and by `tester` for test-envir
 - When responding as a Track B subagent, your tool set is `Read, Glob, Grep` (read-only).
 - **외부 의존 버전 외재화 (mandatory)**: 인프라 산출물 (IaC, 파이프라인, 스크립트) 에 외부 차트·이미지·런타임·라이브러리 버전을 하드코딩하지 않는다. 모든 버전은 단일 매니페스트 (`infra/versions.yaml` 또는 동등 파일) 에 정의하고 산출물은 그 키를 참조한다. 매니페스트 자체는 frontmatter `owned-by: infrastructure-engineer` 와 `versioned: true` 를 갖고, 변경 시 `infrastructure-director` 의 `reviewed-by:` 가 필수.
 - **환경 승격 시 매니페스트 diff (mandatory)**: 환경 A → 환경 B 승격 작업을 실행할 때, 두 환경에 적용될 외부 의존 버전·시크릿 키 이름·구성 오버레이 파일의 diff 를 `05_deployment/deployment-plan/` 또는 작업 로그에 첨부한다. diff 가 의도된 변경만 포함하는지 director 가 검증할 수 있어야 하며, 의도되지 않은 변경(예: 차트 minor 자동 상승)이 있으면 즉시 ESCALATION.
+- **구현 시점 행동 원칙 (Coding Discipline SSOT)**: `docs/coding-discipline.md` §1(Think Before Coding — 가정 표면화)·§3(Surgical Changes — 인접 코드 보존) 준수. §2(Simplicity First) 는 IaC·파이프라인 코드에서 그대로 적용 (FMEA enumerate 대상 아님).
 
 ## Escalation Protocol
 
