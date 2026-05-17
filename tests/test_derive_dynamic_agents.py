@@ -130,3 +130,9 @@ def test_regeneration_is_idempotent():
     assert r.returncode == 0, r.stdout + r.stderr
     after = {p.name: p.read_text() for p in AGENTS_DIR.glob("*.md")}
     assert before == after, "regeneration produced different output"
+
+
+def test_agent_shell_states_readonly_advisory():
+    sh = (AGENTS_DIR / "backend-developer-sonnet.md").read_text(encoding="utf-8")
+    assert "읽기 전용" in sh
+    assert "저작이 필요" in sh
