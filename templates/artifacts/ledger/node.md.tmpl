@@ -1,0 +1,30 @@
+---
+id: <ID>
+parent: <PARENT_ID_OR_EMPTY>
+role: <ROLE>
+dispatched-by: PM
+model: <opus|sonnet|haiku>
+stage: <STAGE>
+status: pending
+artifacts: []
+rtm: []
+created: <ISO8601>
+responded:
+---
+
+## REQUEST
+<!-- PM 이 부모 NEXT 지시로부터 작성. 생성 후 정정은 append-only -->
+
+## RESPONSE
+<!-- 이 노드 담당 general-purpose 가 직접 작성. 실산출물은 링크만, 본문 복제 금지 -->
+
+## CHILD INDEX
+| child id | path | role | one-line purpose | status |
+|----------|------|------|------------------|--------|
+
+## NEXT
+<!-- 기계가독 지시 (PM 이 파싱·실행). 한 줄당 하나:
+  DISPATCH <child-id> role=<role> model=<opus|sonnet|haiku>
+  ESCALATE <사유>
+  CLOSE
+-->
