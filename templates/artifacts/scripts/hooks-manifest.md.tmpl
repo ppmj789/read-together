@@ -13,7 +13,7 @@ related:
 
 본 파일은 본 프로젝트에 fit 한 검증 hook 의 단일 출처입니다. WBS Validation gate 통과 후 PM 이 사용자와 협의해 결정한 hook 들을 `policy-engineer-opus` 가 저작하면 본 매니페스트에 기록됩니다.
 
-본 파일이 실제 `hook_*.py` 목록과 일치하는지는 PM 의 stage-gate self-check 가 점검합니다 (drift 시 stage-gate fail). 변경은 PM 이 `policy-engineer` Track A 재호출로 처리하며, hook 코드를 직접 수정하지 않습니다.
+본 파일이 실제 `hook_*.py` 목록과 일치하는지는 PM 의 stage-gate self-check 가 점검합니다 (drift 시 stage-gate fail). 변경은 PM 이 `policy-engineer` 페르소나 general-purpose 노드 재dispatch 로 처리하며 (call-playbook §0-1), hook 코드를 직접 수정하지 않습니다.
 
 ## 등록된 Hook 목록
 

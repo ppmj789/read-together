@@ -6,16 +6,16 @@ started: YYYY-MM-DD
 
 # Agent Call Log
 
-모든 Track A (`claude -p --dangerously-skip-permissions [--add-dir <p>] --append-system-prompt ...`) 및 Track B (Agent 툴 `subagent_type=...`) 호출을 이 파일에 append 한다 (설계서 §2-3, §2-6). Track A CLI 인자 순서는 load-bearing — `--add-dir` 은 반드시 `--append-system-prompt` 앞에 (Phase 7 Task 6 finding).
+모든 노드 dispatch(general-purpose 저작 노드) 및 읽기전용 자문 호출을 이 파일에 append 한다 (설계서 §2-3, §2-6).
 
 ## 포맷
 
 각 호출마다 아래 표에 한 행 추가.
 
-| Timestamp (UTC) | Caller | Target | Track | Model | Effort | Retry | Stage | Reason / Context |
-|-----------------|--------|--------|-------|-------|--------|-------|-------|------------------|
-| YYYY-MM-DD HH:MM | project-manager | application-director | A | opus | xhigh | 1 | 00_kickoff | 01_analysis 진입 준비 — application-director 에게 요구사항·AS-IS·TO-BE 주도 위임 |
-| YYYY-MM-DD HH:MM | project-manager | business-manager | B | opus (Skill) | xhigh | 1 | 00_kickoff | 예산 가이드 자문 (§2-6 필수 경유) |
+| Timestamp (UTC) | Caller | Target | call-type | Model | Effort | Retry | Stage | Reason / Context |
+|-----------------|--------|--------|-----------|-------|--------|-------|-------|------------------|
+| YYYY-MM-DD HH:MM | project-manager | application-director | 저작 | opus | xhigh | 1 | 00_kickoff | 01_analysis 진입 준비 — application-director 에게 요구사항·AS-IS·TO-BE 주도 위임 |
+| YYYY-MM-DD HH:MM | project-manager | business-manager | 자문 | opus (Skill) | xhigh | 1 | 00_kickoff | 예산 가이드 자문 (§2-6 필수 경유) |
 
 **Timestamp**: UTC, `YYYY-MM-DD HH:MM` 형식. append 순서는 실행 완료 시각 기준 단조 증가 — 시간 역행이 발생하면 로그 무결성 문제 (신규 이슈 N5). 단계 종료 전 `sort` 로 정렬 점검 권장.
 
@@ -23,7 +23,7 @@ started: YYYY-MM-DD
 
 ## 단계별 집계 (사업관리가 단계 종료 시 갱신)
 
-| Stage | Track A 호출 수 | Track B 호출 수 | 누적 토큰 추정 | 누적 비용 추정 | 비고 |
+| Stage | 저작 노드 dispatch 수 | 읽기전용 자문 수 | 누적 토큰 추정 | 누적 비용 추정 | 비고 |
 |-------|--------------|--------------|---------------|---------------|------|
 | 00_kickoff | | | | | |
 | 01_analysis | | | | | |
@@ -46,5 +46,5 @@ started: YYYY-MM-DD
 ## 비고
 
 - Model 컬럼에 `(Skill)` 표기가 있으면 Skill 경로(Opus·xhigh 고정)로 호출된 것.
-- Track A 재시도 시 `Retry` 컬럼을 증가하고 Reason 에 "RETRY from <timestamp>, cause: ..." 명시. ESCALATION 발생 시 Reason 컬럼 `ESCALATION: ...` 접두.
+- 노드 재dispatch 시 `Retry` 컬럼을 증가하고 Reason 에 "RETRY from <timestamp>, cause: ..." 명시. ESCALATION 발생 시 Reason 컬럼 `ESCALATION: ...` 접두.
 - cache-hit 실측 ~95% 기준, 비용 추정은 cache-hit 엔벨로프 사용 (§3 budget.md 갱신 — Phase 7 patch #7).
