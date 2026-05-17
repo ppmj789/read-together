@@ -3,11 +3,13 @@
 Claude Code multi-subagent system that replicates an enterprise SI
 (System Integration) project execution organization.
 
-- Spec: `docs/superpowers/specs/2026-04-17-ai-si-team-design.md`
-  (+ Amendment `2026-04-18-amendment-01-claude-p-invocation.md`)
-- Build plan: `docs/superpowers/plans/2026-04-17-ai-si-team-build.md`
-- Phase 7 E2E: `docs/superpowers/plans/2026-04-18-phase7-e2e.md`
-- Call matrix: `docs/call-playbook.md` — per-role Track A/B invocation rules (drift-guarded)
+- **Current spec**: `docs/superpowers/specs/2026-05-16-no-claude-p-ledger-redesign-design.md`
+  (Agent single-primitive + ledger redesign; supersedes `2026-04-17-ai-si-team-design.md`
+  + Amendment `2026-04-18-amendment-01-claude-p-invocation.md` — superseded by 2026-05-16 redesign)
+- **Current plan**: `docs/superpowers/plans/2026-05-16-no-claude-p-ledger-redesign.md`
+- Build plan (historical): `docs/superpowers/plans/2026-04-17-ai-si-team-build.md`
+- Phase 7 E2E (historical): `docs/superpowers/plans/2026-04-18-phase7-e2e.md`
+- Call matrix: `docs/call-playbook.md` — per-role invocation contract §0 (drift-guarded)
 
 ## Quick Start
 
@@ -17,11 +19,14 @@ Claude Code multi-subagent system that replicates an enterprise SI
 3. Launch a Claude Code session from the repo root — `SessionStart` hook
    auto-loads the `project-manager` Skill; the session itself is the PM.
 4. Talk to PM. PM is the single contact point; it orchestrates
-   everything else via **Track A** (Bash `claude -p` subprocesses) and
-   **Track B** (Agent-tool subagents).
+   everything else via the **Agent tool** — authoring nodes
+   (`subagent_type=general-purpose` + persona injection + model tier)
+   and read-only advisory subagents (`subagent_type=<role>-<variant>`).
+   All delegation is logged to `projects/<name>/ledger/`.
 5. At each stage gate PM reports to you and waits for your approval.
-6. When an audit is due, PM runs `scripts/run_audit.sh` which spins up
-   the `audit-team` in an isolated git worktree.
+6. When an audit is due, PM runs `scripts/run_audit.sh` which creates
+   an isolated git worktree, copies the project, and prints PM dispatch
+   guidance for the `audit-team` general-purpose node (`claude -p` 제거됨).
 
 ## Bootstrapping a new project
 
@@ -37,6 +42,7 @@ Creates `projects/<project-name>/` with the full v2 hierarchical tree:
 - top-level logs: `project-state.md`, `agent-call-log.md`, `escalations.md`,
   `00_kickoff/statement-of-work.md`, `00_kickoff/rollback-history.md`
 - `99_audit/` skeleton for design-audit + closing-audit (+ analysis-audit when `large`)
+- `ledger/` — `index.md` + Dewey-tree delegation nodes (`A`, `A-1`, `A-1-1`, …)
 - `index.md` `child-count` fields auto-synced to actual contents
 
 **Project artifacts are gitignored** (`projects/*/` in `.gitignore`).
@@ -56,19 +62,28 @@ git remote add origin <client-repo-url>
 git push -u origin master
 ```
 
-## Invocation tracks (spec §1-2)
+## Invocation contract (call-playbook §0)
 
-| Track | Command | Purpose | Tool set |
-|-------|---------|---------|----------|
-| **Track A** | `claude -p --dangerously-skip-permissions [--add-dir <p>] --append-system-prompt "$(cat .claude/roles/<role>.md)" --model <m> --effort <e> ...` | Primary authoring · nested dispatch · advisory dispatch | Full (Read/Write/Edit/Glob/Grep/Bash/Agent) |
-| **Track B** | `Agent` tool with `subagent_type=<agent-shell-name>` | Advisory / review / analysis only | `Read, Glob, Grep` (read-only, runtime-fixed) |
-| **Skill** | `project-manager` Skill loaded by SessionStart hook | PM persona on the user-facing top-level session | Inherits session tools (Opus · xhigh fixed) |
+`claude -p` subprocess is **abolished** (2026-05-16). All delegation uses
+the current-session **Agent tool** as a single primitive:
 
-> **CLI argument order is load-bearing**: `--add-dir` must precede
-> `--append-system-prompt`. The reverse order silently consumes the
-> positional prompt as the `--add-dir` value and aborts the session
-> with `Error: Input must be provided` (Phase 7 Task 6 finding).
-> `scripts/run_audit.sh` enforces the correct order automatically.
+| Node type | How invoked | Purpose | Tool set |
+|-----------|-------------|---------|----------|
+| **Authoring node** | `Agent` tool, `subagent_type=general-purpose` + persona prompt from `.claude/roles/<role>.md` injected inline + `model` tier | Primary authoring, writes its own artifacts and its own ledger node | Full (Read/Write/Edit/Glob/Grep/Bash) — no nested Agent |
+| **Advisory (read-only)** | `Agent` tool, `subagent_type=<role>-<variant>` (`.claude/agents/` shells) | Advisory / review / analysis only | `Read, Glob, Grep` (read-only, runtime-fixed) |
+| **PM Skill** | `project-manager` Skill loaded by SessionStart hook | PM persona — sole mandatory bus for all hops; single scribe of shared files | Inherits session tools (Opus · xhigh fixed) |
+
+`general-purpose` nodes do not hold the Agent tool → self-nesting is
+impossible by design (call-playbook §0-3).
+
+## Ledger delegation system (spec 2026-05-16 / call-playbook §0-4)
+
+All PM-to-node delegation is recorded in `projects/<name>/ledger/` as a
+Dewey-numbered tree (`A` → `A-1` → `A-1-1`). Each node is a
+self-contained document with `## REQUEST` / `## RESPONSE` / `## CHILD INDEX` /
+`## NEXT` sections plus links to actual artifacts and RTM IDs.
+`python3 scripts/validate_ledger.py <project>` must exit 0 before any
+stage can be declared complete.
 
 ## Agent Catalog
 
@@ -93,7 +108,7 @@ down the delegation chain.
 
 Source of truth layout:
 - `.claude/roles/<role>.md` — single-source persona (one per role, no model suffix)
-- `.claude/agents/<role>-<variant>.md` — Track B shells derived from roles
+- `.claude/agents/<role>-<variant>.md` — advisory (read-only) shells derived from roles
 - `.claude/skills/project-manager/SKILL.md` — PM skill shell
 
 ## Artifact Templates
@@ -104,6 +119,7 @@ See `templates/artifacts/` for stage and role deliverable skeletons:
 - `change-requests/` — `cr-request` / `cr-impact-analysis` / `cr-decision` / `cr-action-result` / `index`
 - `audit/` — `audit-plan` + `finding` (with `pm-classification` A/B/C/D field)
 - `rtm/` — `index` + `by-stage` templates
+- `ledger/` — `node.md.tmpl` (REQUEST/RESPONSE/CHILD INDEX/NEXT skeleton) + `index.md.tmpl`
 - top-level logs — `project-state` / `agent-call-log` / `escalations` / `review-meeting` / `rollback-history` / `statement-of-work`
 
 Every template carries the required frontmatter schema; violations are
@@ -119,6 +135,9 @@ hierarchy gate, and approval gate.
 The "Hierarchy gate" line requires `validate_artifact_hierarchy.py` to
 exit 0 and — when back-references changed — `sync_back_references.py`
 to report clean.
+
+The "Ledger-completeness gate" requires `python3 scripts/validate_ledger.py <project>`
+to exit 0; open REQUEST nodes (missing RESPONSE) block stage completion.
 
 ## Validation & helper scripts
 
@@ -152,8 +171,12 @@ python3 scripts/bootstrap_project.py <name> --scale small|large
 # Regenerate the 39 dynamic-variant agent shells from role templates
 python3 scripts/derive_dynamic_agents.py
 
-# Audit launcher (creates worktree + enforces CLI order + 3-layer output-path defense)
+# Audit launcher (creates worktree + copies project + prints PM dispatch guidance;
+# claude -p 제거됨 — PM dispatches audit-team as general-purpose node)
 scripts/run_audit.sh <project> <cycle-id> <prompt-file>
+
+# Ledger completeness: all REQUEST nodes must have a RESPONSE (stage gate)
+python3 scripts/validate_ledger.py <project>
 
 # Rollback helper (MOVE vs SNAPSHOT modes — §4-3)
 scripts/execute_rollback.sh <project> <stage> <mode>
@@ -162,7 +185,7 @@ scripts/execute_rollback.sh <project> <stage> <mode>
 python3 -m pytest -q
 ```
 
-At time of writing: **153 tests passing · `validate_agent --all` 68/68 clean**.
+At time of writing: **169 tests passing · `validate_agent --all` 68/68 clean**.
 
 ## Phase 7 E2E outcome (2026-04-19)
 
@@ -181,6 +204,7 @@ Notable structural additions:
   files are PM-only; subprocesses escalate instead of editing directly.
 - **`--add-dir` scope limit** (call-playbook §0) — subprocesses receive
   only their own authored directory, eliminating parallel-write races.
+  (2026-05-16 `claude -p` 폐기로 대체 — 현행 아님)
 - **Rollback MOVE/SNAPSHOT modes** (`scripts/execute_rollback.sh`).
 - **Audit finding classification** A/B/C/D on the `pm-classification`
   frontmatter field; type-A transitions to `resolved` via
@@ -188,6 +212,7 @@ Notable structural additions:
 - **Nested Track A depth guard** — 4-level chain recommended; deeper
   chains must pass a `condensed-brief.md` (95 % cache-hit is not
   enough to preserve context past 4 levels).
+  (2026-05-16 `claude -p` 폐기로 대체 — 현행 아님)
 
 Full report: `docs/superpowers/findings/2026-04-18-phase7-findings.md`
 and `docs/superpowers/findings/2026-04-19-phase7-part-b-findings.md`.
@@ -244,7 +269,7 @@ SSOT: `docs/exception-handling-ratio-policy.md`.
 
 1. PM 이 SOW·WBS·project-plan 을 분석해 후보 hook 5–8 건을 추천
 2. PM 이 사용자에게 후보 제시 → 사용자 선택·추가·제외 합의
-3. PM 이 합의 명세를 `policy-engineer-opus` 에 Track A dispatch
+3. PM 이 합의 명세를 `policy-engineer-opus` 에 general-purpose 노드 dispatch (call-playbook §0-1)
 4. policy-engineer 가 `projects/<name>/scripts/` 에 디스패처 + 개별
    hook + manifest 저작 (Python 표준 라이브러리만, 결정론, 읽기 전용,
    exit 0/1/2 규약)
