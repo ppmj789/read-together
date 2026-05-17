@@ -6,30 +6,51 @@
 
 ---
 
-## 0. 개요
+## 0. 개요 — 단일 호출 계약 (claude -p 폐기)
 
-본 문서는 **역할별 호출 규칙의 중앙 매트릭스 정본**이다. 각 `.claude/roles/<role>.md` 의 `## How You Invoke Sub-executions (Track A)` / `## How You Consult Advisors (Track B)` 섹션은 본 문서의 해당 역할 하위 표를 **발췌·복사** 한 것과 정합해야 한다.
+본 플랫폼은 `claude -p` subprocess 를 사용하지 않는다. "Track A" 개념은
+폐기됐다. 모든 위임·저작·자문은 현 세션의 **Agent 툴 단일 primitive** 로
+수행한다.
 
-`scripts/validate_agent.py` 의 drift-guard 가 Role 파일의 표와 본 문서 §5 의 각 역할 섹션 간 정합(행 누락·잉여·금지 사례 위반) 을 검증한다.
+### 0-1. 저작 노드 호출
 
-### 호출 트랙 (설계서 §1-2)
+PM(유일한 오케스트레이터)이 Agent 툴로 dispatch:
 
-| 트랙 | 커맨드 | 용도 | 툴셋 |
-|------|-------|-----|------|
-| **Track A** | `claude -p --dangerously-skip-permissions [--add-dir <p>] --append-system-prompt "$(cat .claude/roles/<role>.md)" --model <m> --effort <e> ...` | 주 산출물 저작·하위 호출·자문 dispatch | 전체 (Read/Write/Edit/Glob/Grep/Bash/Agent) |
-| **Track B** | 현 세션의 Agent 툴로 `subagent_type=<agent-name>` dispatch | 자문·리뷰·분석 응답만 | `Read, Glob, Grep` (읽기 전용) |
-| **Skill** | 현 세션에서 `project-manager` 등 Skill invoke | PM 세션 개시 · 경량 자문 | 세션 툴 계승 (PM Skill 은 Opus·xhigh 고정) |
+- `subagent_type` = `general-purpose`
+- `model` = 난이도 기반 (`opus` | `sonnet` | `haiku`)
+- `prompt` = (1) `[PERSONA]` 블록에 `.claude/roles/<role>.md` 전문 inline
+  주입 + self-attestation 지시, (2) 처리할 ledger 노드 파일 경로,
+  (3) 출력 계약: 실산출물은 소유 경로에 직접 Write, 같은 ledger 노드의
+  `## RESPONSE`/`## CHILD INDEX`/`## NEXT` 작성 + frontmatter `status`
+  갱신, PM 반환은 **노드 경로 + status + NEXT 요약만**.
 
-> ⚠️ **Track A CLI 인자 순서는 load-bearing**: `--add-dir` 은 반드시 `--append-system-prompt` 앞에. 역순이면 positional prompt 가 `--add-dir` 값으로 흡수되어 세션이 `Error: Input must be provided` 로 종료 (Phase 7 Task 6 finding). 감리 호출은 `scripts/run_audit.sh` 헬퍼가 이 순서를 자동 보장.
+`effort` 는 Agent 툴 미노출 → model 티어 + 프롬프트 명시로 근사.
 
-> 📁 **`--add-dir` 범위 한정 규칙 (Phase 7 Part B meta-test 6 도출, C-18-2)**: `--add-dir` 에는 **해당 subprocess 가 저작할 산출물 디렉토리만** 지정한다. 병렬 Track A 호출 시 공용 디렉토리 전체를 다수 subprocess 에 중복 발급하면 동일 파일을 동시에 수정할 여지가 생겨 race 가 발생할 수 있다 (Task 18: 타이밍 우연 의존, 구조적 보장 없음).
->
-> - 각 subprocess 가 쓸 수 있는 경로 = **(a) 자기 소유 산출물 디렉토리** + **(b) 프로젝트 루트 한정 Read 경로** (--add-dir 이 없어도 기본 cwd 로 Read 가능).
-> - 공유 파일(`project-state.md`, `RTM/`, `agent-call-log.md`, `00_kickoff/rollback-history.md`, `escalations.md`) 이 있는 경로를 `--add-dir` 로 발급하지 말 것. 이들은 PM 단독 수정 영역 (설계서 §7-2 "공유 파일 단독 수정 규칙" 참조).
-> - 감리 호출은 `scripts/run_audit.sh` 가 `--add-dir <project>/99_audit` 로 한정해 자동 발급.
+### 0-2. 순수 자문 호출 (읽기전용)
+
+저작이 불필요한 분석·리뷰는 `subagent_type=<role>-<variant>`
+(`.claude/agents/`, 툴셋 Read/Glob/Grep)로 dispatch. 더 저렴함.
+
+### 0-3. PM 의 위치
+
+PM 은 모든 hop 의 필수 버스이자 공유 파일 단독 scribe
+(`project-state.md`·`RTM/**`·`escalations.md`·`agent-call-log.md`·
+`rollback-history.md`). general-purpose 는 Agent 툴 미보유 → 자율 중첩
+불가. PM 은 본문이 아닌 노드 경로·`NEXT:` 만 셔틀한다.
+
+### 0-4. ledger 프로토콜
+
+위임·통신은 `projects/<name>/ledger/` 계층 트리에 축적된다. 노드 ID =
+Dewey(`A` → `A-1` → `A-1-1`). 노드 = 요청-응답 완결 단일 문서이며
+실산출물(00~05 트리)·RTM-ID 를 링크하는 래퍼다. 스키마·소유 규칙은
+spec `docs/superpowers/specs/2026-05-16-no-claude-p-ledger-redesign-design.md` §2.
 
 > 📝 **산출물 경로 표기 관행 (Phase 7 Part B meta-test 2 도출, C-14-3)**: 각 역할의 산출물 경로는 **프로젝트 상대 경로** (`projects/<project>/<stage>/...` 또는 단순히 `<stage>/...`) 로 기술한다. 절대 경로 (`/home/earth/ai_team_meta/...`) 나 worktree-특정 경로는 사용하지 않는다. persona probe 응답, Role 파일 `## Artifacts You Own` 섹션, 산출물 frontmatter 의 `related:` 리스트에 동일하게 적용.
 > - 근거: 동일 프로젝트가 다수 worktree 에서 실행될 수 있고(예: master, audit worktree, meta-test worktree), 절대 경로는 worktree 이동 시 유효성을 잃음. 상대 경로는 모든 worktree 에서 동일하게 해석.
+
+본 문서는 **역할별 호출 규칙의 중앙 매트릭스 정본**이다. 각 `.claude/roles/<role>.md` 의 `## How You Invoke Sub-executions` / `## How You Consult Advisors` 섹션은 본 문서의 해당 역할 하위 표를 **발췌·복사** 한 것과 정합해야 한다.
+
+`scripts/validate_agent.py` 의 drift-guard 가 Role 파일의 표와 본 문서 §5 의 각 역할 섹션 간 정합(행 누락·잉여·금지 사례 위반) 을 검증한다.
 
 ---
 
@@ -141,26 +162,26 @@ Request to: <해결 요청 대상/내용>
 
 | 금지 사례 | 사유 |
 |---------|------|
-| PM 이 개발자·파트리더를 직접 Track A 호출 (총괄 건너뜀) | 두 단계 이상 건너뛴 지정 — 설계서 §2-3 위임 체인 위반 |
-| 응용총괄이 개발자의 모델·effort 를 파트리더 경유 없이 직접 지정 (대규모 시) | 동일 |
-| 실무자가 다른 실무자를 Track A 호출 | 실무자는 Track A 호출 권한 없음 (자문 Track B 만) |
-| 사업관리가 직접 하위 에이전트 호출 (Track A 또는 B) | 예산 프레임·모니터링만 담당 (설계서 §2-6) |
+| PM 이 개발자·파트리더를 직접 저작 노드로 호출 (총괄 건너뜀) | 두 단계 이상 건너뛴 지정 — 설계서 §2-3 위임 체인 위반 |
+| 응용총괄이 개발자의 모델을 파트리더 경유 없이 직접 지정 (대규모 시) | 동일 |
+| 실무자가 다른 실무자를 저작 노드로 호출 | 실무자는 저작 노드 호출 권한 없음 (순수 자문만) |
+| 사업관리가 직접 하위 에이전트 호출 | 예산 프레임·모니터링만 담당 (설계서 §2-6) |
 | 감리팀이 코드·산출물 직접 수정 | 감리는 읽기 전용 지적만 (설계서 §2-5) |
-| PM 을 `claude -p` subprocess 로 호출 | PM 은 Skill 전용 (의사결정 #14) |
 | 자문 Skill 을 Opus·xhigh 외 값으로 호출 | Skill frontmatter 고정 (의사결정 #19) |
-| `--agent <name>` 플래그로 Track A 호출 | 서브에이전트 모드로 전환되어 Agent 툴 박탈 — 대신 `--append-system-prompt` 사용 (의사결정 #20) |
-| Track B 서브에이전트에게 Write/Edit/Bash 가 필요한 작업 지시 | 서브에이전트 실제 툴셋 = Read/Glob/Grep (의사결정 #21). Track A 로 대체 |
-| Effort `low` 또는 `max` 지정 | 유효 범위 `medium | high | xhigh` (의사결정 #18) |
+| 순수 자문 노드에게 Write/Edit/Bash 가 필요한 작업 지시 | 서브에이전트 실제 툴셋 = Read/Glob/Grep (의사결정 #21). 저작 노드로 대체 |
+| `claude -p` subprocess 를 발생시키는 모든 호출 | 무과금·무claude-p 제약 (spec 2026-05-16) |
+| general-purpose 노드가 공유 파일(§7-2)을 직접 수정 | 공유 파일은 PM 단독 scribe |
+| 저작 노드가 본문을 PM 에 반환 (경로 아닌 본문 셔틀) | PM 컨텍스트 보호 — 경로·NEXT 만 |
 
 ---
 
 ## 5. 역할별 호출 규칙 정본
 
-각 역할에서 Role 파일의 `## How You Invoke Sub-executions (Track A)` 및 `## How You Consult Advisors (Track B)` 섹션은 본 §5 의 해당 역할 하위 표를 복사한다. 역할이 해당 트랙 호출 주체가 아닐 경우 해당 섹션 자체를 생략한다.
+각 역할에서 Role 파일의 `## How You Invoke Sub-executions` 및 `## How You Consult Advisors` 섹션은 본 §5 의 해당 역할 하위 표를 복사한다. 역할이 해당 호출 주체가 아닐 경우 해당 섹션 자체를 생략한다.
 
 ### 5-1. project-manager (Skill 전용, 사용자 세션)
 
-#### 5-1-1. Track A 호출 규칙
+#### 5-1-1. NEXT 디스패치 선언 규칙
 
 | 시점 / 트리거 | 호출 대상 | 목적 | 전달 컨텍스트 |
 |-------------|---------|-----|------------|
@@ -174,7 +195,7 @@ Request to: <해결 요청 대상/내용>
 | 05_deployment 진입 | infrastructure-director | 배포 계획·실행 | 검증된 산출물 |
 | 감리 단계 도래 | (사용자에게 안내) | 사용자가 worktree 에서 audit-team Track A 실행 | 감리 범위 |
 
-#### 5-1-2. Track B 자문 호출 규칙
+#### 5-1-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -189,7 +210,7 @@ Request to: <해결 요청 대상/내용>
 
 ### 5-2. application-director
 
-#### 5-2-1. Track A 호출 규칙
+#### 5-2-1. NEXT 디스패치 선언 규칙
 
 | 시점 / 트리거 | 호출 대상 | 목적 | 전달 컨텍스트 |
 |-------------|---------|-----|------------|
@@ -207,7 +228,7 @@ Request to: <해결 요청 대상/내용>
 | 03_implementation 진입 (소규모) | batch-developer | 배치 구현 (있을 시) | 동일 |
 | 리뷰 회의 오케스트레이션 | 관련 역할 2인 이상 (아키텍트 자문 포함) | 2인 원칙 리뷰 | 리뷰 대상 산출물 |
 
-#### 5-2-2. Track B 자문 호출 규칙
+#### 5-2-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -222,7 +243,7 @@ Request to: <해결 요청 대상/내용>
 
 ### 5-3. infrastructure-director
 
-#### 5-3-1. Track A 호출 규칙
+#### 5-3-1. NEXT 디스패치 선언 규칙
 
 | 시점 / 트리거 | 호출 대상 | 목적 | 전달 컨텍스트 |
 |-------------|---------|-----|------------|
@@ -235,7 +256,7 @@ Request to: <해결 요청 대상/내용>
 | 04_test 진입 | infrastructure-engineer | 테스트 환경 준비 | 테스트 계획 |
 | 05_deployment 진입 | infrastructure-engineer | deployment-plan·operation-manual·training-material 저작 | 검증된 산출물 |
 
-#### 5-3-2. Track B 자문 호출 규칙
+#### 5-3-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -251,11 +272,11 @@ Request to: <해결 요청 대상/내용>
 
 사업관리는 **하위를 직접 호출하지 않는다** (설계서 §2-6 경계). 자문·보고만 수행.
 
-#### 5-4-1. Track A 호출 규칙
+#### 5-4-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-4-2. Track B 자문 호출 규칙 (필요 시 상위 보고용)
+#### 5-4-2. 순수 자문(읽기전용) 호출 규칙 (필요 시 상위 보고용)
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -268,11 +289,11 @@ Request to: <해결 요청 대상/내용>
 
 QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
-#### 5-5-1. Track A 호출 규칙
+#### 5-5-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-5-2. Track B 자문 호출 규칙
+#### 5-5-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -283,7 +304,7 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-6. tester
 
-#### 5-6-1. Track A 호출 규칙
+#### 5-6-1. NEXT 디스패치 선언 규칙
 
 | 시점 / 트리거 | 호출 대상 | 목적 | 전달 컨텍스트 |
 |-------------|---------|-----|------------|
@@ -291,7 +312,7 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 (tester 는 주로 테스트 설계·실행의 실무자. 하위 호출 최소.)
 
-#### 5-6-2. Track B 자문 호출 규칙
+#### 5-6-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -304,11 +325,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-7. audit-team (감리팀, 별도 worktree 에서 실행)
 
-#### 5-7-1. Track A 호출 규칙
+#### 5-7-1. NEXT 디스패치 선언 규칙
 
 해당 없음. 감리팀은 자기 worktree 내부에서 감리 산출물만 저작.
 
-#### 5-7-2. Track B 자문 호출 규칙
+#### 5-7-2. 순수 자문(읽기전용) 호출 규칙
 
 해당 없음. 감리 독립성 원칙상 수행 조직 어떤 에이전트와도 자문 교류 금지 (설계서 §2-5).
 
@@ -316,11 +337,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-8. application-architect (AA)
 
-#### 5-8-1. Track A 호출 규칙
+#### 5-8-1. NEXT 디스패치 선언 규칙
 
 해당 없음 (실무자).
 
-#### 5-8-2. Track B 자문 호출 규칙
+#### 5-8-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -333,11 +354,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-9. software-architect (SWA)
 
-#### 5-9-1. Track A 호출 규칙
+#### 5-9-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-9-2. Track B 자문 호출 규칙
+#### 5-9-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -350,11 +371,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-10. data-modeler
 
-#### 5-10-1. Track A 호출 규칙
+#### 5-10-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-10-2. Track B 자문 호출 규칙
+#### 5-10-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -366,7 +387,7 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-11. part-leader (대규모 모드만)
 
-#### 5-11-1. Track A 호출 규칙
+#### 5-11-1. NEXT 디스패치 선언 규칙
 
 | 시점 / 트리거 | 호출 대상 | 목적 | 전달 컨텍스트 |
 |-------------|---------|-----|------------|
@@ -374,7 +395,7 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 | 03_implementation 진입 | 파트 소속 backend-developer / web-developer / batch-developer / web-publisher | 파트 구현 | 파트 설계 산출물 |
 | 파트 내 리뷰 오케스트레이션 (설계·코드) | 파트 관련 역할 2인 이상 (저자 + 파트리더 또는 아키텍트) | 2인 원칙 리뷰 | 리뷰 대상 |
 
-#### 5-11-2. Track B 자문 호출 규칙
+#### 5-11-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -390,11 +411,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-12. backend-developer
 
-#### 5-12-1. Track A 호출 규칙
+#### 5-12-1. NEXT 디스패치 선언 규칙
 
 해당 없음 (실무자).
 
-#### 5-12-2. Track B 자문 호출 규칙
+#### 5-12-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -409,11 +430,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-13. batch-developer
 
-#### 5-13-1. Track A 호출 규칙
+#### 5-13-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-13-2. Track B 자문 호출 규칙
+#### 5-13-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -426,11 +447,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-14. web-developer
 
-#### 5-14-1. Track A 호출 규칙
+#### 5-14-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-14-2. Track B 자문 호출 규칙
+#### 5-14-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -443,11 +464,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-15. web-publisher
 
-#### 5-15-1. Track A 호출 규칙
+#### 5-15-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-15-2. Track B 자문 호출 규칙
+#### 5-15-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -459,11 +480,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-16. designer
 
-#### 5-16-1. Track A 호출 규칙
+#### 5-16-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-16-2. Track B 자문 호출 규칙
+#### 5-16-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -475,11 +496,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-17. technical-architect (TA)
 
-#### 5-17-1. Track A 호출 규칙
+#### 5-17-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-17-2. Track B 자문 호출 규칙
+#### 5-17-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -492,11 +513,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-18. database-administrator (DBA)
 
-#### 5-18-1. Track A 호출 규칙
+#### 5-18-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-18-2. Track B 자문 호출 규칙
+#### 5-18-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -509,11 +530,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-19. security-specialist
 
-#### 5-19-1. Track A 호출 규칙
+#### 5-19-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-19-2. Track B 자문 호출 규칙
+#### 5-19-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
@@ -526,11 +547,11 @@ QA 는 주로 Track B 자문 대상. 스스로 Track A 호출 불가.
 
 ### 5-20. infrastructure-engineer
 
-#### 5-20-1. Track A 호출 규칙
+#### 5-20-1. NEXT 디스패치 선언 규칙
 
 해당 없음.
 
-#### 5-20-2. Track B 자문 호출 규칙
+#### 5-20-2. 순수 자문(읽기전용) 호출 규칙
 
 | 상황 | 자문 대상 | 목적 |
 |------|---------|-----|
