@@ -24,7 +24,7 @@ Required artifacts (directory or file per §3-1):
 - `00_kickoff/statement-of-work.md` (provided by the user; PM must confirm presence and completeness)
 - `00_kickoff/project-plan/` directory — authored in three ordered waves:
   - **Wave 1 (plan skeleton)**: `index.md`, `overview.md`, `scope.md`, `organization.md`, `schedule.md`
-  - **Wave 2 (budget)**: `budget.md` authored after `business-manager` Track B advisory
+  - **Wave 2 (budget)**: `budget.md` authored after `business-manager` 읽기전용 자문 (call-playbook §0-2)
   - **Wave 3 (WBS)**: `wbs/index.md` + `wbs/W-<letter>-<seq>.md` children, authored after Waves 1–2 as input. WBS rows must cover every stage (00–05) with columns: 단계 · 작업 ID · 해야할 작업 · 담당자(주) · 담당자(자문) · Input · Output · 선행. See `docs/wbs-large-streaming-example.md` for the reference form applied to a large-scale project.
 - `00_kickoff/rollback-history.md` (empty file with heading and table skeleton)
 
@@ -32,8 +32,8 @@ Review requirement:
 - `00_kickoff/reviews/project-plan-review-v<N>.md` with ≥2 participants, using `templates/artifacts/review-meeting.md.tmpl`. Review must take place **after WBS validation gate passes** so the reviewed plan already contains user-ok'd WBS.
 
 Advisory gates (mandatory per §2-6):
-- `business-manager` Track B advisory for `budget.md` logged in `agent-call-log.md`
-- `quality-assurance` Track B review of the finalized plan logged in `agent-call-log.md`
+- `business-manager` 읽기전용 자문 (call-playbook §0-2) for `budget.md` logged in `agent-call-log.md`
+- `quality-assurance` 읽기전용 자문 (call-playbook §0-2) review of the finalized plan logged in `agent-call-log.md`
 
 Project-state requirement:
 - `project-state.md` present with `scale:` filled, `current-stage: 00_kickoff`, and `Stage Progress` initialized
@@ -56,12 +56,15 @@ WBS validation gate (MANDATORY, precedes project-plan review and Approval):
 
 Project-fit Hook Generation gate (MANDATORY, WBS Validation 직후, project-plan review·Approval 직전):
 - PM 이 SOW·WBS·project-plan/scope 분석으로 본 프로젝트에 fit 한 검증 hook 후보 5–8 건을 추천 (예: 7 카테고리 RQ enumerate 완전성, 외부 의존 RQ → IT variant 4종 매핑, 도메인 파트 owner 화이트리스트, RQ↔PRG↔UT 매핑 완전성, FMEA 표 카테고리 정합, large mode by-part 강제 등 — 후보 종류는 사용자 협의 시점에 동적 결정).
-- PM 이 사용자에게 후보 제시 → 사용자 선택·추가·제외 → 합의 명세를 prompt 로 묶어 `policy-engineer-opus` Track A dispatch.
+- PM 이 사용자에게 후보 제시 → 사용자 선택·추가·제외 → 합의 명세를 prompt 로 묶어 PM 이 general-purpose 노드 dispatch (call-playbook §0-1).
 - `policy-engineer` 가 `projects/<name>/scripts/` 에 `run_project_hooks.sh` 디스패처 + `hook_<stage>_<purpose>.py` 개별 hook + `hooks-manifest.md` 저작.
 - PM 이 dry-run 으로 모든 stage 에 대해 `bash projects/<name>/scripts/run_project_hooks.sh <stage>` 실행하고 exit 0 (hook 부재 stage 는 INFO + exit 0) 확인.
 - 결과를 `project-state.md` **Hook Generation Log** 표에 기록: `Date · Hooks Authored (count) · Manifest Path · Dry-run Result · Notes`.
 - 사용자가 "hook 협의 skip" 을 명시 선택한 경우는 매니페스트에 그 사실을 기재하고 통과 (placeholder 디스패처는 모든 stage 에서 INFO + exit 0 으로 동작).
 - 본 게이트 PASS 없이 Approval Log 진입 시도는 stage-gate 위반.
+
+Ledger seed gate:
+- `projects/<name>/ledger/index.md` 존재 (bootstrap 시드).
 
 Approval gate:
 - `Approval Log` entry for `00_kickoff` by `user` (선행: WBS Validation Log 마지막 행 = `ok` AND Hook Generation Log 1건 이상)
@@ -98,6 +101,11 @@ Project-fit hook gate (PM stage-gate self-check):
 - `bash projects/<project>/scripts/run_project_hooks.sh 01_analysis` exits 0
 - 디스패처 부재 시 stage 종결 보고 자체 금지 (00_kickoff Hook Generation gate 미완)
 
+Ledger-completeness gate:
+- `python3 scripts/validate_ledger.py projects/<name>` exit 0. 이 단계에서 dispatch 된 모든 ledger 노드가 status=closed 이고,
+  CHILD INDEX ↔ 자식 파일 정합, artifacts/rtm 링크 존재가 검증되어야
+  단계 종결 가능.
+
 Approval gate:
 - `Approval Log` entry for `01_analysis` by `user`
 
@@ -123,7 +131,7 @@ Required artifacts (directory + children):
 - `02_design/unit-test-cases/` — `index.md` + UT-<seq> children (all UT-xxx IDs registered in RTM)
 - `02_design/security-review/` — `index.md` + SEC-<seq> children
 - `02_design/infra/` — `index.md` + INF-<seq> children (when infrastructure design is in scope)
-- For each area above: a matching review in `02_design/reviews/` with ≥2 participants using `templates/artifacts/review-meeting.md.tmpl`. Directors may Track-B self-review their own authored areas to surface blind spots (Phase 7 Task 9 positive pattern).
+- For each area above: a matching review in `02_design/reviews/` with ≥2 participants using `templates/artifacts/review-meeting.md.tmpl`. Directors may 읽기전용 자문 (call-playbook §0-2) self-review their own authored areas to surface blind spots (Phase 7 Task 9 positive pattern).
 - **Architecture review participation (mandatory)**: `02_design/architecture/` 의 4 영역 통합 리뷰는 다음 참가자가 모두 포함되어야 PASS — application-architect (응용), software-architect (SW), technical-architect (기술), data-modeler (데이터), security-specialist (보안). 응용·기술 ADR 의 상호 인용 정합성 (AA `application/components/CMP-*` ↔ TA `technology/deployment-topology.md`, SWA `application/interface-policy.md` ↔ AA `application/business-flow.md`) 을 리뷰 본문에서 점검.
 
 Advisory gates (mandatory):
@@ -139,7 +147,7 @@ Audit gate (MANDATORY regardless of scale):
 - Invoked via `scripts/run_audit.sh <project> 02_design <prompt-file>` (helper guarantees CLI arg order and output path)
 
 Exception-handling ratio policy (`docs/exception-handling-ratio-policy.md`):
-- **PRG/IF/SCN/BATCH 본문 FMEA 표 의무** (정책 §3·§4) — 각 산출물에 7 Failure Categories enumerate + 표 양식. SWA Track B 자문 finding 시 corrective.
+- **PRG/IF/SCN/BATCH 본문 FMEA 표 의무** (정책 §3·§4) — 각 산출물에 7 Failure Categories enumerate + 표 양식. SWA 읽기전용 자문 (call-playbook §0-2) finding 시 corrective.
 - **UT-*.md frontmatter 비율 강제** (정책 §5) — `variant-happy-count / variant-count ≤ 0.3`, `variant-exception-count / variant-count ≥ 0.7`, 합계 일관성. `validate_artifact_hierarchy.py` 가 자동 검증 (Hierarchy gate 에 포함).
 - 변경 후 단계적 도입 — 기존 UT 가 frontmatter 비율 필드를 갖지 않으면 advisory skip 되며, 새로 저작·갱신되는 UT 는 strict 검증.
 
@@ -160,6 +168,11 @@ Hierarchy gate:
 Project-fit hook gate (PM stage-gate self-check):
 - `bash projects/<project>/scripts/run_project_hooks.sh 02_design` exits 0
 
+Ledger-completeness gate:
+- `python3 scripts/validate_ledger.py projects/<name>` exit 0. 이 단계에서 dispatch 된 모든 ledger 노드가 status=closed 이고,
+  CHILD INDEX ↔ 자식 파일 정합, artifacts/rtm 링크 존재가 검증되어야
+  단계 종결 가능.
+
 Approval gate:
 - `Approval Log` entry for `02_design` by `user`
 
@@ -175,7 +188,7 @@ Required artifacts:
 
 Advisory gates:
 - `business-manager` stage-entry advisory
-- `security-specialist`, `database-administrator` Track B consultations logged when auth / DB / payment code was written
+- `security-specialist`, `database-administrator` 읽기전용 자문 (call-playbook §0-2) logged when auth / DB / payment code was written
 
 RTM requirement:
 - `RTM/by-stage/03_implementation.md` 소스경로 column populated for every PRG-ID
@@ -199,6 +212,11 @@ Hierarchy gate:
 Project-fit hook gate (PM stage-gate self-check):
 - `bash projects/<project>/scripts/run_project_hooks.sh 03_implementation` exits 0
 
+Ledger-completeness gate:
+- `python3 scripts/validate_ledger.py projects/<name>` exit 0. 이 단계에서 dispatch 된 모든 ledger 노드가 status=closed 이고,
+  CHILD INDEX ↔ 자식 파일 정합, artifacts/rtm 링크 존재가 검증되어야
+  단계 종결 가능.
+
 Approval gate:
 - `Approval Log` entry for `03_implementation` by `user`
 
@@ -215,7 +233,7 @@ Required artifacts:
 
 Advisory gates:
 - `business-manager` stage-entry advisory
-- `quality-assurance` + `tester` Track B pass/fail recommendation
+- `quality-assurance` + `tester` 읽기전용 자문 (call-playbook §0-2) pass/fail recommendation
 
 Change-request cycle (when failures arise):
 - Each FAIL that requires an upstream-artifact change spawns a `change-requests/CR-<seq>/` directory with
@@ -232,6 +250,11 @@ Hierarchy gate:
 Project-fit hook gate (PM stage-gate self-check):
 - `bash projects/<project>/scripts/run_project_hooks.sh 04_test` exits 0
 
+Ledger-completeness gate:
+- `python3 scripts/validate_ledger.py projects/<name>` exit 0. 이 단계에서 dispatch 된 모든 ledger 노드가 status=closed 이고,
+  CHILD INDEX ↔ 자식 파일 정합, artifacts/rtm 링크 존재가 검증되어야
+  단계 종결 가능.
+
 Approval gate:
 - `Approval Log` entry for `04_test` by `user` (CONDITIONAL PASS with carry-forward findings is acceptable when PM
   records each carry-forward's owner and deadline; unresolved items must appear in `04_test/qa-report/` and be
@@ -245,11 +268,11 @@ Required artifacts:
 - `05_deployment/deployment-plan/` — `index.md` + `DEPLOY-<seq>.md` children. **Batch 스케줄러 배포 단계** (cron·timer 활성화, 모니터링·알림 연결, 첫 실행 검증) 를 포함하고 관련 BATCH-ID 를 `depends-on` 으로 참조.
 - `05_deployment/operation-manual/` — `index.md` + `OPS-<seq>.md` children. **모든 BATCH-ID 에 대해 OPS-* 하나 이상**이 존재해야 하며(정상 실행 확인, 장애 탐지 경로, 수동 재실행 절차, run-window 초과 대응), `depends-on: [BATCH-...]` 를 기재.
 - `05_deployment/training-material/` — `index.md` + `TRAIN-<seq>.md` children. 운영자 교육 자료는 배치잡 일상 운영 섹션 포함.
-- Review record in `05_deployment/reviews/` with ≥2 participants (director self-review via Track B encouraged)
+- Review record in `05_deployment/reviews/` with ≥2 participants (director self-review via 읽기전용 자문 (call-playbook §0-2) encouraged)
 
 Advisory gates:
 - `business-manager` stage-entry advisory
-- `security-specialist` Track B review for secrets / audit log decisions
+- `security-specialist` 읽기전용 자문 (call-playbook §0-2) for secrets / audit log decisions
 
 Audit gate (MANDATORY regardless of scale):
 - `99_audit/03_closing-audit/audit-report/index.md` + `FIND-*.md` final result = PASS
@@ -261,6 +284,11 @@ Hierarchy gate:
 
 Project-fit hook gate (PM stage-gate self-check):
 - `bash projects/<project>/scripts/run_project_hooks.sh 05_deployment` exits 0
+
+Ledger-completeness gate:
+- `python3 scripts/validate_ledger.py projects/<name>` exit 0. 이 단계에서 dispatch 된 모든 ledger 노드가 status=closed 이고,
+  CHILD INDEX ↔ 자식 파일 정합, artifacts/rtm 링크 존재가 검증되어야
+  단계 종결 가능.
 
 Approval gate:
 - `Approval Log` entry for `05_deployment` by `user` (final project approval → `current-stage: closed`)
@@ -293,7 +321,7 @@ When about to transition stage N → N+1:
 1. Read this file.
 2. For each `Required artifacts` entry, verify the directory / file exists, `index.md` is present if the directory has ≥3 children, and every child has valid frontmatter (`id`, `depends-on`, `referenced-by`, `author`).
 3. For each `Review requirement`, open the review file and count `participants` in its frontmatter. Must be ≥2.
-4. For each `Advisory gate`, confirm a row exists in `agent-call-log.md` for the required Track B consultation.
+4. For each `Advisory gate`, confirm a row exists in `agent-call-log.md` for the required 읽기전용 자문 (call-playbook §0-2).
 5. If `RTM requirement` is listed, read `RTM/by-stage/<stage>.md` and verify the named columns are populated for every relevant ID. Also confirm `RTM/index.md` reflects summary counts.
 6. Run `python3 scripts/sync_back_references.py <project>` (apply mode) and `python3 scripts/validate_artifact_hierarchy.py <project>` — both must exit 0.
 7. If `Audit gate` applies, verify the final audit cycle passed per the audit closure procedure above.
