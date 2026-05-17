@@ -1,15 +1,15 @@
 #!/bin/bash
-# scripts/run_audit.sh — PM helper to dispatch audit-team in an isolated git worktree.
+# scripts/run_audit.sh — PM helper: isolated git worktree 생성 + PM dispatch 안내 출력.
 #
-# Solves Phase 7 ergonomics issue: original spec required the human user to
-# manually create the audit worktree, copy artifacts, and invoke claude -p with
-# the audit-team role. With this helper, the PM Skill session can do the entire
-# flow inside a single Bash call.
+# 신 계약 (Track A 직접 호출 폐기 이후):
+#   감리는 PM 이 Agent 툴로 general-purpose + audit-team 페르소나로 dispatch.
+#   run_audit.sh 는 (1) worktree 격리·프로젝트 복사, (2) PM 안내 출력,
+#   (3) 복사 결과 안내만 담당. claude 직접 실행은 하지 않는다.
 #
 # Usage:
 #   scripts/run_audit.sh <project> <cycle-id> <prompt-file>
 #
-#   <project>     — project name under projects/, e.g., book-mgmt-api
+#   <project>     — project name under projects/, e.g., my-project
 #   <cycle-id>    — audit cycle dir name, e.g., 02_design or 03_closing
 #   <prompt-file> — absolute path to a text file with the audit prompt
 #
@@ -20,20 +20,12 @@
 #        path:   <parent>/<main-name>_audit_<cycle>
 #        branch: <current-branch>-audit-<cycle>-<timestamp>
 #   4. Copy <main>/projects/<project>/ into the audit worktree.
-#   5. Prepend an explicit output-path header to the prompt (Phase 7 Task 10 finding #18
-#      — audit-team was writing to <wt-root>/99_audit/ instead of
-#      <wt-root>/projects/<project>/99_audit/; the header + Mission update + fallback
-#      copy below form a 3-layer defense).
-#   6. Invoke `claude -p` with the audit-team role and CORRECT argument order:
-#         --add-dir <path>  ← MUST come before --append-system-prompt (Phase 7 finding).
-#   7. Copy 99_audit/<cycle>-audit/ back to the main worktree from the expected path.
-#      If absent, fall back to <wt-root>/99_audit/<cycle>-audit/ (root-level) and warn.
-#   8. Print the absolute path of the audit-report directory.
+#   5. Print PM dispatch guidance: Agent 툴로 general-purpose + audit-team 페르소나 호출.
+#   6. (선택) 감리 완료 후 결과를 main 트리로 복사하는 안내 출력.
 #
 # Exit codes:
-#   0   success
+#   0   success (worktree 준비 완료, PM 안내 출력)
 #   2   bad args / paths
-#   *   propagated from `claude -p`
 
 set -euo pipefail
 
@@ -41,13 +33,14 @@ if [ $# -lt 3 ] || [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   cat <<'USAGE'
 Usage: scripts/run_audit.sh <project> <cycle-id> <prompt-file>
 
-  <project>     project under projects/ (e.g., book-mgmt-api)
+  <project>     project under projects/ (e.g., my-project)
   <cycle-id>    audit cycle dir name (e.g., 02_design, 03_closing)
   <prompt-file> path to text file containing the audit prompt
 
-Creates an isolated git worktree, runs audit-team Track A inside it
-(with --add-dir before --append-system-prompt to avoid argument parsing
-issues), and copies 99_audit/<cycle>-audit/ back to the main worktree.
+Creates an isolated git worktree and copies the project into it, then
+prints PM dispatch guidance. Audit execution is done by the PM via
+Agent tool (general-purpose + audit-team persona) — this script does
+NOT invoke claude directly.
 USAGE
   [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] && exit 0 || exit 2
 fi
@@ -81,73 +74,57 @@ if [ -d "$WT_PATH" ]; then
 fi
 
 LOG="/tmp/run_audit_${CYCLE}_$(date +%Y%m%d-%H%M%S).log"
-echo "audit-team log: $LOG"
 echo "audit worktree: $WT_PATH (branch $WT_BRANCH)"
 
 git -C "$MASTER_PATH" worktree add "$WT_PATH" -b "$WT_BRANCH" "$CUR_BRANCH" >"$LOG" 2>&1
 
 cp -r "$MAIN_ROOT/projects" "$WT_PATH/"
 
-USER_PROMPT="$(cat "$PROMPT_FILE")"
-ROLE="$(cat "$ROLE_FILE")"
+cat <<EOF
+[run_audit] worktree 준비 완료: $WT_PATH
 
-# Phase 7 Task 10 finding #18: prepend explicit output-path header so the
-# audit-team writes to <wt>/projects/<project>/99_audit/<cycle>-audit/ instead
-# of <wt>/99_audit/<cycle>-audit/ (the latter lies outside --add-dir and will
-# not be copied back by default).
-PATH_HEADER="[AUDIT OUTPUT PATH — load-bearing]
-산출물 작성 절대 경로 (반드시 준수):
-  - $WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/audit-plan.md
-  - $WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/audit-report/index.md
-  - $WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/audit-report/FIND-*.md
-  - (재감리 시) $WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/re-audit-report-v<N>/
+다음을 PM 세션에서 수행하라:
+  Agent 툴  subagent_type=general-purpose, model=sonnet
+  system    .claude/roles/audit-team.md 전문을 system prompt 로 전달
+  prompt    내용:
+    - 감리 대상 worktree 경로: $WT_PATH/projects/$PROJECT
+    - 산출물 경로: $WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/
+    - 감리 prompt 파일: $PROMPT_FILE
 
-worktree root ($WT_PATH/99_audit/...) 에 작성하면 메인 트리로 자동 복사되지 않음.
-Write 도구 호출 시 반드시 위 절대 경로를 사용하세요.
+감리 완료 후 결과를 main 트리로 복사:
+  SRC: $WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/
+  DST: $MAIN_ROOT/projects/$PROJECT/99_audit/${CYCLE}-audit/
+  명령: cp -r "$WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit" \\
+             "$MAIN_ROOT/projects/$PROJECT/99_audit/"
 
----
-
-"
-PROMPT="${PATH_HEADER}${USER_PROMPT}"
-
-cd "$WT_PATH"
-set +e
-claude -p \
-  --output-format stream-json --verbose \
-  --model sonnet --effort xhigh \
-  --dangerously-skip-permissions \
-  --add-dir "$WT_PATH/projects/$PROJECT" \
-  --append-system-prompt "$ROLE" \
-  "$PROMPT" >>"$LOG" 2>&1
-RC=$?
-set -e
+  (worktree root 에 작성된 경우 fallback):
+  SRC_FALLBACK: $WT_PATH/99_audit/${CYCLE}-audit/
+EOF
 
 SRC="$WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit"
 SRC_FALLBACK="$WT_PATH/99_audit/${CYCLE}-audit"
 DST="$MAIN_ROOT/projects/$PROJECT/99_audit/${CYCLE}-audit"
 
+# 감리 실행 전이므로 결과가 아직 없을 수 있다 — 있으면 복사, 없으면 안내만.
 copied_from=""
 if [ -d "$SRC" ] && [ -n "$(ls -A "$SRC" 2>/dev/null | grep -v '^index.md$' || true)" ]; then
-  # Expected path has content beyond the seed index.md — use it.
   mkdir -p "$DST"
   cp -r "$SRC"/. "$DST"/
   copied_from="$SRC"
 elif [ -d "$SRC_FALLBACK" ]; then
-  # Fallback path (Phase 7 Task 10 finding #18): audit-team wrote to worktree root.
+  # Fallback path (Phase 7 Task 10 finding #18): audit output found at worktree root.
   echo "WARNING: audit output found at fallback path $SRC_FALLBACK" >&2
   echo "         expected $SRC. run_audit.sh will copy from fallback — please confirm." >&2
   mkdir -p "$DST"
   cp -r "$SRC_FALLBACK"/. "$DST"/
-  # Also merge any partial content from the expected path (e.g. seed index.md).
   if [ -d "$SRC" ]; then
     cp -rn "$SRC"/. "$DST"/ 2>/dev/null || true
   fi
   copied_from="$SRC_FALLBACK"
 elif [ -d "$SRC" ]; then
-  # Only seed files exist — copy them but warn that no real audit output landed.
   mkdir -p "$DST"
   cp -r "$SRC"/. "$DST"/
-  echo "WARNING: audit output at $SRC appears to be only seed files — audit may have failed (exit $RC)" >&2
+  echo "WARNING: audit output at $SRC appears to be only seed files — audit may not have run yet" >&2
   copied_from="$SRC (seed-only)"
 fi
 
@@ -155,8 +132,7 @@ if [ -n "$copied_from" ]; then
   echo "audit results copied to: $DST"
   echo "  (source: $copied_from)"
 else
-  echo "WARNING: no audit results found at $SRC nor $SRC_FALLBACK — audit may have failed (exit $RC)" >&2
+  echo "audit output not yet present — run Agent dispatch first, then copy manually."
 fi
 
-echo "audit-team exit code: $RC"
-exit $RC
+exit 0

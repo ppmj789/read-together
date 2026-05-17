@@ -26,7 +26,6 @@ def test_help_prints_usage_and_exits_zero():
     assert r.returncode == 0
     assert "Usage:" in r.stdout
     assert "<cycle-id>" in r.stdout
-    assert "before --append-system-prompt" in r.stdout  # the CRITICAL arg-order note
 
 
 def test_no_args_exits_2():
@@ -55,28 +54,39 @@ def test_invalid_flag_exits_2():
     assert r.returncode == 2
 
 
-# --- Phase 7 Task 10 finding #18 regression guards ---------------------------
-# These tests check that the script still has the 3-layer defense against
-# audit-team writing to the wrong path (worktree root instead of the project
-# copy). They are static checks on the script source — they do not execute
-# `claude -p`.
+# --- Static source checks on run_audit.sh -----------------------------------
 
 _SCRIPT_SRC = SCRIPT.read_text(encoding="utf-8")
 
 
-def test_prompt_header_prepends_absolute_output_paths():
-    """run_audit.sh must prepend an [AUDIT OUTPUT PATH] header that tells the
-    audit-team to write under $WT_PATH/projects/$PROJECT/99_audit/."""
-    assert "[AUDIT OUTPUT PATH" in _SCRIPT_SRC, (
-        "prompt header missing — audit-team will write to worktree root "
-        "(Phase 7 Task 10 finding #18 regression)"
+def test_no_claude_p_invocation():
+    """run_audit.sh must NOT invoke `claude -p` directly (Track A폐기 계약)."""
+    assert "claude -p" not in _SCRIPT_SRC, (
+        "claude -p invocation found in run_audit.sh — must be removed"
     )
-    assert "$WT_PATH/projects/$PROJECT/99_audit/${CYCLE}-audit/" in _SCRIPT_SRC, (
-        "absolute output path template missing from prompt header"
+
+
+def test_pm_dispatch_guidance_in_source():
+    """run_audit.sh must output PM dispatch guidance (general-purpose + audit-team persona)."""
+    assert "general-purpose" in _SCRIPT_SRC, (
+        "PM dispatch guidance (general-purpose subagent_type) missing from run_audit.sh"
     )
-    # The header must be prepended to the user-supplied prompt, not replace it.
-    assert 'PROMPT="${PATH_HEADER}${USER_PROMPT}"' in _SCRIPT_SRC, (
-        "prompt must concatenate PATH_HEADER and USER_PROMPT"
+    assert "audit-team" in _SCRIPT_SRC, (
+        "PM dispatch guidance referencing audit-team persona missing from run_audit.sh"
+    )
+
+
+def test_worktree_creation_in_source():
+    """run_audit.sh must still create a git worktree."""
+    assert "worktree add" in _SCRIPT_SRC, (
+        "git worktree add call missing from run_audit.sh"
+    )
+
+
+def test_project_copy_in_source():
+    """run_audit.sh must still copy the project into the worktree."""
+    assert 'cp -r "$MAIN_ROOT/projects"' in _SCRIPT_SRC, (
+        "project copy step missing from run_audit.sh"
     )
 
 
