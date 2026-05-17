@@ -66,3 +66,47 @@ def test_no_ledger_dir_passes(tmp_path):
     # ledger 디렉토리 미존재 = 검증할 것 없음 = clean
     r = _run(tmp_path)
     assert r.returncode == 0
+
+
+def test_closed_node_with_empty_response_fails(tmp_path):
+    ledger = tmp_path / "ledger"
+    _node(ledger, "A", parent="", status="closed", response="   ")
+    r = _run(tmp_path)
+    assert r.returncode == 1
+    assert "response" in (r.stdout + r.stderr).lower()
+
+
+def test_child_index_row_without_child_file_fails(tmp_path):
+    ledger = tmp_path / "ledger"
+    rows = "| A-1 | ledger/A-1.md | backend-developer | impl | closed |\n"
+    _node(ledger, "A", parent="", children_rows=rows)
+    # A-1.md 파일 없음
+    r = _run(tmp_path)
+    assert r.returncode == 1
+    assert "a-1" in (r.stdout + r.stderr).lower()
+
+
+def test_child_index_consistent_passes(tmp_path):
+    ledger = tmp_path / "ledger"
+    rows = "| A-1 | ledger/A-1.md | backend-developer | impl | closed |\n"
+    _node(ledger, "A", parent="", children_rows=rows)
+    _node(ledger, "A-1", parent="A")
+    r = _run(tmp_path)
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_artifact_link_missing_fails(tmp_path):
+    ledger = tmp_path / "ledger"
+    _node(ledger, "A", parent="", artifacts="[02_design/missing/CMP-001.md]")
+    r = _run(tmp_path)
+    assert r.returncode == 1
+    assert "cmp-001" in (r.stdout + r.stderr).lower()
+
+
+def test_artifact_link_present_passes(tmp_path):
+    (tmp_path / "02_design").mkdir(parents=True)
+    (tmp_path / "02_design" / "CMP-001.md").write_text("x", encoding="utf-8")
+    ledger = tmp_path / "ledger"
+    _node(ledger, "A", parent="", artifacts="[02_design/CMP-001.md]")
+    r = _run(tmp_path)
+    assert r.returncode == 0, r.stdout + r.stderr
