@@ -120,15 +120,21 @@ def validate_role(path: pathlib.Path, fm: dict, body: str) -> list:
         errs.append(f"role: unknown role-name '{role_name_from_file}' "
                     "(expected one of the 21 defined roles)")
 
-    # Must reference one of the 3 track-involvement sections
-    # Exception: audit-team has neither (isolation principle — does not invoke
-    # or consult any performing-side agent, decision #15).
-    if role_name_from_file != "audit-team":
-        has_invoke = bool(re.search(r"^## How You Invoke Sub-executions", body, re.MULTILINE))
-        has_consult = bool(re.search(r"^## How You Consult Advisors", body, re.MULTILINE))
-        if not (has_invoke or has_consult):
-            errs.append("role body: must have at least one of "
-                        "'## How You Invoke Sub-executions' or '## How You Consult Advisors'")
+    # New invocation contract (spec 2026-05-16: claude -p 폐기, ledger 계약).
+    # Every role must declare exactly one of the three contract sections:
+    #   - authoring node  → '## 호출·산출 계약 (ledger)'
+    #   - director/part-leader (ledger NEXT dispatcher)
+    #                     → '## How You Declare Delegations (ledger NEXT)'
+    #   - PM Skill        → '## How You Invoke Sub-executions'
+    has_ledger = bool(re.search(r"^## 호출·산출 계약 \(ledger\)", body, re.MULTILINE))
+    has_next = bool(re.search(r"^## How You Declare Delegations \(ledger NEXT\)", body, re.MULTILINE))
+    has_invoke = bool(re.search(r"^## How You Invoke Sub-executions", body, re.MULTILINE))
+    if not (has_ledger or has_next or has_invoke):
+        errs.append("role body: must declare the invocation contract — one of "
+                    "'## 호출·산출 계약 (ledger)', "
+                    "'## How You Declare Delegations (ledger NEXT)', or "
+                    "'## How You Invoke Sub-executions' "
+                    "(spec 2026-05-16: claude -p 폐기, ledger 계약)")
 
     return errs
 
@@ -248,12 +254,26 @@ def errors_for(path: pathlib.Path) -> list:
 
     kind = classify(path)
     if kind == "role":
-        return validate_role(path, fm, body)
-    if kind == "agent":
-        return validate_agent(fm, body)
-    if kind == "skill":
-        return validate_skill(fm, body)
-    return [f"path does not fit known categories (.claude/roles|agents|skills): {path}"]
+        errs = validate_role(path, fm, body)
+    elif kind == "agent":
+        errs = validate_agent(fm, body)
+    elif kind == "skill":
+        errs = validate_skill(fm, body)
+    else:
+        return [f"path does not fit known categories (.claude/roles|agents|skills): {path}"]
+
+    # Forbidden 'claude -p' invocation (spec 2026-05-16: claude -p 폐기).
+    # Sole exception: project-manager.md's description sentence stating PM is
+    # *never* invoked as a claude -p subprocess.
+    for ln_no, line in enumerate(text.splitlines(), 1):
+        if "claude -p" in line or "--append-system-prompt" in line:
+            if path.name == "project-manager.md" and "never" in line.lower():
+                continue
+            errs.append(
+                f"{path.name}:{ln_no}: forbidden 'claude -p' invocation "
+                f"(spec 2026-05-16: claude -p 폐기)"
+            )
+    return errs
 
 
 def iter_all_files() -> list:

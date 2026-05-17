@@ -126,17 +126,20 @@ def test_role_missing_mission_fails(tmp_path):
     assert r.returncode != 0
 
 
-def test_role_missing_track_sections_fails(tmp_path):
-    # Non-audit role must have at least one of Invoke/Consult
+def test_role_missing_invocation_contract_fails(tmp_path):
+    # spec 2026-05-16: every role must declare one invocation-contract section
+    # ('호출·산출 계약 (ledger)' / 'ledger NEXT' / 'Invoke Sub-executions').
     body = role_body(with_invoke=False, with_consult=False)
     p = write_role(tmp_path, "application-director", role_fm() + body)
     r = run(str(p))
     assert r.returncode != 0
 
 
-def test_audit_team_role_exempt_from_track_sections(tmp_path):
-    # audit-team is the lone exemption (isolation principle, decision #15)
-    body = role_body(with_invoke=False, with_consult=False)
+def test_audit_team_role_follows_ledger_contract(tmp_path):
+    # spec 2026-05-16: claude -p 폐기. audit-team is no longer track-section
+    # exempt; like every authoring node it declares the ledger contract.
+    body = (role_body(with_invoke=False, with_consult=False)
+            + "\n## 호출·산출 계약 (ledger)\n감리 산출.\n")
     p = write_role(tmp_path, "audit-team", role_fm(name="audit-team") + body)
     r = run(str(p))
     assert r.returncode == 0, r.stdout + r.stderr
@@ -289,6 +292,26 @@ def test_missing_frontmatter_fails(tmp_path):
     p = write_role(tmp_path, "application-director", role_body())  # no frontmatter
     r = run(str(p))
     assert r.returncode != 0
+
+
+# ---------- claude -p 폐기 drift-guard ------------------------------------
+
+def test_role_with_claude_p_is_rejected(tmp_path):
+    # spec 2026-05-16: claude -p subprocess invocation is forbidden in any
+    # role/agent/skell file.
+    body = (role_body()
+            + "\n호출: claude -p --append-system-prompt ...\n")
+    p = write_role(tmp_path, "application-director", role_fm() + body)
+    r = run(str(p))
+    assert r.returncode == 1
+    assert "claude -p" in (r.stdout + r.stderr)
+
+
+def test_all_real_roles_have_no_claude_p():
+    # The real repo's roles/agents/skills must be free of claude -p (sole
+    # exception: project-manager.md's 'never ... claude -p' description line).
+    r = run("--all")
+    assert r.returncode == 0, r.stdout + r.stderr
 
 
 # ---------- Integration: real project files pass --------------------------
