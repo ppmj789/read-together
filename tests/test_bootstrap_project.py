@@ -232,3 +232,17 @@ def test_bootstrap_hierarchy_passes_validate_hierarchy():
         assert "OK:" in r.stdout
     finally:
         _cleanup(name)
+
+
+def test_bootstrap_seeds_ledger():
+    name = "demo-ledger"
+    demo = ROOT / "projects" / name
+    try:
+        r = run(name, "--scale", "small")
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert (demo / "ledger").is_dir()
+        assert (demo / "ledger" / "index.md").is_file()
+        txt = (demo / "ledger" / "index.md").read_text(encoding="utf-8")
+        assert "campaign id" in txt
+    finally:
+        _cleanup(name)

@@ -284,6 +284,20 @@ def main() -> int:
             dest.chmod(0o755)
         created_files.append(dest_rel)
 
+    # Ledger tree seed
+    ledger_dir = project_dir / "ledger"
+    ledger_dir.mkdir(parents=True, exist_ok=True)
+    created_dirs.append("ledger")
+    ledger_index_tmpl = ARTIFACTS_TMPL / "ledger" / "index.md.tmpl"
+    if not ledger_index_tmpl.is_file():
+        print(f"error: missing template: {ledger_index_tmpl}", file=sys.stderr)
+        shutil.rmtree(project_dir, ignore_errors=True)
+        return 3
+    ledger_index = ledger_dir / "index.md"
+    if not ledger_index.exists():
+        shutil.copyfile(ledger_index_tmpl, ledger_index)
+        created_files.append("ledger/index.md")
+
     # Post-process: project-state and agent-call-log
     fill_project_state(project_dir / "project-state.md", args.name, args.scale)
     fill_agent_call_log(project_dir / "agent-call-log.md", args.name)
