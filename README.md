@@ -1,59 +1,59 @@
 # AI SI Project Team
 
-Claude Code multi-subagent system that replicates an enterprise SI
-(System Integration) project execution organization.
+Claude Code 멀티 서브에이전트 시스템으로 엔터프라이즈 SI(System Integration)
+프로젝트 실행 조직을 모사한다.
 
-- **Current spec**: `docs/superpowers/specs/2026-05-16-no-claude-p-ledger-redesign-design.md`
-  (Agent single-primitive + ledger redesign; supersedes `2026-04-17-ai-si-team-design.md`
-  + Amendment `2026-04-18-amendment-01-claude-p-invocation.md` — superseded by 2026-05-16 redesign)
-- **Current plan**: `docs/superpowers/plans/2026-05-16-no-claude-p-ledger-redesign.md`
-- Build plan (historical): `docs/superpowers/plans/2026-04-17-ai-si-team-build.md`
-- Phase 7 E2E (historical): `docs/superpowers/plans/2026-04-18-phase7-e2e.md`
-- Call matrix: `docs/call-playbook.md` — per-role invocation contract §0 (drift-guarded)
+- **현행 설계서**: `docs/superpowers/specs/2026-05-16-no-claude-p-ledger-redesign-design.md`
+  (Agent 단일 프리미티브 + ledger 재설계; `2026-04-17-ai-si-team-design.md`
+  + Amendment `2026-04-18-amendment-01-claude-p-invocation.md` 를 대체 — 2026-05-16 재설계로 superseded)
+- **현행 플랜**: `docs/superpowers/plans/2026-05-16-no-claude-p-ledger-redesign.md`
+- 빌드 플랜 (이력): `docs/superpowers/plans/2026-04-17-ai-si-team-build.md`
+- Phase 7 E2E (이력): `docs/superpowers/plans/2026-04-18-phase7-e2e.md`
+- 호출 매트릭스: `docs/call-playbook.md` — 역할별 호출 규약 §0 (drift-guard 대상)
 
 ## Quick Start
 
-1. Bootstrap a project directory (see next section).
-2. Drop your statement-of-work into
-   `projects/<name>/00_kickoff/statement-of-work.md`.
-3. Launch a Claude Code session from the repo root — `SessionStart` hook
-   auto-loads the `project-manager` Skill; the session itself is the PM.
-4. Talk to PM. PM is the single contact point; it orchestrates
-   everything else via the **Agent tool** — authoring nodes
-   (`subagent_type=general-purpose` + persona injection + model tier)
-   and read-only advisory subagents (`subagent_type=<role>-<variant>`).
-   All delegation is logged to `projects/<name>/ledger/`.
-5. At each stage gate PM reports to you and waits for your approval.
-6. When an audit is due, PM runs `scripts/run_audit.sh` which creates
-   an isolated git worktree, copies the project, and prints PM dispatch
-   guidance for the `audit-team` general-purpose node (`claude -p` 제거됨).
+1. 프로젝트 디렉토리를 bootstrap 한다 (다음 절 참고).
+2. 작업 범위 기술서를 `projects/<name>/00_kickoff/statement-of-work.md` 에 작성한다.
+3. 저장소 루트에서 Claude Code 세션을 시작한다 — `SessionStart` hook 이
+   `project-manager` Skill 을 자동 로드하며, 해당 세션 자체가 PM 역할을 맡는다.
+4. PM 에게 요청한다. PM 은 단일 창구로서 **Agent 툴** — 저작 노드
+   (`subagent_type=general-purpose` + 페르소나 주입 + 모델 티어)와
+   읽기전용 자문 서브에이전트 (`subagent_type=<role>-<variant>`) — 를
+   통해 모든 것을 조율한다.
+   모든 위임은 `projects/<name>/ledger/` 에 기록된다.
+5. 각 stage gate 에서 PM 이 결과를 보고하고 승인을 기다린다.
+6. 감리가 필요한 시점에 PM 이 `scripts/run_audit.sh` 를 실행하면
+   격리된 git worktree 를 생성하고 프로젝트를 복사한 뒤 `audit-team`
+   general-purpose 노드에 대한 PM dispatch 안내를 출력한다 (`claude -p` 제거됨).
 
-## Bootstrapping a new project
+## 신규 프로젝트 bootstrap
 
 ```bash
 python3 scripts/bootstrap_project.py <project-name> --scale small|large
 ```
 
-Creates `projects/<project-name>/` with the full v2 hierarchical tree:
+`projects/<project-name>/` 을 v2 계층 트리 전체 구조로 생성한다:
 
-- per-stage directories with `index.md` + `<ID>.md` children
-- `project-plan/` directory (index + overview/scope/organization/schedule/budget/wbs children)
-- `RTM/` directory (`index.md` + `by-stage/*.md` + `_archived/`; `by-part/` when `scale == large`)
-- top-level logs: `project-state.md`, `agent-call-log.md`, `escalations.md`,
+- 단계별 디렉토리: `index.md` + `<ID>.md` 자식 파일
+- `project-plan/` 디렉토리 (index + overview/scope/organization/schedule/budget/wbs 자식)
+- `RTM/` 디렉토리 (`index.md` + `by-stage/*.md` + `_archived/`; `scale == large` 이면 `by-part/` 추가)
+- 최상위 로그: `project-state.md`, `agent-call-log.md`, `escalations.md`,
   `00_kickoff/statement-of-work.md`, `00_kickoff/rollback-history.md`
-- `99_audit/` skeleton for design-audit + closing-audit (+ analysis-audit when `large`)
-- `ledger/` — `index.md` + Dewey-tree delegation nodes (`A`, `A-1`, `A-1-1`, …)
-- `index.md` `child-count` fields auto-synced to actual contents
+- `99_audit/` 스켈레톤 (design-audit + closing-audit; `large` 이면 analysis-audit 추가)
+- `ledger/` — `index.md` + Dewey 트리 위임 노드 (`A`, `A-1`, `A-1-1`, …)
+- `index.md` 의 `child-count` 필드는 실제 내용에 자동 동기화
 
-**Project artifacts are gitignored** (`projects/*/` in `.gitignore`).
-The platform is what this repo versions; a specific project's output is
-not. Run the generator on a fresh checkout to regenerate the skeleton.
+**프로젝트 산출물은 gitignore 대상** (`.gitignore` 의 `projects/*/`).
+이 저장소가 버전 관리하는 것은 플랫폼이며, 특정 프로젝트의 산출물은
+버전 관리 대상이 아니다. 스켈레톤 재생성이 필요하면 새 체크아웃에서
+제너레이터를 실행한다.
 
-### Using a separate git repo per project (optional)
+### 프로젝트별 별도 git 저장소 사용 (선택)
 
-After PM declares the project `closed`, push the artifacts to a client
-repo with a nested `git init` — the parent `.gitignore` keeps the two
-histories independent:
+PM 이 프로젝트를 `closed` 로 선언한 후, 중첩 `git init` 으로 클라이언트
+저장소에 산출물을 push 할 수 있다. 부모 `.gitignore` 가 두 이력을 독립
+상태로 유지한다:
 
 ```bash
 cd projects/<name>
@@ -62,160 +62,156 @@ git remote add origin <client-repo-url>
 git push -u origin master
 ```
 
-## Invocation contract (call-playbook §0)
+## 호출 규약 (call-playbook §0)
 
-`claude -p` subprocess is **abolished** (2026-05-16). All delegation uses
-the current-session **Agent tool** as a single primitive:
+`claude -p` subprocess 는 **폐기** (2026-05-16). 모든 위임은 현재 세션의
+**Agent 툴** 을 단일 프리미티브로 사용한다:
 
-| Node type | How invoked | Purpose | Tool set |
-|-----------|-------------|---------|----------|
-| **Authoring node** | `Agent` tool, `subagent_type=general-purpose` + persona prompt from `.claude/roles/<role>.md` injected inline + `model` tier | Primary authoring, writes its own artifacts and its own ledger node | Full (Read/Write/Edit/Glob/Grep/Bash) — no nested Agent |
-| **Advisory (read-only)** | `Agent` tool, `subagent_type=<role>-<variant>` (`.claude/agents/` shells) | Advisory / review / analysis only | `Read, Glob, Grep` (read-only, runtime-fixed) |
-| **PM Skill** | `project-manager` Skill loaded by SessionStart hook | PM persona — sole mandatory bus for all hops; single scribe of shared files | Inherits session tools (Opus · xhigh fixed) |
+| 노드 유형 | 호출 방법 | 목적 | 툴셋 |
+|-----------|-----------|------|------|
+| **저작 노드** | `Agent` 툴, `subagent_type=general-purpose` + `.claude/roles/<role>.md` 에서 페르소나 프롬프트 인라인 주입 + `model` 티어 | 주 저작, 자신의 산출물 및 자신의 ledger 노드 직접 작성 | Full (Read/Write/Edit/Glob/Grep/Bash) — 중첩 Agent 없음 |
+| **자문 (읽기전용)** | `Agent` 툴, `subagent_type=<role>-<variant>` (`.claude/agents/` shells) | 자문 / 리뷰 / 분석 전용 | `Read, Glob, Grep` (읽기전용, 런타임 고정) |
+| **PM Skill** | SessionStart hook 으로 로드되는 `project-manager` Skill | PM 페르소나 — 모든 hop 의 필수 버스; 공유 파일의 단독 기록자 | 세션 툴 계승 (Opus · xhigh 고정) |
 
-`general-purpose` nodes do not hold the Agent tool → self-nesting is
-impossible by design (call-playbook §0-3).
+`general-purpose` 노드는 Agent 툴을 보유하지 않아 설계상 자기 중첩이
+불가능하다 (call-playbook §0-3).
 
-## Ledger delegation system (spec 2026-05-16 / call-playbook §0-4)
+## Ledger 위임 시스템 (spec 2026-05-16 / call-playbook §0-4)
 
-All PM-to-node delegation is recorded in `projects/<name>/ledger/` as a
-Dewey-numbered tree (`A` → `A-1` → `A-1-1`). Each node is a
-self-contained document with `## REQUEST` / `## RESPONSE` / `## CHILD INDEX` /
-`## NEXT` sections plus links to actual artifacts and RTM IDs.
-`python3 scripts/validate_ledger.py <project>` must exit 0 before any
-stage can be declared complete.
+PM 에서 노드로의 모든 위임은 `projects/<name>/ledger/` 에 Dewey 번호
+트리(`A` → `A-1` → `A-1-1`)로 기록된다. 각 노드는 `## REQUEST` /
+`## RESPONSE` / `## CHILD INDEX` / `## NEXT` 섹션 및 실제 산출물과 RTM ID
+링크를 포함하는 자기완결 문서다. `python3 scripts/validate_ledger.py <project>` 가
+exit 0 을 반환해야 모든 stage 를 완료로 선언할 수 있다.
 
-## Agent Catalog
+## 에이전트 카탈로그
 
-**Fixed-model roles (8)**
-- `project-manager` — Opus · xhigh · **Skill only** (sessionstart-loaded, never `claude -p`)
+**모델 고정 역할 (8종)**
+- `project-manager` — Opus · xhigh · **Skill 전용** (sessionstart 로드, `claude -p` 미사용)
 - `application-director` · `infrastructure-director` · `policy-engineer` — Opus · xhigh
 - `business-manager` · `quality-assurance` · `tester` — Sonnet · xhigh
-- `audit-team` — Sonnet · xhigh · invoked only via `scripts/run_audit.sh`
+- `audit-team` — Sonnet · xhigh · `scripts/run_audit.sh` 경유로만 호출
 
-**Dynamic-model roles (13 × opus/sonnet/haiku = 39 shells)**
+**동적 모델 역할 (13 × opus/sonnet/haiku = 39 shells)**
 - `application-architect` (AA), `software-architect` (SWA),
   `technical-architect` (TA), `data-modeler`
-- `part-leader` (activated only when `scale == large`)
+- `part-leader` (`scale == large` 일 때만 활성화)
 - `backend-developer`, `batch-developer`, `web-developer`,
   `web-publisher`, `designer`
 - `database-administrator` (DBA), `security-specialist`,
   `infrastructure-engineer`
 
-The upstream caller picks the variant based on the task's difficulty
-(spec §2-3 difficulty guide). Never dictate a model more than one level
-down the delegation chain.
+상위 호출자가 작업 난이도에 따라 변형을 선택한다 (spec §2-3 난이도 가이드).
+위임 체인에서 한 단계 이상 낮은 모델을 강제로 지정하지 말 것.
 
-Source of truth layout:
-- `.claude/roles/<role>.md` — single-source persona (one per role, no model suffix)
-- `.claude/agents/<role>-<variant>.md` — advisory (read-only) shells derived from roles
+소스 트리:
+- `.claude/roles/<role>.md` — 단일 소스 페르소나 (역할당 1개, 모델 접미사 없음)
+- `.claude/agents/<role>-<variant>.md` — 역할에서 파생된 자문 (읽기전용) shells
 - `.claude/skills/project-manager/SKILL.md` — PM skill shell
 
-## Artifact Templates
+## 산출물 템플릿
 
-See `templates/artifacts/` for stage and role deliverable skeletons:
+단계별·역할별 산출물 스켈레톤은 `templates/artifacts/` 를 참고:
 
-- `_common/` — `index.md.tmpl` + `child.md.tmpl` (every hierarchical area uses these)
+- `_common/` — `index.md.tmpl` + `child.md.tmpl` (모든 계층 영역 공통)
 - `change-requests/` — `cr-request` / `cr-impact-analysis` / `cr-decision` / `cr-action-result` / `index`
-- `audit/` — `audit-plan` + `finding` (with `pm-classification` A/B/C/D field)
-- `rtm/` — `index` + `by-stage` templates
-- `ledger/` — `node.md.tmpl` (REQUEST/RESPONSE/CHILD INDEX/NEXT skeleton) + `index.md.tmpl`
-- top-level logs — `project-state` / `agent-call-log` / `escalations` / `review-meeting` / `rollback-history` / `statement-of-work`
+- `audit/` — `audit-plan` + `finding` (`pm-classification` A/B/C/D 필드 포함)
+- `rtm/` — `index` + `by-stage` 템플릿
+- `ledger/` — `node.md.tmpl` (REQUEST/RESPONSE/CHILD INDEX/NEXT 스켈레톤) + `index.md.tmpl`
+- 최상위 로그 — `project-state` / `agent-call-log` / `escalations` / `review-meeting` / `rollback-history` / `statement-of-work`
 
-Every template carries the required frontmatter schema; violations are
-caught by the validators below.
+모든 템플릿은 필수 frontmatter 스키마를 포함하며, 위반은 아래 validator 가 검출한다.
 
 ## Stage Gates
 
-`templates/stage-gates.md` lists, per stage, the mandatory artifacts,
-reviews, advisory gates (`business-manager` + `quality-assurance`
-consultations logged in `agent-call-log.md`), RTM population, audit,
-hierarchy gate, and approval gate.
+`templates/stage-gates.md` 는 단계별로 필수 산출물, 리뷰, 자문 게이트
+(`business-manager` + `quality-assurance` 협의 기록을 `agent-call-log.md` 에
+남길 것), RTM 입력, 감리, 계층 게이트, 승인 게이트를 열거한다.
 
-The "Hierarchy gate" line requires `validate_artifact_hierarchy.py` to
-exit 0 and — when back-references changed — `sync_back_references.py`
-to report clean.
+"Hierarchy gate" 항목은 `validate_artifact_hierarchy.py` 가 exit 0 을
+반환하고, 역참조가 변경된 경우 `sync_back_references.py` 가 clean 을
+보고해야 통과된다.
 
-The "Ledger-completeness gate" requires `python3 scripts/validate_ledger.py <project>`
-to exit 0; open REQUEST nodes (missing RESPONSE) block stage completion.
+"Ledger-completeness gate" 는 `python3 scripts/validate_ledger.py <project>`
+가 exit 0 을 반환해야 하며, RESPONSE 가 없는 open REQUEST 노드가 있으면
+stage 완료가 차단된다.
 
-## Validation & helper scripts
+## 검증·헬퍼 스크립트
 
 ```bash
-# Agent-frontmatter schema + role/playbook drift-guard
+# Agent frontmatter 스키마 + 역할/플레이북 drift-guard
 python3 scripts/validate_agent.py --all
 
-# v2 hierarchy: index.md presence, bidirectional deps, 3-hop depth,
-# group-ID references, orphan advisory, audit-advisory relaxation
+# v2 계층: index.md 존재, 양방향 의존성, 3-hop 깊이,
+# group-ID 참조, orphan 자문, audit-advisory 완화
 python3 scripts/validate_artifact_hierarchy.py <project>
 
-# Frontmatter completeness (id/title/owner/depends-on/referenced-by + version regex + duplicate-key detection)
+# Frontmatter 완전성 (id/title/owner/depends-on/referenced-by + version 정규식 + 중복 키 탐지)
 python3 scripts/check_frontmatter.py <project>
 
-# Change-request cycle completeness (CR-<seq>/ five files, schema per template)
+# 변경 요청 사이클 완전성 (CR-<seq>/ 5개 파일, 템플릿별 스키마)
 python3 scripts/validate_cr.py <project>
 
-# Sync referenced-by back-refs from depends-on declarations
+# depends-on 선언에서 referenced-by 역참조 동기화
 python3 scripts/sync_back_references.py <project>
 
-# Sync index.md child-count fields to reality (run automatically by bootstrap)
+# index.md child-count 필드를 실제 내용에 동기화 (bootstrap 시 자동 실행)
 python3 scripts/sync_child_count.py <project>            # write
-python3 scripts/sync_child_count.py <project> --check    # dry-run, exit 1 on drift
+python3 scripts/sync_child_count.py <project> --check    # dry-run, 드리프트 시 exit 1
 
-# Transition FIND-*.md status raised → resolved for Type-A classifications
+# Type-A 분류 FIND-*.md 상태를 raised → resolved 로 전환
 python3 scripts/close_audit_findings.py <project> <cycle-id>
 
-# Bootstrap new project (auto-syncs child-count on exit)
+# 신규 프로젝트 bootstrap (종료 시 child-count 자동 동기화)
 python3 scripts/bootstrap_project.py <name> --scale small|large
 
-# Regenerate the 39 dynamic-variant agent shells from role templates
+# 역할 템플릿에서 동적 변형 agent shell 39개 재생성
 python3 scripts/derive_dynamic_agents.py
 
-# Audit launcher (creates worktree + copies project + prints PM dispatch guidance;
-# claude -p 제거됨 — PM dispatches audit-team as general-purpose node)
+# 감리 실행기 (worktree 생성 + 프로젝트 복사 + PM dispatch 안내 출력;
+# claude -p 제거됨 — PM 이 audit-team 을 general-purpose 노드로 dispatch)
 scripts/run_audit.sh <project> <cycle-id> <prompt-file>
 
-# Ledger completeness: all REQUEST nodes must have a RESPONSE (stage gate)
+# Ledger 완전성: 모든 REQUEST 노드에 RESPONSE 필요 (stage gate)
 python3 scripts/validate_ledger.py <project>
 
-# Rollback helper (MOVE vs SNAPSHOT modes — §4-3)
+# 롤백 헬퍼 (MOVE vs SNAPSHOT 모드 — §4-3)
 scripts/execute_rollback.sh <project> <stage> <mode>
 
-# Run the full test suite
+# 전체 테스트 스위트 실행
 python3 -m pytest -q
 ```
 
-At time of writing: **169 tests passing · `validate_agent --all` 68/68 clean**.
+작성 시점 기준: **169개 테스트 통과 · `validate_agent --all` 68/68 clean**.
 
-## Phase 7 E2E outcome (2026-04-19)
+## Phase 7 E2E 결과 (2026-04-19)
 
-Phase 7 ran the full `book-mgmt-api` sample project end-to-end against
-this system, audited it twice (D-AUDIT-1 pass, C-AUDIT-1 pass), then
-ran five meta-tests (Tasks 14-18). 42 systemic improvements were
-identified and merged to master across three waves:
+Phase 7 에서는 이 시스템으로 `book-mgmt-api` 샘플 프로젝트를 처음부터
+끝까지 실행하고, 감리를 두 차례 진행(D-AUDIT-1 통과, C-AUDIT-1 통과)한
+뒤 다섯 가지 메타테스트(Task 14–18)를 수행했다. 3차례 파동에 걸쳐
+42개의 구조 개선이 master 에 반영되었다:
 
-- 14 from the Phase 7 residual findings list (`#1`–`#19`)
-- 20 from a raw-log / review / artifact meta-data scan (`N1`–`N20`)
-- 8 from the Part B meta-tests (`C-18-1/2`, `C-17-1/2`, `C-14-1/2/3`, `C-18-3`)
+- Phase 7 잔여 발견 목록(`#1`–`#19`)에서 14개
+- 원시 로그 / 리뷰 / 산출물 메타데이터 스캔(`N1`–`N20`)에서 20개
+- Part B 메타테스트(`C-18-1/2`, `C-17-1/2`, `C-14-1/2/3`, `C-18-3`)에서 8개
 
-Notable structural additions:
-- **Shared-file single-writer rule** (spec §7-2) — `project-state.md`,
-  `RTM/`, `agent-call-log.md`, `escalations.md`, and directory index
-  files are PM-only; subprocesses escalate instead of editing directly.
-- **`--add-dir` scope limit** (call-playbook §0) — subprocesses receive
-  only their own authored directory, eliminating parallel-write races.
+주요 구조 추가 사항:
+- **공유 파일 단독 수정 규칙** (spec §7-2) — `project-state.md`,
+  `RTM/`, `agent-call-log.md`, `escalations.md`, 디렉토리 index 파일은
+  PM 전용 기록 대상이며, subprocess 는 직접 수정 대신 에스컬레이션.
+- **`--add-dir` 범위 한정** (call-playbook §0) — subprocess 는 자신이
+  저작하는 디렉토리만 부여받아 병렬 쓰기 경합 제거.
   (2026-05-16 `claude -p` 폐기로 대체 — 현행 아님)
-- **Rollback MOVE/SNAPSHOT modes** (`scripts/execute_rollback.sh`).
-- **Audit finding classification** A/B/C/D on the `pm-classification`
-  frontmatter field; type-A transitions to `resolved` via
-  `scripts/close_audit_findings.py`.
-- **Nested Track A depth guard** — 4-level chain recommended; deeper
-  chains must pass a `condensed-brief.md` (95 % cache-hit is not
-  enough to preserve context past 4 levels).
+- **롤백 MOVE/SNAPSHOT 모드** (`scripts/execute_rollback.sh`).
+- **감리 발견 분류** `pm-classification` frontmatter 필드의 A/B/C/D 값;
+  Type-A 는 `scripts/close_audit_findings.py` 로 `resolved` 전환.
+- **중첩 Track A 깊이 가드** — 4-레벨 체인 권장; 더 깊은 체인은
+  `condensed-brief.md` 를 통과해야 함 (95 % 캐시 히트만으로는 4레벨
+  이후 컨텍스트 보존 불충분).
   (2026-05-16 `claude -p` 폐기로 대체 — 현행 아님)
 
-Full report: `docs/superpowers/findings/2026-04-18-phase7-findings.md`
-and `docs/superpowers/findings/2026-04-19-phase7-part-b-findings.md`.
+전체 보고서: `docs/superpowers/findings/2026-04-18-phase7-findings.md`
+및 `docs/superpowers/findings/2026-04-19-phase7-part-b-findings.md`.
 
 ## Role realignment (2026-05-02)
 
