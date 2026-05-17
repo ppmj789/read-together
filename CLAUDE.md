@@ -125,8 +125,8 @@ git push -u origin master
 ## 테스트·검증 (변경 후 필수)
 
 ```bash
-python3 -m pytest -q                                              # 기준 153 passing
-python3 scripts/validate_agent.py --all                           # 기준 66/66 clean
+python3 -m pytest -q                                              # 기준 169 passing
+python3 scripts/validate_agent.py --all                           # 기준 68/68 clean
 python3 scripts/validate_ledger.py projects/<name>                # 프로젝트 ledger 작업 시
 ```
 
