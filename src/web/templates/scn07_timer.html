@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}같이읽자 — 타이머{% endblock %}
+
+{% block content %}
+<div class="section-hd">
+  <div><div class="eyebrow">타이머</div><h2 class="h-2 mt-4">시간 관리</h2></div>
+</div>
+
+<div class="timer-wrap">
+  <div class="timer" id="timer-display">—</div>
+  <p class="timer-meta" id="timer-mode">카운트다운</p>
+  <div class="timer-controls">
+    <button class="btn btn-sm btn-pill" onclick="timerAction('start')">시작</button>
+    <button class="btn btn-sm btn-pill" onclick="timerAction('stop')">정지</button>
+    <button class="btn btn-ghost btn-sm btn-pill" onclick="timerAction('reset')">리셋</button>
+  </div>
+</div>
+
+<div class="card" id="timer-setup" style="display:none">
+  <div class="card__head"><h3 class="h-3">타이머 설정</h3><span class="tag">호스트</span></div>
+  <div class="field">
+    <label>시간 (초)</label>
+    <input class="input" id="timer-duration" type="number" value="600" min="1" max="10800">
+  </div>
+  <div class="row">
+    <button class="btn btn-pill" onclick="setTimer('countdown')">카운트다운</button>
+    <button class="btn btn-pill" onclick="setTimer('countup')">스톱워치</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var token=sessionStorage.getItem('token');
+var meetingId=sessionStorage.getItem('meeting_id');
+var isHost=sessionStorage.getItem('is_host')==='true';
+if(!token) window.location.href='/';
+var headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'};
+if(isHost) document.getElementById('timer-setup').style.display='block';
+
+async function setTimer(mode){
+  var dur=parseInt(document.getElementById('timer-duration').value)||600;
+  var res=await fetch('/api/v1/meetings/'+meetingId+'/timer',{method:'PUT',headers:headers,body:JSON.stringify({duration_sec:dur,mode:mode})});
+  if(!res.ok){var d=await res.json();showToast(d.error?.message||'오류','error');return}
+  showToast('타이머 설정 완료','success');
+}
+async function timerAction(action){
+  var res=await fetch('/api/v1/meetings/'+meetingId+'/timer/'+action,{method:'POST',headers:headers});
+  if(!res.ok){var d=await res.json();showToast(d.error?.message||'오류','error')}
+}
+</script>
+{% endblock %}

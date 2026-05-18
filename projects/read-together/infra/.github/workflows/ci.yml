@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master", "develop"]
+  pull_request:
+    branches: ["main", "master"]
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 3.11 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 의존성 설치
+        run: pip install -r requirements.txt
+
+      - name: Lint (flake8)
+        run: |
+          pip install flake8
+          flake8 src/ --max-line-length=120 --exclude=__pycache__
+
+      - name: 단위 테스트 (pytest)
+        env:
+          SECRET_KEY: "ci-test-secret-key-not-for-production"
+          DB_PATH: ":memory:"
+          LOG_LEVEL: "warning"
+        run: |
+          pip install pytest pytest-asyncio httpx
+          pytest tests/ -q --tb=short

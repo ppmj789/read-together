@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}같이읽자 — 내 답변{% endblock %}
+
+{% block content %}
+<div class="section-hd">
+  <div><div class="eyebrow">03 · 답변</div><h2 class="h-1 mt-4">내 생각을<br>적어볼까요.</h2></div>
+</div>
+
+<p class="body-2 mb-16" style="color:var(--ink-soft)">여기서는 <b style="color:var(--ink)">내 답변만</b> 보여요. 다른 참가자의 답변은 발표 모드에서 함께 확인합니다.</p>
+
+<div class="sheet" style="background:var(--paper-warm)">
+  <div class="eyebrow mb-8">오늘의 질문 목록</div>
+  <div id="questions-overview" class="body-2">불러오는 중...</div>
+</div>
+
+<div id="questions-section"><p class="body-2">질문을 불러오는 중...</p></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var token=sessionStorage.getItem('token');
+var meetingId=sessionStorage.getItem('meeting_id');
+var participantId=parseInt(sessionStorage.getItem('participant_id'));
+if(!token)window.location.href='/';
+var headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'};
+var bookId=1;
+
+async function load(){
+  var res=await fetch('/api/v1/books/'+bookId+'/questions',{headers:headers});
+  var data=await res.json();var qs=data.data||[];
+
+  /* 질문 개요 표시 */
+  var overview=document.getElementById('questions-overview');
+  if(qs.length){
+    overview.innerHTML=qs.map(function(q,i){
+      return '<div style="display:flex;gap:8px;align-items:baseline;padding:6px 0'+(i<qs.length-1?';border-bottom:1px solid var(--rule-soft)':'')+'">'
+        +'<span class="tag tag-accent" style="flex-shrink:0">Q'+String(i+1).padStart(2,'0')+'</span>'
+        +'<span style="font-weight:500;color:var(--ink)">'+q.body+'</span></div>';
+    }).join('');
+  } else {
+    overview.textContent='등록된 질문이 없습니다';
+  }
+  var container=document.getElementById('questions-section');
+  if(!qs.length){
+    container.innerHTML='<div class="empty-state"><div class="empty-state__icon">💬</div><div class="empty-state__text">아직 등록된 질문이 없어요</div></div>';
+    return;
+  }
+  container.innerHTML=qs.map(function(q,i){return `
+    <div class="sheet" id="q-sheet-${q.id}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span class="tag tag-accent">Q${String(i+1).padStart(2,'0')}</span>
+        <span class="tag">${q.q_type}</span>
+      </div>
+      <h3 class="h-3" style="margin-bottom:16px">${q.body}</h3>
+
+      <!-- 내 답변 영역 -->
+      <div id="my-answer-${q.id}">
+        <div id="my-answer-display-${q.id}" style="display:none">
+          <div class="answer mine">
+            <div class="answer__who"><span><b>나</b></span><span id="my-answer-time-${q.id}"></span></div>
+            <div class="answer__body" id="my-answer-body-${q.id}"></div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="editAnswer(${q.id})">수정하기</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 작성/수정 폼 -->
+        <div id="my-answer-form-${q.id}">
+          <textarea class="input mb-12" id="answer-input-${q.id}" placeholder="여기에 내 생각을 적어보세요. 솔직할수록 좋아요." rows="4" onfocus="requireAuth()"></textarea>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-pill" onclick="submitAnswer(${q.id})">답변 저장</button>
+            <button class="btn btn-ghost btn-pill" id="cancel-edit-${q.id}" style="display:none" onclick="cancelEdit(${q.id})">취소</button>
+          </div>
+        </div>
+      </div>
+    </div>`;}).join('');
+
+  /* 내 답변 로드 */
+  qs.forEach(function(q){ loadMyAnswer(q.id); });
+}
+
+async function loadMyAnswer(qid){
+  var res=await fetch('/api/v1/questions/'+qid+'/answers',{headers:headers});
+  var data=await res.json();var answers=data.data||[];
+  var myAnswer = answers.find(function(a){ return a.participant_id === participantId; });
+
+  if(myAnswer){
+    document.getElementById('my-answer-body-'+qid).textContent = myAnswer.body;
+    document.getElementById('my-answer-time-'+qid).textContent = (myAnswer.created_at||'').slice(11,16);
+    document.getElementById('my-answer-display-'+qid).style.display = 'block';
+    document.getElementById('my-answer-form-'+qid).style.display = 'none';
+    /* 답변 ID 저장 (수정용) */
+    document.getElementById('my-answer-display-'+qid).dataset.answerId = myAnswer.id;
+  }
+}
+
+function editAnswer(qid){
+  var currentBody = document.getElementById('my-answer-body-'+qid).textContent;
+  document.getElementById('answer-input-'+qid).value = currentBody;
+  document.getElementById('my-answer-form-'+qid).style.display = 'block';
+  document.getElementById('my-answer-display-'+qid).style.display = 'none';
+  document.getElementById('cancel-edit-'+qid).style.display = 'block';
+  document.getElementById('answer-input-'+qid).focus();
+}
+
+function cancelEdit(qid){
+  document.getElementById('my-answer-form-'+qid).style.display = 'none';
+  document.getElementById('my-answer-display-'+qid).style.display = 'block';
+  document.getElementById('cancel-edit-'+qid).style.display = 'none';
+}
+
+async function submitAnswer(qid){
+  var body = document.getElementById('answer-input-'+qid).value.trim();
+  if(!body){showToast('답변을 입력해주세요','error');return}
+
+  var displayEl = document.getElementById('my-answer-display-'+qid);
+  var existingId = displayEl.dataset.answerId;
+
+  if(existingId){
+    /* 수정 */
+    var res=await fetch('/api/v1/answers/'+existingId,{method:'PUT',headers:headers,body:JSON.stringify({body:body})});
+    if(!res.ok){
+      /* PUT 미지원 시 fallback: 새로 생성 */
+      var res2=await fetch('/api/v1/questions/'+qid+'/answers',{method:'POST',headers:headers,body:JSON.stringify({body:body,is_anonymous:false})});
+      if(!res2.ok){var d=await res2.json();showToast(d.error?.message||'오류','error');return}
+    }
+    showToast('답변을 수정했어요','success');
+  } else {
+    /* 새로 생성 */
+    var res=await fetch('/api/v1/questions/'+qid+'/answers',{method:'POST',headers:headers,body:JSON.stringify({body:body,is_anonymous:false})});
+    if(!res.ok){var d=await res.json();showToast(d.error?.message||'오류','error');return}
+    showToast('답변을 저장했어요','success');
+  }
+
+  /* 카운터 업데이트 */
+  var cnt = parseInt(localStorage.getItem('rt_my_answers')||'0');
+  localStorage.setItem('rt_my_answers', cnt+1);
+
+  document.getElementById('cancel-edit-'+qid).style.display = 'none';
+  loadMyAnswer(qid);
+}
+
+load();
+</script>
+{% endblock %}

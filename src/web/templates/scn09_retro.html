@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}같이읽자 — 내 기록{% endblock %}
+
+{% block content %}
+<div class="section-hd">
+  <div><div class="eyebrow">내 기록</div><h2 class="h-1 mt-4">나만의<br>독서 일기.</h2></div>
+</div>
+
+<!-- 프로필 카드 -->
+<div class="profile-card">
+  <div class="profile-avatar" id="profile-initial">?</div>
+  <div class="profile-name" id="profile-nickname">—</div>
+  <div style="font-size:13px;color:var(--ink-dim);margin-top:4px" id="profile-status">닉네임으로 참여 중</div>
+  <div class="profile-stat">
+    <div class="profile-stat__item">
+      <div class="profile-stat__num" id="stat-answers">0</div>
+      <div class="profile-stat__label">내 답변</div>
+    </div>
+    <div class="profile-stat__item">
+      <div class="profile-stat__num" id="stat-reactions">0</div>
+      <div class="profile-stat__label">받은 반응</div>
+    </div>
+    <div class="profile-stat__item">
+      <div class="profile-stat__num" id="stat-meetings">0</div>
+      <div class="profile-stat__label">참여 모임</div>
+    </div>
+  </div>
+</div>
+
+<!-- 선택적 계정 연결 -->
+<div class="sheet" id="account-section">
+  <div class="sheet__hd">
+    <div>
+      <div class="eyebrow">계정 (선택)</div>
+      <h3 class="h-3 mt-4" id="account-title">기록을 영구 저장하고 싶다면</h3>
+    </div>
+  </div>
+  <div id="account-form">
+    <p class="body-2 mb-12">계정 없이도 모임 참가는 가능해요. 하지만 기록을 다른 기기에서도 보고 싶다면 계정을 만들어보세요.</p>
+    <div class="field">
+      <label>이메일</label>
+      <input class="input" id="account-email" type="email" placeholder="your@email.com">
+    </div>
+    <div class="field">
+      <label>비밀번호</label>
+      <input class="input" id="account-pw" type="password" placeholder="4자 이상">
+    </div>
+    <button class="btn btn-primary btn-pill" onclick="createAccount()">계정 만들기</button>
+    <p class="body-2 center mt-8" style="font-size:12px;color:var(--ink-dim)">이미 계정이 있나요? <a href="#" onclick="toggleLoginForm();return false" style="color:var(--accent)">로그인</a></p>
+  </div>
+  <div id="login-form" style="display:none">
+    <div class="field">
+      <label>이메일</label>
+      <input class="input" id="login-email" type="email" placeholder="your@email.com">
+    </div>
+    <div class="field">
+      <label>비밀번호</label>
+      <input class="input" id="login-pw" type="password" placeholder="비밀번호">
+    </div>
+    <button class="btn btn-primary btn-pill" onclick="loginAccount()">로그인</button>
+    <p class="body-2 center mt-8" style="font-size:12px;color:var(--ink-dim)"><a href="#" onclick="toggleLoginForm();return false" style="color:var(--accent)">계정 만들기로 돌아가기</a></p>
+  </div>
+  <div id="account-linked" style="display:none">
+    <p class="body-2" style="color:var(--success)">계정이 연결되었어요. 기록이 영구 저장됩니다.</p>
+  </div>
+</div>
+
+<!-- 오늘의 한줄평 -->
+<div class="sheet">
+  <div class="sheet__hd"><div><div class="eyebrow">한줄평</div><h3 class="h-3 mt-4">오늘의 한 줄</h3></div></div>
+  <input class="input mb-12" id="review-input" placeholder="이번 모임을 한 줄로 적어주세요" onfocus="requireAuth()">
+  <button class="btn btn-primary btn-pill" onclick="requireAuth(function(){saveReview()})">저장</button>
+</div>
+
+<!-- 인사이트 일기 -->
+<div class="sheet">
+  <div class="sheet__hd"><div><div class="eyebrow">인사이트 일기</div><h3 class="h-3 mt-4">떠오른 생각 기록</h3></div></div>
+  <div id="insights-list"></div>
+  <textarea class="input mt-12 mb-12" id="insight-input" placeholder="오늘 읽으며 떠오른 생각을 남겨보세요. 이 기록은 나만 볼 수 있어요." rows="3" onfocus="requireAuth()"></textarea>
+  <button class="btn btn-primary btn-pill" onclick="requireAuth(function(){saveInsight()})">기록 저장</button>
+</div>
+
+<!-- 다음 모임 질문 -->
+<div class="sheet">
+  <div class="sheet__hd"><div><div class="eyebrow">다음 모임</div><h3 class="h-3 mt-4">다음에 이야기하고 싶은 것</h3></div></div>
+  <input class="input mb-12" id="newq-input" placeholder="다음에 같이 이야기하고 싶은 질문" onfocus="requireAuth()">
+  <button class="btn btn-primary btn-pill" onclick="requireAuth(function(){saveNewQuestion()})">질문 저장</button>
+</div>
+
+<!-- 내 활동 기록 (누적) -->
+<div class="sheet">
+  <div class="sheet__hd"><div><div class="eyebrow">내 활동 기록</div><h3 class="h-3 mt-4">지금까지 쓴 글</h3></div></div>
+  <div id="my-history">
+    <p class="body-2" style="text-align:center;padding:16px 0;color:var(--ink-dim)">기록이 쌓이면 여기에 표시됩니다</p>
+  </div>
+</div>
+
+<p class="eyebrow center mt-20" style="font-size:12px;opacity:.6">고생하셨어요, 다음에 또 만나요</p>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var token=sessionStorage.getItem('token');
+var meetingId=sessionStorage.getItem('meeting_id');
+if(!token)window.location.href='/';
+var headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'};
+
+/* 프로필 초기화 */
+(function initProfile(){
+  var nick=localStorage.getItem('rt_nickname')||'guest';
+  document.getElementById('profile-nickname').textContent=nick;
+  var firstChar = nick.replace(/[^\uAC00-\uD7AF\u3131-\u3163a-zA-Z]/g,'');
+  document.getElementById('profile-initial').textContent = firstChar.charAt(0) || '?';
+
+  var hasAccount = localStorage.getItem('rt_account_email');
+  if(hasAccount){
+    document.getElementById('profile-status').textContent = hasAccount + ' 계정 연결됨';
+    document.getElementById('account-form').style.display = 'none';
+    document.getElementById('account-linked').style.display = 'block';
+    document.getElementById('account-title').textContent = '계정 상태';
+  }
+
+  var myAnswers=parseInt(localStorage.getItem('rt_my_answers')||'0');
+  var myReactions=parseInt(localStorage.getItem('rt_my_reactions')||'0');
+  var myMeetings=parseInt(localStorage.getItem('rt_my_meetings')||'1');
+  document.getElementById('stat-answers').textContent=myAnswers;
+  document.getElementById('stat-reactions').textContent=myReactions;
+  document.getElementById('stat-meetings').textContent=myMeetings;
+
+  var history = JSON.parse(localStorage.getItem('rt_my_history')||'[]');
+  var historyEl = document.getElementById('my-history');
+  if(history.length){
+    historyEl.innerHTML = history.slice(-10).reverse().map(function(h){
+      return '<div class="history-row"><span class="tag">'+h.type+'</span><span class="who" style="flex:1;font-size:14px">'+h.text+'</span><span class="time">'+h.date+'</span></div>';
+    }).join('');
+  }
+})();
+
+function toggleLoginForm(){
+  var f = document.getElementById('account-form');
+  var l = document.getElementById('login-form');
+  f.style.display = f.style.display==='none'?'block':'none';
+  l.style.display = l.style.display==='none'?'block':'none';
+}
+
+function createAccount(){
+  var email = (document.getElementById('account-email').value||'').trim();
+  var pw = (document.getElementById('account-pw').value||'').trim();
+  if(!email || !pw || pw.length < 4){showToast('이메일과 비밀번호(4자 이상)를 입력해주세요','error');return}
+  /* 실제로는 API 호출 — 여기서는 localStorage에 저장 */
+  localStorage.setItem('rt_account_email', email);
+  localStorage.setItem('rt_account_pw_hash', btoa(pw));
+  document.getElementById('account-form').style.display = 'none';
+  document.getElementById('account-linked').style.display = 'block';
+  document.getElementById('account-title').textContent = '계정 상태';
+  document.getElementById('profile-status').textContent = email + ' 계정 연결됨';
+  showToast('계정이 만들어졌어요!','success');
+}
+
+function loginAccount(){
+  var email = (document.getElementById('login-email').value||'').trim();
+  var pw = (document.getElementById('login-pw').value||'').trim();
+  if(!email || !pw){showToast('이메일과 비밀번호를 입력해주세요','error');return}
+  var storedEmail = localStorage.getItem('rt_account_email');
+  var storedPw = localStorage.getItem('rt_account_pw_hash');
+  if(storedEmail === email && storedPw === btoa(pw)){
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('account-linked').style.display = 'block';
+    document.getElementById('account-title').textContent = '계정 상태';
+    document.getElementById('profile-status').textContent = email + ' 계정 연결됨';
+    showToast('로그인 성공!','success');
+  } else {
+    showToast('이메일 또는 비밀번호가 다릅니다','error');
+  }
+}
+
+function addToHistory(type, text){
+  var history = JSON.parse(localStorage.getItem('rt_my_history')||'[]');
+  var now = new Date();
+  var dateStr = (now.getMonth()+1)+'/'+now.getDate()+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  history.push({type:type, text:text.substring(0,50), date:dateStr});
+  localStorage.setItem('rt_my_history', JSON.stringify(history));
+  var key = type==='답변'?'rt_my_answers':'rt_my_reactions';
+  localStorage.setItem(key, parseInt(localStorage.getItem(key)||'0')+1);
+}
+
+async function saveInsight(){
+  var body=document.getElementById('insight-input').value.trim();
+  if(!body){showToast('인사이트를 입력해주세요','error');return}
+  await fetch('/api/v1/meetings/'+meetingId+'/retro/insights',{method:'POST',headers:headers,body:JSON.stringify({body:body})});
+  addToHistory('인사이트', body);
+  document.getElementById('insight-input').value='';
+  showToast('인사이트를 저장했어요','success');
+}
+async function saveReview(){
+  var body=document.getElementById('review-input').value.trim();
+  if(!body){showToast('한줄평을 입력해주세요','error');return}
+  await fetch('/api/v1/meetings/'+meetingId+'/retro/one-line-reviews',{method:'POST',headers:headers,body:JSON.stringify({body:body})});
+  addToHistory('한줄평', body);
+  showToast('한줄평을 저장했어요','success');
+}
+async function saveNewQuestion(){
+  var body=document.getElementById('newq-input').value.trim();
+  if(!body){showToast('질문을 입력해주세요','error');return}
+  await fetch('/api/v1/meetings/'+meetingId+'/retro/new-questions',{method:'POST',headers:headers,body:JSON.stringify({body:body})});
+  addToHistory('질문', body);
+  document.getElementById('newq-input').value='';
+  showToast('질문을 저장했어요','success');
+}
+</script>
+{% endblock %}

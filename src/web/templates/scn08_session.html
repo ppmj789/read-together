@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}같이읽자 — 모임 진행{% endblock %}
+
+{% block content %}
+<div class="section-hd">
+  <div>
+    <div class="eyebrow">01 · 모임</div>
+    <h2 class="h-2 mt-4">진행 중인 모임</h2>
+  </div>
+  <span class="tag tag-accent tag-dot">LIVE</span>
+</div>
+
+<!-- 오늘의 주제 + 책 -->
+<div class="sheet" id="roadmap-section">
+  <div class="eyebrow mb-8">오늘의 주제</div>
+  <h3 class="h-2" id="session-topic" style="margin-bottom:8px">불러오는 중...</h3>
+  <p class="body-2" id="session-topic-desc"></p>
+
+  <hr class="rule-thin">
+  <div class="eyebrow mb-8">오늘의 책</div>
+  <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px">
+    <div style="width:48px;height:64px;background:var(--accent);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--accent-ink);font-weight:900;font-size:18px;flex-shrink:0" id="book-icon">?</div>
+    <div>
+      <div class="h-3" id="session-book-title">—</div>
+      <div class="body-2" id="session-book-reason">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- 진행 단계 (질문 기반) -->
+<div class="sheet sheet--warm">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div class="eyebrow">진행 단계</div>
+    <span class="tag tag-accent" id="stage-badge-tag">STEP 01</span>
+  </div>
+  <div class="steps" id="session-questions-steps">
+    <p class="body-2 dim">질문을 불러오는 중...</p>
+  </div>
+</div>
+
+<!-- 타이머 -->
+<div class="timer-wrap">
+  <div class="timer-wrap__phase"><b id="timer-phase-label">PHASE 01</b> · 진행 중</div>
+  <div class="timer" id="timer-display" style="font-size:64px">—</div>
+  <p class="timer-meta">한 사람씩, 가장 마음에 닿은 한 문장을.</p>
+  <div class="timer-controls" id="timer-controls" style="display:none">
+    <button class="btn btn-sm btn-pill" onclick="timerAction('start')">시작</button>
+    <button class="btn btn-sm btn-pill" onclick="timerAction('stop')">정지</button>
+    <button class="btn btn-ghost btn-sm btn-pill" onclick="timerAction('reset')">리셋</button>
+  </div>
+</div>
+
+<!-- 현재 발언자 -->
+<div class="sheet" id="session-speaker" style="display:none">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);animation:livedot 1.4s ease-in-out infinite;flex-shrink:0"></div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:4px">현재 발언자</div>
+      <div class="h-1" id="speaker-name" style="color:var(--accent)">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- 호스트 컨트롤 -->
+<div class="row mt-16" id="host-controls" style="display:none">
+  <button class="btn btn-pill" onclick="moveStage(-1)">이전</button>
+  <button class="btn btn-primary btn-arrow btn-pill" onclick="moveStage(1)">다음 단계 <span class="arr">→</span></button>
+</div>
+<button class="btn btn-ghost btn-pill mt-8" id="end-btn" style="display:none" onclick="completeMeeting()">모임 종료</button>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var token=sessionStorage.getItem('token');
+var meetingId=sessionStorage.getItem('meeting_id');
+var isHost=sessionStorage.getItem('is_host')==='true';
+if(!token)window.location.href='/';
+var headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'};
+var currentStage=1;
+
+if(isHost){
+  document.getElementById('host-controls').style.display='flex';
+  document.getElementById('timer-controls').style.display='flex';
+  document.getElementById('end-btn').style.display='block';
+}
+
+/* 데이터 로드 */
+async function loadData(){
+  try{
+    // 주제
+    var topicRes=await fetch('/api/v1/topics',{headers:headers});
+    var topicData=await topicRes.json();
+    var topics=topicData.data||[];
+    if(topics.length){
+      document.getElementById('session-topic').textContent=topics[0].title;
+      document.getElementById('session-topic-desc').textContent=topics[0].description||'';
+    } else {
+      document.getElementById('session-topic').textContent='주제 미정';
+    }
+
+    // 책
+    var bookRes=await fetch('/api/v1/books',{headers:headers});
+    var bookData=await bookRes.json();
+    var books=bookData.data||[];
+    if(books.length){
+      var b=books[0];
+      document.getElementById('session-book-title').textContent=b.title;
+      document.getElementById('session-book-reason').textContent=b.reason;
+      document.getElementById('book-icon').textContent=b.title.charAt(0);
+    }
+
+    // 질문 → 단계
+    var qRes=await fetch('/api/v1/books/1/questions',{headers:headers});
+    var qData=await qRes.json();
+    var qs=qData.data||[];
+    var stepsEl=document.getElementById('session-questions-steps');
+    if(qs.length){
+      stepsEl.innerHTML=qs.map(function(q,i){
+        var isCurrent = (i+1)===currentStage;
+        return '<div class="step'+(isCurrent?' current':'')+'"><span class="num">'+String(i+1).padStart(2,'0')+'</span><div><div class="title"'+(isCurrent?' style="font-size:17px"':'')+'>'+q.body+(isCurrent?' <span class="tag tag-accent" style="font-size:10px;vertical-align:middle;margin-left:6px">지금</span>':'')+'</div><p class="sub">'+q.q_type+'</p></div></div>';
+      }).join('');
+    }
+  }catch(e){
+    document.getElementById('session-topic').textContent='데이터를 불러올 수 없습니다';
+  }
+}
+loadData();
+
+async function pollState(){
+  try{
+    var res=await fetch('/api/v1/meetings/'+meetingId+'/state',{headers:headers});
+    var data=await res.json();var s=data.data;if(!s)return;
+    currentStage=s.current_stage;
+    var badge=document.getElementById('stage-badge-tag');
+    if(badge) badge.textContent='STEP '+String(currentStage).padStart(2,'0');
+    var phaseLabel=document.getElementById('timer-phase-label');
+    if(phaseLabel) phaseLabel.innerHTML='<b>PHASE '+String(currentStage).padStart(2,'0')+'</b> · 진행 중';
+    if(s.timer){
+      var sec=s.timer.remaining_sec;
+      var mm=String(Math.floor(sec/60)).padStart(2,'0');
+      var ss=String(sec%60).padStart(2,'0');
+      var el=document.getElementById('timer-display');
+      el.textContent=mm+':'+ss;
+      el.classList.toggle('danger',sec<30);
+    }
+    if(s.latest_speaker){
+      document.getElementById('session-speaker').style.display='block';
+      document.getElementById('speaker-name').textContent=s.latest_speaker.nickname;
+    }
+    if(s.status==='completed')window.location.href='/retro';
+    loadData(); // refresh steps
+  }catch(e){}
+}
+setInterval(pollState,3000);pollState();
+
+async function timerAction(action){
+  await fetch('/api/v1/meetings/'+meetingId+'/timer/'+action,{method:'POST',headers:headers});
+  pollState();
+}
+async function moveStage(delta){
+  var newStage=Math.max(1,Math.min(8,currentStage+delta));
+  var res=await fetch('/api/v1/meetings/'+meetingId+'/stage',{method:'PATCH',headers:headers,body:JSON.stringify({stage:newStage})});
+  if(!res.ok){var d=await res.json();showToast(d.error?.message||'오류','error');return}
+  showToast('Stage '+newStage,'success');pollState();
+}
+async function completeMeeting(){
+  if(!confirm('모임을 종료하시겠습니까?'))return;
+  await fetch('/api/v1/meetings/'+meetingId+'/complete',{method:'POST',headers:headers});
+  window.location.href='/retro';
+}
+</script>
+{% endblock %}

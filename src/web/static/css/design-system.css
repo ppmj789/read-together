@@ -1,0 +1,139 @@
+/* design-system.css — 같이읽자 v3 디자인 토큰 + 베이스 + 타이포 + 유틸리티 */
+
+/* ─────────────────────────────────────────────────────────────
+   PALETTE — Warm book-club tones
+   ───────────────────────────────────────────────────────────── */
+:root,
+:root[data-palette="indigo"]{
+  --bg:#F5F1E8;
+  --paper:#FDFAF3;
+  --paper-warm:#F8F3E6;
+  --ink:#1A1612;
+  --ink-soft:#6B5E50;
+  --ink-dim:rgba(26,22,18,.45);
+  --rule:#D4CFC4;
+  --rule-soft:rgba(26,22,18,.10);
+  --accent:#3B5998;
+  --accent-soft:#4A6DB5;
+  --accent-tint:rgba(59,89,152,.08);
+  --accent-ink:#FFFFFF;
+  --highlight:#EDE8DA;
+  --success:#2D8659;
+  --success-tint:rgba(45,134,89,.10);
+  --warm:#E8A87C;
+  --warm-tint:rgba(232,168,124,.12);
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:20px;
+  --radius-pill:9999px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 8px 30px rgba(0,0,0,.10);
+}
+:root[data-palette="mustard"]{
+  --bg:#F4EDD6;
+  --paper:#FBF6E2;
+  --paper-warm:#F5EDD2;
+  --ink:#1F1A12;
+  --ink-soft:#6B5E4A;
+  --ink-dim:rgba(31,26,18,.45);
+  --rule:#D6CEAF;
+  --rule-soft:rgba(31,26,18,.10);
+  --accent:#B8860B;
+  --accent-soft:#D4A017;
+  --accent-tint:rgba(184,134,11,.10);
+  --accent-ink:#FFFFFF;
+  --highlight:#E6D8AC;
+  --success:#2D8659;
+  --success-tint:rgba(45,134,89,.10);
+  --warm:#E8A87C;
+  --warm-tint:rgba(232,168,124,.12);
+}
+:root[data-palette="terracotta"]{
+  --bg:#F3E8DD;
+  --paper:#FDF5ED;
+  --paper-warm:#F6EBDF;
+  --ink:#1E1612;
+  --ink-soft:#7A5C4A;
+  --ink-dim:rgba(30,22,18,.45);
+  --rule:#D9C9B8;
+  --rule-soft:rgba(30,22,18,.10);
+  --accent:#C0503A;
+  --accent-soft:#D4654E;
+  --accent-tint:rgba(192,80,58,.08);
+  --accent-ink:#FFFFFF;
+  --highlight:#E8D2BC;
+  --success:#2D8659;
+  --success-tint:rgba(45,134,89,.10);
+  --warm:#E8A87C;
+  --warm-tint:rgba(232,168,124,.12);
+}
+:root[data-palette="ink"]{
+  --bg:#ECEAE4;
+  --paper:#F7F5F0;
+  --paper-warm:#F0EDE6;
+  --ink:#14110D;
+  --ink-soft:#5A564E;
+  --ink-dim:rgba(20,17,13,.45);
+  --rule:#D0CDC5;
+  --rule-soft:rgba(20,17,13,.10);
+  --accent:#14110D;
+  --accent-soft:#3A352E;
+  --accent-tint:rgba(20,17,13,.06);
+  --accent-ink:#F7F5F0;
+  --highlight:#DEDACE;
+  --success:#2D8659;
+  --success-tint:rgba(45,134,89,.10);
+  --warm:#C4A882;
+  --warm-tint:rgba(196,168,130,.12);
+}
+
+/* ─── 베이스 ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+html,body{height:100%}
+body{
+  font-family:'Pretendard Variable','Pretendard','Apple SD Gothic Neo','Noto Sans KR',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:15px;line-height:1.6;
+  --display:'Pretendard Variable','Pretendard','Apple SD Gothic Neo',sans-serif;
+  color:var(--ink);
+  background:var(--bg);
+  letter-spacing:-.01em;
+  min-height:100vh;
+  position:relative;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* ─── 타이포 ─── */
+.display{font-family:var(--display);font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.h-display{font-family:var(--display);font-weight:900;font-size:48px;line-height:1;letter-spacing:-.04em}
+.h-1{font-family:var(--display);font-weight:800;font-size:28px;line-height:1.15;letter-spacing:-.03em}
+.h-2{font-family:var(--display);font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.025em}
+.h-3{font-family:var(--display);font-weight:600;font-size:17px;line-height:1.35;letter-spacing:-.015em}
+.body-1{font-size:15px;line-height:1.65}
+.body-2{font-size:14px;line-height:1.6;color:var(--ink-soft)}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;letter-spacing:.02em}
+.eyebrow{
+  font-family:'Pretendard',sans-serif;
+  font-size:12px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink-dim);
+}
+.eyebrow b{color:var(--accent);font-weight:600}
+.lead{font-size:17px;line-height:1.6;color:var(--ink);letter-spacing:-.005em}
+.lead .lead-mark{color:var(--accent);font-family:var(--display);font-weight:900;letter-spacing:-.04em;font-size:1.4em}
+
+.rule{border:none;border-top:1px solid var(--rule);margin:20px 0}
+.rule-thin{border:none;border-top:1px solid var(--rule-soft);margin:16px 0}
+
+/* ─── 유틸리티 ─── */
+.mt-4{margin-top:4px}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}.mt-24{margin-top:24px}
+.mb-4{margin-bottom:4px}.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}.mb-20{margin-bottom:20px}
+.flex{display:flex}.between{justify-content:space-between;align-items:center;gap:10px}
+.center{text-align:center}.right{text-align:right}
+.dim{color:var(--ink-dim)}.soft{color:var(--ink-soft)}
+.accent{color:var(--accent)}
+.gap-8{gap:8px}.gap-12{gap:12px}
+
+::selection{background:var(--accent);color:var(--accent-ink)}

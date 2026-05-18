@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}같이읽자 — 사전정보{% endblock %}
+
+{% block content %}
+<div class="section-hd">
+  <div><div class="eyebrow">02 · 사전정보</div><h2 class="h-2 mt-4">모임 전에 워밍업!</h2></div>
+</div>
+
+<!-- 책 표지 + 한줄 소개 -->
+<div class="cover" style="aspect-ratio:auto;padding:24px 20px">
+  <div class="cover__top"><span>이향인</span><span>2026</span></div>
+  <div style="text-align:center;padding:20px 0">
+    <div class="cover__title" style="font-size:44px">이향인</div>
+    <div class="cover__author mt-8">라미 카민스키</div>
+  </div>
+  <div class="cover__top"><span>Read Together</span><span>N°01</span></div>
+</div>
+
+<!-- 읽기 전 퀴즈 -->
+<div class="sheet">
+  <div class="sheet__hd">
+    <div>
+      <div class="eyebrow">읽기 전 퀴즈</div>
+      <h3 class="h-3 mt-4">이 책에 대해 얼마나 알고 있나요?</h3>
+    </div>
+    <span class="tag tag-accent">퀴즈</span>
+  </div>
+  <div id="quiz-area">
+    <div class="quiz-q" id="quiz-1">
+      <p style="font-weight:600;font-size:15px;margin-bottom:12px">Q1. '이향인(異鄕人)'의 뜻은?</p>
+      <div class="quiz-options">
+        <button class="btn btn-ghost btn-pill mb-8" onclick="quizAnswer(1,'a',this)">다른 나라에서 온 사람</button>
+        <button class="btn btn-ghost btn-pill mb-8" onclick="quizAnswer(1,'b',this)">낯선 땅의 사람 (이방인)</button>
+        <button class="btn btn-ghost btn-pill mb-8" onclick="quizAnswer(1,'c',this)">향수를 느끼는 사람</button>
+      </div>
+      <div class="quiz-result" id="quiz-1-result" style="display:none"></div>
+    </div>
+    <div class="quiz-q mt-16" id="quiz-2">
+      <p style="font-weight:600;font-size:15px;margin-bottom:12px">Q2. 이 책의 핵심 메시지에 가장 가까운 것은?</p>
+      <div class="quiz-options">
+        <button class="btn btn-ghost btn-pill mb-8" onclick="quizAnswer(2,'a',this)">고향을 떠나면 안 된다</button>
+        <button class="btn btn-ghost btn-pill mb-8" onclick="quizAnswer(2,'b',this)">어디에도 속하지 못할 때 자신을 발견한다</button>
+        <button class="btn btn-ghost btn-pill mb-8" onclick="quizAnswer(2,'c',this)">여행을 많이 다녀야 한다</button>
+      </div>
+      <div class="quiz-result" id="quiz-2-result" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 저자 TMI -->
+<div class="sheet">
+  <div class="sheet__hd">
+    <div>
+      <div class="eyebrow">저자 TMI</div>
+      <h3 class="h-3 mt-4">라미 카민스키, 이런 사람이에요</h3>
+    </div>
+    <span class="tag">FUN FACT</span>
+  </div>
+  <div class="steps" style="gap:8px">
+    <div class="step" style="padding:12px">
+      <span class="num" style="font-size:22px">🌍</span>
+      <div><div class="title" style="font-size:14px">5개국에서 살았다</div><p class="sub">한국, 이스라엘, 프랑스, 미국, 일본</p></div>
+    </div>
+    <div class="step" style="padding:12px">
+      <span class="num" style="font-size:22px">✍️</span>
+      <div><div class="title" style="font-size:14px">원래 번역가였다</div><p class="sub">소설 쓰기 전 10년간 문학 번역을 했어요</p></div>
+    </div>
+    <div class="step" style="padding:12px">
+      <span class="num" style="font-size:22px">🎵</span>
+      <div><div class="title" style="font-size:14px">글 쓸 때 항상 재즈를 듣는다</div><p class="sub">빌 에반스의 'Waltz for Debby'가 이 책의 BGM</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 한 문장 챌린지 -->
+<div class="sheet sheet--warm">
+  <div class="sheet__hd">
+    <div>
+      <div class="eyebrow">한 문장 챌린지</div>
+      <h3 class="h-3 mt-4">이 책을 한 문장으로 표현한다면?</h3>
+    </div>
+  </div>
+  <p class="body-2 mb-12">모임 전에 미리 도전해보세요! 다른 참가자들의 문장은 모임에서 공개됩니다.</p>
+  <textarea class="input mb-12" id="one-sentence" placeholder="예: '고향이란 결국 사람 안에 있는 것이다'" rows="2" onfocus="requireAuth()"></textarea>
+  <button class="btn btn-primary btn-pill" onclick="requireAuth(function(){saveSentence()})">제출하기</button>
+  <div id="my-sentence-saved" style="display:none" class="mt-12">
+    <p style="color:var(--success);font-weight:600;font-size:14px">제출 완료! 모임에서 다른 사람들의 문장과 함께 공개됩니다.</p>
+  </div>
+</div>
+
+<!-- 관련 콘텐츠 추천 -->
+<div class="sheet">
+  <div class="sheet__hd">
+    <div>
+      <div class="eyebrow">관련 콘텐츠</div>
+      <h3 class="h-3 mt-4">읽기 전에 보면 좋은 것들</h3>
+    </div>
+    <button class="btn btn-sm btn-pill" style="width:auto" onclick="document.getElementById('share-form').style.display='block'">+ 추가</button>
+  </div>
+
+  <div id="shared-links">
+    <a class="link-card" href="#" onclick="return false">
+      <div class="link-card__icon">▶</div>
+      <div class="link-card__body">
+        <div class="link-card__title">[10분 요약] 이향인 — 핵심 내용 미리보기</div>
+        <div class="link-card__meta">youtube.com · 추천</div>
+      </div>
+    </a>
+    <a class="link-card" href="#" onclick="return false">
+      <div class="link-card__icon">🎧</div>
+      <div class="link-card__body">
+        <div class="link-card__title">라미 카민스키 인터뷰 — "경계인이라는 정체성"</div>
+        <div class="link-card__meta">podcast.example.com · 추천</div>
+      </div>
+    </a>
+    <a class="link-card" href="#" onclick="return false">
+      <div class="link-card__icon">📄</div>
+      <div class="link-card__body">
+        <div class="link-card__title">비슷한 책: 알베르 카뮈 '이방인' vs 이향인 비교</div>
+        <div class="link-card__meta">blog.example.com · 추천</div>
+      </div>
+    </a>
+  </div>
+
+  <div id="share-form" style="display:none;margin-top:12px">
+    <div class="field">
+      <label>링크 (유튜브, 블로그, 기사 등)</label>
+      <input class="input" id="share-url" placeholder="https://..." onfocus="requireAuth()">
+    </div>
+    <div class="field">
+      <label>한 줄 설명</label>
+      <input class="input" id="share-desc" placeholder="어떤 내용인지 간단히">
+    </div>
+    <div class="row">
+      <button class="btn btn-primary btn-pill" onclick="requireAuth(function(){saveShare()})">공유하기</button>
+      <button class="btn btn-ghost btn-pill" onclick="document.getElementById('share-form').style.display='none'">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 모임 미리보기 -->
+<div class="sheet">
+  <div class="sheet__hd">
+    <div>
+      <div class="eyebrow">모임 순서 미리보기</div>
+      <h3 class="h-3 mt-4">이렇게 진행돼요</h3>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step"><span class="num">01</span><div><div class="title">각자 답변 작성</div><p class="sub">질문에 대한 내 생각을 적어요 (10분)</p></div></div>
+    <div class="step"><span class="num">02</span><div><div class="title">발언자 선정 & 나눔</div><p class="sub">랜덤/공감 최다 등으로 발언자를 뽑아 이야기해요</p></div></div>
+    <div class="step"><span class="num">03</span><div><div class="title">리액션 & 마무리</div><p class="sub">서로의 답변에 반응하고, AI가 우리의 생각을 분석해줘요</p></div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var quizAnswers = {1:'b', 2:'b'};
+var quizExplain = {
+  1: '이향인(異鄕人)은 "다른 고향의 사람", 즉 이방인이라는 뜻이에요.',
+  2: '맞아요! 저자는 어디에도 완전히 속하지 못하는 순간이 자기 발견의 시작이라고 말해요.'
+};
+
+function quizAnswer(qNum, choice, btn){
+  var correct = quizAnswers[qNum] === choice;
+  var resultEl = document.getElementById('quiz-'+qNum+'-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="padding:12px 16px;border-radius:var(--radius-md);margin-top:8px;'
+    + (correct ? 'background:var(--success-tint);color:var(--success)' : 'background:#ffeaea;color:#d44')
+    + ';font-weight:600;font-size:14px">'
+    + (correct ? '정답! ' : '아쉬워요! ') + quizExplain[qNum] + '</div>';
+
+  btn.parentNode.querySelectorAll('.btn').forEach(function(b){
+    b.disabled = true;
+    b.style.opacity = '0.5';
+  });
+  if(correct) btn.style.opacity = '1';
+  btn.classList.toggle('btn-primary', correct);
+  btn.classList.remove('btn-ghost');
+}
+
+function saveSentence(){
+  var text = (document.getElementById('one-sentence').value||'').trim();
+  if(!text){showToast('한 문장을 적어주세요','error');return}
+  document.getElementById('my-sentence-saved').style.display='block';
+  showToast('한 문장 챌린지 제출!','success');
+}
+
+function saveShare(){
+  var url = (document.getElementById('share-url').value||'').trim();
+  var desc = (document.getElementById('share-desc').value||'').trim();
+  if(!url){showToast('링크를 입력해주세요','error');return}
+  var nickname = localStorage.getItem('rt_nickname') || '익명';
+  var domain = 'link';
+  try { domain = new URL(url).hostname.replace('www.',''); } catch(e){}
+  var icon = url.includes('youtu') ? '▶' : url.includes('blog') ? '📝' : '🔗';
+  var card = document.createElement('a');
+  card.className = 'link-card';
+  card.href = url;
+  card.target = '_blank';
+  card.rel = 'noopener';
+  card.innerHTML = '<div class="link-card__icon">'+icon+'</div><div class="link-card__body"><div class="link-card__title">'+(desc||url)+'</div><div class="link-card__meta">'+domain+' · '+nickname+'</div></div>';
+  document.getElementById('shared-links').appendChild(card);
+  document.getElementById('share-url').value='';
+  document.getElementById('share-desc').value='';
+  document.getElementById('share-form').style.display='none';
+  showToast('자료 공유 완료!','success');
+}
+</script>
+{% endblock %}

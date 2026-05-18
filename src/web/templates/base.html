@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}같이읽자{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/design-system.css">
+  <link rel="stylesheet" href="/static/css/main.css">
+  {% block extra_head %}{% endblock %}
+</head>
+<body{% block body_class %}{% endblock %}>
+
+{% block header %}
+<!-- ═══════════════════ MASTHEAD ═══════════════════ -->
+<header class="masthead">
+  <div class="masthead__row">
+    <a href="/" class="masthead__title">같이읽자</a>
+    <span class="masthead__center">
+      <span id="hdr-nick" style="font-weight:600;color:var(--ink)">guest</span>
+    </span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="mode-toggle" onclick="toggleMode()" id="mode-toggle-btn" title="모드 전환">
+        <span id="mode-toggle-label">발표 모드</span>
+      </button>
+      <a href="#" onclick="openTweaks();return false" style="font-size:13px;font-weight:500;color:var(--ink-soft);text-decoration:none">설정</a>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════ 통합 NAV (모드에 따라 메뉴 교체) ═══════════════════ -->
+<nav class="toc" id="top-nav" style="display:none">
+  <!-- 개인 모드 메뉴 -->
+  <div class="toc__group" id="nav-personal">
+    <a href="/session" data-page="session"><span class="lbl">모임</span></a>
+    <a href="/book" data-page="book"><span class="lbl">사전정보</span></a>
+    <a href="/discussion" data-page="discussion"><span class="lbl">답변</span></a>
+    <a href="/retro" data-page="retro"><span class="lbl">내 기록</span></a>
+  </div>
+  <!-- 발표 모드 메뉴 -->
+  <div class="toc__group" id="nav-stage" style="display:none">
+    <a href="#" data-scene="roadmap" onclick="showScene('roadmap');return false"><span class="lbl">로드맵</span></a>
+    <a href="#" data-scene="analysis" onclick="showScene('analysis');return false"><span class="lbl">AI 분석</span></a>
+    <a href="#" data-scene="live" onclick="showScene('live');return false"><span class="lbl">진행</span></a>
+    <a href="#" data-scene="highlights" onclick="showScene('highlights');return false"><span class="lbl">하이라이트</span></a>
+  </div>
+</nav>
+{% endblock %}
+
+<div class="main" id="main-content">
+  {% block content %}{% endblock %}
+</div>
+
+<!-- ════════════════════ STAGE (발표 모드) ════════════════════ -->
+<div class="stage" id="stage">
+  <div class="stage__body">
+
+    <!-- SCENE: 로드맵 -->
+    <div class="scene scene-roadmap active" data-scene="roadmap">
+      <div class="stage-roadmap">
+        <div class="stage-roadmap__header">
+          <div class="stage-roadmap__title" id="stg-rm-title">경계인의 시선으로 세계 읽기</div>
+          <div class="stage-roadmap__book">
+            <span id="stg-rm-book">이향인 — 라미 카민스키</span>
+            <span class="tag tag-accent tag-dot" style="margin-left:8px">LIVE</span>
+          </div>
+          <p style="font-size:15px;color:var(--ink-soft);margin-top:8px;max-width:600px;text-align:center;line-height:1.6">어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다</p>
+        </div>
+
+        <!-- 시각적 진행 바 -->
+        <div class="stage-roadmap__progress">
+          <div class="stage-roadmap__progress-bar"><div class="stage-roadmap__progress-fill" id="stg-rm-progress" style="width:33%"></div></div>
+          <div class="stage-roadmap__progress-label">1 / 3 진행 중</div>
+        </div>
+
+        <div class="stage-roadmap__steps" id="stg-rm-steps">
+          <div class="stage-rm-step current" data-step="1">
+            <div class="stage-rm-step__num">01</div>
+            <div class="stage-rm-step__info">
+              <div class="stage-rm-step__name">가장 마음에 남은 문장은?</div>
+              <div class="stage-rm-step__desc">왜 그 문장이 와닿았는지 이야기해요</div>
+            </div>
+            <div class="stage-rm-step__badge">진행 중</div>
+          </div>
+          <div class="stage-rm-step__connector"></div>
+          <div class="stage-rm-step" data-step="2">
+            <div class="stage-rm-step__num">02</div>
+            <div class="stage-rm-step__info">
+              <div class="stage-rm-step__name">이방인이 된 경험이 있나요?</div>
+              <div class="stage-rm-step__desc">그때 무엇을 느꼈는지 공유해요</div>
+            </div>
+            <div class="stage-rm-step__badge"></div>
+          </div>
+          <div class="stage-rm-step__connector"></div>
+          <div class="stage-rm-step" data-step="3">
+            <div class="stage-rm-step__num">03</div>
+            <div class="stage-rm-step__info">
+              <div class="stage-rm-step__name">바꾸고 싶은 생각이나 행동은?</div>
+              <div class="stage-rm-step__desc">이 책이 준 변화를 나눠요</div>
+            </div>
+            <div class="stage-rm-step__badge"></div>
+          </div>
+        </div>
+        <div class="stage-roadmap__people">참가자 <b id="stg-rm-people">5</b>명 접속 중</div>
+      </div>
+    </div>
+
+    <!-- SCENE: 진행 (타이머 + 발언자 통합) -->
+    <div class="scene scene-live" data-scene="live">
+      <div class="scene-live__layout">
+        <!-- 왼쪽: 타이머 + 발언자 -->
+        <div class="scene-live__left">
+          <div class="scene-timer__phase">답변 시간</div>
+          <div class="stage-timer" id="stage-timer">01:30</div>
+          <div class="stage-timer__label">남은 시간</div>
+          <div class="stage-timer__controls">
+            <button class="btn btn-primary" onclick="stageTimer('start')">시작</button>
+            <button class="btn" onclick="stageTimer('stop')">정지</button>
+            <button class="btn btn-ghost" onclick="stageTimer('reset')">리셋</button>
+          </div>
+          <!-- 발언자 선정 영역 -->
+          <div class="scene-live__speaker-section">
+            <div class="scene-live__speaker-label" id="speaker-prompt">이 질문의 발언자를 찾겠습니다</div>
+            <div class="scene-live__speaker-name" id="stage-speaker-name">?</div>
+            <div class="scene-live__speaker-btns">
+              <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePickSpeaker('무작위')">무작위</button>
+              <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePickSpeaker('공감 최다')">공감 최다</button>
+              <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePickSpeaker('소수 의견')">소수 의견</button>
+            </div>
+          </div>
+        </div>
+        <!-- 오른쪽: 발언자의 답변 표시 -->
+        <div class="scene-live__right">
+          <div class="scene-q__eye" id="stage-live-q-label">Q01 · 가장 마음에 남은 문장은?</div>
+          <div id="stage-speaker-answer" class="scene-live__answer-area">
+            <p style="font-size:16px;color:var(--ink-dim);text-align:center;padding:40px 0">발언자를 선정하면 해당 참가자의 답변이 표시됩니다</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE: AI 생각 분석 -->
+    <div class="scene scene-analysis" data-scene="analysis">
+      <div class="scene-analysis__layout">
+        <div class="scene-analysis__header">
+          <h2 class="scene-analysis__title">우리의 생각 지도</h2>
+          <p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요</p>
+        </div>
+        <div class="scene-analysis__grid">
+          <!-- 키워드 클라우드 -->
+          <div class="analysis-card">
+            <div class="analysis-card__label">자주 등장한 키워드</div>
+            <div class="analysis-keywords" id="ai-keywords">
+              <span class="kw kw-lg">경계</span>
+              <span class="kw kw-md">정체성</span>
+              <span class="kw kw-lg">이방인</span>
+              <span class="kw kw-sm">외로움</span>
+              <span class="kw kw-md">자유</span>
+              <span class="kw kw-sm">관찰자</span>
+              <span class="kw kw-md">소속감</span>
+              <span class="kw kw-sm">공감</span>
+              <span class="kw kw-lg">발견</span>
+              <span class="kw kw-sm">용기</span>
+            </div>
+          </div>
+          <!-- 의견 분포 -->
+          <div class="analysis-card">
+            <div class="analysis-card__label">생각의 분포</div>
+            <div class="analysis-bars" id="ai-dist">
+              <div class="analysis-bar">
+                <div class="analysis-bar__label">공감형 <span>"나도 그런 경험이..."</span></div>
+                <div class="analysis-bar__track"><div class="analysis-bar__fill" style="width:65%"></div></div>
+                <div class="analysis-bar__pct">65%</div>
+              </div>
+              <div class="analysis-bar">
+                <div class="analysis-bar__label">탐구형 <span>"왜 저자는..."</span></div>
+                <div class="analysis-bar__track"><div class="analysis-bar__fill" style="width:20%"></div></div>
+                <div class="analysis-bar__pct">20%</div>
+              </div>
+              <div class="analysis-bar">
+                <div class="analysis-bar__label">실천형 <span>"나는 앞으로..."</span></div>
+                <div class="analysis-bar__track"><div class="analysis-bar__fill" style="width:15%"></div></div>
+                <div class="analysis-bar__pct">15%</div>
+              </div>
+            </div>
+          </div>
+          <!-- AI 한줄 요약 -->
+          <div class="analysis-card analysis-card--wide">
+            <div class="analysis-card__label">AI 한줄 요약</div>
+            <div class="analysis-summary" id="ai-summary">
+              "오늘 참가자들은 대부분 <b>경계인으로서의 외로움</b>에 공감하면서도, 그것이 오히려 <b>자기 발견의 계기</b>가 된다는 점에서 희망을 찾았습니다. 특히 '어디에도 속하지 못할 때 비로소 나를 만난다'는 문장이 가장 많은 울림을 준 것으로 보입니다."
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE: 하이라이트 -->
+    <div class="scene scene-highlights" data-scene="highlights">
+      <div class="scene-highlights__layout">
+        <h2 class="scene-highlights__title">오늘의 하이라이트</h2>
+        <div class="scene-highlights__grid">
+          <div class="highlight-card">
+            <div class="highlight-card__emoji">💛</div>
+            <div class="highlight-card__label">가장 많은 공감</div>
+            <div class="highlight-card__quote">"처음 외국에 갔을 때, 아무것도 아닌 사람이 된 느낌이었어요. 그런데 그게 자유였다는 걸 나중에야 알았죠."</div>
+            <div class="highlight-card__who">— 꿈꾸는 해파리</div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-card__emoji">✨</div>
+            <div class="highlight-card__label">가장 새로운 시각</div>
+            <div class="highlight-card__quote">"이방인이 아닌 사람이 있을까요? 우리는 모두 어딘가에서는 이방인이에요."</div>
+            <div class="highlight-card__who">— 빛나는 알파카</div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-card__emoji">😄</div>
+            <div class="highlight-card__label">가장 재밌었던 답변</div>
+            <div class="highlight-card__quote">"저는 회사에서도 이방인이고 집에서도 이방인이에요. 냉장고 앞에서만 소속감을 느낍니다."</div>
+            <div class="highlight-card__who">— 배고픈 판다</div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-card__emoji">👂</div>
+            <div class="highlight-card__label">더 듣고 싶은 이야기</div>
+            <div class="highlight-card__quote">"소속감을 버리니까 오히려 진짜 연결이 생기더라고요. 역설적이지만요."</div>
+            <div class="highlight-card__who">— 용감한 두부</div>
+          </div>
+        </div>
+        <div class="scene-highlights__footer">
+          <span class="tag tag-accent">총 답변 12개</span>
+          <span class="tag">반응 47개</span>
+          <span class="tag">참가자 6명</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-area" id="toast-area"></div>
+
+<!-- ═══════════════════ NICKNAME MODAL ═══════════════════ -->
+<div class="modal-overlay" id="nick-modal">
+  <div class="modal">
+    <p class="eyebrow mb-8">닉네임을 정해주세요</p>
+    <div class="nick-display" id="nick-display">—</div>
+    <button class="btn btn-ghost btn-sm btn-pill mt-8 mb-12" style="width:auto;margin:8px auto 16px" onclick="rerollNick()">다시 뽑기</button>
+    <button class="btn btn-primary btn-arrow btn-pill" onclick="confirmNick()">이 이름으로 참가 <span class="arr">&rarr;</span></button>
+    <p class="eyebrow dim mt-8" style="font-size:11px">닉네임은 나중에 바꿀 수 없어요</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ TWEAKS ═══════════════════ -->
+<div class="tweaks" id="tweaks-panel">
+  <div class="tweaks__hd">
+    <b>설정</b>
+    <button class="tweaks__x" onclick="closeTweaks()">닫기 &times;</button>
+  </div>
+  <div class="tweaks__body">
+    <div class="tweaks__row">
+      <div class="tweaks__lbl">색상 테마</div>
+      <div class="tweaks__sw-grid" id="palette-swatches">
+        <div class="tweaks__sw" data-palette="indigo"><span class="dot" style="background:#3B5998"></span>인디고</div>
+        <div class="tweaks__sw" data-palette="mustard"><span class="dot" style="background:#B8860B"></span>머스타드</div>
+        <div class="tweaks__sw" data-palette="terracotta"><span class="dot" style="background:#C0503A"></span>테라코타</div>
+        <div class="tweaks__sw" data-palette="ink"><span class="dot" style="background:#14110D"></span>잉크</div>
+      </div>
+    </div>
+    <div class="tweaks__row">
+      <div class="tweaks__lbl">글자 굵기</div>
+      <div class="tweaks__seg" id="font-seg">
+        <button data-font="pretendard" class="active">보통</button>
+        <button data-font="black">두껍게</button>
+      </div>
+    </div>
+    <div class="tweaks__row">
+      <div class="tweaks__lbl">여백</div>
+      <div class="tweaks__seg" id="density-seg">
+        <button data-density="cozy" class="active">기본</button>
+        <button data-density="airy">넓게</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── RANDOM NICKNAME ─── */
+var VERBS=['춤추는','졸고있는','날아가는','분노한','수영하는','고민하는','웃고있는','노래하는','도망치는','달리는','꿈꾸는','뒹구는','폭주하는','기어가는','점프하는','눈치보는','몰래먹는','떨리는','빛나는','배고픈','용감한','수줍은'];
+var NOUNS=['고양이','감자','냉장고','두부','선인장','치킨','판다','슬리퍼','양말','고등어','토스터','구름','해파리','알파카','식빵','오리','다람쥐','이불','라면','고구마','문어','수박','바나나','지우개','꽃게','마카롱','젤리'];
+function generateNick(){return VERBS[Math.floor(Math.random()*VERBS.length)]+' '+NOUNS[Math.floor(Math.random()*NOUNS.length)]}
+
+/* ─── AUTH ─── */
+var myNickname=localStorage.getItem('rt_nickname')||null;
+var pendingAction=null;
+if(myNickname){
+  var hn=document.getElementById('hdr-nick');
+  if(hn) hn.textContent=myNickname;
+}
+
+function requireAuth(callback){
+  if(myNickname){if(callback)callback();return}
+  pendingAction=callback||null;
+  document.getElementById('nick-display').textContent=generateNick();
+  document.getElementById('nick-modal').classList.add('show');
+}
+function rerollNick(){
+  var el=document.getElementById('nick-display');
+  el.style.opacity='0.3';
+  setTimeout(function(){el.textContent=generateNick();el.style.opacity='1'},120);
+}
+function confirmNick(){
+  myNickname=document.getElementById('nick-display').textContent;
+  localStorage.setItem('rt_nickname',myNickname);
+  document.getElementById('nick-modal').classList.remove('show');
+  var hn2=document.getElementById('hdr-nick');
+  if(hn2) hn2.textContent=myNickname;
+  showToast(myNickname+' 환영합니다','success');
+  if(pendingAction){pendingAction();pendingAction=null}
+}
+
+/* ─── TWEAKS ─── */
+var TWEAKS={
+  palette: localStorage.getItem('rt_palette')||'indigo',
+  font: localStorage.getItem('rt_font')||'pretendard',
+  density: localStorage.getItem('rt_density')||'cozy',
+  mode: localStorage.getItem('rt_mode')||'personal'
+};
+
+function applyTweaks(){
+  document.documentElement.setAttribute('data-palette', TWEAKS.palette);
+  var style = document.getElementById('font-override');
+  if(!style){ style = document.createElement('style'); style.id='font-override'; document.head.appendChild(style); }
+  var heavy = TWEAKS.font === 'black';
+  style.textContent = ':root{--display:\'Pretendard Variable\',\'Pretendard\',\'Apple SD Gothic Neo\',sans-serif}' +
+    (heavy ? '.h-1,.h-2,.hero__title,.cover__title,.timer,.spotlight__name,.scene-poll__q,.scene-q__title,.stage-roadmap__title,.scene-book__cover-title,.scene-speaker__name,.stage-timer{font-weight:900 !important;letter-spacing:-.05em !important}' : '');
+  var pad = TWEAKS.density === 'airy' ? '24px 22px' : '20px';
+  document.querySelectorAll('.sheet').forEach(function(s){ s.style.padding = pad; });
+
+  document.querySelectorAll('#palette-swatches .tweaks__sw').forEach(function(s){
+    s.classList.toggle('active', s.dataset.palette===TWEAKS.palette);
+  });
+  document.querySelectorAll('#font-seg button').forEach(function(b){
+    b.classList.toggle('active', b.dataset.font===TWEAKS.font);
+  });
+  document.querySelectorAll('#density-seg button').forEach(function(b){
+    b.classList.toggle('active', b.dataset.density===TWEAKS.density);
+  });
+  applyMode();
+}
+function setTweak(k,v){
+  TWEAKS[k]=v;
+  localStorage.setItem('rt_'+k, v);
+  applyTweaks();
+}
+function openTweaks(){ document.getElementById('tweaks-panel').classList.add('open'); }
+function closeTweaks(){ document.getElementById('tweaks-panel').classList.remove('open'); }
+
+/* ─── TOAST ─── */
+function showToast(msg, type){
+  var el = document.createElement('div');
+  el.className = 'alert ' + (type==='error' ? 'alert-error' : 'alert-success');
+  el.textContent = msg;
+  document.getElementById('toast-area').appendChild(el);
+  setTimeout(function(){
+    el.style.transition='opacity .2s, transform .2s';
+    el.style.opacity='0';
+    el.style.transform='translateY(4px)';
+    setTimeout(function(){el.remove()},200);
+  }, 2200);
+}
+var toast = showToast;
+
+/* ═════════ MODE ═════════ */
+function applyMode(){
+  var mode = TWEAKS.mode || 'personal';
+  var isStage = mode === 'stage';
+
+  document.body.classList.toggle('mode-stage', isStage);
+  document.body.classList.toggle('mode-personal', !isStage);
+
+  /* 네비게이션 메뉴 교체 */
+  var navPersonal = document.getElementById('nav-personal');
+  var navStage = document.getElementById('nav-stage');
+  if(navPersonal) navPersonal.style.display = isStage ? 'none' : 'flex';
+  if(navStage) navStage.style.display = isStage ? 'flex' : 'none';
+
+  /* 발표모드 nav에서 active 표시 */
+  if(isStage && navStage){
+    var activeScene = document.querySelector('#stage .scene.active');
+    var sceneName = activeScene ? activeScene.dataset.scene : 'roadmap';
+    navStage.querySelectorAll('a').forEach(function(a){
+      a.classList.toggle('active', a.dataset.scene === sceneName);
+    });
+  }
+
+  /* 토글 버튼 라벨 */
+  var toggleLabel = document.getElementById('mode-toggle-label');
+  if(toggleLabel) toggleLabel.textContent = isStage ? '개인 모드' : '발표 모드';
+}
+
+function toggleMode(){
+  var isStage = TWEAKS.mode === 'stage';
+  setTweak('mode', isStage ? 'personal' : 'stage');
+}
+
+function showScene(name){
+  document.querySelectorAll('#stage .scene').forEach(function(s){
+    s.classList.toggle('active', s.dataset.scene === name);
+  });
+  /* nav-stage active 갱신 */
+  var navStage = document.getElementById('nav-stage');
+  if(navStage){
+    navStage.querySelectorAll('a').forEach(function(a){
+      a.classList.toggle('active', a.dataset.scene === name);
+    });
+  }
+}
+
+/* ─── STAGE TIMER (1분 30초 = 90초) ─── */
+var stageTimerSec = 90, stageTimerInt = null;
+function updateStageTimer(){
+  var mm = String(Math.floor(stageTimerSec/60)).padStart(2,'0');
+  var ss = String(stageTimerSec%60).padStart(2,'0');
+  var el = document.getElementById('stage-timer');
+  if(!el) return;
+  el.textContent = mm+':'+ss;
+  el.classList.toggle('danger', stageTimerSec < 30);
+}
+function stageTimer(action){
+  if(action==='start' && !stageTimerInt){
+    stageTimerInt = setInterval(function(){
+      if(stageTimerSec > 0){ stageTimerSec--; updateStageTimer(); }
+      else { clearInterval(stageTimerInt); stageTimerInt=null; showToast('시간 종료!','error'); }
+    }, 1000);
+  } else if(action==='stop'){
+    if(stageTimerInt){ clearInterval(stageTimerInt); stageTimerInt=null; }
+  } else if(action==='reset'){
+    clearInterval(stageTimerInt); stageTimerInt=null; stageTimerSec=90; updateStageTimer();
+  }
+}
+
+/* ─── STAGE SPEAKER PICK + 답변 표시 ─── */
+var speakerData = [
+  {name:'미지', answers:{1:'어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다. 이 문장이 계속 머릿속에 맴돌았어요. 회사에서도, 친구들 사이에서도 늘 약간의 거리감을 느끼는 제게 위로가 됐습니다.',2:'유학 갔을 때 아무도 나를 모르는 도시에서 혼자 밥 먹던 순간이 떠올라요. 처음엔 외로웠는데, 점점 그 시간이 저를 단단하게 만들었어요.',3:'어디에 속하려고 애쓰는 걸 좀 그만두고 싶어요. 그냥 나로 존재하는 연습을 해보려고요.'}},
+  {name:'꿈꾸는 해파리', answers:{1:'처음 외국에 갔을 때, 아무것도 아닌 사람이 된 느낌이었어요. 그런데 그게 자유였다는 걸 나중에야 알았죠.',2:'결혼 후 시댁에서의 명절. 모두가 한 가족인데 나만 다른 세계에서 온 것 같은 느낌.',3:'낯선 환경을 피하지 않으려고요. 불편함이 곧 성장이라는 걸 이 책이 알려줬어요.'}},
+  {name:'빛나는 알파카', answers:{1:'이방인이 아닌 사람이 있을까요? 우리는 모두 어딘가에서는 이방인이에요.',2:'새 회사 첫 출근날, 모두가 아는 얘기를 나만 모를 때. 그런데 신입이니까 뭐든 물어볼 수 있었고, 오히려 조직의 문제가 더 잘 보였어요.',3:''}},
+  {name:'배고픈 판다', answers:{1:'저는 회사에서도 이방인이고 집에서도 이방인이에요. 냉장고 앞에서만 소속감을 느낍니다 ㅋㅋ',2:'',3:'다른 사람 눈치를 덜 보고 싶어요. 이방인이라는 게 약점이 아니라 관점이라는 걸 기억하면서요.'}},
+  {name:'용감한 두부', answers:{1:'소속감을 버리니까 오히려 진짜 연결이 생기더라고요. 역설적이지만요.',2:'군대에서요. 완전히 다른 문화에 던져진 느낌이었는데, 거기서 오히려 제가 뭘 좋아하고 뭘 싫어하는지 처음 알게 됐어요.',3:'매일 아침 5분이라도 일기를 쓰려고요. 이방인의 시선으로 나를 관찰하는 연습이요.'}}
+];
+var currentQuestion = 1;
+var questionLabels = {1:'가장 마음에 남은 문장은?', 2:'이방인이 된 경험이 있나요?', 3:'바꾸고 싶은 생각이나 행동은?'};
+var stageScrambleInt = null;
+
+function stagePickSpeaker(label){
+  var pool = speakerData.filter(function(s){ return s.answers[currentQuestion]; });
+  if(!pool.length) pool = speakerData;
+  var picked = pool[Math.floor(Math.random()*pool.length)];
+  var nameEl = document.getElementById('stage-speaker-name');
+  var promptEl = document.getElementById('speaker-prompt');
+  var answerArea = document.getElementById('stage-speaker-answer');
+
+  if(promptEl) promptEl.textContent = '발언자를 찾고 있습니다...';
+  if(stageScrambleInt) clearInterval(stageScrambleInt);
+  var ticks = 0;
+  stageScrambleInt = setInterval(function(){
+    var r = speakerData[Math.floor(Math.random()*speakerData.length)];
+    nameEl.textContent = r.name;
+    nameEl.style.color = 'var(--ink-dim)';
+    ticks++;
+    if(ticks > 14){
+      clearInterval(stageScrambleInt);
+      nameEl.textContent = picked.name;
+      nameEl.style.color = 'var(--accent)';
+      if(promptEl) promptEl.textContent = label + '로 선정됨';
+      showToast(picked.name + ' 선정! (' + label + ')', 'success');
+
+      /* 해당 발언자의 답변 표시 */
+      var ans = picked.answers[currentQuestion] || '(이 질문에 대한 답변이 아직 없습니다)';
+      if(answerArea){
+        answerArea.innerHTML = '<div style="padding:24px;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper);margin-top:12px">'
+          + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
+          + '<div style="width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px">'+picked.name.charAt(0)+'</div>'
+          + '<div><div style="font-weight:700;font-size:16px">'+picked.name+'</div>'
+          + '<div style="font-size:12px;color:var(--ink-dim)">'+label+'로 선정</div></div></div>'
+          + '<div style="font-size:20px;line-height:1.7;font-weight:500;color:var(--ink);border-left:3px solid var(--accent);padding-left:16px">'
+          + ans + '</div></div>';
+      }
+    }
+  }, 60);
+}
+
+/* ─── KEYBOARD NAV (stage mode) ─── */
+document.addEventListener('keydown', function(e){
+  if(TWEAKS.mode !== 'stage') return;
+  var scenes = ['roadmap','analysis','live','highlights'];
+  var cur = document.querySelector('#stage .scene.active');
+  if(!cur) return;
+  var idx = scenes.indexOf(cur.dataset.scene);
+  if(e.key === 'ArrowRight' || e.key === ' '){
+    e.preventDefault();
+    showScene(scenes[(idx+1) % scenes.length]);
+  } else if(e.key === 'ArrowLeft'){
+    e.preventDefault();
+    showScene(scenes[(idx-1+scenes.length) % scenes.length]);
+  } else if(e.key === 'Escape'){
+    setTweak('mode','personal');
+  }
+});
+
+/* ─── NAV INIT ─── */
+(function initNav(){
+  var token = localStorage.getItem('rt_nickname');
+  var nav = document.getElementById('top-nav');
+  var isJoin = document.body.classList.contains('is-join');
+  var path = window.location.pathname.replace(/^\//,'');
+
+  if(token && !isJoin){
+    if(nav) nav.style.display = 'flex';
+    var navPersonal = document.getElementById('nav-personal');
+    if(navPersonal){
+      navPersonal.querySelectorAll('a').forEach(function(a){
+        if(a.dataset.page === path) a.classList.add('active');
+      });
+    }
+  }
+
+  /* 로드맵 씬 질문 동적 로드 */
+  var stgRmSteps = document.getElementById('stg-rm-steps');
+  var apiToken = sessionStorage.getItem('token');
+  if(stgRmSteps && apiToken){
+    fetch('/api/v1/books/1/questions',{headers:{'Authorization':'Bearer '+apiToken}})
+      .then(function(r){return r.json()})
+      .then(function(d){
+        var qs = d.data || [];
+        if(qs.length){
+          stgRmSteps.innerHTML = qs.map(function(q,i){
+            return '<div class="stage-rm-step'+(i===0?' current':'')+'" data-step="'+(i+1)+'">'
+              +'<div class="stage-rm-step__num">'+String(i+1).padStart(2,'0')+'</div>'
+              +'<div class="stage-rm-step__info"><div class="stage-rm-step__name">'+q.body+'</div>'
+              +'<div class="stage-rm-step__desc">'+q.q_type+'</div></div>'
+              +'<div class="stage-rm-step__badge">'+(i===0?'진행 중':'')+'</div></div>';
+          }).join('');
+        }
+      }).catch(function(){});
+  }
+})();
+
+/* ─── DOMContentLoaded ─── */
+document.addEventListener('DOMContentLoaded', function(){
+  applyTweaks();
+
+  document.querySelectorAll('#palette-swatches .tweaks__sw').forEach(function(el){
+    el.addEventListener('click', function(){ setTweak('palette', el.dataset.palette); });
+  });
+  document.querySelectorAll('#font-seg button').forEach(function(el){
+    el.addEventListener('click', function(){ setTweak('font', el.dataset.font); });
+  });
+  document.querySelectorAll('#density-seg button').forEach(function(el){
+    el.addEventListener('click', function(){ setTweak('density', el.dataset.density); });
+  });
+  window.addEventListener('resize', applyMode);
+});
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

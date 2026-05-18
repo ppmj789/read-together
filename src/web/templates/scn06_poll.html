@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}같이읽자 — 투표{% endblock %}
+
+{% block content %}
+<div class="section-hd">
+  <div><div class="eyebrow">투표</div><h2 class="h-1 mt-4">손 들지 마세요,<br>그냥 누르세요.</h2></div>
+</div>
+
+<div class="card" id="create-poll-section" style="display:none">
+  <div class="card__head"><h3 class="h-3">새 투표 만들기</h3><span class="tag">준비 중</span></div>
+  <div class="field"><label>질문</label><input class="input" id="poll-question" placeholder="다음 책은?" onfocus="requireAuth()"></div>
+  <div class="field"><label>선택지</label>
+    <div id="poll-options-inputs">
+      <input class="input mb-8 poll-option" placeholder="선택지 1">
+      <input class="input mb-8 poll-option" placeholder="선택지 2">
+    </div>
+    <button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addOptionInput()">+ 선택지 추가</button>
+  </div>
+  <button class="btn btn-primary btn-pill mt-8" onclick="requireAuth(function(){createPoll()})">투표 만들기</button>
+</div>
+
+<div id="polls-list"></div>
+
+<div class="empty-state" id="polls-empty" style="display:none">
+  <div class="empty-state__icon">🗳</div>
+  <div class="empty-state__text">진행 중인 투표가 없습니다</div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var token=sessionStorage.getItem('token');
+var meetingId=sessionStorage.getItem('meeting_id');
+var isHost=sessionStorage.getItem('is_host')==='true';
+if(!token) window.location.href='/';
+var headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'};
+
+if(isHost) document.getElementById('create-poll-section').style.display='block';
+
+function addOptionInput(){
+  var count=document.querySelectorAll('.poll-option').length;
+  if(count>=6){showToast('선택지는 최대 6개입니다','error');return}
+  var inp=document.createElement('input');
+  inp.className='input mb-8 poll-option';
+  inp.placeholder='선택지 '+(count+1);
+  document.getElementById('poll-options-inputs').appendChild(inp);
+}
+
+async function createPoll(){
+  var question=document.getElementById('poll-question').value.trim();
+  var optEls=document.querySelectorAll('.poll-option');
+  var options=Array.from(optEls).map(function(el,i){return{label:el.value.trim(),order_num:i+1}}).filter(function(o){return o.label});
+  if(!question||options.length<2){showToast('질문과 선택지 2개 이상 필요','error');return}
+  var res=await fetch('/api/v1/meetings/'+meetingId+'/polls',{method:'POST',headers:headers,body:JSON.stringify({question:question,options:options})});
+  if(!res.ok){var d=await res.json();showToast(d.error?.message||'오류','error');return}
+  showToast('투표가 생성됐어요','success');
+  document.getElementById('poll-question').value='';
+  loadPolls();
+}
+
+async function loadPolls(){
+  var res=await fetch('/api/v1/meetings/'+meetingId+'/polls',{headers:headers});
+  var data=await res.json();
+  var polls=data.data||[];
+  var container=document.getElementById('polls-list');
+  var emptyEl=document.getElementById('polls-empty');
+
+  if(!polls.length){
+    container.innerHTML='';
+    if(emptyEl) emptyEl.style.display='block';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+
+  var totalVotes;
+  container.innerHTML=polls.map(function(p){
+    totalVotes=p.options.reduce(function(s,o){return s+(o.vote_count||0)},0)||1;
+    return `<div class="card"${p.is_closed?' style="opacity:.6"':''}>
+      <div class="card__head">
+        <h3 class="h-3">${p.question}</h3>
+        <span class="tag${p.is_closed?'':' tag-accent tag-dot'}">${p.is_closed?'종료':'투표 중'}</span>
+      </div>
+      ${p.options.map(function(o){
+        var pct=Math.round((o.vote_count||0)/totalVotes*100);
+        return `<div class="poll${!p.is_closed&&pct>=50?' winner':''}" onclick="${p.is_closed?'':`requireAuth(function(){votePoll(${p.id},${o.id})})`}">
+          <div class="poll__row"><span>${o.label}</span><span class="meta">${o.vote_count||0}표 · ${pct}%</span></div>
+          <div class="poll__track"><div class="poll__bar" style="width:${p.is_closed?pct:0}%"></div></div>
+        </div>`;
+      }).join('')}
+      ${isHost&&!p.is_closed?`<button class="btn btn-ghost btn-sm btn-pill mt-12" style="width:auto" onclick="requireAuth(function(){closePoll(${p.id})})">투표 종료</button>`:''}
+    </div>`;
+  }).join('');
+
+  /* animate bars */
+  setTimeout(function(){
+    container.querySelectorAll('.poll__bar').forEach(function(bar){
+      var poll=bar.closest('.poll');
+      if(!poll) return;
+      var row=poll.querySelector('.poll__row .meta');
+      if(!row) return;
+      var match=row.textContent.match(/(\d+)%/);
+      if(match) bar.style.width=match[1]+'%';
+    });
+  },50);
+}
+
+async function votePoll(pollId,optionId){
+  var res=await fetch('/api/v1/polls/'+pollId+'/vote',{method:'POST',headers:headers,body:JSON.stringify({poll_option_id:optionId})});
+  if(!res.ok){var d=await res.json();showToast(d.error?.message||'오류','error');return}
+  showToast('투표했어요!','success');loadPolls();
+}
+
+async function closePoll(pollId){
+  var res=await fetch('/api/v1/polls/'+pollId+'/close',{method:'POST',headers:headers});
+  if(!res.ok){var d=await res.json();showToast(d.error?.message||'오류','error');return}
+  loadPolls();
+}
+
+loadPolls();
+setInterval(loadPolls,5000);
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}같이읽자 — 발언자 선정{% endblock %}
+
+{% block content %}
+<div class="section-hd">
+  <div><div class="eyebrow">04 · 발언자</div><h2 class="h-1 mt-4">누가 다음에<br>말할까.</h2></div>
+</div>
+
+<div class="spotlight" id="selected-result" style="display:none">
+  <div class="spotlight__eye">선정되었습니다</div>
+  <div class="spotlight__name" id="selected-name">—</div>
+  <p class="spotlight__method" id="selected-method"></p>
+</div>
+
+<div class="speaker-list">
+  <button class="speaker-row" onclick="requireAuth(function(){selectSpeaker('random')})"><span class="num">01</span><div style="flex:1"><div class="ttl">무작위</div><div class="sub">주사위를 굴려요</div></div><span class="arr">→</span></button>
+  <button class="speaker-row" onclick="requireAuth(function(){selectSpeaker('most_empathy')})"><span class="num">02</span><div style="flex:1"><div class="ttl">공감 최다</div><div class="sub">가장 많이 공감받은 답변</div></div><span class="arr">→</span></button>
+  <button class="speaker-row" onclick="requireAuth(function(){selectSpeaker('minority')})"><span class="num">03</span><div style="flex:1"><div class="ttl">소수 의견</div><div class="sub">덜 들린 목소리에게</div></div><span class="arr">→</span></button>
+  <button class="speaker-row" onclick="requireAuth(function(){selectSpeaker('opposite')})"><span class="num">04</span><div style="flex:1"><div class="ttl">관점 전환</div><div class="sub">분위기를 바꿔봐요</div></div><span class="arr">→</span></button>
+  <button class="speaker-row" onclick="requireAuth(function(){selectSpeaker('reveal')})"><span class="num">05</span><div style="flex:1"><div class="ttl">익명 해제</div><div class="sub">누가 썼는지 공개</div></div><span class="arr">→</span></button>
+  <button class="speaker-row" onclick="requireAuth(function(){selectSpeaker('similar')})"><span class="num">06</span><div style="flex:1"><div class="ttl">유사 의견</div><div class="sub">결이 비슷한 사람들</div></div><span class="arr">→</span></button>
+  <button class="speaker-row" onclick="requireAuth(function(){selectSpeaker('question_king')})"><span class="num">07</span><div style="flex:1"><div class="ttl">질문왕</div><div class="sub">질문을 가장 많이 한 사람</div></div><span class="arr">→</span></button>
+</div>
+
+<div class="eyebrow mt-20 mb-12">선정 기록</div>
+<div id="history-list"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var token=sessionStorage.getItem('token');
+var meetingId=sessionStorage.getItem('meeting_id');
+if(!token)window.location.href='/';
+var headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'};
+var names=['미지','은지','서연','다온','지유','참가자 2'];
+
+async function selectSpeaker(cardType){
+  var res=await fetch('/api/v1/meetings/'+meetingId+'/speakers',{method:'POST',headers:headers,body:JSON.stringify({card_type:cardType})});
+  var data=await res.json();
+  if(!res.ok){showToast(data.error?.message||'오류','error');return}
+  var p=data.data.selected_participant;
+  var el=document.getElementById('selected-result');el.style.display='block';
+  var nameEl=document.getElementById('selected-name');
+  var i=0,intv=setInterval(function(){nameEl.textContent=names[Math.floor(Math.random()*names.length)];i++;if(i>9){clearInterval(intv);nameEl.textContent=p?p.nickname:'—';document.getElementById('selected-method').textContent='선정 방식: '+cardType}},70);
+  showToast((p?p.nickname:'—')+' 선정!','success');
+  loadHistory();
+}
+
+async function loadHistory(){
+  var res=await fetch('/api/v1/meetings/'+meetingId+'/speakers',{headers:headers});
+  var data=await res.json();var items=data.data||[];
+  document.getElementById('history-list').innerHTML=items.map(function(s){return `
+    <div class="history-row">
+      <span class="tag">${s.card_type}</span>
+      <span class="who">${s.selected_participant?.nickname||'—'}</span>
+      <span class="time">${(s.created_at||'').slice(11,16)}</span>
+    </div>`}).join('')||'<p class="body-2" style="text-align:center;color:var(--ink-dim);padding:16px 0">아직 선정 기록이 없어요</p>';
+}
+loadHistory();
+</script>
+{% endblock %}
