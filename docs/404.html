@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>같이읽자 — 정적 미리보기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<style>
+/* ═══ DESIGN TOKENS ═══ */
+:root{
+  --bg:#F5F1E8;--paper:#FDFAF3;--paper-warm:#F8F3E6;
+  --ink:#1A1612;--ink-soft:#6B5E50;--ink-dim:rgba(26,22,18,.45);
+  --rule:#D4CFC4;--rule-soft:rgba(26,22,18,.10);
+  --accent:#3B5998;--accent-soft:#4A6DB5;--accent-tint:rgba(59,89,152,.08);--accent-ink:#fff;
+  --highlight:#EDE8DA;--success:#2D8659;--success-tint:rgba(45,134,89,.10);
+  --radius-sm:8px;--radius-md:12px;--radius-lg:20px;--radius-pill:9999px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06);--shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 30px rgba(0,0,0,.10);
+  --display:'Pretendard Variable','Pretendard','Apple SD Gothic Neo',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{font-family:'Pretendard Variable','Pretendard',sans-serif;font-size:15px;line-height:1.6;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:#fff}
+
+/* ═══ MASTHEAD ═══ */
+.masthead{position:fixed;top:0;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--rule);z-index:60;backdrop-filter:blur(12px)}
+.masthead__row{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;gap:12px}
+.masthead__title{font-family:var(--display);font-weight:900;font-size:22px;letter-spacing:-.04em;color:var(--ink);text-decoration:none;cursor:pointer}
+.masthead__center{flex:1;text-align:center;font-size:13px;color:var(--ink-dim)}
+.masthead__center b{font-weight:600;color:var(--ink)}
+
+/* ═══ NAV ═══ */
+.toc{position:fixed;top:54px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--rule);z-index:59;display:flex;justify-content:center;padding:8px 16px;gap:0}
+.toc__group{display:flex;justify-content:center;gap:6px}
+.toc a{display:flex;align-items:center;gap:6px;padding:9px 20px;text-decoration:none;color:var(--ink-soft);font-family:var(--display);font-weight:600;font-size:15px;border-radius:var(--radius-pill);transition:all .2s;white-space:nowrap;cursor:pointer}
+.toc a:hover{background:var(--accent-tint);color:var(--ink)}
+.toc a.active{background:var(--accent);color:#fff}
+
+/* ═══ LAYOUT ═══ */
+.main{padding:120px 20px 100px;max-width:520px;margin:0 auto}
+.main.hidden{display:none}
+.stage-wrap{display:none;position:fixed;top:100px;left:0;right:0;bottom:0;background:var(--bg);overflow-y:auto;padding:24px 36px 40px}
+.stage-wrap.visible{display:block}
+
+/* ═══ PAGE SECTIONS (개인모드 화면 전환) ═══ */
+.page{display:none;animation:pageIn .3s ease}
+.page.active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.scene{display:none;animation:pageIn .3s ease}
+.scene.active{display:block}
+
+/* ═══ COMMON COMPONENTS ═══ */
+.section-hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--rule);margin-bottom:20px}
+.sheet{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-md);padding:20px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.sheet--warm{background:var(--paper-warm)}
+.sheet__hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--rule-soft)}
+.eyebrow{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-dim)}
+.h-1{font-family:var(--display);font-weight:800;font-size:28px;line-height:1.15;letter-spacing:-.03em}
+.h-2{font-family:var(--display);font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.025em}
+.h-3{font-family:var(--display);font-weight:600;font-size:17px;line-height:1.35}
+.body-2{font-size:14px;line-height:1.6;color:var(--ink-soft)}
+.lead{font-size:17px;line-height:1.6;color:var(--ink)}
+.lead-mark{color:var(--accent);font-family:var(--display);font-weight:900;font-size:1.4em}
+.rule{border:none;border-top:1px solid var(--rule);margin:20px 0}
+.rule-thin{border:none;border-top:1px solid var(--rule-soft);margin:16px 0}
+.mt-4{margin-top:4px}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}.mt-24{margin-top:24px}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}
+.center{text-align:center}.dim{color:var(--ink-dim)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 20px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;border-radius:var(--radius-md)}
+.btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent-soft);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-ghost{background:transparent;border-color:var(--rule);color:var(--ink-soft)}
+.btn-ghost:hover{background:var(--accent-tint);border-color:var(--accent);color:var(--accent)}
+.btn-sm{min-height:36px;padding:7px 14px;font-size:13px}
+.btn-pill{border-radius:var(--radius-pill)}
+.btn-arrow .arr{display:inline-block;transition:transform .2s;margin-left:2px}
+.btn-arrow:hover .arr{transform:translateX(3px)}
+.row{display:flex;gap:8px}.row>*{flex:1}
+
+/* Tags */
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--rule);padding:3px 10px;color:var(--ink-soft);background:var(--paper);border-radius:var(--radius-pill)}
+.tag-accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tag-dot::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;animation:livedot 1.4s ease-in-out infinite}
+@keyframes livedot{50%{opacity:.3}}
+
+/* Input */
+.input{display:block;width:100%;min-height:46px;padding:12px 16px;background:var(--paper);color:var(--ink);border:1px solid var(--rule);font-family:'Pretendard',sans-serif;font-size:15px;border-radius:var(--radius-md);transition:border-color .2s,box-shadow .2s}
+.input::placeholder{color:var(--ink-dim)}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-tint)}
+textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+
+/* Tabs */
+.tabs{display:flex;background:var(--highlight);border-radius:var(--radius-md);padding:4px;margin-bottom:20px;gap:4px}
+.tab{flex:1;padding:10px 8px;border:none;background:transparent;color:var(--ink-soft);font-family:var(--display);font-weight:600;font-size:15px;cursor:pointer;border-radius:var(--radius-sm);transition:all .2s}
+.tab.active{background:var(--paper);color:var(--ink);box-shadow:var(--shadow-sm)}
+
+/* Steps */
+.steps{display:flex;flex-direction:column;gap:2px}
+.step{display:flex;align-items:flex-start;gap:16px;padding:16px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-md);transition:all .2s}
+.step.current{border-color:var(--accent);background:var(--accent-tint);border-width:2px}
+.step .num{font-family:var(--display);font-weight:900;font-size:28px;line-height:1;color:var(--accent);flex-shrink:0;width:36px}
+.step .title{font-family:var(--display);font-weight:700;font-size:16px;line-height:1.3}
+.step .sub{font-size:13px;color:var(--ink-soft);margin-top:3px;line-height:1.5}
+
+/* Hero */
+.hero{padding:40px 4px 32px;text-align:center;margin-bottom:28px}
+.hero__issue{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--ink-dim);text-transform:uppercase;margin-bottom:20px}
+.hero__title{font-family:var(--display);font-weight:900;font-size:64px;line-height:.95;letter-spacing:-.05em;color:var(--ink);margin-bottom:20px}
+.hero__title .accent{color:var(--accent)}
+.hero__sub{font-size:16px;line-height:1.6;color:var(--ink-soft);font-weight:500;max-width:80%;margin:0 auto}
+.hero__byline{font-size:12px;font-weight:500;color:var(--ink-dim);margin-top:24px;display:flex;justify-content:center;gap:16px}
+
+/* Cover */
+.cover{position:relative;background:var(--accent);color:#fff;border-radius:var(--radius-lg);padding:24px 20px;display:flex;flex-direction:column;justify-content:space-between;margin-bottom:20px;overflow:hidden;box-shadow:var(--shadow-lg)}
+.cover::before{content:"";position:absolute;inset:10px;border:1px solid rgba(255,255,255,.25);border-radius:var(--radius-md);pointer-events:none}
+.cover__top{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;display:flex;justify-content:space-between;opacity:.8;position:relative;z-index:1}
+.cover__title{font-family:var(--display);font-weight:900;font-size:44px;line-height:.95;letter-spacing:-.05em;text-align:center;position:relative;z-index:1}
+.cover__author{font-size:14px;text-align:center;position:relative;z-index:1;opacity:.85;margin-top:8px}
+
+/* Answer */
+.answer{padding:16px;border:1px solid var(--rule-soft);border-radius:var(--radius-md);margin-bottom:10px;background:var(--paper)}
+.answer.mine{border-color:var(--accent);background:var(--accent-tint)}
+.answer__who{font-size:12px;color:var(--ink-dim);font-weight:500;margin-bottom:8px;display:flex;justify-content:space-between}
+.answer__who b{font-weight:600;color:var(--ink-soft)}
+.answer__body{font-size:15px;line-height:1.65;color:var(--ink);font-weight:500}
+
+/* Reaction */
+.reaction-row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.reaction-btn{display:inline-flex;align-items:center;gap:5px;background:var(--paper);border:1px solid var(--rule);font-size:13px;color:var(--ink-soft);font-weight:500;padding:6px 12px;cursor:pointer;border-radius:var(--radius-pill);transition:all .2s}
+.reaction-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-tint);transform:scale(1.05)}
+
+/* Link card */
+.link-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--rule-soft);border-radius:var(--radius-md);background:var(--paper);margin-bottom:8px;transition:all .2s;text-decoration:none;color:inherit;cursor:pointer}
+.link-card:hover{border-color:var(--accent);background:var(--accent-tint)}
+.link-card__icon{width:42px;height:42px;border-radius:var(--radius-sm);background:var(--highlight);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.link-card__body{flex:1;min-width:0}
+.link-card__title{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-card__meta{font-size:12px;color:var(--ink-dim);margin-top:2px}
+
+/* Profile */
+.profile-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:24px 20px;text-align:center;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:28px;margin-bottom:12px}
+.profile-name{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.03em}
+.profile-stat{display:flex;justify-content:center;gap:24px;margin-top:16px;padding-top:16px;border-top:1px solid var(--rule-soft)}
+.profile-stat__num{font-family:var(--display);font-weight:800;font-size:22px;color:var(--accent)}
+.profile-stat__label{font-size:12px;color:var(--ink-dim);margin-top:2px}
+
+/* Timer */
+.timer-wrap{text-align:center;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:28px 20px 24px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.timer{font-family:var(--display);font-weight:900;font-size:80px;line-height:1;letter-spacing:-.05em;color:var(--ink);font-variant-numeric:tabular-nums;transition:color .2s}
+.timer.danger{color:#D44;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.5}}
+.timer-meta{font-size:14px;color:var(--ink-soft);font-weight:500;margin:8px 0 16px}
+.timer-controls{display:flex;gap:8px;justify-content:center}
+.timer-controls .btn{width:auto;flex:0 0 auto;min-width:80px;border-radius:var(--radius-pill)}
+
+/* Toast */
+.toast-area{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:center}
+.alert{padding:10px 20px;background:var(--success);color:#fff;font-size:14px;font-weight:500;pointer-events:auto;border-radius:var(--radius-pill);display:flex;align-items:center;gap:8px;animation:toastIn .3s ease;box-shadow:var(--shadow-lg)}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* Mode toggle */
+.mode-toggle{display:inline-flex;align-items:center;gap:5px;background:var(--paper);border:1px solid var(--rule);font-size:12px;font-weight:600;color:var(--ink-soft);padding:6px 12px;cursor:pointer;border-radius:var(--radius-pill);transition:all .2s}
+.mode-toggle:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-tint)}
+
+/* ═══ STAGE SCENES ═══ */
+.stage-roadmap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;min-height:60vh}
+.stage-roadmap__header{text-align:center}
+.stage-roadmap__title{font-family:var(--display);font-weight:900;font-size:clamp(32px,5vw,52px);line-height:1.1;letter-spacing:-.04em;color:var(--ink);margin-bottom:8px}
+.stage-roadmap__book{font-size:18px;color:var(--accent);font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px}
+.stage-roadmap__progress{max-width:600px;width:100%;text-align:center}
+.stage-roadmap__progress-bar{height:6px;background:var(--highlight);border-radius:var(--radius-pill);overflow:hidden;margin-bottom:6px}
+.stage-roadmap__progress-fill{height:100%;background:var(--accent);border-radius:var(--radius-pill);transition:width .6s ease}
+.stage-roadmap__progress-label{font-size:13px;color:var(--ink-dim);font-weight:500}
+.stage-roadmap__steps{display:flex;flex-direction:column;align-items:center;gap:0;max-width:500px;width:100%}
+.stage-rm-step{width:100%;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:20px;display:flex;gap:12px;align-items:flex-start;transition:all .3s;opacity:.6}
+.stage-rm-step.current{border-color:var(--accent);border-width:2px;background:var(--accent-tint);opacity:1;transform:scale(1.02);box-shadow:var(--shadow-md)}
+.stage-rm-step__num{font-family:var(--display);font-weight:900;font-size:28px;color:var(--accent);line-height:1}
+.stage-rm-step__info{flex:1}
+.stage-rm-step__name{font-family:var(--display);font-weight:700;font-size:16px;margin-bottom:4px}
+.stage-rm-step__desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+.stage-rm-step__badge{font-size:12px;font-weight:600;color:var(--accent)}
+.stage-rm-step__connector{width:2px;height:16px;background:var(--rule);margin:0 auto;flex-shrink:0}
+.stage-roadmap__people{font-size:14px;color:var(--ink-soft);font-weight:500}
+.stage-roadmap__people b{font-weight:800;color:var(--ink);font-size:20px}
+
+/* Live scene */
+.scene-live__layout{display:flex;gap:24px;min-height:50vh}
+.scene-live__left{flex:0 0 40%;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper);padding:28px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;box-shadow:var(--shadow-sm)}
+.scene-live__right{flex:1;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper-warm);padding:24px;display:flex;flex-direction:column;box-shadow:var(--shadow-sm)}
+.scene-timer__phase{font-size:14px;font-weight:600;color:var(--ink-dim);margin-bottom:12px}
+.stage-timer{font-family:var(--display);font-weight:900;font-size:clamp(80px,12vw,160px);line-height:1;letter-spacing:-.06em;color:var(--ink);font-variant-numeric:tabular-nums;transition:color .2s}
+.stage-timer__label{font-size:14px;font-weight:600;color:var(--ink-dim);margin-top:8px;padding:6px 16px;background:var(--highlight);border-radius:var(--radius-pill);display:inline-block}
+.stage-timer__controls{display:flex;gap:10px;margin-top:20px}
+.stage-timer__controls .btn{width:auto;font-size:15px;padding:12px 24px;min-height:48px;font-weight:700;border-radius:var(--radius-pill)}
+.scene-live__speaker-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--rule-soft);width:100%}
+.scene-live__speaker-label{font-size:12px;font-weight:600;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.scene-live__speaker-name{font-family:var(--display);font-weight:900;font-size:clamp(24px,3vw,40px);line-height:1.1;color:var(--accent);margin-bottom:12px;transition:color .2s}
+.scene-live__speaker-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.scene-q__eye{font-size:13px;font-weight:600;color:var(--ink-dim);margin-bottom:14px;letter-spacing:.04em;text-transform:uppercase}
+
+/* Analysis */
+.scene-analysis__layout{display:flex;flex-direction:column;gap:24px}
+.scene-analysis__header{text-align:center;margin-bottom:8px}
+.scene-analysis__title{font-family:var(--display);font-weight:900;font-size:clamp(28px,4vw,48px);letter-spacing:-.04em;color:var(--ink)}
+.scene-analysis__sub{font-size:16px;color:var(--ink-soft);margin-top:6px}
+.scene-analysis__grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.analysis-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-sm)}
+.analysis-card--wide{grid-column:1/-1}
+.analysis-card__label{font-size:13px;font-weight:600;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:16px}
+.analysis-keywords{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;padding:12px 0}
+.kw{display:inline-block;padding:6px 14px;background:var(--accent-tint);color:var(--accent);border-radius:var(--radius-pill);font-weight:600;transition:transform .2s;cursor:default}
+.kw:hover{transform:scale(1.1)}
+.kw-sm{font-size:13px;opacity:.7}.kw-md{font-size:16px}.kw-lg{font-size:22px;font-weight:800;padding:8px 18px;background:var(--accent);color:#fff}
+.analysis-bars{display:flex;flex-direction:column;gap:14px}
+.analysis-bar__label{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.analysis-bar__label span{font-weight:400;color:var(--ink-soft);font-size:13px}
+.analysis-bar__track{height:10px;background:var(--highlight);border-radius:var(--radius-pill);overflow:hidden}
+.analysis-bar__fill{height:100%;background:var(--accent);border-radius:var(--radius-pill)}
+.analysis-bar__pct{font-size:13px;font-weight:700;color:var(--accent);margin-top:4px}
+.analysis-summary{font-size:18px;line-height:1.7;color:var(--ink);font-weight:500;padding:16px 20px;background:var(--paper-warm);border-radius:var(--radius-md);border-left:4px solid var(--accent)}
+.analysis-summary b{color:var(--accent);font-weight:700}
+
+/* Highlights */
+.scene-highlights__layout{display:flex;flex-direction:column;align-items:center;gap:24px}
+.scene-highlights__title{font-family:var(--display);font-weight:900;font-size:clamp(28px,4vw,48px);letter-spacing:-.04em;color:var(--ink);text-align:center}
+.scene-highlights__grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;width:100%}
+.highlight-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:24px 20px;box-shadow:var(--shadow-sm);transition:transform .2s,box-shadow .2s}
+.highlight-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.highlight-card__emoji{font-size:32px;margin-bottom:8px}
+.highlight-card__label{font-size:12px;font-weight:600;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.highlight-card__quote{font-size:16px;line-height:1.6;color:var(--ink);font-weight:500;font-style:italic}
+.highlight-card__who{font-size:13px;color:var(--accent);font-weight:600;margin-top:10px}
+.scene-highlights__footer{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+@media(max-width:768px){
+  .scene-live__layout{flex-direction:column}
+  .scene-live__left{flex:none}
+  .scene-analysis__grid{grid-template-columns:1fr}
+  .analysis-card--wide{grid-column:1}
+  .scene-highlights__grid{grid-template-columns:1fr}
+  .stage-timer{font-size:80px !important}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ MASTHEAD ═══ -->
+<header class="masthead">
+  <div class="masthead__row">
+    <span class="masthead__title" onclick="goJoin()">같이읽자</span>
+    <span class="masthead__center"><b id="hdr-nick">미지</b></span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="mode-toggle" onclick="toggleMode()" id="mode-toggle-btn">발표 모드</button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ NAV ═══ -->
+<nav class="toc" id="top-nav">
+  <div class="toc__group" id="nav-personal">
+    <a class="active" onclick="showPage('session')">모임</a>
+    <a onclick="showPage('book')">사전정보</a>
+    <a onclick="showPage('discussion')">답변</a>
+    <a onclick="showPage('retro')">내 기록</a>
+  </div>
+  <div class="toc__group" id="nav-stage" style="display:none">
+    <a class="active" data-scene="roadmap" onclick="showStageScene('roadmap')">로드맵</a>
+    <a data-scene="analysis" onclick="showStageScene('analysis')">AI 분석</a>
+    <a data-scene="live" onclick="showStageScene('live')">진행</a>
+    <a data-scene="highlights" onclick="showStageScene('highlights')">하이라이트</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN (개인 모드) ═══ -->
+<div class="main" id="main-content">
+
+<!-- PAGE: 참가 -->
+<div class="page" id="page-join">
+  <div class="hero">
+    <div class="hero__issue">같이읽자 &middot; Read Together</div>
+    <h1 class="hero__title">같이,<br><span class="accent">읽자.</span></h1>
+    <p class="hero__sub">책 한 권을 셋 이상이 같이 펼치면<br>다른 사람의 머릿속을 잠깐 빌려쓸 수 있다.</p>
+    <div class="hero__byline"><span>Read Together</span><span>Edited by readers</span></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="this.parentNode.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});this.classList.add('active')">모임 참가</button>
+    <button class="tab">새로 만들기</button>
+  </div>
+  <div class="field"><label>모임 코드</label><input class="input" value="R5PH8TY4" style="text-transform:uppercase"></div>
+  <div class="field"><label>닉네임</label>
+    <div style="display:flex;gap:8px"><input class="input" value="미지" style="flex:1"><button class="btn btn-ghost btn-sm btn-pill" style="width:auto;min-height:46px" onclick="this.previousElementSibling.value=['춤추는 고양이','배고픈 판다','빛나는 알파카'][Math.floor(Math.random()*3)]">랜덤</button></div>
+  </div>
+  <button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="showPage('session');toast('미지님 환영합니다!')">참가하기 <span class="arr">&rarr;</span></button>
+</div>
+
+<!-- PAGE: 모임 -->
+<div class="page active" id="page-session">
+  <div class="section-hd"><div><div class="eyebrow">01 &middot; 모임</div><h2 class="h-2 mt-4">진행 중인 모임</h2></div><span class="tag tag-accent tag-dot">LIVE</span></div>
+  <div class="sheet">
+    <div class="eyebrow mb-8">오늘의 주제</div>
+    <h3 class="h-2" style="margin-bottom:8px">경계인의 시선으로 세계 읽기</h3>
+    <p class="body-2">이방인이라는 정체성을 통해 나를 발견하는 여정</p>
+    <hr class="rule-thin">
+    <div class="eyebrow mb-8">오늘의 책</div>
+    <div style="display:flex;gap:14px;align-items:center">
+      <div style="width:48px;height:64px;background:var(--accent);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;flex-shrink:0">이</div>
+      <div><div class="h-3">이향인</div><div class="body-2">어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다</div></div>
+    </div>
+  </div>
+  <div class="sheet sheet--warm">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="eyebrow">진행 단계</div><span class="tag tag-accent">STEP 01</span></div>
+    <div class="steps">
+      <div class="step current"><span class="num">01</span><div><div class="title" style="font-size:17px">가장 마음에 남은 문장은? <span class="tag tag-accent" style="font-size:10px;vertical-align:middle;margin-left:6px">지금</span></div><p class="sub">왜 그 문장이 와닿았나요?</p></div></div>
+      <div class="step"><span class="num">02</span><div><div class="title">이방인이 된 경험이 있나요?</div><p class="sub">그때 무엇을 느꼈나요?</p></div></div>
+      <div class="step"><span class="num">03</span><div><div class="title">바꾸고 싶은 생각이나 행동은?</div><p class="sub">이 책이 준 변화를 나눠요</p></div></div>
+    </div>
+  </div>
+  <div class="timer-wrap">
+    <div style="font-size:13px;font-weight:600;color:var(--ink-dim);margin-bottom:8px"><b style="color:var(--accent)">PHASE 01</b> &middot; 진행 중</div>
+    <div class="timer" id="p-timer" style="font-size:64px">01:30</div>
+    <p class="timer-meta">한 사람씩, 가장 마음에 닿은 한 문장을.</p>
+  </div>
+</div>
+
+<!-- PAGE: 사전정보 -->
+<div class="page" id="page-book">
+  <div class="section-hd"><div><div class="eyebrow">02 &middot; 사전정보</div><h2 class="h-2 mt-4">모임 전에 워밍업!</h2></div></div>
+  <div class="cover" style="aspect-ratio:auto;padding:24px 20px">
+    <div class="cover__top"><span>이향인</span><span>2026</span></div>
+    <div style="text-align:center;padding:20px 0"><div class="cover__title">이향인</div><div class="cover__author">라미 카민스키</div></div>
+    <div class="cover__top"><span>Read Together</span><span>N&deg;01</span></div>
+  </div>
+
+  <div class="sheet">
+    <div class="sheet__hd"><div><div class="eyebrow">읽기 전 퀴즈</div><h3 class="h-3 mt-4">이 책에 대해 얼마나 알고 있나요?</h3></div><span class="tag tag-accent">퀴즈</span></div>
+    <p style="font-weight:600;font-size:15px;margin-bottom:12px">Q1. '이향인(異鄕人)'의 뜻은?</p>
+    <button class="btn btn-ghost btn-pill mb-8" onclick="this.style.opacity='.5'">다른 나라에서 온 사람</button>
+    <button class="btn btn-primary btn-pill mb-8" disabled>낯선 땅의 사람 (이방인) &check;</button>
+    <button class="btn btn-ghost btn-pill mb-8" onclick="this.style.opacity='.5'">향수를 느끼는 사람</button>
+    <div style="padding:12px 16px;border-radius:var(--radius-md);margin-top:8px;background:var(--success-tint);color:var(--success);font-weight:600;font-size:14px">정답! 이향인(異鄕人)은 "다른 고향의 사람", 즉 이방인이라는 뜻이에요.</div>
+  </div>
+
+  <div class="sheet">
+    <div class="sheet__hd"><div><div class="eyebrow">저자 TMI</div><h3 class="h-3 mt-4">라미 카민스키, 이런 사람이에요</h3></div><span class="tag">FUN FACT</span></div>
+    <div class="steps" style="gap:8px">
+      <div class="step" style="padding:12px"><span class="num" style="font-size:22px;width:auto">&#127758;</span><div><div class="title" style="font-size:14px">5개국에서 살았다</div><p class="sub">한국, 이스라엘, 프랑스, 미국, 일본</p></div></div>
+      <div class="step" style="padding:12px"><span class="num" style="font-size:22px;width:auto">&#9997;&#65039;</span><div><div class="title" style="font-size:14px">원래 번역가였다</div><p class="sub">소설 쓰기 전 10년간 문학 번역을 했어요</p></div></div>
+      <div class="step" style="padding:12px"><span class="num" style="font-size:22px;width:auto">&#127925;</span><div><div class="title" style="font-size:14px">글 쓸 때 항상 재즈를 듣는다</div><p class="sub">빌 에반스의 'Waltz for Debby'가 이 책의 BGM</p></div></div>
+    </div>
+  </div>
+
+  <div class="sheet sheet--warm">
+    <div class="sheet__hd"><div><div class="eyebrow">한 문장 챌린지</div><h3 class="h-3 mt-4">이 책을 한 문장으로 표현한다면?</h3></div></div>
+    <p class="body-2 mb-12">모임 전에 미리 도전! 다른 참가자들의 문장은 모임에서 공개됩니다.</p>
+    <textarea class="input mb-12" placeholder="예: '고향이란 결국 사람 안에 있는 것이다'" rows="2"></textarea>
+    <button class="btn btn-primary btn-pill" onclick="toast('한 문장 챌린지 제출!')">제출하기</button>
+  </div>
+
+  <div class="sheet">
+    <div class="sheet__hd"><div><div class="eyebrow">관련 콘텐츠</div><h3 class="h-3 mt-4">읽기 전에 보면 좋은 것들</h3></div></div>
+    <div class="link-card"><div class="link-card__icon">&#9654;</div><div class="link-card__body"><div class="link-card__title">[10분 요약] 이향인 — 핵심 내용 미리보기</div><div class="link-card__meta">youtube.com &middot; 추천</div></div></div>
+    <div class="link-card"><div class="link-card__icon">&#127911;</div><div class="link-card__body"><div class="link-card__title">라미 카민스키 인터뷰 — "경계인이라는 정체성"</div><div class="link-card__meta">podcast.example.com &middot; 추천</div></div></div>
+    <div class="link-card"><div class="link-card__icon">&#128196;</div><div class="link-card__body"><div class="link-card__title">비슷한 책: 알베르 카뮈 '이방인' vs 이향인 비교</div><div class="link-card__meta">blog.example.com &middot; 추천</div></div></div>
+  </div>
+</div>
+
+<!-- PAGE: 답변 -->
+<div class="page" id="page-discussion">
+  <div class="section-hd"><div><div class="eyebrow">03 &middot; 답변</div><h2 class="h-1 mt-4">내 생각을<br>적어볼까요.</h2></div></div>
+  <p class="body-2 mb-16">여기서는 <b style="color:var(--ink)">내 답변만</b> 보여요. 다른 참가자의 답변은 발표 모드에서 함께 확인합니다.</p>
+
+  <div class="sheet" style="background:var(--paper-warm)">
+    <div class="eyebrow mb-8">오늘의 질문 목록</div>
+    <div style="display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--rule-soft)"><span class="tag tag-accent">Q01</span><span style="font-weight:500">가장 마음에 남은 문장은? 왜 그 문장이 와닿았나요?</span></div>
+    <div style="display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--rule-soft)"><span class="tag tag-accent">Q02</span><span style="font-weight:500">이방인이 된 경험이 있나요? 그때 무엇을 느꼈나요?</span></div>
+    <div style="display:flex;gap:8px;align-items:baseline;padding:6px 0"><span class="tag tag-accent">Q03</span><span style="font-weight:500">이 책을 읽고 바꾸고 싶은 생각이나 행동이 있나요?</span></div>
+  </div>
+
+  <!-- Q1 -->
+  <div class="sheet">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q01</span></div>
+    <h3 class="h-3" style="margin-bottom:16px">가장 마음에 남은 문장은? 왜 그 문장이 와닿았나요?</h3>
+    <div class="answer mine">
+      <div class="answer__who"><span><b>나</b></span><span>15:22</span></div>
+      <div class="answer__body">어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다. 이 문장이 계속 머릿속에 맴돌았어요. 회사에서도, 친구들 사이에서도 늘 약간의 거리감을 느끼는 제게 위로가 됐습니다.</div>
+      <div style="margin-top:12px"><button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="toast('수정 모드!')">수정하기</button></div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="sheet">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q02</span></div>
+    <h3 class="h-3" style="margin-bottom:16px">이방인이 된 경험이 있나요? 그때 무엇을 느꼈나요?</h3>
+    <div class="answer mine">
+      <div class="answer__who"><span><b>나</b></span><span>15:23</span></div>
+      <div class="answer__body">유학 갔을 때 아무도 나를 모르는 도시에서 혼자 밥 먹던 순간이 떠올라요. 처음엔 외로웠는데, 점점 그 시간이 저를 단단하게 만들었어요.</div>
+      <div style="margin-top:12px"><button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="toast('수정 모드!')">수정하기</button></div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="sheet">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q03</span></div>
+    <h3 class="h-3" style="margin-bottom:16px">이 책을 읽고 바꾸고 싶은 생각이나 행동이 있나요?</h3>
+    <div class="answer mine">
+      <div class="answer__who"><span><b>나</b></span><span>15:24</span></div>
+      <div class="answer__body">어디에 속하려고 애쓰는 걸 좀 그만두고 싶어요. 그냥 나로 존재하는 연습을 해보려고요.</div>
+      <div style="margin-top:12px"><button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="toast('수정 모드!')">수정하기</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: 내 기록 -->
+<div class="page" id="page-retro">
+  <div class="section-hd"><div><div class="eyebrow">내 기록</div><h2 class="h-1 mt-4">나만의<br>독서 일기.</h2></div></div>
+  <div class="profile-card">
+    <div class="profile-avatar">미</div>
+    <div class="profile-name">미지</div>
+    <div style="font-size:13px;color:var(--ink-dim);margin-top:4px">닉네임으로 참여 중</div>
+    <div class="profile-stat">
+      <div><div class="profile-stat__num">3</div><div class="profile-stat__label">내 답변</div></div>
+      <div><div class="profile-stat__num">5</div><div class="profile-stat__label">받은 반응</div></div>
+      <div><div class="profile-stat__num">1</div><div class="profile-stat__label">참여 모임</div></div>
+    </div>
+  </div>
+  <div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">한줄평</div><h3 class="h-3 mt-4">오늘의 한 줄</h3></div></div><input class="input mb-12" placeholder="이번 모임을 한 줄로 적어주세요"><button class="btn btn-primary btn-pill" onclick="toast('한줄평 저장!')">저장</button></div>
+  <div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">인사이트 일기</div><h3 class="h-3 mt-4">떠오른 생각 기록</h3></div></div><textarea class="input mt-4 mb-12" placeholder="오늘 읽으며 떠오른 생각을 남겨보세요. 이 기록은 나만 볼 수 있어요." rows="3"></textarea><button class="btn btn-primary btn-pill" onclick="toast('인사이트 저장!')">기록 저장</button></div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ═══ STAGE WRAP (발표 모드) ═══ -->
+<div class="stage-wrap" id="stage-wrap">
+
+<div class="scene active" id="scene-roadmap">
+  <div class="stage-roadmap">
+    <div class="stage-roadmap__header">
+      <div class="stage-roadmap__title">경계인의 시선으로 세계 읽기</div>
+      <div class="stage-roadmap__book">이향인 — 라미 카민스키 <span class="tag tag-accent tag-dot" style="margin-left:8px">LIVE</span></div>
+      <p style="font-size:15px;color:var(--ink-soft);margin-top:8px;max-width:600px;text-align:center;line-height:1.6">어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다</p>
+    </div>
+    <div class="stage-roadmap__progress"><div class="stage-roadmap__progress-bar"><div class="stage-roadmap__progress-fill" style="width:33%"></div></div><div class="stage-roadmap__progress-label">1 / 3 진행 중</div></div>
+    <div class="stage-roadmap__steps">
+      <div class="stage-rm-step current"><div class="stage-rm-step__num">01</div><div class="stage-rm-step__info"><div class="stage-rm-step__name">가장 마음에 남은 문장은?</div><div class="stage-rm-step__desc">왜 그 문장이 와닿았는지 이야기해요</div></div><div class="stage-rm-step__badge">진행 중</div></div>
+      <div class="stage-rm-step__connector"></div>
+      <div class="stage-rm-step"><div class="stage-rm-step__num">02</div><div class="stage-rm-step__info"><div class="stage-rm-step__name">이방인이 된 경험이 있나요?</div><div class="stage-rm-step__desc">그때 무엇을 느꼈는지 공유해요</div></div><div class="stage-rm-step__badge"></div></div>
+      <div class="stage-rm-step__connector"></div>
+      <div class="stage-rm-step"><div class="stage-rm-step__num">03</div><div class="stage-rm-step__info"><div class="stage-rm-step__name">바꾸고 싶은 생각이나 행동은?</div><div class="stage-rm-step__desc">이 책이 준 변화를 나눠요</div></div><div class="stage-rm-step__badge"></div></div>
+    </div>
+    <div class="stage-roadmap__people">참가자 <b>5</b>명 접속 중</div>
+  </div>
+</div>
+
+<div class="scene" id="scene-analysis">
+  <div class="scene-analysis__layout">
+    <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요</p></div>
+    <div class="scene-analysis__grid">
+      <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드</div><div class="analysis-keywords"><span class="kw kw-lg">경계</span><span class="kw kw-md">정체성</span><span class="kw kw-lg">이방인</span><span class="kw kw-sm">외로움</span><span class="kw kw-md">자유</span><span class="kw kw-sm">관찰자</span><span class="kw kw-md">소속감</span><span class="kw kw-sm">공감</span><span class="kw kw-lg">발견</span><span class="kw kw-sm">용기</span></div></div>
+      <div class="analysis-card"><div class="analysis-card__label">생각의 분포</div><div class="analysis-bars">
+        <div class="analysis-bar"><div class="analysis-bar__label">공감형 <span>"나도 그런 경험이..."</span></div><div class="analysis-bar__track"><div class="analysis-bar__fill" style="width:65%"></div></div><div class="analysis-bar__pct">65%</div></div>
+        <div class="analysis-bar"><div class="analysis-bar__label">탐구형 <span>"왜 저자는..."</span></div><div class="analysis-bar__track"><div class="analysis-bar__fill" style="width:20%"></div></div><div class="analysis-bar__pct">20%</div></div>
+        <div class="analysis-bar"><div class="analysis-bar__label">실천형 <span>"나는 앞으로..."</span></div><div class="analysis-bar__track"><div class="analysis-bar__fill" style="width:15%"></div></div><div class="analysis-bar__pct">15%</div></div>
+      </div></div>
+      <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 한줄 요약</div><div class="analysis-summary">"오늘 참가자들은 대부분 <b>경계인으로서의 외로움</b>에 공감하면서도, 그것이 오히려 <b>자기 발견의 계기</b>가 된다는 점에서 희망을 찾았습니다. 특히 '어디에도 속하지 못할 때 비로소 나를 만난다'는 문장이 가장 많은 울림을 준 것으로 보입니다."</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="scene" id="scene-live">
+  <div class="scene-live__layout">
+    <div class="scene-live__left">
+      <div class="scene-timer__phase">답변 시간</div>
+      <div class="stage-timer" id="stage-timer-display">01:30</div>
+      <div class="stage-timer__label">남은 시간</div>
+      <div class="stage-timer__controls">
+        <button class="btn btn-primary" onclick="startTimer()">시작</button>
+        <button class="btn" onclick="stopTimer()">정지</button>
+        <button class="btn btn-ghost" onclick="resetTimer()">리셋</button>
+      </div>
+      <div class="scene-live__speaker-section">
+        <div class="scene-live__speaker-label" id="speaker-prompt">이 질문의 발언자를 찾겠습니다</div>
+        <div class="scene-live__speaker-name" id="stage-speaker-name">?</div>
+        <div class="scene-live__speaker-btns">
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="pickSpeaker('무작위')">무작위</button>
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="pickSpeaker('공감 최다')">공감 최다</button>
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="pickSpeaker('소수 의견')">소수 의견</button>
+        </div>
+      </div>
+    </div>
+    <div class="scene-live__right">
+      <div class="scene-q__eye">Q01 &middot; 가장 마음에 남은 문장은?</div>
+      <div id="stage-speaker-answer"><p style="font-size:16px;color:var(--ink-dim);text-align:center;padding:40px 0">발언자를 선정하면 해당 참가자의 답변이 표시됩니다</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="scene" id="scene-highlights">
+  <div class="scene-highlights__layout">
+    <h2 class="scene-highlights__title">오늘의 하이라이트</h2>
+    <div class="scene-highlights__grid">
+      <div class="highlight-card"><div class="highlight-card__emoji">&#128155;</div><div class="highlight-card__label">가장 많은 공감</div><div class="highlight-card__quote">"처음 외국에 갔을 때, 아무것도 아닌 사람이 된 느낌이었어요. 그런데 그게 자유였다는 걸 나중에야 알았죠."</div><div class="highlight-card__who">&mdash; 꿈꾸는 해파리</div></div>
+      <div class="highlight-card"><div class="highlight-card__emoji">&#10024;</div><div class="highlight-card__label">가장 새로운 시각</div><div class="highlight-card__quote">"이방인이 아닌 사람이 있을까요? 우리는 모두 어딘가에서는 이방인이에요."</div><div class="highlight-card__who">&mdash; 빛나는 알파카</div></div>
+      <div class="highlight-card"><div class="highlight-card__emoji">&#128516;</div><div class="highlight-card__label">가장 재밌었던 답변</div><div class="highlight-card__quote">"저는 회사에서도 이방인이고 집에서도 이방인이에요. 냉장고 앞에서만 소속감을 느낍니다."</div><div class="highlight-card__who">&mdash; 배고픈 판다</div></div>
+      <div class="highlight-card"><div class="highlight-card__emoji">&#128066;</div><div class="highlight-card__label">더 듣고 싶은 이야기</div><div class="highlight-card__quote">"소속감을 버리니까 오히려 진짜 연결이 생기더라고요. 역설적이지만요."</div><div class="highlight-card__who">&mdash; 용감한 두부</div></div>
+    </div>
+    <div class="scene-highlights__footer"><span class="tag tag-accent">총 답변 13개</span><span class="tag">반응 47개</span><span class="tag">참가자 5명</span></div>
+  </div>
+</div>
+
+</div><!-- /stage-wrap -->
+
+<div class="toast-area" id="toast-area"></div>
+
+<script>
+var isStage = false;
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  var el = document.getElementById('page-'+name);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('#nav-personal a').forEach(function(a){a.classList.remove('active')});
+  event.target.closest('a')?.classList.add('active');
+  if(!event.target.closest('a')){
+    var map={session:0,book:1,discussion:2,retro:3};
+    var links=document.querySelectorAll('#nav-personal a');
+    if(links[map[name]]) links[map[name]].classList.add('active');
+  }
+}
+
+function showStageScene(name){
+  document.querySelectorAll('.stage-wrap .scene').forEach(function(s){s.classList.remove('active')});
+  var el=document.getElementById('scene-'+name);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('#nav-stage a').forEach(function(a){a.classList.remove('active');if(a.dataset.scene===name)a.classList.add('active')});
+}
+
+function toggleMode(){
+  isStage=!isStage;
+  document.getElementById('main-content').classList.toggle('hidden',isStage);
+  document.getElementById('stage-wrap').classList.toggle('visible',isStage);
+  document.getElementById('nav-personal').style.display=isStage?'none':'flex';
+  document.getElementById('nav-stage').style.display=isStage?'flex':'none';
+  document.getElementById('mode-toggle-btn').textContent=isStage?'개인 모드':'발표 모드';
+}
+
+function goJoin(){
+  if(isStage) toggleMode();
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.getElementById('page-join').classList.add('active');
+  document.querySelectorAll('#nav-personal a').forEach(function(a){a.classList.remove('active')});
+}
+
+function toast(msg){
+  var el=document.createElement('div');el.className='alert';el.textContent=msg;
+  document.getElementById('toast-area').appendChild(el);
+  setTimeout(function(){el.style.transition='opacity .2s';el.style.opacity='0';setTimeout(function(){el.remove()},200)},2200);
+}
+
+/* Timer */
+var timerSec=90,timerInt=null;
+function updateTimer(){
+  var mm=String(Math.floor(timerSec/60)).padStart(2,'0');
+  var ss=String(timerSec%60).padStart(2,'0');
+  var el=document.getElementById('stage-timer-display');
+  if(el){el.textContent=mm+':'+ss;el.classList.toggle('danger',timerSec<10)}
+}
+function startTimer(){if(!timerInt)timerInt=setInterval(function(){if(timerSec>0){timerSec--;updateTimer()}else{clearInterval(timerInt);timerInt=null;toast('시간 종료!')}},1000)}
+function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null}}
+function resetTimer(){stopTimer();timerSec=90;updateTimer()}
+
+/* Speaker */
+var speakers=[
+  {name:'미지',ans:'어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다. 이 문장이 계속 머릿속에 맴돌았어요. 회사에서도, 친구들 사이에서도 늘 약간의 거리감을 느끼는 제게 위로가 됐습니다.'},
+  {name:'꿈꾸는 해파리',ans:'처음 외국에 갔을 때, 아무것도 아닌 사람이 된 느낌이었어요. 그런데 그게 자유였다는 걸 나중에야 알았죠.'},
+  {name:'빛나는 알파카',ans:'이방인이 아닌 사람이 있을까요? 우리는 모두 어딘가에서는 이방인이에요. 이 구절을 읽고 소속감에 대한 집착을 내려놓게 됐어요.'},
+  {name:'배고픈 판다',ans:'저는 회사에서도 이방인이고 집에서도 이방인이에요. 냉장고 앞에서만 소속감을 느낍니다. 근데 그게 나쁜 건 아닌 것 같아요 ㅋㅋ'},
+  {name:'용감한 두부',ans:'소속감을 버리니까 오히려 진짜 연결이 생기더라고요. 역설적이지만요. 저자도 비슷한 경험을 한 것 같아서 공감이 많이 됐어요.'}
+];
+var scrambleInt=null;
+function pickSpeaker(label){
+  var picked=speakers[Math.floor(Math.random()*speakers.length)];
+  var nameEl=document.getElementById('stage-speaker-name');
+  var promptEl=document.getElementById('speaker-prompt');
+  var ansArea=document.getElementById('stage-speaker-answer');
+  if(promptEl) promptEl.textContent='발언자를 찾고 있습니다...';
+  if(scrambleInt) clearInterval(scrambleInt);
+  var t=0;
+  scrambleInt=setInterval(function(){
+    nameEl.textContent=speakers[Math.floor(Math.random()*speakers.length)].name;
+    nameEl.style.color='var(--ink-dim)';t++;
+    if(t>14){
+      clearInterval(scrambleInt);scrambleInt=null;
+      nameEl.textContent=picked.name;nameEl.style.color='var(--accent)';
+      if(promptEl) promptEl.textContent=label+' 로 선정됨';
+      toast(picked.name+' 선정! ('+label+')');
+      if(ansArea) ansArea.innerHTML='<div style="padding:24px;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper);margin-top:12px">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
+        +'<div style="width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px">'+picked.name.charAt(0)+'</div>'
+        +'<div><div style="font-weight:700;font-size:16px">'+picked.name+'</div>'
+        +'<div style="font-size:12px;color:var(--ink-dim)">'+label+' 로 선정</div></div></div>'
+        +'<div style="font-size:20px;line-height:1.7;font-weight:500;color:var(--ink);border-left:3px solid var(--accent);padding-left:16px">'+picked.ans+'</div></div>';
+    }
+  },60);
+}
+</script>
+</body>
+</html>
