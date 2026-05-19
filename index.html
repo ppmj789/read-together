@@ -221,6 +221,9 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .qrow__del{flex:0 0 auto;width:38px;height:38px;border-radius:var(--radius-pill);border:1px solid var(--rule);background:var(--paper);color:var(--ink-dim);cursor:pointer;font-size:15px;line-height:1}
 .qrow__del:hover{border-color:#D44;color:#D44}
 .react-on{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.cmt-x{float:right;background:none;border:none;color:var(--ink-dim);font-size:15px;line-height:1;cursor:pointer;padding:0 0 0 8px}
+.cmt-x:hover{color:#D44}
+.danger-link{background:none;border:none;color:#D44;font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .qfix{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-sm);margin-bottom:8px}
 .qfix__t{flex:1;font-size:14px;font-weight:600;color:var(--ink);line-height:1.45}
 .qfix__btn{flex:0 0 auto;background:none;border:1px solid var(--rule);color:var(--ink-soft);font-size:12px;font-weight:700;padding:5px 12px;border-radius:var(--radius-pill);cursor:pointer;transition:border-color .15s,color .15s}
@@ -670,7 +673,19 @@ function blankBook(){return {answers:['','',''],submitted:false,ratings:{},comme
 function bookState(id){var s=loadStore();return s[id]||blankBook();}
 function setBookState(id,bs){var s=loadStore();s[id]=bs;saveStore(s);}
 
+function nkLoad(){try{return JSON.parse(localStorage.getItem('rt:nick'))||{};}catch(e){return MEM['rt:nick']?JSON.parse(MEM['rt:nick']):{};}}
+function nkSave(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:nick',v);}catch(e){MEM['rt:nick']=v;}}
+function fixedNick(p4,bid){return (nkLoad()[p4+'|'+bid])||null;}
+function randomNick(){return NICK_ADJ[Math.floor(Math.random()*NICK_ADJ.length)]+' '+NICK_NOUN[Math.floor(Math.random()*NICK_NOUN.length)];}
+var PENDNICK=null;
+function rollNick(){PENDNICK=randomNick();renderBook();}
+function confirmNick(){
+  if(!PENDNICK)PENDNICK=randomNick();
+  var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=PENDNICK;nkSave(o);
+  var nm=PENDNICK;PENDNICK=null;setNick();renderBook();toast('닉네임 확정: '+nm);
+}
 function nickFor(phone4,bookId){
+  var f=fixedNick(phone4,bookId); if(f) return f;
   var str=String(phone4)+'|'+bookId,h=0;
   for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))>>>0;}
   return NICK_ADJ[h%NICK_ADJ.length]+' '+NICK_NOUN[Math.floor(h/NICK_ADJ.length)%NICK_NOUN.length];
@@ -725,7 +740,7 @@ var RT={
   async loadBook(bookId){
     var mb=await sb.from('member_book').select('phone4,nickname,submitted,ratings').eq('book_id',bookId);
     var an=await sb.from('answer').select('phone4,q_index,body').eq('book_id',bookId);
-    var cm=await sb.from('comment').select('q_index,target_phone4,author_phone4,author_nick,body').eq('book_id',bookId);
+    var cm=await sb.from('comment').select('id,q_index,target_phone4,author_phone4,author_nick,body').eq('book_id',bookId);
     var rx=await sb.from('reaction').select('q_index,target_phone4,author_phone4').eq('book_id',bookId);
     if(mb.error||an.error||cm.error||rx.error){rtErr(mb.error||an.error||cm.error||rx.error);return;}
     var bk=bookById(bookId);if(!bk)return;
@@ -764,7 +779,7 @@ var RT={
     (cm.data||[]).forEach(function(c){
       if(c.author_phone4!==me) return;
       var j=idxOf[c.target_phone4];if(j===undefined)return;
-      var k='q'+c.q_index+'a'+j;(myCmt[k]=myCmt[k]||[]).push(c.body);
+      var k='q'+c.q_index+'a'+j;(myCmt[k]=myCmt[k]||[]).push({id:c.id,t:c.body});
     });
     NETSTORE[bookId]={answers:myAns,submitted:myMb?!!myMb.submitted:false,ratings:(myMb&&myMb.ratings)||{},comments:myCmt};
   },
@@ -821,6 +836,23 @@ var RT={
     var e=(await sb.from('book').update({intro:p.intro,author_bio:p.author_bio,yearmonth:p.yearmonth,author_facts:p.author_facts,links:p.links}).eq('id',bookId)).error;
     if(e){rtErr(e);return false;}
     await RT.loadMeetings(); await RT.loadBook(bookId); return true;
+  },
+  async deleteComment(bookId,id){
+    var e=(await sb.from('comment').delete().eq('id',id)).error;
+    if(e){rtErr(e);return false;} await RT.loadBook(bookId); return true;
+  },
+  async deleteBook(bookId){
+    var e=(await sb.from('book').delete().eq('id',bookId)).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  },
+  async deleteMeeting(id){
+    var e=(await sb.from('meeting').delete().eq('id',id)).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  },
+  async addBook(meetingId,title,author){
+    var m=meetingById(meetingId),ord=((m&&m.season&&m.season.books.length)||0)+1;
+    var e=(await sb.from('book').insert({meeting_id:meetingId,ord:ord,title:title,author:author||'',intro:'',author_bio:'',yearmonth:'',questions:[''],author_facts:[],links:[]})).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
   }
 };
 
@@ -1192,6 +1224,7 @@ function renderSeason(){
            '<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="startShare(\''+b.id+'\')">&#9654; 공유 시작하기</button>'+
            '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="openBook(\''+b.id+'\')">사전정보</button>'+
            '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="toggleEditQ(\''+b.id+'\')">질문 편집</button>'+
+           '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="delBookHost(\''+b.id+'\',\''+esc(b.title)+'\')">책 삭제</button>'+
          '</div>'):'')+
        '</div>'+
        '<span class="book-card__badge '+(cur?'now':'soon')+'">'+bl+'</span>'+
@@ -1217,15 +1250,60 @@ function renderSeason(){
     if(i<books.length-1) h+='<div class="season-rail"></div>';
   });
   h+='</div>'+
-   (STATE.isHost?'':'<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>');
+   (STATE.isHost
+     ? '<button class="btn btn-ghost btn-pill mt-16" onclick="addBookHost()">+ 책 추가</button>'+
+       '<div class="center mt-24"><button class="danger-link" onclick="delMeetingHost()">이 모임 삭제</button></div>'
+     : '<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>');
   document.getElementById('page-season').innerHTML=h;
 }
 async function openBook(id){STATE.bookId=id;setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
+function _custMutate(fn){ var cs=customMeetings(),hit=false; cs.forEach(function(mm){ if(fn(mm))hit=true; }); if(hit)saveCustomMeetings(cs); return hit; }
+async function delBookHost(id,title){
+  if(!confirm('「'+title+'」 책과 그 답변·댓글을 모두 삭제할까요?'))return;
+  if(ONLINE){ if(!(await RT.deleteBook(id)))return; }
+  else { _custMutate(function(mm){ if(!mm.season)return false; var n=mm.season.books.length; mm.season.books=mm.season.books.filter(function(x){return x.id!==id;}); return mm.season.books.length!==n; }); }
+  renderSeason();toast('책을 삭제했어요');
+}
+async function addBookHost(){
+  var t=(prompt('추가할 책 제목')||'').trim(); if(!t)return;
+  var au=(prompt('저자 (선택, 비워도 됨)')||'').trim();
+  if(ONLINE){ if(!(await RT.addBook(STATE.meetingId,t,au)))return; }
+  else {
+    var m=activeMeeting(); if(!m||m.kind!=='custom'){toast('기본 모임엔 책을 추가할 수 없어요(온라인 전용)');return;}
+    var ok=_custMutate(function(mm){ if(mm.id!==STATE.meetingId||!mm.season)return false;
+      mm.season.books.push({id:STATE.meetingId+'-b'+Date.now(),title:t,author:au||'(저자 미상)',spine:t.charAt(0),status:'current',yearmonth:'',month:'',angle:'',tagline:t,intro:'(책 소개 미입력)',intro_note:'',authorBio:'',bio:[],links:[],questions:[''],others:[[]]});
+      applySchedule(mm.season.books); return true; });
+    if(!ok){toast('추가 실패');return;}
+  }
+  renderSeason();toast('「'+t+'」 추가됨 · 카드에서 질문·사전정보를 채우세요');
+}
+async function delMeetingHost(){
+  if(!confirm('이 모임 전체(시즌·책·답변·별점·댓글)를 영구 삭제할까요? 되돌릴 수 없습니다.'))return;
+  if(ONLINE){ if(!(await RT.deleteMeeting(STATE.meetingId)))return; }
+  else { _custMutate(function(mm){ return mm.id===STATE.meetingId; }) || 0;
+    var cs=customMeetings().filter(function(mm){return mm.id!==STATE.meetingId;}); saveCustomMeetings(cs); }
+  sessClear();STATE.isHost=false;STATE.meetingId=ONLINE?null:'m1';STATE.bookId=null;
+  setNick();syncHostUI();syncAuthUI();go('login');toast('모임을 삭제했어요');
+}
 
 /* ═══════════ RENDER: 사전정보 ═══════════ */
 function renderBook(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
   var cur=b.status==='current';
+  if(STATE.phone4&&!STATE.isHost&&!fixedNick(STATE.phone4,STATE.bookId)){
+    if(!PENDNICK)PENDNICK=randomNick();
+    document.getElementById('page-book').innerHTML=
+      '<div class="section-hd"><div><div class="eyebrow">'+esc(b.title)+'</div><h2 class="h-1 mt-4">이 책에서의<br>내 이름.</h2></div></div>'+
+      '<div class="cover" style="padding:36px 20px;text-align:center"><div class="cover__top"><span>untoldChapter</span><span>'+esc(b.month||'')+'</span></div>'+
+      '<div style="padding:30px 0"><div style="font-size:14px;opacity:.8;margin-bottom:10px">당신은</div>'+
+      '<div class="cover__title" style="font-size:34px">'+esc(PENDNICK)+'</div>'+
+      '<div style="font-size:15px;opacity:.85;margin-top:10px">입니다!!</div></div>'+
+      '<div class="cover__top"><span>책마다 새 이름</span><span>익명</span></div></div>'+
+      '<p class="body-2 center mb-16">이 이름으로 「'+esc(b.title)+'」에 참여합니다. 마음에 들면 확정하세요.</p>'+
+      '<div class="row"><button class="btn btn-ghost btn-pill" onclick="rollNick()">🎲 다시 뽑기</button>'+
+      '<button class="btn btn-primary btn-pill" onclick="confirmNick()">이 이름으로 확정</button></div>';
+    return;
+  }
   var h='<div class="section-hd"><div><div class="eyebrow">사전정보</div><h2 class="h-2 mt-4">모임 전에 워밍업!</h2></div></div>'+
    '<div class="cover" style="padding:24px 20px">'+
      '<div class="cover__top"><span>'+esc(b.title)+'</span><span>'+esc(b.month||'')+'</span></div>'+
@@ -1360,7 +1438,8 @@ function renderDiscussion(){
           '<div class="comment-box">';
         if(list.length){
           h+='<div class="comment-list">';
-          list.forEach(function(c){h+='<div class="comment"><b>나</b> '+esc(c)+'</div>';});
+          list.forEach(function(c,ci){var txt=(typeof c==='string')?c:c.t;
+            h+='<div class="comment"><b>나</b> '+esc(txt)+'<button class="cmt-x" title="삭제" onclick="delComment('+i+','+j+','+ci+')">&times;</button></div>';});
           h+='</div>';
         }
         h+='<div class="comment-form"><input class="input" id="cm-'+i+'-'+j+'" placeholder="댓글·궁금한 점을 남겨보세요" onkeydown="if(event.key===\'Enter\')addComment('+i+','+j+')">'+
@@ -1436,6 +1515,19 @@ async function addComment(i,j){
   }
   toast('댓글을 남겼어요 — 모임 때 함께 이야기해요');
   renderDiscussion();
+}
+async function delComment(i,j,ci){
+  if(!confirm('이 댓글을 삭제할까요?'))return;
+  var b=bookById(STATE.bookId),bs=bookState(b.id),ck='q'+i+'a'+j,list=(bs.comments&&bs.comments[ck])||[];
+  var c=list[ci];if(c===undefined)return;
+  if(ONLINE){
+    var id=(typeof c==='string')?null:c.id;
+    if(!id){toast('삭제할 댓글을 찾을 수 없어요');return;}
+    if(!(await RT.deleteComment(b.id,id)))return;
+  } else {
+    list.splice(ci,1);setBookState(b.id,bs);
+  }
+  toast('댓글을 삭제했어요');renderDiscussion();
 }
 async function toggleReact(i,j){
   var b=bookById(STATE.bookId);
