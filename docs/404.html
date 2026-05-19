@@ -224,6 +224,11 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .cmt-x{float:right;background:none;border:none;color:var(--ink-dim);font-size:15px;line-height:1;cursor:pointer;padding:0 0 0 8px}
 .cmt-x:hover{color:#D44}
 .danger-link{background:none;border:none;color:#D44;font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.bi-item{background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px}
+.bi-item__hd{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--ink-dim)}
+.bi-del{background:none;border:none;color:var(--ink-dim);font-size:16px;line-height:1;cursor:pointer;padding:0 2px}
+.bi-del:hover{color:#D44}
+.bi-cap{font-size:12px;color:var(--ink-dim);margin:0 0 8px;line-height:1.5}
 .qfix{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-sm);margin-bottom:8px}
 .qfix__t{flex:1;font-size:14px;font-weight:600;color:var(--ink);line-height:1.45}
 .qfix__btn{flex:0 0 auto;background:none;border:1px solid var(--rule);color:var(--ink-soft);font-size:12px;font-weight:700;padding:5px 12px;border-radius:var(--radius-pill);cursor:pointer;transition:border-color .15s,color .15s}
@@ -413,7 +418,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
     <span class="masthead__center"><b id="hdr-nick">—</b></span>
     <div style="display:flex;align-items:center;gap:8px">
       <button class="mode-toggle" onclick="toggleMode()" id="mode-toggle-btn" style="display:none">발표 모드</button>
-      <button class="mode-toggle" onclick="logout()" id="logout-btn" style="display:none">로그아웃</button>
+      <button class="mode-toggle" onclick="logout()" id="logout-btn">로그아웃</button>
     </div>
   </div>
 </header>
@@ -900,7 +905,7 @@ function sessRead(){
   catch(e){return MEM['rt:sess']?JSON.parse(MEM['rt:sess']):null;}
 }
 function sessClear(){ try{localStorage.removeItem('rt:sess');}catch(e){} if(MEM)delete MEM['rt:sess']; }
-function syncAuthUI(){ var b=document.getElementById('logout-btn'); if(b)b.style.display=(STATE.phone4||STATE.isHost)?'inline-flex':'none'; }
+function syncAuthUI(){ var b=document.getElementById('logout-btn'); if(b)b.style.display='inline-flex'; }
 function logout(){
   if(isStage) setStage(false);
   sessClear();
@@ -944,20 +949,24 @@ function syncHostUI(){var b=document.getElementById('mode-toggle-btn');if(b)b.st
 /* ═══════════ RENDER: 모임 리스트 ═══════════ */
 function renderMeetings(){
   if(!STATE.phone4){go(STATE.isHost?'season':'login');return;}
-  var ms=allMeetings().filter(function(m){return m.isOpen!==false;}),h=''+
-   '<div class="section-hd"><div><div class="eyebrow">모임</div><h2 class="h-1 mt-4">참여 가능한<br>모임.</h2></div></div>'+
-   '<p class="body-2 mb-16">휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4)+'</b> · 들어갈 모임을 선택하세요. 닉네임은 책마다 자동 배정됩니다.</p>'+
-   (ms.length?'':'<div class="locked-note">지금 참여 가능한 모임이 없어요. 모임장이 모임을 공개하면 여기에 나타납니다.</div>')+
+  var all=allMeetings().slice().sort(function(a,b){
+    var oa=(a.isOpen!==false)?0:1,ob=(b.isOpen!==false)?0:1;return oa-ob;});
+  var h=''+
+   '<div class="section-hd"><div><div class="eyebrow">모임</div><h2 class="h-1 mt-4">모임<br>고르기.</h2></div></div>'+
+   '<p class="body-2 mb-16">휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4)+'</b> · 지금 참여 가능한 모임이 위에 파란색으로 표시됩니다.</p>'+
    '<div class="season-books">';
-  ms.forEach(function(m){
+  all.forEach(function(m){
     var sn=m.kind==='custom'?m.season:SEASON;
+    var open=(m.isOpen!==false);
     var sub=sn.books.length+'권 시즌'+(m.kind==='custom'?' · 모임장 개설':'');
-    h+='<div class="book-card current" style="opacity:1" onclick="enterMeeting(\''+m.id+'\')">'+
+    h+='<div class="book-card '+(open?'current':'upcoming')+'" style="opacity:1" onclick="enterMeeting(\''+m.id+'\')">'+
       '<div class="book-card__spine">'+esc(sn.title.charAt(0))+'</div>'+
       '<div class="book-card__body"><div class="book-card__month">'+esc(m.name)+'</div>'+
       '<div class="book-card__title">'+esc(sn.title)+'</div>'+
       '<div class="book-card__author">'+esc(sub)+'</div></div>'+
-      '<span class="book-card__go">입장 &rarr;</span></div>';
+      (open?'<span class="book-card__go">입장 &rarr;</span>'
+           :'<span class="book-card__badge soon">마감</span>')+
+    '</div>';
   });
   h+='</div>';
   document.getElementById('page-meetings').innerHTML=h;
@@ -1314,21 +1323,21 @@ function renderBook(){
     var bf=BINFO.buf||{intro:'',authorBio:'',yearmonth:'',facts:[],links:[]};
     var lab='style="display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin:16px 0 6px"';
     var fh='';bf.facts.forEach(function(f,k){
-      fh+='<div class="qrow"><input class="input" id="bi-ft-'+k+'" value="'+esc(f.t||'')+'" placeholder="제목 (예: 글 쓸 때 재즈를 듣는다)">'+
-        '<input class="input" id="bi-fs-'+k+'" value="'+esc(f.s||'')+'" placeholder="설명(선택)">'+
-        '<button class="qrow__del" onclick="rmBIFact('+k+')">&times;</button></div>';
+      fh+='<div class="bi-item"><div class="bi-item__hd"><span>사실 '+(k+1)+'</span><button class="bi-del" onclick="rmBIFact('+k+')">&times;</button></div>'+
+        '<input class="input" id="bi-ft-'+k+'" value="'+esc(f.t||'')+'" placeholder="제목 (예: 글 쓸 때 재즈를 듣는다)">'+
+        '<input class="input" id="bi-fs-'+k+'" value="'+esc(f.s||'')+'" placeholder="내용 (선택 · 부연 설명)"></div>';
     });
     var lh='';bf.links.forEach(function(l,k){
-      lh+='<div class="qrow"><input class="input" id="bi-lt-'+k+'" value="'+esc(l.t||'')+'" placeholder="콘텐츠 제목">'+
-        '<input class="input" id="bi-lm-'+k+'" value="'+esc(l.m||'')+'" placeholder="출처/링크(선택)">'+
-        '<button class="qrow__del" onclick="rmBILink('+k+')">&times;</button></div>';
+      lh+='<div class="bi-item"><div class="bi-item__hd"><span>콘텐츠 '+(k+1)+'</span><button class="bi-del" onclick="rmBILink('+k+')">&times;</button></div>'+
+        '<input class="input" id="bi-lt-'+k+'" value="'+esc(l.t||'')+'" placeholder="제목 (예: 작가 인터뷰 영상)">'+
+        '<input class="input" id="bi-lm-'+k+'" value="'+esc(l.m||'')+'" placeholder="링크 / 출처 (예: youtube.com)"></div>';
     });
     h+='<div class="sheet sheet--warm"><div class="eyebrow mb-12">사전정보 편집 · '+esc(b.title)+'</div>'+
       '<div class="field"><label>책 소개</label><textarea class="input" id="bi-intro" rows="3">'+esc(bf.intro||'')+'</textarea></div>'+
       '<div class="field"><label>작가 소개</label><textarea class="input" id="bi-bio" rows="2">'+esc(bf.authorBio||'')+'</textarea></div>'+
       '<div class="field"><label>회차 연월 (예: 202607)</label><input class="input" id="bi-ym" value="'+esc(bf.yearmonth||'')+'" inputmode="numeric" maxlength="6" placeholder="YYYYMM"></div>'+
-      '<label '+lab+'>재미있는 사실</label>'+fh+'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBIFact()">+ 사실 추가</button>'+
-      '<label '+lab+'>같이 볼 콘텐츠</label>'+lh+'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBILink()">+ 콘텐츠 추가</button>'+
+      '<label '+lab+'>재미있는 사실</label><p class="bi-cap">사전정보의 ‘재미있는 사실’ 카드입니다 — 제목 + 내용. 아이콘은 자동(📌), 무작위 아님.</p>'+fh+'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBIFact()">+ 사실 추가</button>'+
+      '<label '+lab+'>같이 볼 콘텐츠</label><p class="bi-cap">‘같이 볼 콘텐츠’ 링크 카드입니다 — 제목 + 링크. 아이콘 자동(🔗).</p>'+lh+'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBILink()">+ 콘텐츠 추가</button>'+
       '<div class="row mt-16"><button class="btn btn-primary btn-sm btn-pill" onclick="saveBookInfo()">저장</button>'+
       '<button class="btn btn-ghost btn-sm btn-pill" onclick="cancelBookInfo()">취소</button></div></div>';
   } else {
