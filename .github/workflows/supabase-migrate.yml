@@ -1,0 +1,43 @@
+name: Supabase migrate
+
+# supabase/migrations/** 가 master 에 push 되면 연결된 Supabase 프로젝트에
+# 자동으로 `supabase db push`. Secrets 미설정 시엔 조용히 스킵(빨간 X 안 뜸).
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/config.toml'
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Secrets 확인 (없으면 스킵)
+        id: gate
+        run: |
+          if [ -z "${{ secrets.SUPABASE_PROJECT_REF }}" ] || [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
+            echo "run=0" >> "$GITHUB_OUTPUT"
+            echo "::notice::Supabase Secrets 미설정 — 마이그레이션 스킵"
+          else
+            echo "run=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Supabase CLI
+        if: steps.gate.outputs.run == '1'
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link & db push
+        if: steps.gate.outputs.run == '1'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+          supabase db push

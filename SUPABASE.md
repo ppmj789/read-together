@@ -1,87 +1,95 @@
-# 같이읽자 — v1 백엔드(Supabase) 셋업·배포 가이드
+# 같이읽자 — v1 백엔드(Supabase) 셋업·자동화 가이드
 
-정적 `index.html`(GitHub Pages) + **Supabase**(호스티드 Postgres + 자동 REST) 구성.
-서버를 따로 띄우지 않고도 진짜 멀티유저로 동작합니다.
+정적 `index.html`(GitHub Pages) + **Supabase**(호스티드 Postgres). 서버를 따로 띄우지 않고 멀티유저.
 
-> 핵심: `index.html` 상단의 `SB_URL`/`SB_KEY` 가 **비어 있으면 기존처럼 localStorage**(오프라인·단일 브라우저)로 동작하고, **채우면 Supabase**(멀티유저)로 자동 전환됩니다. 무회귀.
+- `index.html` 상단 `SB_URL`/`SB_KEY` 가 **비면 localStorage**(단일 브라우저), **채우면 Supabase**(멀티유저). 무회귀.
+- DB 스키마는 **`supabase/migrations/`** 가 단일 소스. push 하면 자동 적용(아래 자동화).
 
 ---
+
+## 0. 한눈에
+
+| 대상 | 자동화 | 1회 준비 |
+|---|---|---|
+| 화면(Pages) | push → Pages 자동 재배포 | Settings→Pages 1회 활성화 |
+| DB 스키마 | push(`supabase/migrations/**`) → Actions 가 `db push` | GitHub Secrets 3개 |
+| 키(anon) | 파일에 커밋(공개 가능 키) | 키 2줄 입력 후 1회 push |
 
 ## 1. Supabase 프로젝트 생성
 
-1. https://supabase.com → 로그인 → **New project**
-2. 리전: `Northeast Asia (Seoul)` 권장. DB 비밀번호는 적당히(이건 Postgres 관리용, 앱과 무관).
-3. 생성 완료까지 1~2분.
+1. https://supabase.com → **New project** (리전 `Northeast Asia (Seoul)`)
+2. 생성 시 정한 **Database password** 를 메모(자동화 Secret 에 씀)
 
-## 2. 스키마 적용
+## 2. 첫 스키마 적용 (택1)
 
-1. 좌측 **SQL Editor** → **New query**
-2. 이 저장소의 `supabase/schema.sql` 전체를 붙여넣고 **Run**
-3. "Success" 확인. (재실행해도 안전 — idempotent)
-   - 좌측 **Table editor** 에 `meeting/book/member_book/answer/comment` 5개 테이블과
-     데모 모임(`HUMAN-Q2 / 1234`, 책 3권, 이향인 표본 4인)이 보이면 정상.
+- **간단(1회)**: SQL Editor → `supabase/migrations/20260519120000_init.sql` 내용 붙여넣고 Run
+- **또는** 아래 3번 자동화를 먼저 켜고 빈 커밋/재실행으로 적용
 
-## 3. 키 확인
+> 둘 다 idempotent — 여러 번 돌려도 안전.
 
-좌측 **Project Settings → API**:
+## 3. DB 마이그레이션 자동화 (GitHub Actions)
 
-- **Project URL** → `SB_URL`
-- **anon public** 키 → `SB_KEY`  (절대 `service_role` 키를 쓰지 마세요)
+`.github/workflows/supabase-migrate.yml` 가 이미 있습니다.
+**GitHub → 저장소 → Settings → Secrets and variables → Actions** 에 3개 추가:
 
-## 4. 프론트에 키 연결
+| Secret | 값 위치 |
+|---|---|
+| `SUPABASE_PROJECT_REF` | Supabase → Settings → General → **Reference ID** |
+| `SUPABASE_ACCESS_TOKEN` | https://supabase.com/dashboard/account/tokens 에서 발급 |
+| `SUPABASE_DB_PASSWORD` | 1번에서 정한 DB password |
 
-`index.html` 상단 스크립트의 설정 블록을 채웁니다 (루트 + `docs/index.html` 둘 다):
+→ 이후 `supabase/migrations/**` 변경을 push 하면 **자동으로 해당 프로젝트에 반영**.
+Secrets 미설정이면 워크플로는 조용히 스킵(빨간 X 안 뜸).
+
+> 스키마 바꾸려면 `supabase/migrations/` 에 새 파일
+> (`<YYYYMMDDHHMMSS>_변경.sql`) 추가 후 push. 기존 파일은 수정하지 말 것(이력 보존).
+
+대안 — Supabase 대시보드의 **GitHub 연동(Branching)** 을 쓰면 Actions 없이도
+같은 폴더를 자동 적용하지만, 유료/프리뷰 제약이 있어 위 Actions 방식을 권장합니다.
+
+## 4. 프론트에 키 연결 (파일 커밋)
+
+Supabase → **Settings → API**: **Project URL** + **anon public** 키.
+`index.html` **과** `docs/index.html` 상단 두 줄을 채웁니다:
 
 ```js
-/* ── Supabase 설정 (비우면 localStorage 모드) ── */
-var SB_URL = 'https://xxxxxxxx.supabase.co';
-var SB_KEY = 'eyJhbGciOi...(anon public)';
+var SB_URL = 'https://xxxx.supabase.co';
+var SB_KEY = 'eyJ...(anon public)';
 ```
 
-저장 후 브라우저로 `index.html` 을 열면 우측 하단에 한 번 `온라인(Supabase) 모드` 토스트가 뜹니다.
+> `service_role` 키는 절대 넣지 마세요. anon 키는 공개돼도 되는 키지만,
+> 그래서 **RLS 가 유일한 방어선**입니다(아래 보안).
 
-## 5. 배포 (GitHub Pages)
+## 5. GitHub Pages 활성화 (1회)
 
-```bash
-cd ~/read-together
-git add index.html docs/index.html supabase/ SUPABASE.md
-git commit -m "feat: v1 Supabase 백엔드 연동"
-git push
-```
+저장소 **Settings → Pages → Source: Deploy from a branch → `master` / `/ (root)`** → Save.
+이후 **모든 push 마다 Pages 가 자동 재배포**됩니다.
 
-- Pages 게시 소스가 `/`면 루트 `index.html`, `/docs`면 `docs/index.html` 이 서비스됩니다.
-  (Settings → Pages 에서 확인. 둘 다 갱신해 두면 안전)
-- `anon` 키는 공개돼도 되는 키지만, 그래서 **RLS 가 유일한 방어선**입니다.
-  v1 스키마는 데모 등급(anon 전체 허용)입니다 — 사내 비공개 모임 수준에서만 쓰세요.
+URL: **https://ppmj789.github.io/read-together/**
+
+## 6. 검증
+
+Pages URL → 회원: 휴대폰 4자리 입장 / 모임장: `모임 관리` 코드 `HUMAN-Q2` 비번 `1234`.
+다른 기기·브라우저에서 같은 데이터가 보이면 멀티유저 성공.
 
 ---
 
-## 데이터 모델 요약
+## 데이터 모델
 
 | 테이블 | 의미 |
 |---|---|
-| `meeting` | 모임(시즌). `code`+`password` 가 모임장 공용계정 |
-| `book` | 모임 안의 책. `questions` jsonb = 질문 배열 |
-| `member_book` | (책, phone4) — 제출여부 · 다축 별점 · 닉네임 |
-| `answer` | (책, phone4, 질문번호) 답변 1행 |
-| `comment` | 어떤 사람의 답변에 달린 댓글 |
+| `meeting` | 모임(시즌). `code`+`password`=모임장 공용계정 |
+| `book` | 책. `questions` jsonb |
+| `member_book` | (책,phone4) 제출여부·다축 별점·닉네임 |
+| `answer` | (책,phone4,질문) 답변 |
+| `comment` | 답변에 달린 댓글 |
 
-식별자 = 휴대폰 뒤 4자리(`phone4`). 인증 아님(사내 신뢰 모델). 닉네임은 책마다 자동.
+식별자 = 휴대폰 뒤 4자리. 인증 아님(사내 신뢰 모델).
 
-## 동작 매핑 (프론트 → Supabase)
+## 보안 / 한계 (공개 전 확인)
 
-- 모임 리스트 / 입장 → `meeting`,`book` select
-- 모임 만들기(시즌 빌더) → `meeting`,`book` insert
-- 모임 관리(코드+비번) → `meeting` 조회 검증
-- 질문 편집 → `book.questions` update
-- 내 답변 제출 → `answer` upsert + `member_book.submitted=true`
-- 제출 직후 타인 답변 열람 → 다른 phone4 의 `answer` select
-- 책 별점 → `member_book.ratings` upsert
-- 댓글 → `comment` insert/select
-- 발표 모드(참가자·답변·별점분포·댓글) → `member_book`+`answer`+`comment` 집계
-
-## 한계 / 다음 버전
-
-- v1 RLS 는 데모 등급(누구나 read/write). 운영 시: 모임코드 스코프 정책 + Edge Function 으로 모임장 비번 검증, 답변 수정은 본인 phone4 만 등으로 강화.
-- 실시간 갱신은 폴링 없음(화면 진입·새로고침 시 최신화). 필요하면 Supabase Realtime 구독 추가.
-- phone4 4자리 충돌 가능(같은 모임 내). 소규모에선 수용, 운영 시 전체번호/초대코드로 확장.
+- github.io 는 공개 URL. anon 키가 정적 파일에 박히고 v1 RLS 는 **데모 등급
+  (anon 전체 read/write)** → URL+키를 본 사람은 데이터 조작 가능. **사내 비공개
+  소규모 전용.** 외부 공개하려면 RLS 강화(모임 스코프·모임장 비번 검증 Edge
+  Function) 선행 필요.
+- 공감(💛) 미영속, 실시간 갱신 없음(화면 진입 시 최신화), phone4 4자리 충돌 가능.
