@@ -539,8 +539,8 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ═══════════ Supabase 설정 (비우면 localStorage 모드) ═══════════ */
-var SB_URL = '';   /* 예: https://xxxx.supabase.co  — SUPABASE.md 4단계 */
-var SB_KEY = '';   /* anon public 키 */
+var SB_URL = 'https://kkkmsnyiwliovitsmsmw.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtra21zbnlpd2xpb3ZpdHNtc213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTgzNDEsImV4cCI6MjA5NDczNDM0MX0.lNYzLXqyI2cVsxm2yhKgvnIIZpqeIV4TEw-S0gAVb5I';   /* anon public */
 var sb=null, ONLINE=false;
 try{ if(SB_URL&&SB_KEY&&window.supabase){ sb=window.supabase.createClient(SB_URL,SB_KEY); ONLINE=true; } }catch(e){ ONLINE=false; }
 
