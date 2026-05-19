@@ -221,6 +221,10 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .qrow__del{flex:0 0 auto;width:38px;height:38px;border-radius:var(--radius-pill);border:1px solid var(--rule);background:var(--paper);color:var(--ink-dim);cursor:pointer;font-size:15px;line-height:1}
 .qrow__del:hover{border-color:#D44;color:#D44}
 .react-on{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.qfix{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-sm);margin-bottom:8px}
+.qfix__t{flex:1;font-size:14px;font-weight:600;color:var(--ink);line-height:1.45}
+.qfix__btn{flex:0 0 auto;background:none;border:1px solid var(--rule);color:var(--ink-soft);font-size:12px;font-weight:700;padding:5px 12px;border-radius:var(--radius-pill);cursor:pointer;transition:border-color .15s,color .15s}
+.qfix__btn:hover{border-color:var(--accent);color:var(--accent)}
 
 /* ═══ BOOK HEADER (답변 상단 책 정보) ═══ */
 .book-head{display:flex;gap:14px;align-items:center;background:var(--paper-warm);border:1px solid var(--rule);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:18px}
@@ -406,6 +410,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
     <span class="masthead__center"><b id="hdr-nick">—</b></span>
     <div style="display:flex;align-items:center;gap:8px">
       <button class="mode-toggle" onclick="toggleMode()" id="mode-toggle-btn" style="display:none">발표 모드</button>
+      <button class="mode-toggle" onclick="logout()" id="logout-btn" style="display:none">로그아웃</button>
     </div>
   </div>
 </header>
@@ -701,12 +706,12 @@ function applySchedule(books){
 function rtErr(e){console.error('[Supabase]',e);toast('서버 오류: '+((e&&e.message)||'요청 실패'));}
 var RT={
   async loadMeetings(){
-    var r=await sb.from('meeting').select('id,name,code,password,season_title,season_sub,book(id,ord,title,author,intro,author_bio,yearmonth,questions)');
+    var r=await sb.from('meeting').select('id,name,code,password,season_title,season_sub,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links)');
     if(r.error){rtErr(r.error);return;}
     MEET_CACHE=(r.data||[]).map(function(m){
       var books=(m.book||[]).slice().sort(function(a,b){return (a.ord||0)-(b.ord||0);}).map(function(bk){
         var qs=Array.isArray(bk.questions)?bk.questions:[];
-        return {id:bk.id,title:bk.title,author:bk.author||'(저자 미상)',spine:(bk.title||'?').charAt(0),status:'current',yearmonth:bk.yearmonth||'',month:fmtYM(bk.yearmonth)||((bk.ord||0)+'권'),angle:'',tagline:bk.title,intro:bk.intro||'(책 소개 미입력)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:bk.author_bio||'',bio:[],links:[],questions:qs,others:qs.map(function(){return [];})};
+        return {id:bk.id,title:bk.title,author:bk.author||'(저자 미상)',spine:(bk.title||'?').charAt(0),status:'current',yearmonth:bk.yearmonth||'',month:fmtYM(bk.yearmonth)||((bk.ord||0)+'권'),angle:'',tagline:bk.title,intro:bk.intro||'(책 소개 미입력)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:bk.author_bio||'',bio:(Array.isArray(bk.author_facts)?bk.author_facts:[]),links:(Array.isArray(bk.links)?bk.links:[]),questions:qs,others:qs.map(function(){return [];})};
       });
       applySchedule(books);
       return {id:m.id,name:m.name,code:m.code,pw:m.password,kind:'custom',
@@ -797,7 +802,7 @@ var RT={
     var code=rndCode(),pw=String(Math.floor(1000+Math.random()*9000));
     var mi=await sb.from('meeting').insert({name:name,code:code,password:pw,season_title:stitle,season_sub:ssub||''}).select('id').single();
     if(mi.error){rtErr(mi.error);return null;}
-    var rows=books.map(function(b,i){return {meeting_id:mi.data.id,ord:i+1,title:b.title,author:b.author||'(저자 미상)',intro:b.intro||'',author_bio:b.authorBio||'',yearmonth:b.yearmonth||'',questions:b.questions.filter(function(q){return q&&q.trim();})};});
+    var rows=books.map(function(b,i){return {meeting_id:mi.data.id,ord:i+1,title:b.title,author:b.author||'(저자 미상)',intro:b.intro||'',author_bio:b.authorBio||'',yearmonth:b.yearmonth||'',questions:b.questions.filter(function(q){return q&&q.trim();}),author_facts:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {i:'🔗',t:s,m:''};})};});
     var be=(await sb.from('book').insert(rows)).error;
     if(be){rtErr(be);return null;}
     await RT.loadMeetings();
@@ -839,7 +844,36 @@ function go(name){
     var label={book:'사전정보',discussion:'답변',history:'내 기록'}[name];
     document.getElementById('subbar-crumb').innerHTML=(bk&&name!=='history'?'<b>'+esc(bk.title)+'</b> · ':'')+label;
   }
+  sessSave(name);
   window.scrollTo(0,0);
+}
+/* ── 세션 기억 (새로고침해도 있던 화면 복원) ── */
+function sessSave(page){
+  if(!STATE.phone4 && !STATE.isHost) return;
+  var s={p4:STATE.phone4,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId,pg:page||''};
+  try{localStorage.setItem('rt:sess',JSON.stringify(s));}catch(e){MEM['rt:sess']=JSON.stringify(s);}
+}
+function sessRead(){
+  try{var v=localStorage.getItem('rt:sess');return v?JSON.parse(v):null;}
+  catch(e){return MEM['rt:sess']?JSON.parse(MEM['rt:sess']):null;}
+}
+function sessClear(){ try{localStorage.removeItem('rt:sess');}catch(e){} if(MEM)delete MEM['rt:sess']; }
+function syncAuthUI(){ var b=document.getElementById('logout-btn'); if(b)b.style.display=(STATE.phone4||STATE.isHost)?'inline-flex':'none'; }
+function logout(){
+  if(isStage) setStage(false);
+  sessClear();
+  STATE.phone4=null;STATE.bookId=null;STATE.isHost=false;
+  setNick();syncHostUI();syncAuthUI();
+  go('login');toast('로그아웃됐어요');
+}
+async function sessRestore(){
+  var s=sessRead(); if(!s||(!s.p4&&!s.host)) return false;
+  STATE.phone4=s.p4||null; STATE.meetingId=s.mid||STATE.meetingId; STATE.isHost=!!s.host; STATE.bookId=s.bid||null;
+  if(ONLINE){ try{ await RT.loadMeetings(); if(STATE.bookId) await RT.loadBook(STATE.bookId); }catch(e){ rtErr(e); } }
+  setNick(); syncHostUI(); syncAuthUI();
+  var ok=['meetings','season','book','discussion','history','create','manage'];
+  var pg=(ok.indexOf(s.pg)>=0)?s.pg:(STATE.isHost?'season':'meetings');
+  go(pg); return true;
 }
 function back(){
   var cur=document.querySelector('.page.active');
@@ -870,7 +904,8 @@ function renderMeetings(){
   if(!STATE.phone4){go(STATE.isHost?'season':'login');return;}
   var ms=allMeetings(),h=''+
    '<div class="section-hd"><div><div class="eyebrow">모임</div><h2 class="h-1 mt-4">참여 가능한<br>모임.</h2></div></div>'+
-   '<p class="body-2 mb-16">휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4)+'</b> · 들어갈 모임을 선택하세요. 닉네임은 책마다 자동 배정됩니다.</p>';
+   '<p class="body-2 mb-16">휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4)+'</b> · 들어갈 모임을 선택하세요. 닉네임은 책마다 자동 배정됩니다.</p>'+
+   '<div class="season-books">';
   ms.forEach(function(m){
     var sn=m.kind==='custom'?m.season:SEASON;
     var sub=sn.books.length+'권 시즌'+(m.kind==='custom'?' · 모임장 개설':'');
@@ -881,6 +916,7 @@ function renderMeetings(){
       '<div class="book-card__author">'+esc(sub)+'</div></div>'+
       '<span class="book-card__go">입장 &rarr;</span></div>';
   });
+  h+='</div>';
   document.getElementById('page-meetings').innerHTML=h;
 }
 function enterMeeting(id){STATE.meetingId=id;STATE.bookId=null;setNick();go('season');toast('모임에 입장했어요');}
@@ -909,27 +945,48 @@ function renderCreate(){
         '<div class="body-2">'+esc(bk.author||'저자 미상')+'</div></div>'+
         '<span class="tag '+(nq?'tag-accent':'')+'">질문 '+nq+'</span></div>';
       if(BUILD.open===i){
+        bk.facts=bk.facts||[];bk.links=bk.links||[];
+        var lab='style="display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin:16px 0 6px"';
         var qh='';
         bk.questions.forEach(function(q,k){
           qh+='<div class="qrow"><input class="input" id="bk-q-'+i+'-'+k+'" value="'+esc(q||'')+'" placeholder="질문 '+(k+1)+'">'+
             (bk.questions.length>1?'<button class="qrow__del" title="삭제" onclick="removeBuildQ('+i+','+k+')">&times;</button>':'')+'</div>';
         });
+        var fh='';
+        bk.facts.forEach(function(f,k){
+          fh+='<div class="qrow"><input class="input" id="bk-f-'+i+'-'+k+'" value="'+esc(f||'')+'" placeholder="예: 글 쓸 때 늘 재즈를 듣는다">'+
+            '<button class="qrow__del" title="삭제" onclick="removeBuildFact('+i+','+k+')">&times;</button></div>';
+        });
+        var lh='';
+        bk.links.forEach(function(l,k){
+          lh+='<div class="qrow"><input class="input" id="bk-l-'+i+'-'+k+'" value="'+esc(l||'')+'" placeholder="예: 작가 인터뷰 — youtube.com">'+
+            '<button class="qrow__del" title="삭제" onclick="removeBuildLink('+i+','+k+')">&times;</button></div>';
+        });
         h+='<div onclick="event.stopPropagation()" style="margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:14px">'+
           '<div class="field"><label>책 소개 (선택 · 교보문고 등에서 복사)</label><textarea class="input" id="bk-intro-'+i+'" rows="2" placeholder="이 책은…">'+esc(bk.intro||'')+'</textarea></div>'+
           '<div class="field"><label>작가 소개 (선택)</label><textarea class="input" id="bk-bio-'+i+'" rows="2" placeholder="작가는…">'+esc(bk.authorBio||'')+'</textarea></div>'+
           '<div class="field"><label>회차 연월 (예: 202607)</label><input class="input" id="bk-ym-'+i+'" value="'+esc(bk.yearmonth||'')+'" inputmode="numeric" maxlength="6" placeholder="YYYYMM"></div>'+
-          '<label style="display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px">질문 ('+bk.questions.length+'개)</label>'+qh+
+          '<label '+lab+'>질문 ('+bk.questions.length+'개)</label>'+qh+
           '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBuildQ('+i+')">+ 질문 추가</button>'+
+          '<label '+lab+'>재미있는 사실 (선택)</label>'+fh+
+          '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBuildFact('+i+')">+ 사실 추가</button>'+
+          '<label '+lab+'>같이 볼 콘텐츠 (선택)</label>'+lh+
+          '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBuildLink('+i+')">+ 콘텐츠 추가</button>'+
           '<div class="row mt-16"><button class="btn btn-primary btn-sm btn-pill" onclick="saveBuildBook('+i+')">저장</button>'+
           '<button class="btn btn-ghost btn-sm btn-pill" onclick="delBuildBook('+i+')">책 삭제</button></div></div>';
       }
       h+='</div>';
     });
-    h+='<div class="sheet sheet--warm"><div class="eyebrow mb-8">책 추가</div>'+
-      '<div class="field"><label>책 제목</label><input class="input" id="ab-title" placeholder="예: 프로젝트 헤일메리"></div>'+
-      '<div class="field"><label>저자</label><input class="input" id="ab-author" placeholder="예: 앤디 위어"></div>'+
-      '<button class="btn btn-pill" onclick="addBuildBook()">+ 책 추가</button></div>'+
-      '<button class="btn btn-primary btn-pill" onclick="issueMeeting()">모임 발급하기 (코드·비번)</button>'+
+    if(BUILD.adding){
+      h+='<div class="sheet sheet--warm"><div class="eyebrow mb-8">새 책</div>'+
+        '<div class="field"><label>책 제목</label><input class="input" id="ab-title" placeholder="예: 프로젝트 헤일메리"></div>'+
+        '<div class="field"><label>저자</label><input class="input" id="ab-author" placeholder="예: 앤디 위어"></div>'+
+        '<div class="row"><button class="btn btn-primary btn-sm btn-pill" onclick="addBuildBook()">추가</button>'+
+        '<button class="btn btn-ghost btn-sm btn-pill" onclick="BUILD.adding=false;renderCreate()">취소</button></div></div>';
+    } else {
+      h+='<button class="btn btn-pill" onclick="BUILD.adding=true;renderCreate()">+ 책 추가하기</button>';
+    }
+    h+='<button class="btn btn-primary btn-pill mt-12" onclick="issueMeeting()">모임 발급하기 (코드·비번)</button>'+
       '<button class="btn btn-ghost btn-pill mt-12" onclick="BUILD.stage=\'season\';renderCreate()">&larr; 시즌 정보로</button>'+
       '<div id="cb-result"></div>';
   }
@@ -948,16 +1005,22 @@ function readBuildBook(i){
   bk.yearmonth=(val('bk-ym-'+i)||'').replace(/[^0-9]/g,'').slice(0,6);
   var qs=[];for(var k=0;k<bk.questions.length;k++){var el=document.getElementById('bk-q-'+i+'-'+k);qs.push(el?el.value.trim():(bk.questions[k]||''));}
   bk.questions=qs;
+  bk.facts=bk.facts||[];var fs=[];for(var a=0;a<bk.facts.length;a++){var fe=document.getElementById('bk-f-'+i+'-'+a);fs.push(fe?fe.value.trim():(bk.facts[a]||''));}bk.facts=fs;
+  bk.links=bk.links||[];var ls=[];for(var c=0;c<bk.links.length;c++){var le=document.getElementById('bk-l-'+i+'-'+c);ls.push(le?le.value.trim():(bk.links[c]||''));}bk.links=ls;
 }
 function addBuildBook(){
   var t=val('ab-title');if(!t){toast('책 제목을 입력해주세요');return;}
-  BUILD.books.push({title:t,author:val('ab-author'),intro:'',authorBio:'',yearmonth:'',questions:['']});
-  BUILD.open=BUILD.books.length-1;BUILD.justAdded=BUILD.open;renderCreate();
-  toast('「'+t+'」 추가됨 · 카드를 눌러 질문을 붙이세요');
+  BUILD.books.push({title:t,author:val('ab-author'),intro:'',authorBio:'',yearmonth:'',questions:[''],facts:[],links:[]});
+  BUILD.open=BUILD.books.length-1;BUILD.justAdded=BUILD.open;BUILD.adding=false;renderCreate();
+  toast('「'+t+'」 추가됨 · 카드를 눌러 내용을 채우세요');
 }
 function toggleBuildBook(i){ if(BUILD.open!==-1)readBuildBook(BUILD.open); BUILD.open=(BUILD.open===i?-1:i);renderCreate(); }
 function addBuildQ(i){ readBuildBook(i); BUILD.books[i].questions.push(''); renderCreate(); }
 function removeBuildQ(i,k){ readBuildBook(i); if(BUILD.books[i].questions.length<=1)return; BUILD.books[i].questions.splice(k,1); renderCreate(); }
+function addBuildFact(i){ readBuildBook(i); (BUILD.books[i].facts=BUILD.books[i].facts||[]).push(''); renderCreate(); }
+function removeBuildFact(i,k){ readBuildBook(i); BUILD.books[i].facts.splice(k,1); renderCreate(); }
+function addBuildLink(i){ readBuildBook(i); (BUILD.books[i].links=BUILD.books[i].links||[]).push(''); renderCreate(); }
+function removeBuildLink(i,k){ readBuildBook(i); BUILD.books[i].links.splice(k,1); renderCreate(); }
 function saveBuildBook(i){
   readBuildBook(i);
   var n=BUILD.books[i].questions.filter(function(q){return q&&q.trim();}).length;
@@ -981,7 +1044,7 @@ async function issueMeeting(){
     var season={title:BUILD.stitle,sub:BUILD.ssub,eyebrow:'모임 · '+BUILD.name,meta:'모임장이 개설한 시즌 · 코드 '+code,
       books:BUILD.books.map(function(b,i){
         var qs=b.questions.filter(function(q){return q&&q.trim();});
-        return {id:mid+'-b'+i,title:b.title,author:b.author||'(저자 미상)',spine:b.title.charAt(0),status:'current',yearmonth:b.yearmonth||'',month:fmtYM(b.yearmonth)||((i+1)+'권'),angle:'',tagline:b.title,intro:b.intro||'(책 소개 미입력 — 모임장이 채울 수 있어요)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:b.authorBio||'',bio:[],links:[],questions:qs,others:qs.map(function(){return [];})};
+        return {id:mid+'-b'+i,title:b.title,author:b.author||'(저자 미상)',spine:b.title.charAt(0),status:'current',yearmonth:b.yearmonth||'',month:fmtYM(b.yearmonth)||((i+1)+'권'),angle:'',tagline:b.title,intro:b.intro||'(책 소개 미입력 — 모임장이 채울 수 있어요)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:b.authorBio||'',bio:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {i:'🔗',t:s,m:''};}),questions:qs,others:qs.map(function(){return [];})};
       })};
     applySchedule(season.books);
     var cs=customMeetings();cs.push({id:mid,name:BUILD.name,code:code,pw:pw,kind:'custom',season:season});saveCustomMeetings(cs);
@@ -1047,7 +1110,8 @@ function showStageScene(name){
 }
 
 /* ═══════════ RENDER: 시즌 포탈 ═══════════ */
-var EDIT={bookId:null};
+var EDIT={bookId:null,qi:-1};
+var EDITANS={qi:-1};
 function qeStore(){try{return JSON.parse(localStorage.getItem('rt:qedits'))||{};}catch(e){return MEM['rt:qedits']?JSON.parse(MEM['rt:qedits']):{};}}
 function qeSave(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:qedits',v);}catch(e){MEM['rt:qedits']=v;}}
 function applyQEdits(){var o=qeStore();SEASON.books.forEach(function(b){if(o[b.id])b.questions=o[b.id].slice();});}
@@ -1057,13 +1121,33 @@ function saveBookQuestions(id,arr){
   if(done){saveCustomMeetings(cs);return;}
   var o=qeStore();o[id]=arr;qeSave(o);applyQEdits();
 }
-function toggleEditQ(id){EDIT.bookId=(EDIT.bookId===id?null:id);renderSeason();}
-async function saveQ(id){
-  var arr=[val('eq-0'),val('eq-1'),val('eq-2')].filter(function(q){return q&&q.trim();});
-  if(!arr.length){toast('질문을 1개 이상 입력해주세요');return;}
-  if(ONLINE){ if(!(await RT.saveQuestions(id,arr))) return; }
-  else { saveBookQuestions(id,arr); }
-  EDIT.bookId=null;renderSeason();toast('질문을 저장했어요');
+function toggleEditQ(id){EDIT.bookId=(EDIT.bookId===id?null:id);EDIT.qi=-1;renderSeason();}
+function editQ(id,k){EDIT.bookId=id;EDIT.qi=k;renderSeason();}
+function cancelQ(){EDIT.qi=-1;renderSeason();}
+async function persistQuestions(id,arr){
+  if(ONLINE){ return await RT.saveQuestions(id,arr); }
+  saveBookQuestions(id,arr); return true;
+}
+async function saveQ1(id,k){
+  var b=bookById(id);if(!b)return;
+  var el=document.getElementById('eq-'+k),v=el?el.value.trim():'';
+  if(!v){toast('질문을 입력해주세요');return;}
+  var arr=(b.questions||[]).slice();arr[k]=v;
+  if(!(await persistQuestions(id,arr)))return;
+  EDIT.qi=-1;renderSeason();toast('질문 저장됨');
+}
+function addQ2(id){
+  var b=bookById(id);if(!b)return;
+  b.questions=(b.questions||[]).slice();b.questions.push('');
+  EDIT.bookId=id;EDIT.qi=b.questions.length-1;renderSeason();
+}
+async function delQ2(id,k){
+  var b=bookById(id);if(!b)return;
+  var arr=(b.questions||[]).slice();
+  if(arr.length<=1){toast('질문은 최소 1개 필요해요');return;}
+  arr.splice(k,1);
+  if(!(await persistQuestions(id,arr)))return;
+  EDIT.qi=-1;renderSeason();toast('질문 삭제됨');
 }
 function renderSeason(){
   var m=activeMeeting(),custom=(m.kind==='custom'),sn=custom?m.season:SEASON,books=sn.books;
@@ -1099,12 +1183,22 @@ function renderSeason(){
        '<span class="book-card__badge '+(cur?'now':'soon')+'">'+bl+'</span>'+
      '</div>';
     if(STATE.isHost&&EDIT.bookId===b.id){
-      h+='<div class="sheet sheet--warm" style="margin-top:8px"><div class="eyebrow mb-8">질문 편집 · '+esc(b.title)+'</div>'+
-        '<div class="field"><label>질문 1</label><input class="input" id="eq-0" value="'+esc(b.questions[0]||'')+'"></div>'+
-        '<div class="field"><label>질문 2</label><input class="input" id="eq-1" value="'+esc(b.questions[1]||'')+'"></div>'+
-        '<div class="field"><label>질문 3</label><input class="input" id="eq-2" value="'+esc(b.questions[2]||'')+'"></div>'+
-        '<div class="row"><button class="btn btn-primary btn-sm btn-pill" onclick="saveQ(\''+b.id+'\')">저장</button>'+
+      var qs=b.questions||[];
+      var qe='<div class="sheet sheet--warm" style="margin-top:8px"><div class="eyebrow mb-12">질문 · '+esc(b.title)+'</div>';
+      qs.forEach(function(q,k){
+        if(EDIT.qi===k){
+          qe+='<div class="qrow"><input class="input" id="eq-'+k+'" value="'+esc(q||'')+'" placeholder="질문 '+(k+1)+'">'+
+            '<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="saveQ1(\''+b.id+'\','+k+')">저장</button>'+
+            '<button class="qrow__del" title="취소" onclick="cancelQ()">&times;</button></div>';
+        } else {
+          qe+='<div class="qfix"><span class="qfix__t">Q'+(k+1)+'. '+(q?esc(q):'<span class="dim">빈 질문 — 편집을 눌러 작성</span>')+'</span>'+
+            '<button class="qfix__btn" onclick="editQ(\''+b.id+'\','+k+')">편집</button>'+
+            (qs.length>1?'<button class="qfix__btn" onclick="delQ2(\''+b.id+'\','+k+')">삭제</button>':'')+'</div>';
+        }
+      });
+      qe+='<div class="row mt-12"><button class="btn btn-ghost btn-sm btn-pill" onclick="addQ2(\''+b.id+'\')">+ 질문 추가</button>'+
         '<button class="btn btn-ghost btn-sm btn-pill" onclick="toggleEditQ(\''+b.id+'\')">닫기</button></div></div>';
+      h+=qe;
     }
     if(i<books.length-1) h+='<div class="season-rail"></div>';
   });
@@ -1184,8 +1278,14 @@ function renderDiscussion(){
       h+='<div class="sheet">'+
         '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
         '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
-        '<div class="answer mine"><div class="answer__who"><span><b>나 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>제출됨</span></div>'+
-          '<div class="answer__body">'+esc(bs.answers[i]||'')+'</div></div>';
+        '<div class="answer mine"><div class="answer__who"><span><b>나 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>'+(EDITANS.qi===i?'수정 중':'제출됨')+'</span></div>'+
+          (EDITANS.qi===i
+            ? '<textarea class="input" id="ea-'+i+'" rows="3">'+esc(bs.answers[i]||'')+'</textarea>'+
+              '<div class="row mt-12"><button class="btn btn-primary btn-sm btn-pill" onclick="saveAns('+i+')">저장</button>'+
+              '<button class="btn btn-ghost btn-sm btn-pill" onclick="cancelAns()">취소</button></div>'
+            : '<div class="answer__body">'+esc(bs.answers[i]||'')+'</div>'+
+              '<div class="reaction-row"><button class="reaction-btn" onclick="editAns('+i+')">✏️ 수정</button></div>')+
+          '</div>';
       (b.others[i]||[]).forEach(function(o,j){
         var ck='q'+i+'a'+j, list=(bs.comments[ck]||[]);
         var rc=(b.reactions&&b.reactions[ck])||(bs.reactions&&bs.reactions[ck])||{count:0,mine:false};
@@ -1234,6 +1334,17 @@ async function submitAnswers(){
   else { bs.submitted=true;setBookState(b.id,bs); }
   toast('답변 제출 완료! 다른 사람 답변이 열렸어요');
   renderDiscussion();
+}
+function editAns(i){ EDITANS.qi=i; renderDiscussion(); }
+function cancelAns(){ EDITANS.qi=-1; renderDiscussion(); }
+async function saveAns(i){
+  var b=bookById(STATE.bookId),bs=bookState(b.id);
+  var el=document.getElementById('ea-'+i),v=el?el.value.trim():'';
+  if(!v){toast('답변을 입력해주세요');return;}
+  bs.answers[i]=v;
+  if(ONLINE){ if(!(await RT.submit(b.id,bs.answers))) return; }
+  else { setBookState(b.id,bs); }
+  EDITANS.qi=-1; renderDiscussion(); toast('답변을 수정했어요');
 }
 function setRating(k,n){
   var b=bookById(STATE.bookId),bs=bookState(b.id);
@@ -1486,6 +1597,8 @@ function renderStageAll(){STAGE.bookId=currentBookId();STAGE.order=[];STAGE.pick
 applyQEdits();
 setNick();
 syncHostUI();
+syncAuthUI();
+(async function(){ try{ await sessRestore(); }catch(e){ console.error(e); } })();
 </script>
 </body>
 </html>
