@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>같이읽자 — 정적 미리보기</title>
+<title>untoldChapter — 우리만의 다음 페이지</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@
   --ink:#1A1612;--ink-soft:#6B5E50;--ink-dim:rgba(26,22,18,.45);
   --rule:#D4CFC4;--rule-soft:rgba(26,22,18,.10);
   --accent:#3B5998;--accent-soft:#4A6DB5;--accent-tint:rgba(59,89,152,.08);--accent-ink:#fff;
-  --highlight:#EDE8DA;--success:#2D8659;--success-tint:rgba(45,134,89,.10);
+  --highlight:#EDE8DA;--success:#2D8659;--success-tint:rgba(45,134,89,.10);--star:#E8B23A;
   --radius-sm:8px;--radius-md:12px;--radius-lg:20px;--radius-pill:9999px;
   --shadow-sm:0 1px 3px rgba(0,0,0,.06);--shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 30px rgba(0,0,0,.10);
   --display:'Pretendard Variable','Pretendard','Apple SD Gothic Neo',sans-serif;
@@ -29,19 +29,30 @@ body{font-family:'Pretendard Variable','Pretendard',sans-serif;font-size:15px;li
 .masthead{position:fixed;top:0;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--rule);z-index:60;backdrop-filter:blur(12px)}
 .masthead__row{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;gap:12px}
 .masthead__title{font-family:var(--display);font-weight:900;font-size:22px;letter-spacing:-.04em;color:var(--ink);text-decoration:none;cursor:pointer}
-.masthead__center{flex:1;text-align:center;font-size:13px;color:var(--ink-dim)}
-.masthead__center b{font-weight:600;color:var(--ink)}
+.masthead__title .mh-accent{color:var(--accent)}
+.masthead__center{flex:1;text-align:center;font-size:11px;color:var(--ink-dim)}
+.masthead__center b{display:block;font-family:var(--display);font-weight:800;font-size:18px;color:var(--ink);letter-spacing:-.02em;line-height:1.15}
 
-/* ═══ NAV ═══ */
-.toc{position:fixed;top:54px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--rule);z-index:59;display:flex;justify-content:center;padding:8px 16px;gap:0}
+/* ═══ STAGE NAV (발표 모드 전용) ═══ */
+.toc{position:fixed;top:54px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--rule);z-index:59;display:none;justify-content:center;padding:8px 16px;gap:0}
+.toc.visible{display:flex}
 .toc__group{display:flex;justify-content:center;gap:6px}
 .toc a{display:flex;align-items:center;gap:6px;padding:9px 20px;text-decoration:none;color:var(--ink-soft);font-family:var(--display);font-weight:600;font-size:15px;border-radius:var(--radius-pill);transition:all .2s;white-space:nowrap;cursor:pointer}
 .toc a:hover{background:var(--accent-tint);color:var(--ink)}
 .toc a.active{background:var(--accent);color:#fff}
 
+/* ═══ SUBBAR (개인 모드 경량 네비 — 홈/뒤로) ═══ */
+.subbar{position:fixed;top:54px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--rule);z-index:59;display:none;align-items:center;gap:8px;padding:9px 16px;font-size:13px}
+.subbar.visible{display:flex}
+.subbar a{display:inline-flex;align-items:center;gap:5px;color:var(--ink-soft);font-weight:600;text-decoration:none;cursor:pointer;padding:6px 12px;border-radius:var(--radius-pill);transition:all .2s}
+.subbar a:hover{background:var(--accent-tint);color:var(--accent)}
+.subbar__crumb{flex:1;text-align:right;color:var(--ink-dim);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subbar__crumb b{color:var(--ink);font-weight:700}
+
 /* ═══ LAYOUT ═══ */
-.main{padding:120px 20px 100px;max-width:520px;margin:0 auto}
+.main{padding:74px 20px 100px;max-width:520px;margin:0 auto}
 .main.hidden{display:none}
+body.has-subbar .main{padding-top:116px}
 .stage-wrap{display:none;position:fixed;top:100px;left:0;right:0;bottom:0;background:var(--bg);overflow-y:auto;padding:24px 36px 40px}
 .stage-wrap.visible{display:block}
 
@@ -79,6 +90,8 @@ body{font-family:'Pretendard Variable','Pretendard',sans-serif;font-size:15px;li
 .btn-ghost:hover{background:var(--accent-tint);border-color:var(--accent);color:var(--accent)}
 .btn-sm{min-height:36px;padding:7px 14px;font-size:13px}
 .btn-pill{border-radius:var(--radius-pill)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn[disabled]:hover{background:var(--paper);color:var(--ink);border-color:var(--rule);transform:none;box-shadow:none}
 .btn-arrow .arr{display:inline-block;transition:transform .2s;margin-left:2px}
 .btn-arrow:hover .arr{transform:translateX(3px)}
 .row{display:flex;gap:8px}.row>*{flex:1}
@@ -97,11 +110,6 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .field{margin-bottom:16px}
 .field label{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
 
-/* Tabs */
-.tabs{display:flex;background:var(--highlight);border-radius:var(--radius-md);padding:4px;margin-bottom:20px;gap:4px}
-.tab{flex:1;padding:10px 8px;border:none;background:transparent;color:var(--ink-soft);font-family:var(--display);font-weight:600;font-size:15px;cursor:pointer;border-radius:var(--radius-sm);transition:all .2s}
-.tab.active{background:var(--paper);color:var(--ink);box-shadow:var(--shadow-sm)}
-
 /* Steps */
 .steps{display:flex;flex-direction:column;gap:2px}
 .step{display:flex;align-items:flex-start;gap:16px;padding:16px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-md);transition:all .2s}
@@ -111,12 +119,11 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .step .sub{font-size:13px;color:var(--ink-soft);margin-top:3px;line-height:1.5}
 
 /* Hero */
-.hero{padding:40px 4px 32px;text-align:center;margin-bottom:28px}
+.hero{padding:32px 4px 24px;text-align:center;margin-bottom:20px}
 .hero__issue{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--ink-dim);text-transform:uppercase;margin-bottom:20px}
 .hero__title{font-family:var(--display);font-weight:900;font-size:64px;line-height:.95;letter-spacing:-.05em;color:var(--ink);margin-bottom:20px}
 .hero__title .accent{color:var(--accent)}
 .hero__sub{font-size:16px;line-height:1.6;color:var(--ink-soft);font-weight:500;max-width:80%;margin:0 auto}
-.hero__byline{font-size:12px;font-weight:500;color:var(--ink-dim);margin-top:24px;display:flex;justify-content:center;gap:16px}
 
 /* Cover */
 .cover{position:relative;background:var(--accent);color:#fff;border-radius:var(--radius-lg);padding:24px 20px;display:flex;flex-direction:column;justify-content:space-between;margin-bottom:20px;overflow:hidden;box-shadow:var(--shadow-lg)}
@@ -153,15 +160,6 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .profile-stat__num{font-family:var(--display);font-weight:800;font-size:22px;color:var(--accent)}
 .profile-stat__label{font-size:12px;color:var(--ink-dim);margin-top:2px}
 
-/* Timer */
-.timer-wrap{text-align:center;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:28px 20px 24px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
-.timer{font-family:var(--display);font-weight:900;font-size:80px;line-height:1;letter-spacing:-.05em;color:var(--ink);font-variant-numeric:tabular-nums;transition:color .2s}
-.timer.danger{color:#D44;animation:pulse 1.2s ease-in-out infinite}
-@keyframes pulse{50%{opacity:.5}}
-.timer-meta{font-size:14px;color:var(--ink-soft);font-weight:500;margin:8px 0 16px}
-.timer-controls{display:flex;gap:8px;justify-content:center}
-.timer-controls .btn{width:auto;flex:0 0 auto;min-width:80px;border-radius:var(--radius-pill)}
-
 /* Toast */
 .toast-area{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:center}
 .alert{padding:10px 20px;background:var(--success);color:#fff;font-size:14px;font-weight:500;pointer-events:auto;border-radius:var(--radius-pill);display:flex;align-items:center;gap:8px;animation:toastIn .3s ease;box-shadow:var(--shadow-lg)}
@@ -170,6 +168,107 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 /* Mode toggle */
 .mode-toggle{display:inline-flex;align-items:center;gap:5px;background:var(--paper);border:1px solid var(--rule);font-size:12px;font-weight:600;color:var(--ink-soft);padding:6px 12px;cursor:pointer;border-radius:var(--radius-pill);transition:all .2s}
 .mode-toggle:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-tint)}
+
+/* ═══ LOGIN (휴대폰 뒤 4자리) ═══ */
+.login-wrap{max-width:380px;margin:0 auto;text-align:center}
+.pin-input{font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:.45em;text-align:center;padding:18px 16px;text-indent:.45em}
+.pin-input::placeholder{letter-spacing:.25em;font-size:20px;font-weight:500;text-indent:.25em}
+.login-hint{font-size:12px;color:var(--ink-dim);margin-top:14px;line-height:1.6}
+.host-links{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:18px;font-size:13px}
+.host-links a{color:var(--ink-soft);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.host-links a:hover{color:var(--accent)}
+.host-links span{color:var(--ink-dim)}
+.host-banner{background:var(--accent-tint);border:1px solid var(--accent);color:var(--accent);font-size:13px;font-weight:600;padding:10px 14px;border-radius:var(--radius-md);margin-bottom:14px;text-align:center}
+.code-box{background:var(--paper-warm);border:1px dashed var(--accent);border-radius:var(--radius-md);padding:18px;margin-top:16px}
+.code-box__row{font-size:15px;color:var(--ink-soft);font-weight:600;margin:6px 0}
+.code-box__row b{font-family:var(--display);font-weight:900;font-size:22px;color:var(--accent);letter-spacing:.05em;margin-left:8px}
+.book-card__host{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-soft);flex-wrap:wrap}
+.book-card__host .btn{min-height:36px}
+
+/* ═══ SEASON PORTAL ═══ */
+.season-hd{text-align:center;padding:20px 0 4px}
+.season-hd__eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-dim);margin-bottom:12px}
+.season-hd__title{font-family:var(--display);font-weight:900;font-size:clamp(34px,8.5vw,52px);line-height:1.04;letter-spacing:-.045em;color:var(--ink)}
+.season-hd__sub{font-size:16px;color:var(--accent);font-weight:700;margin-top:12px}
+.season-hd__meta{font-size:13px;color:var(--ink-soft);margin-top:8px;line-height:1.6}
+.season-books{display:flex;flex-direction:column;align-items:stretch;gap:14px;margin-top:24px}
+.book-card{position:relative;display:flex;gap:16px;align-items:stretch;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:18px;cursor:pointer;transition:transform .25s,box-shadow .25s,border-color .25s;text-align:left;box-shadow:var(--shadow-sm)}
+.book-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.book-card.upcoming{opacity:.6}
+.book-card.upcoming:hover{opacity:.85;transform:translateY(-1px)}
+.book-card.current{border-color:var(--accent);border-width:2px;background:var(--accent-tint);box-shadow:var(--shadow-md)}
+.book-card__spine{width:54px;flex-shrink:0;border-radius:var(--radius-sm);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:22px}
+.book-card.upcoming .book-card__spine{background:var(--ink-soft)}
+.book-card__body{flex:1;min-width:0;padding-right:62px}
+.book-card__month{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.book-card.upcoming .book-card__month{color:var(--ink-dim)}
+.book-card__title{font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:-.02em;margin:3px 0 2px}
+.book-card__author{font-size:13px;color:var(--ink-soft)}
+.book-card__angle{font-size:13px;color:var(--ink-soft);margin-top:9px;line-height:1.5}
+.book-card__badge{position:absolute;top:16px;right:16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:4px 11px;border-radius:var(--radius-pill)}
+.book-card__badge.now{background:var(--accent);color:#fff}
+.book-card__badge.soon{background:var(--highlight);color:var(--ink-dim)}
+.season-connector{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--ink-dim);font-size:12px;font-weight:600;padding:8px 0}
+.season-connector::before,.season-connector::after{content:"";width:2px;height:14px;background:var(--rule)}
+.season-connector::before,.season-connector::after{display:none}
+.season-rail{display:none}
+.book-card__go{position:absolute;top:50%;right:18px;transform:translateY(-50%);font-size:13px;font-weight:700;color:var(--ink-dim);letter-spacing:.02em;transition:color .2s,right .2s}
+.book-card:hover .book-card__go{color:var(--accent);right:13px}
+.just-added{animation:justAdded 1.1s ease}
+@keyframes justAdded{0%{box-shadow:0 0 0 2px var(--accent);background:var(--accent-tint)}100%{box-shadow:var(--shadow-sm);background:var(--paper)}}
+.qrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.qrow .input{flex:1}
+.qrow__del{flex:0 0 auto;width:38px;height:38px;border-radius:var(--radius-pill);border:1px solid var(--rule);background:var(--paper);color:var(--ink-dim);cursor:pointer;font-size:15px;line-height:1}
+.qrow__del:hover{border-color:#D44;color:#D44}
+.react-on{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.cmt-x{float:right;background:none;border:none;color:var(--ink-dim);font-size:15px;line-height:1;cursor:pointer;padding:0 0 0 8px}
+.cmt-x:hover{color:#D44}
+.danger-link{background:none;border:none;color:#D44;font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.qfix{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-sm);margin-bottom:8px}
+.qfix__t{flex:1;font-size:14px;font-weight:600;color:var(--ink);line-height:1.45}
+.qfix__btn{flex:0 0 auto;background:none;border:1px solid var(--rule);color:var(--ink-soft);font-size:12px;font-weight:700;padding:5px 12px;border-radius:var(--radius-pill);cursor:pointer;transition:border-color .15s,color .15s}
+.qfix__btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ═══ BOOK HEADER (답변 상단 책 정보) ═══ */
+.book-head{display:flex;gap:14px;align-items:center;background:var(--paper-warm);border:1px solid var(--rule);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:18px}
+.book-head__spine{width:42px;height:56px;border-radius:var(--radius-sm);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:17px;flex-shrink:0}
+.book-head__title{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.02em}
+.book-head__meta{font-size:13px;color:var(--ink-soft);margin-top:2px}
+
+/* ═══ STAR RATING (책 별점 — 다축) ═══ */
+.rating-grid{display:flex;flex-direction:column;gap:12px}
+.rating-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--rule-soft)}
+.rating-row:last-child{border-bottom:none}
+.rating-row__label{font-size:14px;font-weight:600;color:var(--ink)}
+.rating-row__label span{display:block;font-size:12px;color:var(--ink-dim);font-weight:400;margin-top:1px}
+.stars{display:flex;gap:3px}
+.star{font-size:24px;line-height:1;color:var(--rule);cursor:pointer;background:none;border:none;padding:2px;transition:transform .12s,color .15s}
+.star:hover{transform:scale(1.18)}
+.star.on{color:var(--star)}
+.rating-row--total{border-top:2px solid var(--rule);border-bottom:none;margin-top:4px;padding-top:14px}
+.rating-row--total .rating-row__label{font-weight:800;font-size:15px}
+.rating-row--total .star{font-size:28px}
+
+/* ═══ COMMENT (타인 답변 댓글) ═══ */
+.comment-box{margin-top:14px;padding-top:12px;border-top:1px dashed var(--rule)}
+.comment-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.comment{background:var(--highlight);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;line-height:1.55;color:var(--ink)}
+.comment b{font-weight:700;color:var(--accent)}
+.comment-form{display:flex;gap:8px}
+.comment-form .input{min-height:42px;font-size:14px}
+.comment-form .btn{width:auto;min-height:42px;flex:0 0 auto}
+.locked-note{text-align:center;padding:30px 18px;color:var(--ink-dim);font-size:14px;line-height:1.7;background:var(--paper-warm);border:1px dashed var(--rule);border-radius:var(--radius-md)}
+.locked-note b{color:var(--ink-soft)}
+
+/* ═══ HISTORY (내 기록) ═══ */
+.history-item{display:flex;gap:14px;align-items:center;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:10px}
+.history-item__spine{width:36px;height:48px;border-radius:var(--radius-sm);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:15px;flex-shrink:0}
+.history-item.todo .history-item__spine{background:var(--ink-soft);opacity:.5}
+.history-item__body{flex:1;min-width:0}
+.history-item__title{font-family:var(--display);font-weight:700;font-size:16px}
+.history-item__sub{font-size:12px;color:var(--ink-dim);margin-top:3px;line-height:1.5}
+.history-item__badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--radius-pill);background:var(--success-tint);color:var(--success);white-space:nowrap}
+.history-item__badge.todo{background:var(--highlight);color:var(--ink-dim)}
 
 /* ═══ STAGE SCENES ═══ */
 .stage-roadmap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;min-height:60vh}
@@ -192,7 +291,6 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .stage-roadmap__people{font-size:14px;color:var(--ink-soft);font-weight:500}
 .stage-roadmap__people b{font-weight:800;color:var(--ink);font-size:20px}
 
-/* Live scene */
 .scene-live__layout{display:flex;gap:24px;min-height:50vh}
 .scene-live__left{flex:0 0 40%;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper);padding:28px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;box-shadow:var(--shadow-sm)}
 .scene-live__right{flex:1;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper-warm);padding:24px;display:flex;flex-direction:column;box-shadow:var(--shadow-sm)}
@@ -207,7 +305,6 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .scene-live__speaker-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .scene-q__eye{font-size:13px;font-weight:600;color:var(--ink-dim);margin-bottom:14px;letter-spacing:.04em;text-transform:uppercase}
 
-/* Analysis */
 .scene-analysis__layout{display:flex;flex-direction:column;gap:24px}
 .scene-analysis__header{text-align:center;margin-bottom:8px}
 .scene-analysis__title{font-family:var(--display);font-weight:900;font-size:clamp(28px,4vw,48px);letter-spacing:-.04em;color:var(--ink)}
@@ -229,7 +326,6 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .analysis-summary{font-size:18px;line-height:1.7;color:var(--ink);font-weight:500;padding:16px 20px;background:var(--paper-warm);border-radius:var(--radius-md);border-left:4px solid var(--accent)}
 .analysis-summary b{color:var(--accent);font-weight:700}
 
-/* Highlights */
 .scene-highlights__layout{display:flex;flex-direction:column;align-items:center;gap:24px}
 .scene-highlights__title{font-family:var(--display);font-weight:900;font-size:clamp(28px,4vw,48px);letter-spacing:-.04em;color:var(--ink);text-align:center}
 .scene-highlights__grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;width:100%}
@@ -241,6 +337,61 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .highlight-card__who{font-size:13px;color:var(--accent);font-weight:600;margin-top:10px}
 .scene-highlights__footer{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 
+/* Stage roadmap (책 흐름) */
+.sr-season{text-align:center}
+.sr-season__eyebrow{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim)}
+.sr-season__title{font-family:var(--display);font-weight:900;font-size:clamp(32px,5vw,52px);letter-spacing:-.04em;color:var(--ink);margin-top:8px}
+.sr-season__sub{font-size:16px;color:var(--accent);font-weight:700;margin-top:8px}
+.sr-flow{display:flex;align-items:stretch;gap:0;max-width:880px;width:100%;justify-content:center}
+.sr-book{flex:1;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:22px 16px;text-align:center;opacity:.5;transition:all .3s}
+.sr-book.current{opacity:1;border-color:var(--accent);border-width:2px;background:var(--accent-tint);box-shadow:var(--shadow-md);transform:scale(1.04)}
+.sr-book.done{opacity:.8}
+.sr-book__month{font-size:13px;font-weight:700;color:var(--accent)}
+.sr-book.upcoming .sr-book__month{color:var(--ink-dim)}
+.sr-book__spine{width:54px;height:74px;margin:12px auto;border-radius:var(--radius-sm);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:24px}
+.sr-book.upcoming .sr-book__spine{background:var(--ink-soft)}
+.sr-book__title{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em}
+.sr-book__author{font-size:13px;color:var(--ink-soft);margin-top:2px}
+.sr-book__angle{font-size:13px;color:var(--ink-soft);margin-top:10px;line-height:1.5}
+.sr-book__badge{display:inline-block;margin-top:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:4px 12px;border-radius:var(--radius-pill)}
+.sr-book__badge.now{background:var(--accent);color:#fff}
+.sr-book__badge.soon{background:var(--highlight);color:var(--ink-dim)}
+.sr-arrow{display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--ink-dim);padding:0 4px;font-weight:700}
+.sr-meta{font-size:15px;color:var(--ink-soft);font-weight:500}
+.sr-meta b{font-weight:900;color:var(--ink);font-size:22px}
+/* Stage rating stars */
+.rt-stars-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--rule-soft)}
+.rt-stars-row:last-child{border-bottom:none}
+.rt-stars-row__label{font-size:14px;font-weight:600;color:var(--ink)}
+.rt-stars{font-size:20px;letter-spacing:2px;color:var(--star)}
+.rt-stars .off{color:var(--rule)}
+.rt-stars__num{font-size:13px;font-weight:700;color:var(--ink-soft);margin-left:8px}
+/* Stage live */
+.sl-qtabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.sl-qtab{padding:8px 16px;border:1px solid var(--rule);background:var(--paper);border-radius:var(--radius-pill);font-weight:700;font-size:13px;cursor:pointer;color:var(--ink-soft);transition:all .2s}
+.sl-qtab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sl-criteria{margin-top:18px;padding-top:18px;border-top:1px solid var(--rule-soft);width:100%;display:flex;flex-direction:column;gap:10px}
+.sl-crit-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.sl-axis{padding:6px 12px;border:1px solid var(--rule);background:var(--paper);border-radius:var(--radius-pill);font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-soft);transition:all .2s}
+.sl-axis.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sl-order{list-style:none;display:flex;flex-direction:column;gap:6px;margin:8px 0 16px}
+.sl-order li{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-sm);padding:9px 14px;font-size:14px;transition:all .2s}
+.sl-order li.is-picked{border-color:var(--accent);background:var(--accent-tint);font-weight:700}
+.sl-order__n{font-family:var(--display);font-weight:900;font-size:18px;color:var(--accent);width:24px;text-align:center}
+.sl-pick-card{padding:22px;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper)}
+.sl-pick-card__top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.sl-pick-card__av{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0}
+.sl-pick-card__chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
+.sl-chip{font-size:12px;font-weight:700;padding:4px 11px;border-radius:var(--radius-pill);background:var(--highlight);color:var(--ink-soft)}
+.sl-chip.hot{background:var(--accent);color:#fff}
+.sl-pick-card__ans{font-size:19px;line-height:1.7;font-weight:500;color:var(--ink);border-left:3px solid var(--accent);padding-left:16px}
+.sl-cmts{margin-top:16px;padding-top:14px;border-top:1px dashed var(--rule)}
+.sl-cmts__hd{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-dim);margin-bottom:8px}
+.sl-cmt{background:var(--highlight);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;line-height:1.55;margin-bottom:6px}
+.sl-cmt b{color:var(--accent);font-weight:700}
+.sl-empty{font-size:14px;color:var(--ink-dim);text-align:center;padding:28px 8px}
+.sl-qa{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule-soft)}
+
 @media(max-width:768px){
   .scene-live__layout{flex-direction:column}
   .scene-live__left{flex:none}
@@ -248,6 +399,8 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
   .analysis-card--wide{grid-column:1}
   .scene-highlights__grid{grid-template-columns:1fr}
   .stage-timer{font-size:80px !important}
+  .sr-flow{flex-direction:column}
+  .sr-arrow{transform:rotate(90deg);padding:6px 0}
 }
 </style>
 </head>
@@ -256,23 +409,25 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <!-- ═══ MASTHEAD ═══ -->
 <header class="masthead">
   <div class="masthead__row">
-    <span class="masthead__title" onclick="goJoin()">같이읽자</span>
-    <span class="masthead__center"><b id="hdr-nick">미지</b></span>
+    <span class="masthead__title" onclick="goHome()">untold<span class="mh-accent">Chapter</span></span>
+    <span class="masthead__center"><b id="hdr-nick">—</b></span>
     <div style="display:flex;align-items:center;gap:8px">
-      <button class="mode-toggle" onclick="toggleMode()" id="mode-toggle-btn">발표 모드</button>
+      <button class="mode-toggle" onclick="toggleMode()" id="mode-toggle-btn" style="display:none">발표 모드</button>
+      <button class="mode-toggle" onclick="logout()" id="logout-btn" style="display:none">로그아웃</button>
     </div>
   </div>
 </header>
 
-<!-- ═══ NAV ═══ -->
+<!-- ═══ SUBBAR (개인 모드 경량 네비) ═══ -->
+<nav class="subbar" id="subbar">
+  <a onclick="back()">&larr; 뒤로</a>
+  <a onclick="go('season')">&#127968; 시즌</a>
+  <span class="subbar__crumb" id="subbar-crumb"></span>
+</nav>
+
+<!-- ═══ STAGE NAV (발표 모드 전용) ═══ -->
 <nav class="toc" id="top-nav">
-  <div class="toc__group" id="nav-personal">
-    <a class="active" onclick="showPage('session')">모임</a>
-    <a onclick="showPage('book')">사전정보</a>
-    <a onclick="showPage('discussion')">답변</a>
-    <a onclick="showPage('retro')">내 기록</a>
-  </div>
-  <div class="toc__group" id="nav-stage" style="display:none">
+  <div class="toc__group">
     <a class="active" data-scene="roadmap" onclick="showStageScene('roadmap')">로드맵</a>
     <a data-scene="analysis" onclick="showStageScene('analysis')">AI 분석</a>
     <a data-scene="live" onclick="showStageScene('live')">진행</a>
@@ -283,158 +438,47 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <!-- ═══ MAIN (개인 모드) ═══ -->
 <div class="main" id="main-content">
 
-<!-- PAGE: 참가 -->
-<div class="page" id="page-join">
+<!-- PAGE: 로그인 (휴대폰 뒤 4자리) -->
+<div class="page active" id="page-login">
   <div class="hero">
-    <div class="hero__issue">같이읽자 &middot; Read Together</div>
-    <h1 class="hero__title">같이,<br><span class="accent">읽자.</span></h1>
-    <p class="hero__sub">책 한 권을 셋 이상이 같이 펼치면<br>다른 사람의 머릿속을 잠깐 빌려쓸 수 있다.</p>
-    <div class="hero__byline"><span>Read Together</span><span>Edited by readers</span></div>
+    <div class="hero__issue">untoldChapter</div>
+    <h1 class="hero__title">untold<br><span class="accent">Chapter.</span></h1>
+    <p class="hero__sub">아직 펼치지 않은 다음 페이지를,<br>우리 함께 읽어요.</p>
   </div>
-  <div class="tabs">
-    <button class="tab active" onclick="this.parentNode.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});this.classList.add('active')">모임 참가</button>
-    <button class="tab">새로 만들기</button>
+  <div class="login-wrap">
+    <div class="field" style="text-align:left">
+      <label>휴대폰 번호 뒤 4자리</label>
+      <input class="input pin-input" id="pin" inputmode="numeric" maxlength="4" placeholder="0000"
+             oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn btn-primary btn-arrow btn-pill" onclick="login()">들어가기 <span class="arr">&rarr;</span></button>
+    <p class="login-hint">번호 뒤 4자리만으로 입장합니다. 닉네임은 책마다 자동으로 새로 정해지고,<br>이 4자리로 내가 읽은 책 기록이 이어집니다.</p>
+    <div class="host-links">
+      <a onclick="go('create')">+ 모임 만들기</a><span>·</span><a onclick="go('manage')">모임 관리 (발표 모드)</a>
+    </div>
   </div>
-  <div class="field"><label>모임 코드</label><input class="input" value="R5PH8TY4" style="text-transform:uppercase"></div>
-  <div class="field"><label>닉네임</label>
-    <div style="display:flex;gap:8px"><input class="input" value="미지" style="flex:1"><button class="btn btn-ghost btn-sm btn-pill" style="width:auto;min-height:46px" onclick="this.previousElementSibling.value=['춤추는 고양이','배고픈 판다','빛나는 알파카'][Math.floor(Math.random()*3)]">랜덤</button></div>
-  </div>
-  <button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="showPage('session');toast('미지님 환영합니다!')">참가하기 <span class="arr">&rarr;</span></button>
 </div>
 
-<!-- PAGE: 모임 -->
-<div class="page active" id="page-session">
-  <div class="section-hd"><div><div class="eyebrow">01 &middot; 모임</div><h2 class="h-2 mt-4">진행 중인 모임</h2></div><span class="tag tag-accent tag-dot">LIVE</span></div>
-  <div class="sheet">
-    <div class="eyebrow mb-8">오늘의 주제</div>
-    <h3 class="h-2" style="margin-bottom:8px">경계인의 시선으로 세계 읽기</h3>
-    <p class="body-2">이방인이라는 정체성을 통해 나를 발견하는 여정</p>
-    <hr class="rule-thin">
-    <div class="eyebrow mb-8">오늘의 책</div>
-    <div style="display:flex;gap:14px;align-items:center">
-      <div style="width:48px;height:64px;background:var(--accent);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;flex-shrink:0">이</div>
-      <div><div class="h-3">이향인</div><div class="body-2">어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다</div></div>
-    </div>
-  </div>
-  <div class="sheet sheet--warm">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="eyebrow">진행 단계</div><span class="tag tag-accent">STEP 01</span></div>
-    <div class="steps">
-      <div class="step current"><span class="num">01</span><div><div class="title" style="font-size:17px">가장 마음에 남은 문장은? <span class="tag tag-accent" style="font-size:10px;vertical-align:middle;margin-left:6px">지금</span></div><p class="sub">왜 그 문장이 와닿았나요?</p></div></div>
-      <div class="step"><span class="num">02</span><div><div class="title">이방인이 된 경험이 있나요?</div><p class="sub">그때 무엇을 느꼈나요?</p></div></div>
-      <div class="step"><span class="num">03</span><div><div class="title">바꾸고 싶은 생각이나 행동은?</div><p class="sub">이 책이 준 변화를 나눠요</p></div></div>
-    </div>
-  </div>
-  <div class="timer-wrap">
-    <div style="font-size:13px;font-weight:600;color:var(--ink-dim);margin-bottom:8px"><b style="color:var(--accent)">PHASE 01</b> &middot; 진행 중</div>
-    <div class="timer" id="p-timer" style="font-size:64px">01:30</div>
-    <p class="timer-meta">한 사람씩, 가장 마음에 닿은 한 문장을.</p>
-  </div>
-</div>
+<!-- PAGE: 모임 리스트 -->
+<div class="page" id="page-meetings"></div>
+
+<!-- PAGE: 모임 만들기 -->
+<div class="page" id="page-create"></div>
+
+<!-- PAGE: 모임 관리 -->
+<div class="page" id="page-manage"></div>
+
+<!-- PAGE: 시즌 포탈 -->
+<div class="page" id="page-season"></div>
 
 <!-- PAGE: 사전정보 -->
-<div class="page" id="page-book">
-  <div class="section-hd"><div><div class="eyebrow">02 &middot; 사전정보</div><h2 class="h-2 mt-4">모임 전에 워밍업!</h2></div></div>
-  <div class="cover" style="aspect-ratio:auto;padding:24px 20px">
-    <div class="cover__top"><span>이향인</span><span>2026</span></div>
-    <div style="text-align:center;padding:20px 0"><div class="cover__title">이향인</div><div class="cover__author">라미 카민스키</div></div>
-    <div class="cover__top"><span>Read Together</span><span>N&deg;01</span></div>
-  </div>
-
-  <div class="sheet">
-    <div class="sheet__hd"><div><div class="eyebrow">읽기 전 퀴즈</div><h3 class="h-3 mt-4">이 책에 대해 얼마나 알고 있나요?</h3></div><span class="tag tag-accent">퀴즈</span></div>
-    <p style="font-weight:600;font-size:15px;margin-bottom:12px">Q1. '이향인(異鄕人)'의 뜻은?</p>
-    <button class="btn btn-ghost btn-pill mb-8" onclick="this.style.opacity='.5'">다른 나라에서 온 사람</button>
-    <button class="btn btn-primary btn-pill mb-8" disabled>낯선 땅의 사람 (이방인) &check;</button>
-    <button class="btn btn-ghost btn-pill mb-8" onclick="this.style.opacity='.5'">향수를 느끼는 사람</button>
-    <div style="padding:12px 16px;border-radius:var(--radius-md);margin-top:8px;background:var(--success-tint);color:var(--success);font-weight:600;font-size:14px">정답! 이향인(異鄕人)은 "다른 고향의 사람", 즉 이방인이라는 뜻이에요.</div>
-  </div>
-
-  <div class="sheet">
-    <div class="sheet__hd"><div><div class="eyebrow">저자 TMI</div><h3 class="h-3 mt-4">라미 카민스키, 이런 사람이에요</h3></div><span class="tag">FUN FACT</span></div>
-    <div class="steps" style="gap:8px">
-      <div class="step" style="padding:12px"><span class="num" style="font-size:22px;width:auto">&#127758;</span><div><div class="title" style="font-size:14px">5개국에서 살았다</div><p class="sub">한국, 이스라엘, 프랑스, 미국, 일본</p></div></div>
-      <div class="step" style="padding:12px"><span class="num" style="font-size:22px;width:auto">&#9997;&#65039;</span><div><div class="title" style="font-size:14px">원래 번역가였다</div><p class="sub">소설 쓰기 전 10년간 문학 번역을 했어요</p></div></div>
-      <div class="step" style="padding:12px"><span class="num" style="font-size:22px;width:auto">&#127925;</span><div><div class="title" style="font-size:14px">글 쓸 때 항상 재즈를 듣는다</div><p class="sub">빌 에반스의 'Waltz for Debby'가 이 책의 BGM</p></div></div>
-    </div>
-  </div>
-
-  <div class="sheet sheet--warm">
-    <div class="sheet__hd"><div><div class="eyebrow">한 문장 챌린지</div><h3 class="h-3 mt-4">이 책을 한 문장으로 표현한다면?</h3></div></div>
-    <p class="body-2 mb-12">모임 전에 미리 도전! 다른 참가자들의 문장은 모임에서 공개됩니다.</p>
-    <textarea class="input mb-12" placeholder="예: '고향이란 결국 사람 안에 있는 것이다'" rows="2"></textarea>
-    <button class="btn btn-primary btn-pill" onclick="toast('한 문장 챌린지 제출!')">제출하기</button>
-  </div>
-
-  <div class="sheet">
-    <div class="sheet__hd"><div><div class="eyebrow">관련 콘텐츠</div><h3 class="h-3 mt-4">읽기 전에 보면 좋은 것들</h3></div></div>
-    <div class="link-card"><div class="link-card__icon">&#9654;</div><div class="link-card__body"><div class="link-card__title">[10분 요약] 이향인 — 핵심 내용 미리보기</div><div class="link-card__meta">youtube.com &middot; 추천</div></div></div>
-    <div class="link-card"><div class="link-card__icon">&#127911;</div><div class="link-card__body"><div class="link-card__title">라미 카민스키 인터뷰 — "경계인이라는 정체성"</div><div class="link-card__meta">podcast.example.com &middot; 추천</div></div></div>
-    <div class="link-card"><div class="link-card__icon">&#128196;</div><div class="link-card__body"><div class="link-card__title">비슷한 책: 알베르 카뮈 '이방인' vs 이향인 비교</div><div class="link-card__meta">blog.example.com &middot; 추천</div></div></div>
-  </div>
-</div>
+<div class="page" id="page-book"></div>
 
 <!-- PAGE: 답변 -->
-<div class="page" id="page-discussion">
-  <div class="section-hd"><div><div class="eyebrow">03 &middot; 답변</div><h2 class="h-1 mt-4">내 생각을<br>적어볼까요.</h2></div></div>
-  <p class="body-2 mb-16">여기서는 <b style="color:var(--ink)">내 답변만</b> 보여요. 다른 참가자의 답변은 발표 모드에서 함께 확인합니다.</p>
-
-  <div class="sheet" style="background:var(--paper-warm)">
-    <div class="eyebrow mb-8">오늘의 질문 목록</div>
-    <div style="display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--rule-soft)"><span class="tag tag-accent">Q01</span><span style="font-weight:500">가장 마음에 남은 문장은? 왜 그 문장이 와닿았나요?</span></div>
-    <div style="display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--rule-soft)"><span class="tag tag-accent">Q02</span><span style="font-weight:500">이방인이 된 경험이 있나요? 그때 무엇을 느꼈나요?</span></div>
-    <div style="display:flex;gap:8px;align-items:baseline;padding:6px 0"><span class="tag tag-accent">Q03</span><span style="font-weight:500">이 책을 읽고 바꾸고 싶은 생각이나 행동이 있나요?</span></div>
-  </div>
-
-  <!-- Q1 -->
-  <div class="sheet">
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q01</span></div>
-    <h3 class="h-3" style="margin-bottom:16px">가장 마음에 남은 문장은? 왜 그 문장이 와닿았나요?</h3>
-    <div class="answer mine">
-      <div class="answer__who"><span><b>나</b></span><span>15:22</span></div>
-      <div class="answer__body">어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다. 이 문장이 계속 머릿속에 맴돌았어요. 회사에서도, 친구들 사이에서도 늘 약간의 거리감을 느끼는 제게 위로가 됐습니다.</div>
-      <div style="margin-top:12px"><button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="toast('수정 모드!')">수정하기</button></div>
-    </div>
-  </div>
-
-  <!-- Q2 -->
-  <div class="sheet">
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q02</span></div>
-    <h3 class="h-3" style="margin-bottom:16px">이방인이 된 경험이 있나요? 그때 무엇을 느꼈나요?</h3>
-    <div class="answer mine">
-      <div class="answer__who"><span><b>나</b></span><span>15:23</span></div>
-      <div class="answer__body">유학 갔을 때 아무도 나를 모르는 도시에서 혼자 밥 먹던 순간이 떠올라요. 처음엔 외로웠는데, 점점 그 시간이 저를 단단하게 만들었어요.</div>
-      <div style="margin-top:12px"><button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="toast('수정 모드!')">수정하기</button></div>
-    </div>
-  </div>
-
-  <!-- Q3 -->
-  <div class="sheet">
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q03</span></div>
-    <h3 class="h-3" style="margin-bottom:16px">이 책을 읽고 바꾸고 싶은 생각이나 행동이 있나요?</h3>
-    <div class="answer mine">
-      <div class="answer__who"><span><b>나</b></span><span>15:24</span></div>
-      <div class="answer__body">어디에 속하려고 애쓰는 걸 좀 그만두고 싶어요. 그냥 나로 존재하는 연습을 해보려고요.</div>
-      <div style="margin-top:12px"><button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="toast('수정 모드!')">수정하기</button></div>
-    </div>
-  </div>
-</div>
+<div class="page" id="page-discussion"></div>
 
 <!-- PAGE: 내 기록 -->
-<div class="page" id="page-retro">
-  <div class="section-hd"><div><div class="eyebrow">내 기록</div><h2 class="h-1 mt-4">나만의<br>독서 일기.</h2></div></div>
-  <div class="profile-card">
-    <div class="profile-avatar">미</div>
-    <div class="profile-name">미지</div>
-    <div style="font-size:13px;color:var(--ink-dim);margin-top:4px">닉네임으로 참여 중</div>
-    <div class="profile-stat">
-      <div><div class="profile-stat__num">3</div><div class="profile-stat__label">내 답변</div></div>
-      <div><div class="profile-stat__num">5</div><div class="profile-stat__label">받은 반응</div></div>
-      <div><div class="profile-stat__num">1</div><div class="profile-stat__label">참여 모임</div></div>
-    </div>
-  </div>
-  <div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">한줄평</div><h3 class="h-3 mt-4">오늘의 한 줄</h3></div></div><input class="input mb-12" placeholder="이번 모임을 한 줄로 적어주세요"><button class="btn btn-primary btn-pill" onclick="toast('한줄평 저장!')">저장</button></div>
-  <div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">인사이트 일기</div><h3 class="h-3 mt-4">떠오른 생각 기록</h3></div></div><textarea class="input mt-4 mb-12" placeholder="오늘 읽으며 떠오른 생각을 남겨보세요. 이 기록은 나만 볼 수 있어요." rows="3"></textarea><button class="btn btn-primary btn-pill" onclick="toast('인사이트 저장!')">기록 저장</button></div>
-</div>
+<div class="page" id="page-history"></div>
 
 </div><!-- /main -->
 
@@ -442,35 +486,16 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <div class="stage-wrap" id="stage-wrap">
 
 <div class="scene active" id="scene-roadmap">
-  <div class="stage-roadmap">
-    <div class="stage-roadmap__header">
-      <div class="stage-roadmap__title">경계인의 시선으로 세계 읽기</div>
-      <div class="stage-roadmap__book">이향인 — 라미 카민스키 <span class="tag tag-accent tag-dot" style="margin-left:8px">LIVE</span></div>
-      <p style="font-size:15px;color:var(--ink-soft);margin-top:8px;max-width:600px;text-align:center;line-height:1.6">어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다</p>
-    </div>
-    <div class="stage-roadmap__progress"><div class="stage-roadmap__progress-bar"><div class="stage-roadmap__progress-fill" style="width:33%"></div></div><div class="stage-roadmap__progress-label">1 / 3 진행 중</div></div>
-    <div class="stage-roadmap__steps">
-      <div class="stage-rm-step current"><div class="stage-rm-step__num">01</div><div class="stage-rm-step__info"><div class="stage-rm-step__name">가장 마음에 남은 문장은?</div><div class="stage-rm-step__desc">왜 그 문장이 와닿았는지 이야기해요</div></div><div class="stage-rm-step__badge">진행 중</div></div>
-      <div class="stage-rm-step__connector"></div>
-      <div class="stage-rm-step"><div class="stage-rm-step__num">02</div><div class="stage-rm-step__info"><div class="stage-rm-step__name">이방인이 된 경험이 있나요?</div><div class="stage-rm-step__desc">그때 무엇을 느꼈는지 공유해요</div></div><div class="stage-rm-step__badge"></div></div>
-      <div class="stage-rm-step__connector"></div>
-      <div class="stage-rm-step"><div class="stage-rm-step__num">03</div><div class="stage-rm-step__info"><div class="stage-rm-step__name">바꾸고 싶은 생각이나 행동은?</div><div class="stage-rm-step__desc">이 책이 준 변화를 나눠요</div></div><div class="stage-rm-step__badge"></div></div>
-    </div>
-    <div class="stage-roadmap__people">참가자 <b>5</b>명 접속 중</div>
-  </div>
+  <div class="stage-roadmap" id="stage-roadmap"></div>
 </div>
 
 <div class="scene" id="scene-analysis">
   <div class="scene-analysis__layout">
-    <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요</p></div>
+    <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요 &middot; 사람은 공감만, 분석은 AI</p></div>
     <div class="scene-analysis__grid">
       <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드</div><div class="analysis-keywords"><span class="kw kw-lg">경계</span><span class="kw kw-md">정체성</span><span class="kw kw-lg">이방인</span><span class="kw kw-sm">외로움</span><span class="kw kw-md">자유</span><span class="kw kw-sm">관찰자</span><span class="kw kw-md">소속감</span><span class="kw kw-sm">공감</span><span class="kw kw-lg">발견</span><span class="kw kw-sm">용기</span></div></div>
-      <div class="analysis-card"><div class="analysis-card__label">생각의 분포</div><div class="analysis-bars">
-        <div class="analysis-bar"><div class="analysis-bar__label">공감형 <span>"나도 그런 경험이..."</span></div><div class="analysis-bar__track"><div class="analysis-bar__fill" style="width:65%"></div></div><div class="analysis-bar__pct">65%</div></div>
-        <div class="analysis-bar"><div class="analysis-bar__label">탐구형 <span>"왜 저자는..."</span></div><div class="analysis-bar__track"><div class="analysis-bar__fill" style="width:20%"></div></div><div class="analysis-bar__pct">20%</div></div>
-        <div class="analysis-bar"><div class="analysis-bar__label">실천형 <span>"나는 앞으로..."</span></div><div class="analysis-bar__track"><div class="analysis-bar__fill" style="width:15%"></div></div><div class="analysis-bar__pct">15%</div></div>
-      </div></div>
-      <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 한줄 요약</div><div class="analysis-summary">"오늘 참가자들은 대부분 <b>경계인으로서의 외로움</b>에 공감하면서도, 그것이 오히려 <b>자기 발견의 계기</b>가 된다는 점에서 희망을 찾았습니다. 특히 '어디에도 속하지 못할 때 비로소 나를 만난다'는 문장이 가장 많은 울림을 준 것으로 보입니다."</div></div>
+      <div class="analysis-card"><div class="analysis-card__label">책 별점 분포 (익명 · 5점 만점)</div><div id="stage-rating-rows"></div></div>
+      <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 한줄 요약</div><div class="analysis-summary">"오늘 참가자들은 대부분 <b>경계인으로서의 외로움</b>에 공감하면서도, 그것이 오히려 <b>자기 발견의 계기</b>가 된다는 점에서 희망을 찾았습니다. 별점은 <b>참신함이 가장 높고 재미가 가장 낮게</b> 갈렸습니다 &mdash; 진행에서 가장 낮게/높게 준 분의 이유를 들어봅니다."</div></div>
     </div>
   </div>
 </div>
@@ -486,19 +511,32 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
         <button class="btn" onclick="stopTimer()">정지</button>
         <button class="btn btn-ghost" onclick="resetTimer()">리셋</button>
       </div>
-      <div class="scene-live__speaker-section">
-        <div class="scene-live__speaker-label" id="speaker-prompt">이 질문의 발언자를 찾겠습니다</div>
+      <div class="sl-criteria">
+        <div class="scene-live__speaker-label" id="speaker-prompt">발언자 선정 기준을 고르세요</div>
         <div class="scene-live__speaker-name" id="stage-speaker-name">?</div>
-        <div class="scene-live__speaker-btns">
-          <button class="btn btn-sm btn-pill" style="width:auto" onclick="pickSpeaker('무작위')">무작위</button>
-          <button class="btn btn-sm btn-pill" style="width:auto" onclick="pickSpeaker('공감 최다')">공감 최다</button>
-          <button class="btn btn-sm btn-pill" style="width:auto" onclick="pickSpeaker('소수 의견')">소수 의견</button>
+        <div class="sl-crit-row">
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'random'})">무작위</button>
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'empathy'})">공감 최다</button>
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'comments'})">댓글 최다</button>
+        </div>
+        <div class="scene-live__speaker-label" style="margin:4px 0 0">별점 기준 — 항목 선택</div>
+        <div class="sl-crit-row" id="sl-axis-row"></div>
+        <div class="sl-crit-row">
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'rating',dir:'max'})">★ 최고로 준 사람</button>
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'rating',dir:'min'})">★ 최저로 준 사람</button>
         </div>
       </div>
     </div>
     <div class="scene-live__right">
-      <div class="scene-q__eye">Q01 &middot; 가장 마음에 남은 문장은?</div>
-      <div id="stage-speaker-answer"><p style="font-size:16px;color:var(--ink-dim);text-align:center;padding:40px 0">발언자를 선정하면 해당 참가자의 답변이 표시됩니다</p></div>
+      <div class="scene-live__speaker-label" style="margin:0 0 6px">질문 선택</div>
+      <div class="sl-crit-row" id="sl-qtabs" style="justify-content:flex-start;flex-wrap:wrap;margin-bottom:6px"></div>
+      <div class="scene-q__eye" id="sl-qtext" style="margin:0 0 12px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span class="scene-live__speaker-label" style="margin:0">발언 순서 (무작위)</span>
+        <button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="stageReshuffle()">순서 섞기</button>
+      </div>
+      <ol class="sl-order" id="sl-order"></ol>
+      <div id="sl-pickcard"></div>
     </div>
   </div>
 </div>
@@ -520,52 +558,1048 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 
 <div class="toast-area" id="toast-area"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-var isStage = false;
+/* ═══════════ Supabase 설정 (비우면 localStorage 모드) ═══════════ */
+var SB_URL = 'https://kkkmsnyiwliovitsmsmw.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtra21zbnlpd2xpb3ZpdHNtc213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTgzNDEsImV4cCI6MjA5NDczNDM0MX0.lNYzLXqyI2cVsxm2yhKgvnIIZpqeIV4TEw-S0gAVb5I';   /* anon public */
+var sb=null, ONLINE=false;
+try{ if(SB_URL&&SB_KEY&&window.supabase){ sb=window.supabase.createClient(SB_URL,SB_KEY); ONLINE=true; } }catch(e){ ONLINE=false; }
 
-function showPage(name){
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
-  var el = document.getElementById('page-'+name);
-  if(el) el.classList.add('active');
-  document.querySelectorAll('#nav-personal a').forEach(function(a){a.classList.remove('active')});
-  event.target.closest('a')?.classList.add('active');
-  if(!event.target.closest('a')){
-    var map={session:0,book:1,discussion:2,retro:3};
-    var links=document.querySelectorAll('#nav-personal a');
-    if(links[map[name]]) links[map[name]].classList.add('active');
-  }
+/* ═══════════ DATA ═══════════ */
+var SEASON={
+  eyebrow:'SEASON 01 · 2026 2분기',
+  title:'인간 본성 탐구',
+  sub:'나 → 연결 → 관계의 그늘',
+  meta:'한 주제를 관점이 다른 책 3권으로 이어 읽습니다. 매달 1권, 매달 1번 모임.',
+  books:[
+    {id:'ihyangin',month:'6월',status:'current',title:'이향인',author:'라미 카민스키',spine:'이',
+     angle:'나 — 집단에 속하지 않는 개인',
+     tagline:'어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다',
+     intro:'열다섯에 한국을 떠나 다섯 나라를 거친 저자가 "어디에도 온전히 속하지 못하는 사람"의 자리에서 길어 올린 심리·에세이. 소속을 갈망하는 마음과 경계에 선 자유 사이를 오가며, 이방인이라는 조건이 어떻게 자기 발견의 출발점이 되는지를 담담한 문장으로 그린다. 첫 책으로는 다소 난도가 있어, 우리 모임의 호흡을 가늠하는 기준이 된다.',
+     intro_note:'※ 사전정보 본문은 교보문고·알라딘 등의 책 소개를 옮겨 채워 넣는 영역입니다.',
+     bio:[
+       {e:'🌍',t:'5개국에서 살았다',s:'한국, 이스라엘, 프랑스, 미국, 일본'},
+       {e:'✍️',t:'원래 번역가였다',s:'소설을 쓰기 전 10년간 문학 번역을 했어요'},
+       {e:'🎵',t:'글 쓸 때 항상 재즈를 듣는다',s:"빌 에반스의 'Waltz for Debby'가 이 책의 BGM"}
+     ],
+     links:[
+       {i:'▶',t:'[10분 요약] 이향인 — 핵심 내용 미리보기',m:'youtube.com · 추천'},
+       {i:'🎧',t:'라미 카민스키 인터뷰 — "경계인이라는 정체성"',m:'podcast.example.com · 추천'},
+       {i:'📄',t:"비슷한 책: 카뮈 '이방인' vs 이향인 비교",m:'blog.example.com · 추천'}
+     ],
+     questions:[
+       '가장 마음에 남은 문장은? 왜 그 문장이 와닿았나요?',
+       '이방인이 된 경험이 있나요? 그때 무엇을 느꼈나요?',
+       '이 책을 읽고 바꾸고 싶은 생각이나 행동이 있나요?'
+     ],
+     others:[
+       [
+         {n:'꿈꾸는 해파리',a:'처음 외국에 갔을 때, 아무것도 아닌 사람이 된 느낌이었어요. 그런데 그게 자유였다는 걸 나중에야 알았죠.'},
+         {n:'빛나는 알파카',a:'이방인이 아닌 사람이 있을까요? 우리는 모두 어딘가에서는 이방인이에요.'},
+         {n:'배고픈 판다',a:'저는 회사에서도 이방인이고 집에서도 이방인이에요. 냉장고 앞에서만 소속감을 느낍니다 ㅋㅋ'},
+         {n:'용감한 두부',a:'소속감을 버리니까 오히려 진짜 연결이 생기더라고요. 역설적이지만요.'}
+       ],
+       [
+         {n:'꿈꾸는 해파리',a:'전학을 자주 다녀서 어느 교실에서도 늘 새 사람이었어요. 관찰자가 되는 법을 일찍 배웠죠.'},
+         {n:'빛나는 알파카',a:'타지에서 명절을 혼자 보낸 적이 있어요. 외로움이 아니라 묘한 해방감이 들어 스스로 놀랐어요.'},
+         {n:'배고픈 판다',a:'이직 첫 주, 회의에서 다들 웃는 농담을 나만 못 알아들었을 때요.'},
+         {n:'용감한 두부',a:'군대에서요. 거기선 한동안 모두가 이방인이잖아요.'}
+       ],
+       [
+         {n:'꿈꾸는 해파리',a:'억지로 섞이려는 노력을 줄이려고요. 거리감을 결핍이 아니라 시야로 보기로.'},
+         {n:'빛나는 알파카',a:"내가 어디 '소속'인지로 나를 설명하던 습관을 바꾸고 싶어요."},
+         {n:'배고픈 판다',a:'남의 무리를 부러워하는 시간을 줄이고 내 리듬을 지키기.'},
+         {n:'용감한 두부',a:'혼자인 시간을 결핍이 아니라 회복으로 부르기로 했어요.'}
+       ]
+     ]},
+    {id:'hailmary',month:'7월',status:'upcoming',title:'프로젝트 헤일메리',author:'앤디 위어',spine:'헤',
+     angle:'연결 — 다른 존재와의 협력·이타심',
+     tagline:'전혀 다른 존재와 손잡을 때, 인류의 마지막 임무가 시작된다',
+     intro:'혼자 깨어난 우주선, 기억을 잃은 과학자, 그리고 인류의 마지막 임무. 절체절명의 상황에서 전혀 다른 존재와 손을 잡는 "연결"과 이타심을 그린 앤디 위어의 SF. 에세이 다음으로 소설을 두어 같은 주제를 다른 결로 본다.',
+     intro_note:'※ 7월 모임 도서. 사전정보는 모임 전에 채워집니다.',
+     bio:[
+       {e:'🚀',t:"'마션'의 작가",s:'생존·문제해결 서사로 잘 알려져 있어요'},
+       {e:'🔬',t:'공학·과학 디테일 마니아',s:'설정을 직접 계산해 검증하는 편'}
+     ],
+     links:[
+       {i:'▶',t:'프로젝트 헤일메리 — 스포일러 없는 소개',m:'youtube.com · 추천'}
+     ],
+     questions:[
+       '가장 인상 깊었던 "연결"의 순간은?',
+       '낯선 존재를 신뢰하기까지, 나라면?',
+       '이타심은 어디까지 가능할까요?'
+     ],
+     others:[[],[],[]]},
+    {id:'darkpsych',month:'8월',status:'upcoming',title:'다크 심리학',author:'(저자 미확정)',spine:'다',
+     angle:'관계의 그늘 — 자기보호',
+     tagline:'관계의 그늘을 알아야, 나를 지킬 수 있다',
+     intro:'타인의 조종, 자기보호, 관계의 그늘을 다루는 실용 심리. 에세이 → 소설 → 실용서로 관점을 넓히며 한 주제를 마무리한다. 8월 도서는 아직 미확정이며, 6~7월 진행 결과를 보고 다음 분기 주제부터 조정합니다.',
+     intro_note:'※ 8월 도서 미확정. 진행 결과를 보고 확정합니다.',
+     bio:[],
+     links:[],
+     questions:[],
+     others:[[],[],[]]}
+  ]
+};
+var RATING_AXES=[
+  {k:'length',label:'길이',hint:'분량이 적절했나요?'},
+  {k:'difficulty',label:'난이도',hint:'읽기 까다로웠나요? (높을수록 어려움)'},
+  {k:'fun',label:'재미',hint:'읽는 재미가 있었나요?'},
+  {k:'novelty',label:'참신함',hint:'관점이 새로웠나요?'},
+  {k:'overall',label:'총점',hint:'한마디로 이 책은?'}
+];
+var NICK_ADJ=['춤추는','배고픈','빛나는','꿈꾸는','용감한','졸린','조용한','웃는','달리는','노래하는','생각하는','반짝이는'];
+var NICK_NOUN=['고양이','판다','알파카','해파리','두부','수달','부엉이','고래','다람쥐','펭귄','여우','거북'];
+
+/* ═══════════ STATE & STORE ═══════════ */
+var STATE={phone4:null,bookId:null,meetingId:'m1',isHost:false};
+var M1={id:'m1',name:'사내 독서모임 · 인간 본성 탐구',code:'HUMAN-Q2',pw:'1234',kind:'season'};
+var MEM={};               // localStorage 차단 시 폴백
+var MEET_CACHE=[];        // ONLINE: 모임+책 캐시
+var NETSTORE={};          // ONLINE: 활성 책 내 상태 미러 (bookId→{answers,submitted,ratings,comments})
+function storeKey(){return 'rt:'+STATE.phone4;}
+function loadStore(){
+  if(ONLINE) return NETSTORE;
+  try{var v=localStorage.getItem(storeKey());return v?JSON.parse(v):{};}
+  catch(e){return MEM[storeKey()]?JSON.parse(MEM[storeKey()]):{};}
+}
+function saveStore(s){
+  if(ONLINE) return;          /* ONLINE: 영속은 RT.* · NETSTORE 는 동일 참조 */
+  var v=JSON.stringify(s);
+  try{localStorage.setItem(storeKey(),v);}catch(e){MEM[storeKey()]=v;}
+}
+function blankBook(){return {answers:['','',''],submitted:false,ratings:{},comments:{}};}
+function bookState(id){var s=loadStore();return s[id]||blankBook();}
+function setBookState(id,bs){var s=loadStore();s[id]=bs;saveStore(s);}
+
+function nkLoad(){try{return JSON.parse(localStorage.getItem('rt:nick'))||{};}catch(e){return MEM['rt:nick']?JSON.parse(MEM['rt:nick']):{};}}
+function nkSave(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:nick',v);}catch(e){MEM['rt:nick']=v;}}
+function fixedNick(p4,bid){return (nkLoad()[p4+'|'+bid])||null;}
+function randomNick(){return NICK_ADJ[Math.floor(Math.random()*NICK_ADJ.length)]+' '+NICK_NOUN[Math.floor(Math.random()*NICK_NOUN.length)];}
+var PENDNICK=null;
+function rollNick(){PENDNICK=randomNick();renderBook();}
+function confirmNick(){
+  if(!PENDNICK)PENDNICK=randomNick();
+  var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=PENDNICK;nkSave(o);
+  var nm=PENDNICK;PENDNICK=null;setNick();renderBook();toast('닉네임 확정: '+nm);
+}
+function nickFor(phone4,bookId){
+  var f=fixedNick(phone4,bookId); if(f) return f;
+  var str=String(phone4)+'|'+bookId,h=0;
+  for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))>>>0;}
+  return NICK_ADJ[h%NICK_ADJ.length]+' '+NICK_NOUN[Math.floor(h/NICK_ADJ.length)%NICK_NOUN.length];
+}
+function customMeetings(){try{return JSON.parse(localStorage.getItem('rt:meetings'))||[];}catch(e){return MEM['rt:meetings']?JSON.parse(MEM['rt:meetings']):[];}}
+function saveCustomMeetings(a){var v=JSON.stringify(a);try{localStorage.setItem('rt:meetings',v);}catch(e){MEM['rt:meetings']=v;}}
+function allMeetings(){return ONLINE?MEET_CACHE:[M1].concat(customMeetings());}
+function meetingById(id){var a=allMeetings();for(var i=0;i<a.length;i++){if(a[i].id===id)return a[i];}return M1;}
+function activeMeeting(){return meetingById(STATE.meetingId);}
+function meetingBooks(){var m=activeMeeting();return m.kind==='custom'?m.season.books:SEASON.books;}
+function currentBookId(){var m=activeMeeting();if(m.kind==='custom')return m.season.books[0].id;var c='ihyangin';SEASON.books.forEach(function(b){if(b.status==='current')c=b.id;});return c;}
+function bookById(id){
+  if(ONLINE){for(var x=0;x<MEET_CACHE.length;x++){var ob=(MEET_CACHE[x].season&&MEET_CACHE[x].season.books)||[];for(var y=0;y<ob.length;y++){if(ob[y].id===id)return ob[y];}}return null;}
+  for(var i=0;i<SEASON.books.length;i++){if(SEASON.books[i].id===id)return SEASON.books[i];}
+  var cs=customMeetings();for(var j=0;j<cs.length;j++){var bb=(cs[j].season&&cs[j].season.books)||[];for(var k=0;k<bb.length;k++){if(bb[k].id===id)return bb[k];}}
+  return null;
+}
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ═══════════ 일정(연월) 헬퍼 ═══════════ */
+function ymNow(){var d=new Date();return ''+d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2);}
+function fmtYM(ym){return (/^[0-9]{6}$/.test(ym||''))?(ym.slice(0,4)+'.'+ym.slice(4,6)):'';}
+function applySchedule(books){
+  var now=ymNow(),wy=books.filter(function(b){return /^[0-9]{6}$/.test(b.yearmonth||'');});
+  if(!wy.length)return;
+  var fut=wy.filter(function(b){return b.yearmonth>=now;}).sort(function(a,b){return a.yearmonth<b.yearmonth?-1:1;});
+  var curId=fut.length?fut[0].id:wy.slice().sort(function(a,b){return a.yearmonth<b.yearmonth?-1:1;}).pop().id;
+  books.forEach(function(b){
+    if(/^[0-9]{6}$/.test(b.yearmonth||'')){
+      b.month=fmtYM(b.yearmonth);
+      b.status=(b.id===curId)?'current':(b.yearmonth<now?'past':'upcoming');
+    }
+  });
 }
 
+/* ═══════════ RT — Supabase 데이터 계층 (ONLINE 일 때만 호출) ═══════════ */
+function rtErr(e){console.error('[Supabase]',e);toast('서버 오류: '+((e&&e.message)||'요청 실패'));}
+var RT={
+  async loadMeetings(){
+    var r=await sb.from('meeting').select('id,name,code,password,season_title,season_sub,is_open,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links)');
+    if(r.error){rtErr(r.error);return;}
+    MEET_CACHE=(r.data||[]).map(function(m){
+      var books=(m.book||[]).slice().sort(function(a,b){return (a.ord||0)-(b.ord||0);}).map(function(bk){
+        var qs=Array.isArray(bk.questions)?bk.questions:[];
+        return {id:bk.id,title:bk.title,author:bk.author||'(저자 미상)',spine:(bk.title||'?').charAt(0),status:'current',yearmonth:bk.yearmonth||'',month:fmtYM(bk.yearmonth)||((bk.ord||0)+'권'),angle:'',tagline:bk.title,intro:bk.intro||'(책 소개 미입력)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:bk.author_bio||'',bio:(Array.isArray(bk.author_facts)?bk.author_facts:[]),links:(Array.isArray(bk.links)?bk.links:[]),questions:qs,others:qs.map(function(){return [];})};
+      });
+      applySchedule(books);
+      return {id:m.id,name:m.name,code:m.code,pw:m.password,kind:'custom',isOpen:(m.is_open!==false),
+        season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'코드 '+m.code,books:books}};
+    });
+  },
+  async loadBook(bookId){
+    var mb=await sb.from('member_book').select('phone4,nickname,submitted,ratings').eq('book_id',bookId);
+    var an=await sb.from('answer').select('phone4,q_index,body').eq('book_id',bookId);
+    var cm=await sb.from('comment').select('id,q_index,target_phone4,author_phone4,author_nick,body').eq('book_id',bookId);
+    var rx=await sb.from('reaction').select('q_index,target_phone4,author_phone4').eq('book_id',bookId);
+    if(mb.error||an.error||cm.error||rx.error){rtErr(mb.error||an.error||cm.error||rx.error);return;}
+    var bk=bookById(bookId);if(!bk)return;
+    var me=STATE.phone4;
+    var members=(mb.data||[]).slice().sort(function(a,b){return a.phone4<b.phone4?-1:1;});
+    var ansMap={};(an.data||[]).forEach(function(a){(ansMap[a.phone4]=ansMap[a.phone4]||{})[a.q_index]=a.body;});
+    var others=members.filter(function(x){return x.phone4!==me;});
+    var idxOf={};others.forEach(function(o,j){idxOf[o.phone4]=j;});
+    bk.others=bk.questions.map(function(_,qi){
+      return others.map(function(o){return {n:o.nickname,a:(ansMap[o.phone4]||{})[qi]||'',phone4:o.phone4};});
+    });
+    var nickByPhone={};members.forEach(function(o){nickByPhone[o.phone4]=o.nickname;});
+    var rcCount={},rcMine={},empByNick={};
+    (rx.data||[]).forEach(function(x){
+      var key='q'+x.q_index+'|'+x.target_phone4;
+      rcCount[key]=(rcCount[key]||0)+1;
+      if(x.author_phone4===me) rcMine[key]=true;
+      var tn=nickByPhone[x.target_phone4]; if(tn) empByNick[tn]=(empByNick[tn]||0)+1;
+    });
+    bk.reactions={};
+    bk.questions.forEach(function(_,qi){ others.forEach(function(o,j){
+      var key='q'+qi+'|'+o.phone4;
+      bk.reactions['q'+qi+'a'+j]={count:rcCount[key]||0,mine:!!rcMine[key]};
+    }); });
+    var SR={},SC={};
+    members.forEach(function(o){var rr=o.ratings||{};SR[o.nickname]={length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0,empathy:empByNick[o.nickname]||0};});
+    (cm.data||[]).forEach(function(c){
+      if(c.author_phone4===me) return;
+      var tm=members.filter(function(x){return x.phone4===c.target_phone4;})[0];
+      var k='q'+c.q_index+'|'+((tm&&tm.nickname)||'');(SC[k]=SC[k]||[]).push({by:c.author_nick,t:c.body});
+    });
+    STAGE_RATINGS=SR;STAGE_COMMENTS=SC;
+    var myMb=(mb.data||[]).filter(function(x){return x.phone4===me;})[0];
+    var myAns=bk.questions.map(function(_,qi){return (ansMap[me]||{})[qi]||'';});
+    var myCmt={};
+    (cm.data||[]).forEach(function(c){
+      if(c.author_phone4!==me) return;
+      var j=idxOf[c.target_phone4];if(j===undefined)return;
+      var k='q'+c.q_index+'a'+j;(myCmt[k]=myCmt[k]||[]).push({id:c.id,t:c.body});
+    });
+    NETSTORE[bookId]={answers:myAns,submitted:myMb?!!myMb.submitted:false,ratings:(myMb&&myMb.ratings)||{},comments:myCmt};
+  },
+  async toggleReaction(bookId,qi,targetPhone4){
+    if(!STATE.phone4){toast('휴대폰 4자리로 입장해야 공감할 수 있어요');return false;}
+    var ex=await sb.from('reaction').select('id').eq('book_id',bookId).eq('q_index',qi).eq('target_phone4',targetPhone4).eq('author_phone4',STATE.phone4).limit(1);
+    if(ex.error){rtErr(ex.error);return false;}
+    var e;
+    if(ex.data&&ex.data.length) e=(await sb.from('reaction').delete().eq('id',ex.data[0].id)).error;
+    else e=(await sb.from('reaction').insert({book_id:bookId,q_index:qi,target_phone4:targetPhone4,author_phone4:STATE.phone4})).error;
+    if(e){rtErr(e);return false;}
+    await RT.loadBook(bookId);return true;
+  },
+  async loadHistory(){
+    var bks=meetingBooks();
+    for(var i=0;i<bks.length;i++){ await RT.loadBook(bks[i].id); }
+  },
+  async submit(bookId,answers){
+    var nick=nickFor(STATE.phone4,bookId);
+    var rows=answers.map(function(t,qi){return {book_id:bookId,phone4:STATE.phone4,q_index:qi,body:t};});
+    var e1=(await sb.from('answer').upsert(rows,{onConflict:'book_id,phone4,q_index'})).error;
+    var e2=(await sb.from('member_book').upsert({book_id:bookId,phone4:STATE.phone4,nickname:nick,submitted:true},{onConflict:'book_id,phone4'})).error;
+    if(e1||e2){rtErr(e1||e2);return false;}
+    await RT.loadBook(bookId);return true;
+  },
+  async saveRatings(bookId,ratings){
+    var nick=nickFor(STATE.phone4,bookId);
+    var e=(await sb.from('member_book').upsert({book_id:bookId,phone4:STATE.phone4,nickname:nick,ratings:ratings},{onConflict:'book_id,phone4'})).error;
+    if(e){rtErr(e);return false;}
+    await RT.loadBook(bookId);return true;
+  },
+  async addComment(bookId,qi,targetPhone4,body){
+    var nick=STATE.phone4?nickFor(STATE.phone4,bookId):'모임장';
+    var e=(await sb.from('comment').insert({book_id:bookId,q_index:qi,target_phone4:targetPhone4,author_phone4:STATE.phone4||'host',author_nick:nick,body:body})).error;
+    if(e){rtErr(e);return false;}
+    await RT.loadBook(bookId);return true;
+  },
+  async createMeeting(name,stitle,ssub,books){
+    var code=rndCode(),pw=String(Math.floor(1000+Math.random()*9000));
+    var mi=await sb.from('meeting').insert({name:name,code:code,password:pw,season_title:stitle,season_sub:ssub||'',is_open:(BUILD.isOpen!==false)}).select('id').single();
+    if(mi.error){rtErr(mi.error);return null;}
+    var rows=books.map(function(b,i){return {meeting_id:mi.data.id,ord:i+1,title:b.title,author:b.author||'(저자 미상)',intro:b.intro||'',author_bio:b.authorBio||'',yearmonth:b.yearmonth||'',questions:b.questions.filter(function(q){return q&&q.trim();}),author_facts:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {i:'🔗',t:s,m:''};})};});
+    var be=(await sb.from('book').insert(rows)).error;
+    if(be){rtErr(be);return null;}
+    await RT.loadMeetings();
+    return {code:code,pw:pw};
+  },
+  async saveQuestions(bookId,qs){
+    var e=(await sb.from('book').update({questions:qs}).eq('id',bookId)).error;
+    if(e){rtErr(e);return false;}
+    await RT.loadMeetings();return true;
+  },
+  async saveBookInfo(bookId,p){
+    var e=(await sb.from('book').update({intro:p.intro,author_bio:p.author_bio,yearmonth:p.yearmonth,author_facts:p.author_facts,links:p.links}).eq('id',bookId)).error;
+    if(e){rtErr(e);return false;}
+    await RT.loadMeetings(); await RT.loadBook(bookId); return true;
+  },
+  async deleteComment(bookId,id){
+    var e=(await sb.from('comment').delete().eq('id',id)).error;
+    if(e){rtErr(e);return false;} await RT.loadBook(bookId); return true;
+  },
+  async deleteBook(bookId){
+    var e=(await sb.from('book').delete().eq('id',bookId)).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  },
+  async deleteMeeting(id){
+    var e=(await sb.from('meeting').delete().eq('id',id)).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  },
+  async addBook(meetingId,title,author){
+    var m=meetingById(meetingId),ord=((m&&m.season&&m.season.books.length)||0)+1;
+    var e=(await sb.from('book').insert({meeting_id:meetingId,ord:ord,title:title,author:author||'',intro:'',author_bio:'',yearmonth:'',questions:[''],author_facts:[],links:[]})).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  }
+};
+
+/* ═══════════ NAV ═══════════ */
+var isStage=false;
+function setNick(){
+  var el=document.getElementById('hdr-nick');
+  if(STATE.bookId&&STATE.phone4) el.textContent=nickFor(STATE.phone4,STATE.bookId);
+  else if(STATE.phone4) el.textContent='•••• '+STATE.phone4;
+  else if(STATE.isHost) el.textContent='모임장';
+  else el.textContent='—';
+}
+function go(name,nopush){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  var el=document.getElementById('page-'+name);
+  if(el) el.classList.add('active');
+  if(name==='meetings') renderMeetings();
+  if(name==='create') renderCreate();
+  if(name==='manage') renderManage();
+  if(name==='season') renderSeason();
+  if(name==='book') renderBook();
+  if(name==='discussion') renderDiscussion();
+  if(name==='history') renderHistory();
+  var inner=(name==='book'||name==='discussion'||name==='history');
+  var sb=document.getElementById('subbar');
+  sb.classList.toggle('visible',inner);
+  document.body.classList.toggle('has-subbar',inner);
+  if(inner){
+    var bk=STATE.bookId?bookById(STATE.bookId):null;
+    var label={book:'사전정보',discussion:'답변',history:'내 기록'}[name];
+    document.getElementById('subbar-crumb').innerHTML=(bk&&name!=='history'?'<b>'+esc(bk.title)+'</b> · ':'')+label;
+  }
+  sessSave(name);
+  if(!nopush){ try{ history.pushState({rt:1,pg:name,p4:STATE.phone4,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId},''); }catch(e){} }
+  window.scrollTo(0,0);
+}
+/* ── 세션 기억 (새로고침해도 있던 화면 복원) ── */
+function sessSave(page){
+  if(!STATE.phone4 && !STATE.isHost) return;
+  var s={p4:STATE.phone4,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId,pg:page||''};
+  try{localStorage.setItem('rt:sess',JSON.stringify(s));}catch(e){MEM['rt:sess']=JSON.stringify(s);}
+}
+function sessRead(){
+  try{var v=localStorage.getItem('rt:sess');return v?JSON.parse(v):null;}
+  catch(e){return MEM['rt:sess']?JSON.parse(MEM['rt:sess']):null;}
+}
+function sessClear(){ try{localStorage.removeItem('rt:sess');}catch(e){} if(MEM)delete MEM['rt:sess']; }
+function syncAuthUI(){ var b=document.getElementById('logout-btn'); if(b)b.style.display=(STATE.phone4||STATE.isHost)?'inline-flex':'none'; }
+function logout(){
+  if(isStage) setStage(false);
+  sessClear();
+  STATE.phone4=null;STATE.bookId=null;STATE.isHost=false;
+  setNick();syncHostUI();syncAuthUI();
+  go('login');toast('로그아웃됐어요');
+}
+async function sessRestore(){
+  var s=sessRead(); if(!s||(!s.p4&&!s.host)) return false;
+  STATE.phone4=s.p4||null; STATE.meetingId=s.mid||STATE.meetingId; STATE.isHost=!!s.host; STATE.bookId=s.bid||null;
+  if(ONLINE){ try{ await RT.loadMeetings(); if(STATE.bookId) await RT.loadBook(STATE.bookId); }catch(e){ rtErr(e); } }
+  setNick(); syncHostUI(); syncAuthUI();
+  var ok=['meetings','season','book','discussion','history','create','manage'];
+  var pg=(ok.indexOf(s.pg)>=0)?s.pg:(STATE.isHost?'season':'meetings');
+  go(pg); return true;
+}
+function back(){
+  var cur=document.querySelector('.page.active');
+  var id=cur?cur.id.replace('page-',''):'login';
+  if(id==='book'||id==='history') go('season');
+  else if(id==='discussion') go('book');
+  else if(id==='season') go('meetings');
+  else go('login');
+}
+function goHome(){
+  if(isStage) toggleMode();
+  if(STATE.isHost) go('season');
+  else go(STATE.phone4?'meetings':'login');
+}
+async function login(){
+  var v=(document.getElementById('pin').value||'').trim();
+  if(!/^[0-9]{4}$/.test(v)){toast('휴대폰 뒤 4자리 숫자를 입력해주세요');return;}
+  STATE.phone4=v;STATE.bookId=null;setNick();
+  if(ONLINE){try{await RT.loadMeetings();}catch(e){rtErr(e);}}
+  go('meetings');toast(v+' 으로 입장했어요');
+}
+function val(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
+function rndCode(){var s='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r='';for(var i=0;i<5;i++)r+=s.charAt(Math.floor(Math.random()*s.length));return r;}
+function syncHostUI(){var b=document.getElementById('mode-toggle-btn');if(b)b.style.display=isStage?'inline-flex':'none';}
+
+/* ═══════════ RENDER: 모임 리스트 ═══════════ */
+function renderMeetings(){
+  if(!STATE.phone4){go(STATE.isHost?'season':'login');return;}
+  var ms=allMeetings().filter(function(m){return m.isOpen!==false;}),h=''+
+   '<div class="section-hd"><div><div class="eyebrow">모임</div><h2 class="h-1 mt-4">참여 가능한<br>모임.</h2></div></div>'+
+   '<p class="body-2 mb-16">휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4)+'</b> · 들어갈 모임을 선택하세요. 닉네임은 책마다 자동 배정됩니다.</p>'+
+   (ms.length?'':'<div class="locked-note">지금 참여 가능한 모임이 없어요. 모임장이 모임을 공개하면 여기에 나타납니다.</div>')+
+   '<div class="season-books">';
+  ms.forEach(function(m){
+    var sn=m.kind==='custom'?m.season:SEASON;
+    var sub=sn.books.length+'권 시즌'+(m.kind==='custom'?' · 모임장 개설':'');
+    h+='<div class="book-card current" style="opacity:1" onclick="enterMeeting(\''+m.id+'\')">'+
+      '<div class="book-card__spine">'+esc(sn.title.charAt(0))+'</div>'+
+      '<div class="book-card__body"><div class="book-card__month">'+esc(m.name)+'</div>'+
+      '<div class="book-card__title">'+esc(sn.title)+'</div>'+
+      '<div class="book-card__author">'+esc(sub)+'</div></div>'+
+      '<span class="book-card__go">입장 &rarr;</span></div>';
+  });
+  h+='</div>';
+  document.getElementById('page-meetings').innerHTML=h;
+}
+function enterMeeting(id){STATE.meetingId=id;STATE.bookId=null;setNick();go('season');toast('모임에 입장했어요');}
+
+/* ═══════════ RENDER: 모임 만들기 (시즌 빌더) ═══════════ */
+var BUILD={stage:'season',name:'',stitle:'',ssub:'',books:[],open:-1,isOpen:true};
+function renderCreate(){
+  var h='<div class="section-hd"><div><div class="eyebrow">모임장 · 시즌 만들기</div><h2 class="h-1 mt-4">'+(BUILD.stage==='season'?'시즌<br>만들기.':'책 ·<br>질문 넣기.')+'</h2></div></div>';
+  if(BUILD.stage==='season'){
+    h+='<p class="body-2 mb-16">먼저 시즌(주제)을 만든 뒤, 그 안에 책을 하나씩 추가하고 책마다 질문을 붙입니다.</p>'+
+     '<div class="sheet">'+
+       '<div class="field"><label>모임 이름</label><input class="input" id="cb-name" value="'+esc(BUILD.name)+'" placeholder="예: 사내 독서모임"></div>'+
+       '<div class="field"><label>시즌 제목 (주제)</label><input class="input" id="cb-stitle" value="'+esc(BUILD.stitle)+'" placeholder="예: 인간 본성 탐구"></div>'+
+       '<div class="field"><label>시즌 한 줄 설명 (선택)</label><input class="input" id="cb-ssub" value="'+esc(BUILD.ssub)+'" placeholder="예: 나 → 연결 → 관계의 그늘"></div>'+
+       '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer"><input type="checkbox" id="cb-open"'+(BUILD.isOpen!==false?' checked':'')+' style="width:18px;height:18px;accent-color:var(--accent)"> 지금 공개 (참여 가능한 모임 목록에 노출)</label>'+
+     '</div>'+
+     '<button class="btn btn-primary btn-pill" onclick="buildToBooks()">다음 · 책 추가하기 &rarr;</button>'+
+     '<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'login\')">&larr; 처음으로</button>';
+  }else{
+    h+='<div class="host-banner" style="margin-bottom:16px">시즌 <b>'+esc(BUILD.stitle)+'</b> · '+esc(BUILD.name)+'</div>';
+    if(!BUILD.books.length) h+='<p class="body-2 mb-16">아직 책이 없어요. 아래에서 책을 추가하고, 책 카드를 눌러 질문을 붙이세요.</p>';
+    BUILD.books.forEach(function(bk,i){
+      var nq=bk.questions.filter(function(q){return q&&q.trim();}).length;
+      h+='<div class="sheet'+(BUILD.justAdded===i?' just-added':'')+'" style="cursor:pointer" onclick="toggleBuildBook('+i+')">'+
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div>'+
+        '<div class="eyebrow">'+(i+1)+'권'+(bk.yearmonth?(' · '+esc(fmtYM(bk.yearmonth)||bk.yearmonth)):'')+'</div><h3 class="h-3 mt-4">'+esc(bk.title)+'</h3>'+
+        '<div class="body-2">'+esc(bk.author||'저자 미상')+'</div></div>'+
+        '<span class="tag '+(nq?'tag-accent':'')+'">질문 '+nq+'</span></div>';
+      if(BUILD.open===i){
+        bk.facts=bk.facts||[];bk.links=bk.links||[];
+        var lab='style="display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin:16px 0 6px"';
+        var qh='';
+        bk.questions.forEach(function(q,k){
+          qh+='<div class="qrow"><input class="input" id="bk-q-'+i+'-'+k+'" value="'+esc(q||'')+'" placeholder="질문 '+(k+1)+'">'+
+            (bk.questions.length>1?'<button class="qrow__del" title="삭제" onclick="removeBuildQ('+i+','+k+')">&times;</button>':'')+'</div>';
+        });
+        var fh='';
+        bk.facts.forEach(function(f,k){
+          fh+='<div class="qrow"><input class="input" id="bk-f-'+i+'-'+k+'" value="'+esc(f||'')+'" placeholder="예: 글 쓸 때 늘 재즈를 듣는다">'+
+            '<button class="qrow__del" title="삭제" onclick="removeBuildFact('+i+','+k+')">&times;</button></div>';
+        });
+        var lh='';
+        bk.links.forEach(function(l,k){
+          lh+='<div class="qrow"><input class="input" id="bk-l-'+i+'-'+k+'" value="'+esc(l||'')+'" placeholder="예: 작가 인터뷰 — youtube.com">'+
+            '<button class="qrow__del" title="삭제" onclick="removeBuildLink('+i+','+k+')">&times;</button></div>';
+        });
+        h+='<div onclick="event.stopPropagation()" style="margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:14px">'+
+          '<div class="field"><label>책 소개 (선택 · 교보문고 등에서 복사)</label><textarea class="input" id="bk-intro-'+i+'" rows="2" placeholder="이 책은…">'+esc(bk.intro||'')+'</textarea></div>'+
+          '<div class="field"><label>작가 소개 (선택)</label><textarea class="input" id="bk-bio-'+i+'" rows="2" placeholder="작가는…">'+esc(bk.authorBio||'')+'</textarea></div>'+
+          '<div class="field"><label>회차 연월 (예: 202607)</label><input class="input" id="bk-ym-'+i+'" value="'+esc(bk.yearmonth||'')+'" inputmode="numeric" maxlength="6" placeholder="YYYYMM"></div>'+
+          '<label '+lab+'>질문 ('+bk.questions.length+'개)</label>'+qh+
+          '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBuildQ('+i+')">+ 질문 추가</button>'+
+          '<label '+lab+'>재미있는 사실 (선택)</label>'+fh+
+          '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBuildFact('+i+')">+ 사실 추가</button>'+
+          '<label '+lab+'>같이 볼 콘텐츠 (선택)</label>'+lh+
+          '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBuildLink('+i+')">+ 콘텐츠 추가</button>'+
+          '<div class="row mt-16"><button class="btn btn-primary btn-sm btn-pill" onclick="saveBuildBook('+i+')">저장</button>'+
+          '<button class="btn btn-ghost btn-sm btn-pill" onclick="delBuildBook('+i+')">책 삭제</button></div></div>';
+      }
+      h+='</div>';
+    });
+    if(BUILD.adding){
+      h+='<div class="sheet sheet--warm"><div class="eyebrow mb-8">새 책</div>'+
+        '<div class="field"><label>책 제목</label><input class="input" id="ab-title" placeholder="예: 프로젝트 헤일메리"></div>'+
+        '<div class="field"><label>저자</label><input class="input" id="ab-author" placeholder="예: 앤디 위어"></div>'+
+        '<div class="row"><button class="btn btn-primary btn-sm btn-pill" onclick="addBuildBook()">추가</button>'+
+        '<button class="btn btn-ghost btn-sm btn-pill" onclick="BUILD.adding=false;renderCreate()">취소</button></div></div>';
+    } else {
+      h+='<button class="btn btn-pill" onclick="BUILD.adding=true;renderCreate()">+ 책 추가하기</button>';
+    }
+    h+='<button class="btn btn-primary btn-pill mt-12" onclick="issueMeeting()">모임 발급하기 (코드·비번)</button>'+
+      '<button class="btn btn-ghost btn-pill mt-12" onclick="BUILD.stage=\'season\';renderCreate()">&larr; 시즌 정보로</button>'+
+      '<div id="cb-result"></div>';
+  }
+  document.getElementById('page-create').innerHTML=h;
+  BUILD.justAdded=-1;
+}
+function buildToBooks(){
+  BUILD.name=val('cb-name');BUILD.stitle=val('cb-stitle');BUILD.ssub=val('cb-ssub');
+  var ck=document.getElementById('cb-open'); if(ck) BUILD.isOpen=ck.checked;
+  if(!BUILD.name||!BUILD.stitle){toast('모임 이름과 시즌 제목을 입력해주세요');return;}
+  BUILD.stage='books';renderCreate();
+}
+function readBuildBook(i){
+  var bk=BUILD.books[i];if(!bk)return;
+  if(document.getElementById('bk-intro-'+i)==null)return;
+  bk.intro=val('bk-intro-'+i);bk.authorBio=val('bk-bio-'+i);
+  bk.yearmonth=(val('bk-ym-'+i)||'').replace(/[^0-9]/g,'').slice(0,6);
+  var qs=[];for(var k=0;k<bk.questions.length;k++){var el=document.getElementById('bk-q-'+i+'-'+k);qs.push(el?el.value.trim():(bk.questions[k]||''));}
+  bk.questions=qs;
+  bk.facts=bk.facts||[];var fs=[];for(var a=0;a<bk.facts.length;a++){var fe=document.getElementById('bk-f-'+i+'-'+a);fs.push(fe?fe.value.trim():(bk.facts[a]||''));}bk.facts=fs;
+  bk.links=bk.links||[];var ls=[];for(var c=0;c<bk.links.length;c++){var le=document.getElementById('bk-l-'+i+'-'+c);ls.push(le?le.value.trim():(bk.links[c]||''));}bk.links=ls;
+}
+function addBuildBook(){
+  var t=val('ab-title');if(!t){toast('책 제목을 입력해주세요');return;}
+  BUILD.books.push({title:t,author:val('ab-author'),intro:'',authorBio:'',yearmonth:'',questions:[''],facts:[],links:[]});
+  BUILD.open=BUILD.books.length-1;BUILD.justAdded=BUILD.open;BUILD.adding=false;renderCreate();
+  toast('「'+t+'」 추가됨 · 카드를 눌러 내용을 채우세요');
+}
+function toggleBuildBook(i){ if(BUILD.open!==-1)readBuildBook(BUILD.open); BUILD.open=(BUILD.open===i?-1:i);renderCreate(); }
+function addBuildQ(i){ readBuildBook(i); BUILD.books[i].questions.push(''); renderCreate(); }
+function removeBuildQ(i,k){ readBuildBook(i); if(BUILD.books[i].questions.length<=1)return; BUILD.books[i].questions.splice(k,1); renderCreate(); }
+function addBuildFact(i){ readBuildBook(i); (BUILD.books[i].facts=BUILD.books[i].facts||[]).push(''); renderCreate(); }
+function removeBuildFact(i,k){ readBuildBook(i); BUILD.books[i].facts.splice(k,1); renderCreate(); }
+function addBuildLink(i){ readBuildBook(i); (BUILD.books[i].links=BUILD.books[i].links||[]).push(''); renderCreate(); }
+function removeBuildLink(i,k){ readBuildBook(i); BUILD.books[i].links.splice(k,1); renderCreate(); }
+function saveBuildBook(i){
+  readBuildBook(i);
+  var n=BUILD.books[i].questions.filter(function(q){return q&&q.trim();}).length;
+  renderCreate();toast(n?('저장됨 · 질문 '+n+'개'):'저장됨 (질문이 비어 있어요)');
+}
+function delBuildBook(i){BUILD.books.splice(i,1);BUILD.open=-1;renderCreate();toast('책을 삭제했어요');}
+async function issueMeeting(){
+  if(BUILD.open!==-1) readBuildBook(BUILD.open);
+  if(!BUILD.books.length){toast('책을 최소 1권 추가해주세요');return;}
+  for(var i=0;i<BUILD.books.length;i++){
+    var qv=BUILD.books[i].questions.filter(function(q){return q&&q.trim();});
+    if(!qv.length){toast((i+1)+'권 「'+BUILD.books[i].title+'」에 질문을 1개 이상 넣어주세요');BUILD.open=i;renderCreate();return;}
+  }
+  var code,pw;
+  if(ONLINE){
+    var res=await RT.createMeeting(BUILD.name,BUILD.stitle,BUILD.ssub,BUILD.books);
+    if(!res) return;
+    code=res.code;pw=res.pw;
+  } else {
+    code=rndCode();pw=String(Math.floor(1000+Math.random()*9000));var mid='c'+Date.now();
+    var season={title:BUILD.stitle,sub:BUILD.ssub,eyebrow:'모임 · '+BUILD.name,meta:'모임장이 개설한 시즌 · 코드 '+code,
+      books:BUILD.books.map(function(b,i){
+        var qs=b.questions.filter(function(q){return q&&q.trim();});
+        return {id:mid+'-b'+i,title:b.title,author:b.author||'(저자 미상)',spine:b.title.charAt(0),status:'current',yearmonth:b.yearmonth||'',month:fmtYM(b.yearmonth)||((i+1)+'권'),angle:'',tagline:b.title,intro:b.intro||'(책 소개 미입력 — 모임장이 채울 수 있어요)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:b.authorBio||'',bio:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {i:'🔗',t:s,m:''};}),questions:qs,others:qs.map(function(){return [];})};
+      })};
+    applySchedule(season.books);
+    var cs=customMeetings();cs.push({id:mid,name:BUILD.name,code:code,pw:pw,kind:'custom',isOpen:(BUILD.isOpen!==false),season:season});saveCustomMeetings(cs);
+  }
+  document.getElementById('cb-result').innerHTML='<div class="code-box">'+
+    '<div class="eyebrow mb-8">발급 완료 — 회원에게 공유하세요</div>'+
+    '<div class="code-box__row">모임코드 <b>'+esc(code)+'</b></div>'+
+    '<div class="code-box__row">모임 비밀번호 <b>'+esc(pw)+'</b></div>'+
+    '<p class="body-2 mt-12">회원은 휴대폰 뒤 4자리 입장 후 목록에서 <b>'+esc(BUILD.name)+'</b>을 고릅니다. 모임장은 첫 화면의 [모임 관리]에서 이 코드·비번으로 발표 모드를 엽니다.</p>'+
+    '<button class="btn btn-primary btn-pill mt-12" onclick="go(\'manage\')">모임 관리로 이동</button></div>';
+  BUILD={stage:'season',name:'',stitle:'',ssub:'',books:[],open:-1};
+  toast('모임 발급 완료: '+code);
+}
+
+/* ═══════════ RENDER: 모임 관리 (모임장 인증 게이트) ═══════════ */
+function renderManage(){
+  document.getElementById('page-manage').innerHTML=''+
+   '<div class="section-hd"><div><div class="eyebrow">모임장</div><h2 class="h-1 mt-4">모임<br>관리.</h2></div></div>'+
+   '<p class="body-2 mb-16">모임 하나당 공용 계정입니다. 모임코드·비밀번호로 인증하면 발표 모드가 열려요. (개인 답변이 필요하면 첫 화면에서 휴대폰 4자리로 따로 입장하세요.)</p>'+
+   '<div class="sheet">'+
+     '<div class="field"><label>모임코드</label><input class="input" id="mg-code" style="text-transform:uppercase" placeholder="예: HUMAN-Q2"></div>'+
+     '<div class="field"><label>모임 비밀번호</label><input class="input" id="mg-pw" inputmode="numeric" placeholder="모임 비밀번호" onkeydown="if(event.key===\'Enter\')managerLogin()"></div>'+
+   '</div>'+
+   '<button class="btn btn-primary btn-pill" onclick="managerLogin()">인증하고 입장</button>'+
+   '<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'login\')">&larr; 돌아가기</button>'+
+   '<p class="login-hint">데모 기본 모임 — 코드 <b>HUMAN-Q2</b> · 비번 <b>1234</b></p>';
+}
+async function managerLogin(){
+  var code=val('mg-code').toUpperCase(),pw=val('mg-pw'),m=null;
+  if(ONLINE){try{await RT.loadMeetings();}catch(e){rtErr(e);}}
+  allMeetings().forEach(function(x){if(String(x.code).toUpperCase()===code&&String(x.pw)===pw)m=x;});
+  if(!m){toast('모임코드 또는 비밀번호가 맞지 않아요');return;}
+  STATE.meetingId=m.id;STATE.bookId=null;STATE.isHost=true;
+  setNick();syncHostUI();
+  go('season');toast(m.name+' 모임장으로 입장 (발표 모드 사용 가능)');
+}
+function setStage(on){
+  isStage=on;
+  document.getElementById('main-content').classList.toggle('hidden',on);
+  document.getElementById('stage-wrap').classList.toggle('visible',on);
+  document.getElementById('top-nav').classList.toggle('visible',on);
+  document.getElementById('subbar').classList.toggle('visible',!on&&document.body.classList.contains('has-subbar'));
+  var b=document.getElementById('mode-toggle-btn');
+  if(b){b.textContent='발표 종료';b.style.display=on?'inline-flex':'none';}
+}
+async function startShare(bookId){
+  STAGE.bookId=bookId;STAGE.order=[];STAGE.pickedName=null;
+  if(ONLINE){try{await RT.loadBook(bookId);}catch(e){rtErr(e);}}
+  setStage(true);
+  renderStageRoadmap();renderStageRating();renderStageLive();
+  toast('발표를 시작합니다');
+}
+function exitStage(){setStage(false);}
+function toggleMode(){if(isStage)exitStage();else startShare(currentBookId());}
 function showStageScene(name){
   document.querySelectorAll('.stage-wrap .scene').forEach(function(s){s.classList.remove('active')});
   var el=document.getElementById('scene-'+name);
   if(el) el.classList.add('active');
-  document.querySelectorAll('#nav-stage a').forEach(function(a){a.classList.remove('active');if(a.dataset.scene===name)a.classList.add('active')});
+  document.querySelectorAll('#top-nav a').forEach(function(a){a.classList.remove('active');if(a.dataset.scene===name)a.classList.add('active')});
+  if(name==='roadmap') renderStageRoadmap();
+  else if(name==='analysis') renderStageRating();
+  else if(name==='live') renderStageLive();
 }
 
-function toggleMode(){
-  isStage=!isStage;
-  document.getElementById('main-content').classList.toggle('hidden',isStage);
-  document.getElementById('stage-wrap').classList.toggle('visible',isStage);
-  document.getElementById('nav-personal').style.display=isStage?'none':'flex';
-  document.getElementById('nav-stage').style.display=isStage?'flex':'none';
-  document.getElementById('mode-toggle-btn').textContent=isStage?'개인 모드':'발표 모드';
+/* ═══════════ RENDER: 시즌 포탈 ═══════════ */
+var EDIT={bookId:null,qi:-1};
+var EDITANS={qi:-1};
+var BINFO={editing:false,buf:null};
+function qeStore(){try{return JSON.parse(localStorage.getItem('rt:qedits'))||{};}catch(e){return MEM['rt:qedits']?JSON.parse(MEM['rt:qedits']):{};}}
+function qeSave(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:qedits',v);}catch(e){MEM['rt:qedits']=v;}}
+function applyQEdits(){var o=qeStore();SEASON.books.forEach(function(b){if(o[b.id])b.questions=o[b.id].slice();});}
+function saveBookQuestions(id,arr){
+  var cs=customMeetings(),done=false;
+  cs.forEach(function(mm){((mm.season&&mm.season.books)||[]).forEach(function(bb){if(bb.id===id){bb.questions=arr;bb.others=arr.map(function(){return [];});done=true;}});});
+  if(done){saveCustomMeetings(cs);return;}
+  var o=qeStore();o[id]=arr;qeSave(o);applyQEdits();
+}
+function toggleEditQ(id){EDIT.bookId=(EDIT.bookId===id?null:id);EDIT.qi=-1;renderSeason();}
+function editQ(id,k){EDIT.bookId=id;EDIT.qi=k;renderSeason();}
+function cancelQ(){EDIT.qi=-1;renderSeason();}
+async function persistQuestions(id,arr){
+  if(ONLINE){ return await RT.saveQuestions(id,arr); }
+  saveBookQuestions(id,arr); return true;
+}
+async function saveQ1(id,k){
+  var b=bookById(id);if(!b)return;
+  var el=document.getElementById('eq-'+k),v=el?el.value.trim():'';
+  if(!v){toast('질문을 입력해주세요');return;}
+  var arr=(b.questions||[]).slice();arr[k]=v;
+  if(!(await persistQuestions(id,arr)))return;
+  EDIT.qi=-1;renderSeason();toast('질문 저장됨');
+}
+function addQ2(id){
+  var b=bookById(id);if(!b)return;
+  b.questions=(b.questions||[]).slice();b.questions.push('');
+  EDIT.bookId=id;EDIT.qi=b.questions.length-1;renderSeason();
+}
+async function delQ2(id,k){
+  var b=bookById(id);if(!b)return;
+  var arr=(b.questions||[]).slice();
+  if(arr.length<=1){toast('질문은 최소 1개 필요해요');return;}
+  arr.splice(k,1);
+  if(!(await persistQuestions(id,arr)))return;
+  EDIT.qi=-1;renderSeason();toast('질문 삭제됨');
+}
+function renderSeason(){
+  var m=activeMeeting(),custom=(m.kind==='custom'),sn=custom?m.season:SEASON,books=sn.books;
+  var eyebrow=custom?('모임 · '+m.name):SEASON.eyebrow;
+  var title=sn.title;
+  var sub=custom?(sn.sub||sn.books.length+'권 시즌'):SEASON.sub;
+  var meta=custom?('모임장이 개설한 시즌 · 코드 '+m.code):SEASON.meta;
+  var h='<div class="season-hd">'+
+     '<div class="season-hd__eyebrow">'+esc(eyebrow)+'</div>'+
+     '<div class="season-hd__title">'+esc(title)+'</div>'+
+     '<div class="season-hd__sub">'+esc(sub)+'</div>'+
+     '<div class="season-hd__meta">'+esc(meta)+'</div>'+
+   '</div>'+
+   (STATE.isHost?'<div class="host-banner">&#128081; 모임장 모드 — 책 카드에서 <b>공유 시작하기</b> · <b>질문 편집</b> (기존 시즌 책도 편집 가능)</div>':'')+
+   '<div class="season-books">';
+  books.forEach(function(b,i){
+    var cur=b.status==='current';
+    var bl=(b.status==='past')?'지난':(cur?'이번 회차':'예정');
+    h+=
+     '<div class="book-card '+(cur?'current':'upcoming')+'"'+(STATE.isHost?'':' onclick="openBook(\''+b.id+'\')"')+'>'+
+       '<div class="book-card__spine">'+esc(b.spine)+'</div>'+
+       '<div class="book-card__body">'+
+         '<div class="book-card__month">'+esc(b.month||'')+'</div>'+
+         '<div class="book-card__title">'+esc(b.title)+'</div>'+
+         '<div class="book-card__author">'+esc(b.author)+'</div>'+
+         '<div class="book-card__angle">'+esc(b.angle||'')+'</div>'+
+         (STATE.isHost?('<div class="book-card__host">'+
+           '<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="startShare(\''+b.id+'\')">&#9654; 공유 시작하기</button>'+
+           '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="openBook(\''+b.id+'\')">사전정보</button>'+
+           '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="toggleEditQ(\''+b.id+'\')">질문 편집</button>'+
+           '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="delBookHost(\''+b.id+'\',\''+esc(b.title)+'\')">책 삭제</button>'+
+         '</div>'):'')+
+       '</div>'+
+       '<span class="book-card__badge '+(cur?'now':'soon')+'">'+bl+'</span>'+
+     '</div>';
+    if(STATE.isHost&&EDIT.bookId===b.id){
+      var qs=b.questions||[];
+      var qe='<div class="sheet sheet--warm" style="margin-top:8px"><div class="eyebrow mb-12">질문 · '+esc(b.title)+'</div>';
+      qs.forEach(function(q,k){
+        if(EDIT.qi===k){
+          qe+='<div class="qrow"><input class="input" id="eq-'+k+'" value="'+esc(q||'')+'" placeholder="질문 '+(k+1)+'">'+
+            '<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="saveQ1(\''+b.id+'\','+k+')">저장</button>'+
+            '<button class="qrow__del" title="취소" onclick="cancelQ()">&times;</button></div>';
+        } else {
+          qe+='<div class="qfix"><span class="qfix__t">Q'+(k+1)+'. '+(q?esc(q):'<span class="dim">빈 질문 — 편집을 눌러 작성</span>')+'</span>'+
+            '<button class="qfix__btn" onclick="editQ(\''+b.id+'\','+k+')">편집</button>'+
+            (qs.length>1?'<button class="qfix__btn" onclick="delQ2(\''+b.id+'\','+k+')">삭제</button>':'')+'</div>';
+        }
+      });
+      qe+='<div class="row mt-12"><button class="btn btn-ghost btn-sm btn-pill" onclick="addQ2(\''+b.id+'\')">+ 질문 추가</button>'+
+        '<button class="btn btn-ghost btn-sm btn-pill" onclick="toggleEditQ(\''+b.id+'\')">닫기</button></div></div>';
+      h+=qe;
+    }
+    if(i<books.length-1) h+='<div class="season-rail"></div>';
+  });
+  h+='</div>'+
+   (STATE.isHost
+     ? '<button class="btn btn-ghost btn-pill mt-16" onclick="addBookHost()">+ 책 추가</button>'+
+       '<div class="center mt-24"><button class="danger-link" onclick="delMeetingHost()">이 모임 삭제</button></div>'
+     : '<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>');
+  document.getElementById('page-season').innerHTML=h;
+}
+async function openBook(id){STATE.bookId=id;setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
+function _custMutate(fn){ var cs=customMeetings(),hit=false; cs.forEach(function(mm){ if(fn(mm))hit=true; }); if(hit)saveCustomMeetings(cs); return hit; }
+async function delBookHost(id,title){
+  if(!confirm('「'+title+'」 책과 그 답변·댓글을 모두 삭제할까요?'))return;
+  if(ONLINE){ if(!(await RT.deleteBook(id)))return; }
+  else { _custMutate(function(mm){ if(!mm.season)return false; var n=mm.season.books.length; mm.season.books=mm.season.books.filter(function(x){return x.id!==id;}); return mm.season.books.length!==n; }); }
+  renderSeason();toast('책을 삭제했어요');
+}
+async function addBookHost(){
+  var t=(prompt('추가할 책 제목')||'').trim(); if(!t)return;
+  var au=(prompt('저자 (선택, 비워도 됨)')||'').trim();
+  if(ONLINE){ if(!(await RT.addBook(STATE.meetingId,t,au)))return; }
+  else {
+    var m=activeMeeting(); if(!m||m.kind!=='custom'){toast('기본 모임엔 책을 추가할 수 없어요(온라인 전용)');return;}
+    var ok=_custMutate(function(mm){ if(mm.id!==STATE.meetingId||!mm.season)return false;
+      mm.season.books.push({id:STATE.meetingId+'-b'+Date.now(),title:t,author:au||'(저자 미상)',spine:t.charAt(0),status:'current',yearmonth:'',month:'',angle:'',tagline:t,intro:'(책 소개 미입력)',intro_note:'',authorBio:'',bio:[],links:[],questions:[''],others:[[]]});
+      applySchedule(mm.season.books); return true; });
+    if(!ok){toast('추가 실패');return;}
+  }
+  renderSeason();toast('「'+t+'」 추가됨 · 카드에서 질문·사전정보를 채우세요');
+}
+async function delMeetingHost(){
+  if(!confirm('이 모임 전체(시즌·책·답변·별점·댓글)를 영구 삭제할까요? 되돌릴 수 없습니다.'))return;
+  if(ONLINE){ if(!(await RT.deleteMeeting(STATE.meetingId)))return; }
+  else { _custMutate(function(mm){ return mm.id===STATE.meetingId; }) || 0;
+    var cs=customMeetings().filter(function(mm){return mm.id!==STATE.meetingId;}); saveCustomMeetings(cs); }
+  sessClear();STATE.isHost=false;STATE.meetingId=ONLINE?null:'m1';STATE.bookId=null;
+  setNick();syncHostUI();syncAuthUI();go('login');toast('모임을 삭제했어요');
 }
 
-function goJoin(){
-  if(isStage) toggleMode();
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
-  document.getElementById('page-join').classList.add('active');
-  document.querySelectorAll('#nav-personal a').forEach(function(a){a.classList.remove('active')});
+/* ═══════════ RENDER: 사전정보 ═══════════ */
+function renderBook(){
+  var b=bookById(STATE.bookId);if(!b)return go('season');
+  var cur=b.status==='current';
+  if(STATE.phone4&&!STATE.isHost&&!fixedNick(STATE.phone4,STATE.bookId)){
+    if(!PENDNICK)PENDNICK=randomNick();
+    document.getElementById('page-book').innerHTML=
+      '<div class="section-hd"><div><div class="eyebrow">'+esc(b.title)+'</div><h2 class="h-1 mt-4">이 책에서의<br>내 이름.</h2></div></div>'+
+      '<div class="cover" style="padding:36px 20px;text-align:center"><div class="cover__top"><span>untoldChapter</span><span>'+esc(b.month||'')+'</span></div>'+
+      '<div style="padding:30px 0"><div style="font-size:14px;opacity:.8;margin-bottom:10px">당신은</div>'+
+      '<div class="cover__title" style="font-size:34px">'+esc(PENDNICK)+'</div>'+
+      '<div style="font-size:15px;opacity:.85;margin-top:10px">입니다!!</div></div>'+
+      '<div class="cover__top"><span>책마다 새 이름</span><span>익명</span></div></div>'+
+      '<p class="body-2 center mb-16">이 이름으로 「'+esc(b.title)+'」에 참여합니다. 마음에 들면 확정하세요.</p>'+
+      '<div class="row"><button class="btn btn-ghost btn-pill" onclick="rollNick()">🎲 다시 뽑기</button>'+
+      '<button class="btn btn-primary btn-pill" onclick="confirmNick()">이 이름으로 확정</button></div>';
+    return;
+  }
+  var h='<div class="section-hd"><div><div class="eyebrow">사전정보</div><h2 class="h-2 mt-4">모임 전에 워밍업!</h2></div></div>'+
+   '<div class="cover" style="padding:24px 20px">'+
+     '<div class="cover__top"><span>'+esc(b.title)+'</span><span>'+esc(b.month||'')+'</span></div>'+
+     '<div style="text-align:center;padding:20px 0"><div class="cover__title">'+esc(b.title)+'</div><div class="cover__author">'+esc(b.author)+'</div></div>'+
+     '<div class="cover__top"><span>untoldChapter</span><span>'+esc(b.month||'')+'</span></div>'+
+   '</div>';
+  if(STATE.isHost&&BINFO.editing){
+    var bf=BINFO.buf||{intro:'',authorBio:'',yearmonth:'',facts:[],links:[]};
+    var lab='style="display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin:16px 0 6px"';
+    var fh='';bf.facts.forEach(function(f,k){
+      fh+='<div class="qrow"><input class="input" id="bi-ft-'+k+'" value="'+esc(f.t||'')+'" placeholder="제목 (예: 글 쓸 때 재즈를 듣는다)">'+
+        '<input class="input" id="bi-fs-'+k+'" value="'+esc(f.s||'')+'" placeholder="설명(선택)">'+
+        '<button class="qrow__del" onclick="rmBIFact('+k+')">&times;</button></div>';
+    });
+    var lh='';bf.links.forEach(function(l,k){
+      lh+='<div class="qrow"><input class="input" id="bi-lt-'+k+'" value="'+esc(l.t||'')+'" placeholder="콘텐츠 제목">'+
+        '<input class="input" id="bi-lm-'+k+'" value="'+esc(l.m||'')+'" placeholder="출처/링크(선택)">'+
+        '<button class="qrow__del" onclick="rmBILink('+k+')">&times;</button></div>';
+    });
+    h+='<div class="sheet sheet--warm"><div class="eyebrow mb-12">사전정보 편집 · '+esc(b.title)+'</div>'+
+      '<div class="field"><label>책 소개</label><textarea class="input" id="bi-intro" rows="3">'+esc(bf.intro||'')+'</textarea></div>'+
+      '<div class="field"><label>작가 소개</label><textarea class="input" id="bi-bio" rows="2">'+esc(bf.authorBio||'')+'</textarea></div>'+
+      '<div class="field"><label>회차 연월 (예: 202607)</label><input class="input" id="bi-ym" value="'+esc(bf.yearmonth||'')+'" inputmode="numeric" maxlength="6" placeholder="YYYYMM"></div>'+
+      '<label '+lab+'>재미있는 사실</label>'+fh+'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBIFact()">+ 사실 추가</button>'+
+      '<label '+lab+'>같이 볼 콘텐츠</label>'+lh+'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBILink()">+ 콘텐츠 추가</button>'+
+      '<div class="row mt-16"><button class="btn btn-primary btn-sm btn-pill" onclick="saveBookInfo()">저장</button>'+
+      '<button class="btn btn-ghost btn-sm btn-pill" onclick="cancelBookInfo()">취소</button></div></div>';
+  } else {
+    h+='<div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">책 소개</div><h3 class="h-3 mt-4">'+esc(b.tagline)+'</h3></div></div>'+
+      '<p class="lead" style="font-size:15px">'+esc(b.intro)+'</p>'+
+      (b.intro_note?'<p class="body-2 mt-12" style="color:var(--ink-dim)">'+esc(b.intro_note)+'</p>':'')+'</div>';
+    if(b.authorBio) h+='<div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">작가 소개</div><h3 class="h-3 mt-4">'+esc(b.author)+'</h3></div></div><p class="lead" style="font-size:15px">'+esc(b.authorBio)+'</p></div>';
+    if(b.bio&&b.bio.length){
+      h+='<div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">재미있는 사실</div><h3 class="h-3 mt-4">'+esc(b.author)+', 이런 사람이에요</h3></div></div><div class="steps" style="gap:8px">';
+      b.bio.forEach(function(x){h+='<div class="step" style="padding:12px"><span class="num" style="font-size:22px;width:auto">'+(x.e||'📌')+'</span><div><div class="title" style="font-size:14px">'+esc(x.t)+'</div>'+(x.s?'<p class="sub">'+esc(x.s)+'</p>':'')+'</div></div>';});
+      h+='</div></div>';
+    }
+    if(b.links&&b.links.length){
+      h+='<div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">같이 볼 콘텐츠</div><h3 class="h-3 mt-4">읽기 전에 보면 좋은 것들</h3></div></div>';
+      b.links.forEach(function(x){h+='<div class="link-card"><div class="link-card__icon">'+(x.i||'🔗')+'</div><div class="link-card__body"><div class="link-card__title">'+esc(x.t)+'</div><div class="link-card__meta">'+esc(x.m||'')+'</div></div></div>';});
+      h+='</div>';
+    }
+    if(STATE.isHost)
+      h+='<div class="row mt-12"><button class="btn btn-ghost btn-pill" onclick="editBookInfo()">✏️ 사전정보 편집</button>'+
+        '<button class="btn btn-primary btn-arrow btn-pill" onclick="startShare(\''+b.id+'\')">발표 시작 <span class="arr">&rarr;</span></button></div>';
+    else if(cur)
+      h+='<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">답변하러 가기 <span class="arr">&rarr;</span></button>';
+    else
+      h+='<div class="locked-note mt-12">이 책은 <b>'+esc(b.month)+'</b>에 모임이 열려요.<br>지금은 미리 워밍업만 할 수 있어요.</div>';
+  }
+  document.getElementById('page-book').innerHTML=h;
+}
+function editBookInfo(){
+  var b=bookById(STATE.bookId);if(!b)return;
+  BINFO.buf={intro:b.intro||'',authorBio:b.authorBio||'',yearmonth:b.yearmonth||'',
+    facts:(b.bio||[]).map(function(x){return {e:x.e||'📌',t:x.t||'',s:x.s||''};}),
+    links:(b.links||[]).map(function(x){return {i:x.i||'🔗',t:x.t||'',m:x.m||''};})};
+  BINFO.editing=true;renderBook();
+}
+function readBINFO(){
+  var bf=BINFO.buf;if(!bf||document.getElementById('bi-intro')==null)return;
+  bf.intro=val('bi-intro');bf.authorBio=val('bi-bio');bf.yearmonth=(val('bi-ym')||'').replace(/[^0-9]/g,'').slice(0,6);
+  bf.facts.forEach(function(f,k){var t=document.getElementById('bi-ft-'+k),s=document.getElementById('bi-fs-'+k);if(t)f.t=t.value.trim();if(s)f.s=s.value.trim();});
+  bf.links.forEach(function(l,k){var t=document.getElementById('bi-lt-'+k),m=document.getElementById('bi-lm-'+k);if(t)l.t=t.value.trim();if(m)l.m=m.value.trim();});
+}
+function addBIFact(){readBINFO();BINFO.buf.facts.push({e:'📌',t:'',s:''});renderBook();}
+function rmBIFact(k){readBINFO();BINFO.buf.facts.splice(k,1);renderBook();}
+function addBILink(){readBINFO();BINFO.buf.links.push({i:'🔗',t:'',m:''});renderBook();}
+function rmBILink(k){readBINFO();BINFO.buf.links.splice(k,1);renderBook();}
+function cancelBookInfo(){BINFO.editing=false;BINFO.buf=null;renderBook();}
+async function saveBookInfo(){
+  readBINFO();var b=bookById(STATE.bookId),bf=BINFO.buf;if(!b||!bf)return;
+  var facts=bf.facts.filter(function(f){return f.t&&f.t.trim();});
+  var links=bf.links.filter(function(l){return l.t&&l.t.trim();});
+  var p={intro:bf.intro,author_bio:bf.authorBio,yearmonth:bf.yearmonth,author_facts:facts,links:links};
+  if(ONLINE){ if(!(await RT.saveBookInfo(b.id,p))) return; }
+  else {
+    b.intro=bf.intro;b.authorBio=bf.authorBio;b.yearmonth=bf.yearmonth;b.bio=facts;b.links=links;b.month=fmtYM(bf.yearmonth)||b.month;
+    var cs=customMeetings(),hit=false;
+    cs.forEach(function(mm){((mm.season&&mm.season.books)||[]).forEach(function(x){if(x.id===b.id){x.intro=b.intro;x.authorBio=b.authorBio;x.yearmonth=b.yearmonth;x.bio=facts;x.links=links;x.month=b.month;hit=true;}});});
+    if(hit){ cs.forEach(function(mm){ if(mm.season&&mm.season.books) applySchedule(mm.season.books); }); saveCustomMeetings(cs); }
+  }
+  BINFO.editing=false;BINFO.buf=null;renderBook();toast('사전정보를 저장했어요');
 }
 
+/* ═══════════ RENDER: 답변 ═══════════ */
+function bookHeadHtml(b){
+  return '<div class="book-head"><div class="book-head__spine">'+esc(b.spine)+'</div>'+
+    '<div><div class="book-head__title">'+esc(b.title)+'</div>'+
+    '<div class="book-head__meta">'+esc(b.author)+' · '+esc(b.month)+' · '+esc(SEASON.title)+'</div></div></div>';
+}
+function renderDiscussion(){
+  var b=bookById(STATE.bookId);if(!b)return go('season');
+  var h=bookHeadHtml(b);
+  if(b.status!=='current'){
+    h+='<div class="locked-note">이 책의 답변은 <b>'+esc(b.month)+'</b> 모임 기간에 열려요.<br>그때 닉네임도 새로 자동 배정됩니다.</div>';
+    document.getElementById('page-discussion').innerHTML=h;return;
+  }
+  var bs=bookState(b.id);
+  h+='<div class="section-hd"><div><div class="eyebrow">답변</div><h2 class="h-1 mt-4">내 생각을<br>적어볼까요.</h2></div></div>';
+
+  if(!bs.submitted){
+    h+='<p class="body-2 mb-16">먼저 <b style="color:var(--ink)">내 답변</b>을 제출하면, 그 직후 다른 참가자의 답변(익명)을 읽고 댓글을 달 수 있어요.</p>';
+    b.questions.forEach(function(q,i){
+      h+='<div class="sheet">'+
+        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
+        '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
+        '<textarea class="input" id="ans-'+i+'" rows="3" placeholder="내 생각을 적어주세요">'+esc(bs.answers[i]||'')+'</textarea>'+
+      '</div>';
+    });
+    h+='<button class="btn btn-primary btn-pill" onclick="submitAnswers()">답변 제출하기</button>';
+  }else{
+    h+='<p class="body-2 mb-16">답변 제출 완료! 이제 다른 참가자의 답변(익명)을 읽고 댓글을 남길 수 있어요. 이 댓글은 모임 당일 토론 거리가 됩니다.</p>';
+    b.questions.forEach(function(q,i){
+      h+='<div class="sheet">'+
+        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
+        '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
+        '<div class="answer mine"><div class="answer__who"><span><b>나 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>'+(EDITANS.qi===i?'수정 중':'제출됨')+'</span></div>'+
+          (EDITANS.qi===i
+            ? '<textarea class="input" id="ea-'+i+'" rows="3">'+esc(bs.answers[i]||'')+'</textarea>'+
+              '<div class="row mt-12"><button class="btn btn-primary btn-sm btn-pill" onclick="saveAns('+i+')">저장</button>'+
+              '<button class="btn btn-ghost btn-sm btn-pill" onclick="cancelAns()">취소</button></div>'
+            : '<div class="answer__body">'+esc(bs.answers[i]||'')+'</div>'+
+              '<div class="reaction-row"><button class="reaction-btn" onclick="editAns('+i+')">✏️ 수정</button></div>')+
+          '</div>';
+      (b.others[i]||[]).forEach(function(o,j){
+        var ck='q'+i+'a'+j, list=(bs.comments[ck]||[]);
+        var rc=(b.reactions&&b.reactions[ck])||(bs.reactions&&bs.reactions[ck])||{count:0,mine:false};
+        h+='<div class="answer"><div class="answer__who"><span><b>'+esc(o.n)+'</b> · 익명</span></div>'+
+          '<div class="answer__body">'+esc(o.a)+'</div>'+
+          '<div class="reaction-row"><button class="reaction-btn'+(rc.mine?' react-on':'')+'" onclick="toggleReact('+i+','+j+')">💛 공감'+(rc.count?(' '+rc.count):'')+'</button></div>'+
+          '<div class="comment-box">';
+        if(list.length){
+          h+='<div class="comment-list">';
+          list.forEach(function(c,ci){var txt=(typeof c==='string')?c:c.t;
+            h+='<div class="comment"><b>나</b> '+esc(txt)+'<button class="cmt-x" title="삭제" onclick="delComment('+i+','+j+','+ci+')">&times;</button></div>';});
+          h+='</div>';
+        }
+        h+='<div class="comment-form"><input class="input" id="cm-'+i+'-'+j+'" placeholder="댓글·궁금한 점을 남겨보세요" onkeydown="if(event.key===\'Enter\')addComment('+i+','+j+')">'+
+            '<button class="btn btn-ghost btn-sm btn-pill" onclick="addComment('+i+','+j+')">등록</button></div>'+
+          '</div></div>';
+      });
+      h+='</div>';
+    });
+    h+=ratingHtml(b,bs);
+  }
+  document.getElementById('page-discussion').innerHTML=h;
+}
+function ratingHtml(b,bs){
+  var h='<div class="sheet sheet--warm"><div class="sheet__hd"><div><div class="eyebrow">책 별점</div>'+
+    '<h3 class="h-3 mt-4">이 책, 어땠나요?</h3></div></div>'+
+    '<p class="body-2 mb-16">답변이 아니라 <b style="color:var(--ink)">책 자체</b>에 대한 평가예요. 발표에서는 누구 점수인지 보이지 않고 익명 분포만 공개됩니다.</p>'+
+    '<div class="rating-grid">';
+  RATING_AXES.forEach(function(ax){
+    var val=bs.ratings[ax.k]||0;
+    h+='<div class="rating-row'+(ax.k==='overall'?' rating-row--total':'')+'">'+
+      '<div class="rating-row__label">'+esc(ax.label)+'<span>'+esc(ax.hint)+'</span></div><div class="stars">';
+    for(var n=1;n<=5;n++) h+='<button class="star'+(n<=val?' on':'')+'" onclick="setRating(\''+ax.k+'\','+n+')">★</button>';
+    h+='</div></div>';
+  });
+  h+='</div><button class="btn btn-primary btn-pill mt-16" onclick="saveRating()">별점 저장</button></div>';
+  return h;
+}
+async function submitAnswers(){
+  var b=bookById(STATE.bookId),bs=bookState(b.id),filled=0,vals=[];
+  b.questions.forEach(function(q,i){
+    var t=(document.getElementById('ans-'+i).value||'').trim();
+    bs.answers[i]=t;vals[i]=t;if(t)filled++;
+  });
+  if(filled<b.questions.length){setBookState(b.id,bs);toast('모든 질문에 답한 뒤 제출해주세요 ('+filled+'/'+b.questions.length+')');return;}
+  if(ONLINE){ if(!(await RT.submit(b.id,vals))) return; }
+  else { bs.submitted=true;setBookState(b.id,bs); }
+  toast('답변 제출 완료! 다른 사람 답변이 열렸어요');
+  renderDiscussion();
+}
+function editAns(i){ EDITANS.qi=i; renderDiscussion(); }
+function cancelAns(){ EDITANS.qi=-1; renderDiscussion(); }
+async function saveAns(i){
+  var b=bookById(STATE.bookId),bs=bookState(b.id);
+  var el=document.getElementById('ea-'+i),v=el?el.value.trim():'';
+  if(!v){toast('답변을 입력해주세요');return;}
+  bs.answers[i]=v;
+  if(ONLINE){ if(!(await RT.submit(b.id,bs.answers))) return; }
+  else { setBookState(b.id,bs); }
+  EDITANS.qi=-1; renderDiscussion(); toast('답변을 수정했어요');
+}
+function setRating(k,n){
+  var b=bookById(STATE.bookId),bs=bookState(b.id);
+  bs.ratings[k]=n;setBookState(b.id,bs);renderDiscussion();
+}
+async function saveRating(){
+  var b=bookById(STATE.bookId),bs=bookState(b.id),done=0;
+  RATING_AXES.forEach(function(ax){if(bs.ratings[ax.k])done++;});
+  if(!done){toast('별을 하나 이상 눌러주세요');return;}
+  if(ONLINE){ if(!(await RT.saveRatings(b.id,bs.ratings))) return; }
+  toast('별점 저장 완료 ('+done+'/'+RATING_AXES.length+' 항목)');
+}
+async function addComment(i,j){
+  var inp=document.getElementById('cm-'+i+'-'+j),t=(inp.value||'').trim();
+  if(!t){toast('댓글을 입력해주세요');return;}
+  var b=bookById(STATE.bookId),bs=bookState(b.id),ck='q'+i+'a'+j;
+  if(ONLINE){
+    var tgt=((b.others[i]||[])[j]||{}).phone4;
+    if(!tgt){toast('대상 답변을 찾을 수 없어요');return;}
+    if(!(await RT.addComment(b.id,i,tgt,t))) return;
+  } else {
+    if(!bs.comments[ck])bs.comments[ck]=[];
+    bs.comments[ck].push(t);setBookState(b.id,bs);
+  }
+  toast('댓글을 남겼어요 — 모임 때 함께 이야기해요');
+  renderDiscussion();
+}
+async function delComment(i,j,ci){
+  if(!confirm('이 댓글을 삭제할까요?'))return;
+  var b=bookById(STATE.bookId),bs=bookState(b.id),ck='q'+i+'a'+j,list=(bs.comments&&bs.comments[ck])||[];
+  var c=list[ci];if(c===undefined)return;
+  if(ONLINE){
+    var id=(typeof c==='string')?null:c.id;
+    if(!id){toast('삭제할 댓글을 찾을 수 없어요');return;}
+    if(!(await RT.deleteComment(b.id,id)))return;
+  } else {
+    list.splice(ci,1);setBookState(b.id,bs);
+  }
+  toast('댓글을 삭제했어요');renderDiscussion();
+}
+async function toggleReact(i,j){
+  var b=bookById(STATE.bookId);
+  var tgt=((b.others[i]||[])[j]||{}).phone4;
+  if(ONLINE){
+    if(!tgt){toast('대상을 찾을 수 없어요');return;}
+    if(!(await RT.toggleReaction(b.id,i,tgt))) return;
+    renderDiscussion();
+  } else {
+    var bs=bookState(b.id),ck='q'+i+'a'+j;
+    if(!bs.reactions) bs.reactions={};
+    var r=bs.reactions[ck]||{count:0,mine:false};
+    r.mine=!r.mine; r.count=Math.max(0,(r.count||0)+(r.mine?1:-1));
+    bs.reactions[ck]=r; setBookState(b.id,bs);
+    renderDiscussion();
+    toast(r.mine?'공감했어요 💛':'공감 취소');
+  }
+}
+
+/* ═══════════ RENDER: 내 기록 ═══════════ */
+async function openHistory(){ if(ONLINE){try{await RT.loadHistory();}catch(e){rtErr(e);}} go('history'); }
+function renderHistory(){
+  var s=loadStore();
+  var am=activeMeeting(),sn=(am&&am.kind==='custom')?am.season:SEASON,bks=meetingBooks();
+  var nbk=0,nans=0;
+  bks.forEach(function(b){var bs=s[b.id];if(bs&&bs.submitted){nbk++;nans+=(bs.answers||[]).filter(function(x){return x&&x.trim();}).length;}});
+  var h=''+
+   '<div class="section-hd"><div><div class="eyebrow">내 기록</div><h2 class="h-1 mt-4">내가 읽은<br>책들.</h2></div></div>'+
+   '<div class="profile-card">'+
+     '<div class="profile-avatar">📖</div>'+
+     '<div class="profile-name">•••• '+esc(STATE.phone4||'----')+'</div>'+
+     '<div style="font-size:13px;color:var(--ink-dim);margin-top:4px">휴대폰 뒤 4자리 기준 기록 · 책마다 닉네임은 새로</div>'+
+     '<div class="profile-stat">'+
+       '<div><div class="profile-stat__num">'+nbk+'</div><div class="profile-stat__label">읽은 책</div></div>'+
+       '<div><div class="profile-stat__num">'+nans+'</div><div class="profile-stat__label">제출 답변</div></div>'+
+       '<div><div class="profile-stat__num">'+bks.length+'</div><div class="profile-stat__label">시즌 도서</div></div>'+
+     '</div>'+
+   '</div>'+
+   '<div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">'+esc(sn.title)+'</div><h3 class="h-3 mt-4">독서 히스토리</h3></div></div>';
+  bks.forEach(function(b){
+    var bs=s[b.id],done=bs&&bs.submitted;
+    var sub;
+    if(done){
+      var ans=(bs.answers||[]).filter(function(x){return x&&x.trim();}).length;
+      var rated=0;RATING_AXES.forEach(function(ax){if(bs.ratings&&bs.ratings[ax.k])rated++;});
+      var cmt=0;for(var k in (bs.comments||{})) cmt+=bs.comments[k].length;
+      sub='답변 '+ans+' · 별점 '+rated+'/'+RATING_AXES.length+' · 댓글 '+cmt+'개 · 닉네임 '+nickFor(STATE.phone4,b.id);
+    }else if(b.status==='current'){
+      sub='이번 달 책 · 아직 답변 전';
+    }else{
+      sub=b.month+' 예정';
+    }
+    h+='<div class="history-item'+(done?'':' todo')+'">'+
+      '<div class="history-item__spine">'+esc(b.spine)+'</div>'+
+      '<div class="history-item__body"><div class="history-item__title">'+esc(b.title)+'</div>'+
+        '<div class="history-item__sub">'+esc(sub)+'</div></div>'+
+      '<span class="history-item__badge'+(done?'':' todo')+'">'+(done?'완료':(b.status==='current'?'진행 중':'예정'))+'</span>'+
+    '</div>';
+  });
+  h+='</div>'+
+   '<p class="body-2 center" style="color:var(--ink-dim)">한 줄 회고·인사이트 일기는 빼고, 간단 요약만 남깁니다.</p>';
+  document.getElementById('page-history').innerHTML=h;
+}
+
+/* ═══════════ TOAST ═══════════ */
 function toast(msg){
   var el=document.createElement('div');el.className='alert';el.textContent=msg;
   document.getElementById('toast-area').appendChild(el);
   setTimeout(function(){el.style.transition='opacity .2s';el.style.opacity='0';setTimeout(function(){el.remove()},200)},2200);
 }
 
-/* Timer */
+/* ═══════════ STAGE: TIMER ═══════════ */
 var timerSec=90,timerInt=null;
 function updateTimer(){
   var mm=String(Math.floor(timerSec/60)).padStart(2,'0');
@@ -577,40 +1611,183 @@ function startTimer(){if(!timerInt)timerInt=setInterval(function(){if(timerSec>0
 function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null}}
 function resetTimer(){stopTimer();timerSec=90;updateTimer()}
 
-/* Speaker */
-var speakers=[
-  {name:'미지',ans:'어디에도 완전히 속하지 못할 때 비로소 자기 자신을 발견한다. 이 문장이 계속 머릿속에 맴돌았어요. 회사에서도, 친구들 사이에서도 늘 약간의 거리감을 느끼는 제게 위로가 됐습니다.'},
-  {name:'꿈꾸는 해파리',ans:'처음 외국에 갔을 때, 아무것도 아닌 사람이 된 느낌이었어요. 그런데 그게 자유였다는 걸 나중에야 알았죠.'},
-  {name:'빛나는 알파카',ans:'이방인이 아닌 사람이 있을까요? 우리는 모두 어딘가에서는 이방인이에요. 이 구절을 읽고 소속감에 대한 집착을 내려놓게 됐어요.'},
-  {name:'배고픈 판다',ans:'저는 회사에서도 이방인이고 집에서도 이방인이에요. 냉장고 앞에서만 소속감을 느낍니다. 근데 그게 나쁜 건 아닌 것 같아요 ㅋㅋ'},
-  {name:'용감한 두부',ans:'소속감을 버리니까 오히려 진짜 연결이 생기더라고요. 역설적이지만요. 저자도 비슷한 경험을 한 것 같아서 공감이 많이 됐어요.'}
-];
+/* ═══════════ STAGE (발표·모임장 전용) ═══════════ */
 var scrambleInt=null;
-function pickSpeaker(label){
-  var picked=speakers[Math.floor(Math.random()*speakers.length)];
-  var nameEl=document.getElementById('stage-speaker-name');
-  var promptEl=document.getElementById('speaker-prompt');
-  var ansArea=document.getElementById('stage-speaker-answer');
-  if(promptEl) promptEl.textContent='발언자를 찾고 있습니다...';
-  if(scrambleInt) clearInterval(scrambleInt);
+var STAGE={bookId:'ihyangin',q:0,axis:'fun',order:[],pickedName:null,critText:''};
+function cmtCount(p,qi){
+  var c=(STAGE_COMMENTS['q'+qi+'|'+p.name]||[]).length;
+  if(STATE.phone4){var bs=bookState(STAGE.bookId),uk='q'+qi+'a'+p.idx;c+=((bs.comments&&bs.comments[uk])||[]).length;}
+  return c;
+}
+var STAGE_RATINGS={
+  '꿈꾸는 해파리':{length:4,difficulty:5,fun:3,novelty:5,overall:4,empathy:9},
+  '빛나는 알파카':{length:3,difficulty:4,fun:2,novelty:5,overall:3,empathy:5},
+  '배고픈 판다':{length:2,difficulty:3,fun:5,novelty:3,overall:3,empathy:7},
+  '용감한 두부':{length:5,difficulty:4,fun:4,novelty:4,overall:4,empathy:6}
+};
+var STAGE_COMMENTS={
+  'q0|꿈꾸는 해파리':[{by:'배고픈 판다',t:'그 자유, 저도 뒤늦게 알았어요'}],
+  'q0|배고픈 판다':[{by:'용감한 두부',t:'냉장고 소속감 ㅋㅋ 너무 공감'}],
+  'q1|빛나는 알파카':[{by:'꿈꾸는 해파리',t:'그 해방감, 어떤 순간이었는지 더 듣고 싶어요'}],
+  'q2|용감한 두부':[{by:'빛나는 알파카',t:"'회복'이라는 단어가 마음에 남네요"}]
+};
+function axisLabel(k){for(var i=0;i<RATING_AXES.length;i++){if(RATING_AXES[i].k===k)return RATING_AXES[i].label;}return k;}
+function starStr(v){var s='';for(var i=1;i<=5;i++)s+=(i<=v?'★':'<span class="off">★</span>');return s;}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function stageParts(){
+  var b=bookById(STAGE.bookId),base=(b.others[0]||[]);
+  return base.map(function(o,idx){
+    var r=STAGE_RATINGS[o.n]||{length:3,difficulty:3,fun:3,novelty:3,overall:3,empathy:4};
+    var ans=b.questions.map(function(_,qi){return ((b.others[qi]||[])[idx]||{}).a||'';});
+    return {name:o.n,idx:idx,r:r,answers:ans};
+  });
+}
+function submittedCount(){
+  var n=stageParts().length;
+  if(STATE.phone4&&bookState(STAGE.bookId).submitted)n++;
+  return n;
+}
+function renderStageRoadmap(){
+  var host=document.getElementById('stage-roadmap');if(!host)return;
+  var m=activeMeeting(),bks=meetingBooks(),custom=(m.kind==='custom');
+  var curIdx=0;bks.forEach(function(b,i){if(b.status==='current')curIdx=i;});
+  bks.forEach(function(b,i){if(b.id===STAGE.bookId)curIdx=i;});
+  var sEye=custom?('모임 · '+m.name):SEASON.eyebrow;
+  var sTitle=custom?m.season.title:SEASON.title;
+  var sSub=custom?(m.season.sub||m.season.books.length+'권 시즌'):SEASON.sub;
+  var h='<div class="sr-season"><div class="sr-season__eyebrow">'+esc(sEye)+'</div>'+
+    '<div class="sr-season__title">'+esc(sTitle)+'</div><div class="sr-season__sub">'+esc(sSub)+'</div></div>'+
+    '<div class="stage-roadmap__progress"><div class="stage-roadmap__progress-bar"><div class="stage-roadmap__progress-fill" style="width:'+Math.round((curIdx+1)/bks.length*100)+'%"></div></div>'+
+    '<div class="stage-roadmap__progress-label">'+(curIdx+1)+' / '+bks.length+'권째</div></div><div class="sr-flow">';
+  bks.forEach(function(b,i){
+    var st=i<curIdx?'done':(i===curIdx?'current':'upcoming');
+    h+='<div class="sr-book '+st+'"><div class="sr-book__month">'+esc(b.month||'이번 모임')+'</div>'+
+      '<div class="sr-book__spine">'+esc(b.spine)+'</div>'+
+      '<div class="sr-book__title">'+esc(b.title)+'</div>'+
+      '<div class="sr-book__author">'+esc(b.author)+'</div>'+
+      '<div class="sr-book__angle">'+esc(b.angle||'')+'</div>'+
+      '<span class="sr-book__badge '+(i===curIdx?'now':'soon')+'">'+(i<curIdx?'완료':(i===curIdx?'이번 달':'예정'))+'</span></div>';
+    if(i<bks.length-1)h+='<div class="sr-arrow">→</div>';
+  });
+  h+='</div><div class="sr-meta"><b>'+submittedCount()+'</b>명 답변 제출 · 이번 책 「'+esc(bks[curIdx].title)+'」</div>';
+  host.innerHTML=h;
+}
+function renderStageRating(){
+  var host=document.getElementById('stage-rating-rows');if(!host)return;
+  var ps=stageParts(),h='';
+  if(!ps.length){host.innerHTML='<div class="sl-empty">회원 별점 표본이 없어요. 서버 연동 후 표시됩니다(기본 데모 모임에서 시연 가능).</div>';return;}
+  RATING_AXES.forEach(function(ax){
+    var sum=0;ps.forEach(function(p){sum+=p.r[ax.k]||0;});var cnt=ps.length;
+    if(STATE.phone4){var bs=bookState(STAGE.bookId);if(bs.ratings&&bs.ratings[ax.k]){sum+=bs.ratings[ax.k];cnt++;}}
+    var avg=cnt?sum/cnt:0;
+    h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'</div>'+
+      '<div><span class="rt-stars">'+starStr(Math.round(avg))+'</span><span class="rt-stars__num">'+avg.toFixed(1)+'</span></div></div>';
+  });
+  host.innerHTML=h;
+}
+function renderStageLive(){
+  var ps=stageParts();
+  var orderEl=document.getElementById('sl-order');if(!orderEl)return;
+  var axEl=document.getElementById('sl-axis-row'),pc=document.getElementById('sl-pickcard');
+  if(!ps.length){
+    if(axEl)axEl.innerHTML='';orderEl.innerHTML='';
+    if(pc)pc.innerHTML='<div class="sl-empty">서버 연동 전이라 회원 답변·별점·댓글 표본이 없습니다.<br>기본 데모 모임(인간 본성 탐구)에서 진행을 시연하세요.</div>';
+    return;
+  }
+  var bk=bookById(STAGE.bookId)||{questions:[]};
+  if(STAGE.q>=bk.questions.length)STAGE.q=0;
+  var qt=document.getElementById('sl-qtabs');
+  if(qt){var qh='';bk.questions.forEach(function(q,i){qh+='<button class="sl-axis'+(i===STAGE.q?' active':'')+'" onclick="stageSetQ('+i+')">Q'+(i+1)+'</button>';});qt.innerHTML=qh;}
+  var qx=document.getElementById('sl-qtext');
+  if(qx)qx.textContent=bk.questions.length?('Q'+(STAGE.q+1)+'. '+bk.questions[STAGE.q]):'';
+  var axh='';RATING_AXES.forEach(function(a){axh+='<button class="sl-axis'+(a.k===STAGE.axis?' active':'')+'" onclick="stageSetAxis(\''+a.k+'\')">'+esc(a.label)+'</button>';});
+  axEl.innerHTML=axh;
+  if(!STAGE.order.length)STAGE.order=shuffle(ps.map(function(p){return p.name;}));
+  var ol='';STAGE.order.forEach(function(nm,i){ol+='<li'+(nm===STAGE.pickedName?' class="is-picked"':'')+'><span class="sl-order__n">'+(i+1)+'</span><span>'+esc(nm)+'</span></li>';});
+  orderEl.innerHTML=ol;
+  renderPickCard();
+}
+function stageSetAxis(k){STAGE.axis=k;renderStageLive();}
+function stageSetQ(i){STAGE.q=i;STAGE.pickedName=null;renderStageLive();}
+function stageReshuffle(){STAGE.order=shuffle(stageParts().map(function(p){return p.name;}));STAGE.pickedName=null;renderStageLive();toast('발언 순서를 새로 섞었어요');}
+function renderPickCard(){
+  var host=document.getElementById('sl-pickcard');if(!host)return;
+  if(!STAGE.pickedName){host.innerHTML='<div class="sl-empty">질문을 고르고 왼쪽 선정 기준을 누르면,<br>그 질문의 발표자와 답변·댓글이 표시됩니다.</div>';return;}
+  var b=bookById(STAGE.bookId),p=null;stageParts().forEach(function(x){if(x.name===STAGE.pickedName)p=x;});
+  if(!p){host.innerHTML='';return;}
+  var crit=STAGE.critText||'',qi=STAGE.q;
+  var cmts=(STAGE_COMMENTS['q'+qi+'|'+p.name]||[]).slice();
+  if(STATE.phone4){var bs=bookState(STAGE.bookId),uk='q'+qi+'a'+p.idx;((bs.comments&&bs.comments[uk])||[]).forEach(function(t){cmts.push({by:'나 (개인모드)',t:t});});}
+  var ch=cmts.map(function(c){return '<div class="sl-cmt"><b>'+esc(c.by)+'</b> '+esc(c.t)+'</div>';}).join('');
+  host.innerHTML='<div class="sl-pick-card"><div class="sl-pick-card__top">'+
+    '<div class="sl-pick-card__av">'+esc(p.name.charAt(0))+'</div>'+
+    '<div><div style="font-weight:800;font-size:17px">'+esc(p.name)+'</div>'+
+    '<div style="font-size:12px;color:var(--ink-dim)">Q'+(qi+1)+' · '+esc(crit)+'</div></div></div>'+
+    '<div class="sl-pick-card__chips"><span class="sl-chip hot">'+esc(crit)+'</span>'+
+    '<span class="sl-chip">댓글 '+cmtCount(p,qi)+'</span>'+
+    '<span class="sl-chip">'+esc(axisLabel(STAGE.axis))+' '+p.r[STAGE.axis]+'★</span>'+
+    '<span class="sl-chip">공감 '+p.r.empathy+'</span></div>'+
+    '<div class="sl-qa"><div class="scene-q__eye" style="margin:0 0 8px">Q'+(qi+1)+' · '+esc((b.questions||[])[qi]||'')+'</div>'+
+    '<div class="sl-pick-card__ans">'+esc(p.answers[qi]||'(답변 없음)')+'</div>'+
+    '<div class="sl-cmts"><div class="sl-cmts__hd">이 답변에 달린 댓글 · 모임 토론거리</div>'+
+    (ch||'<div class="sl-cmt" style="background:none;color:var(--ink-dim);padding:4px 0">아직 댓글이 없어요.</div>')+
+    '</div></div></div>';
+}
+function stagePick(opt){
+  var ps=stageParts(),picked,crit;
+  if(!ps.length){toast('회원 답변 표본이 없어요 (기본 데모 모임에서 시연)');return;}
+  if(opt.type==='random'){picked=ps[Math.floor(Math.random()*ps.length)];crit='무작위 선정';}
+  else if(opt.type==='empathy'){picked=ps.reduce(function(a,b){return b.r.empathy>a.r.empathy?b:a;});crit='공감 최다 · '+picked.r.empathy+'개';}
+  else if(opt.type==='comments'){picked=ps.reduce(function(a,b){return cmtCount(b,STAGE.q)>cmtCount(a,STAGE.q)?b:a;});crit='댓글 최다 · '+cmtCount(picked,STAGE.q)+'개';}
+  else{var k=STAGE.axis;
+    if(opt.dir==='max'){picked=ps.reduce(function(a,b){return b.r[k]>a.r[k]?b:a;});crit=axisLabel(k)+' 별점 최고 · '+picked.r[k]+'★';}
+    else{picked=ps.reduce(function(a,b){return b.r[k]<a.r[k]?b:a;});crit=axisLabel(k)+' 별점 최저 · '+picked.r[k]+'★';}
+  }
+  var nameEl=document.getElementById('stage-speaker-name'),promptEl=document.getElementById('speaker-prompt');
+  if(promptEl)promptEl.textContent='발언자를 찾고 있습니다...';
+  if(scrambleInt)clearInterval(scrambleInt);
   var t=0;
   scrambleInt=setInterval(function(){
-    nameEl.textContent=speakers[Math.floor(Math.random()*speakers.length)].name;
-    nameEl.style.color='var(--ink-dim)';t++;
+    nameEl.textContent=ps[Math.floor(Math.random()*ps.length)].name;nameEl.style.color='var(--ink-dim)';t++;
     if(t>14){
       clearInterval(scrambleInt);scrambleInt=null;
       nameEl.textContent=picked.name;nameEl.style.color='var(--accent)';
-      if(promptEl) promptEl.textContent=label+' 로 선정됨';
-      toast(picked.name+' 선정! ('+label+')');
-      if(ansArea) ansArea.innerHTML='<div style="padding:24px;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper);margin-top:12px">'
-        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
-        +'<div style="width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px">'+picked.name.charAt(0)+'</div>'
-        +'<div><div style="font-weight:700;font-size:16px">'+picked.name+'</div>'
-        +'<div style="font-size:12px;color:var(--ink-dim)">'+label+' 로 선정</div></div></div>'
-        +'<div style="font-size:20px;line-height:1.7;font-weight:500;color:var(--ink);border-left:3px solid var(--accent);padding-left:16px">'+picked.ans+'</div></div>';
+      if(promptEl)promptEl.textContent=crit;
+      STAGE.pickedName=picked.name;STAGE.critText=crit;
+      toast(picked.name+' 선정! ('+crit+')');
+      renderStageLive();
     }
   },60);
 }
+function renderStageAll(){STAGE.bookId=currentBookId();STAGE.q=0;STAGE.order=[];STAGE.pickedName=null;renderStageRoadmap();renderStageRating();renderStageLive();}
+
+/* ── 브라우저 뒤로가기 = 앱 내 이전 화면 ── */
+async function onPop(ev){
+  var s=ev.state;
+  if(isStage) setStage(false);
+  if(s&&s.rt){
+    STATE.phone4=s.p4||null;STATE.meetingId=s.mid||STATE.meetingId;STATE.isHost=!!s.host;STATE.bookId=s.bid||null;
+    setNick();syncHostUI();syncAuthUI();
+    if(ONLINE){
+      try{
+        if(!MEET_CACHE.length) await RT.loadMeetings();
+        if(s.bid&&(s.pg==='book'||s.pg==='discussion'||s.pg==='history')) await RT.loadBook(s.bid);
+      }catch(e){ rtErr(e); }
+    }
+    go(s.pg||'login',true);
+  } else {
+    go(STATE.phone4?'meetings':(STATE.isHost?'season':'login'),true);
+  }
+}
+window.addEventListener('popstate',onPop);
+
+/* ═══════════ INIT ═══════════ */
+applyQEdits();
+setNick();
+syncHostUI();
+syncAuthUI();
+try{ history.replaceState({rt:1,pg:'login',p4:null,mid:STATE.meetingId,host:false,bid:null},''); }catch(e){}
+(async function(){ try{ await sessRestore(); }catch(e){ console.error(e); } })();
 </script>
 </body>
 </html>
