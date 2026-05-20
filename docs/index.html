@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>untoldChapter — 우리만의 다음 페이지</title>
+<title>같이읽자 — 모임과 시즌을 함께 만들어요</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -151,6 +151,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .link-card__body{flex:1;min-width:0}
 .link-card__title{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .link-card__meta{font-size:12px;color:var(--ink-dim);margin-top:2px}
+.lk-go{color:var(--accent);font-weight:700}
 
 /* Profile */
 .profile-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:24px 20px;text-align:center;margin-bottom:16px;box-shadow:var(--shadow-sm)}
@@ -197,6 +198,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .book-card.upcoming{opacity:.6}
 .book-card.upcoming:hover{opacity:.85;transform:translateY(-1px)}
 .book-card.current{border-color:var(--accent);border-width:2px;background:var(--accent-tint);box-shadow:var(--shadow-md)}
+.book-card.is-closed{background:var(--paper-warm);border-style:dashed}
 .book-card__spine{width:54px;flex-shrink:0;border-radius:var(--radius-sm);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:22px}
 .book-card.upcoming .book-card__spine{background:var(--ink-soft)}
 .book-card__body{flex:1;min-width:0;padding-right:62px}
@@ -235,7 +237,12 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .qfix__btn:hover{border-color:var(--accent);color:var(--accent)}
 
 /* ═══ BOOK HEADER (답변 상단 책 정보) ═══ */
-.book-head{display:flex;gap:14px;align-items:center;background:var(--paper-warm);border:1px solid var(--rule);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:18px}
+.book-head{display:flex;gap:14px;align-items:center;background:var(--paper-warm);border:1px solid var(--rule);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:14px}
+.disc-tabs{display:flex;gap:6px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-pill);padding:4px;margin-bottom:18px;overflow-x:auto}
+.disc-tab{flex:1;min-width:0;white-space:nowrap;padding:8px 12px;border:none;background:none;font-size:13px;font-weight:700;color:var(--ink-soft);border-radius:var(--radius-pill);cursor:pointer;transition:all .2s;font-family:inherit}
+.disc-tab.active{background:var(--accent);color:#fff}
+.disc-tab.lock{color:var(--ink-dim);cursor:not-allowed}
+.disc-tab:not(.active):not(.lock):hover{background:var(--accent-tint);color:var(--accent)}
 .book-head__spine{width:42px;height:56px;border-radius:var(--radius-sm);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:17px;flex-shrink:0}
 .book-head__title{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.02em}
 .book-head__meta{font-size:13px;color:var(--ink-soft);margin-top:2px}
@@ -414,7 +421,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <!-- ═══ MASTHEAD ═══ -->
 <header class="masthead">
   <div class="masthead__row">
-    <span class="masthead__title" onclick="goHome()">untold<span class="mh-accent">Chapter</span></span>
+    <span class="masthead__title" onclick="goHome()">같이<span class="mh-accent">읽자</span></span>
     <span class="masthead__center"><b id="hdr-nick">—</b></span>
     <div style="display:flex;align-items:center;gap:8px">
       <button class="mode-toggle" onclick="toggleMode()" id="mode-toggle-btn" style="display:none">발표 모드</button>
@@ -427,6 +434,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <nav class="subbar" id="subbar">
   <a onclick="back()">&larr; 뒤로</a>
   <a onclick="go('season')">&#127968; 시즌</a>
+  <a onclick="go('meetings')">📚 모임</a>
   <span class="subbar__crumb" id="subbar-crumb"></span>
 </nav>
 
@@ -446,9 +454,9 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <!-- PAGE: 로그인 (휴대폰 뒤 4자리) -->
 <div class="page active" id="page-login">
   <div class="hero">
-    <div class="hero__issue">untoldChapter</div>
-    <h1 class="hero__title">untold<br><span class="accent">Chapter.</span></h1>
-    <p class="hero__sub">아직 펼치지 않은 다음 페이지를,<br>우리 함께 읽어요.</p>
+    <div class="hero__issue">같이읽자</div>
+    <h1 class="hero__title">같이<br><span class="accent">읽자.</span></h1>
+    <p class="hero__sub">모임과 시즌을 만들어,<br>함께 다음 페이지를 펼쳐요.</p>
   </div>
   <div class="login-wrap">
     <div class="field" style="text-align:left">
@@ -459,15 +467,21 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
     <button class="btn btn-primary btn-arrow btn-pill" onclick="login()">들어가기 <span class="arr">&rarr;</span></button>
     <p class="login-hint">번호 뒤 4자리만으로 입장합니다. 닉네임은 책마다 자동으로 새로 정해지고,<br>이 4자리로 내가 읽은 책 기록이 이어집니다.</p>
     <div class="host-links">
-      <a onclick="go('create')">+ 모임 만들기</a><span>·</span><a onclick="go('manage')">모임 관리 (발표 모드)</a>
+      <a onclick="go('create-club')">+ 모임 만들기</a><span>·</span><a onclick="go('manage')">모임 관리 (발표 모드)</a>
     </div>
   </div>
 </div>
 
-<!-- PAGE: 모임 리스트 -->
-<div class="page" id="page-meetings"></div>
+<!-- PAGE: 모임(club) 목록 -->
+<div class="page" id="page-clubs"></div>
 
 <!-- PAGE: 모임 만들기 -->
+<div class="page" id="page-create-club"></div>
+
+<!-- PAGE: 모임 안 시즌 목록 (구 page-meetings) -->
+<div class="page" id="page-meetings"></div>
+
+<!-- PAGE: 시즌 만들기 -->
 <div class="page" id="page-create"></div>
 
 <!-- PAGE: 모임 관리 -->
@@ -589,9 +603,9 @@ var SEASON={
        {e:'🎵',t:'글 쓸 때 항상 재즈를 듣는다',s:"빌 에반스의 'Waltz for Debby'가 이 책의 BGM"}
      ],
      links:[
-       {i:'▶',t:'[10분 요약] 이향인 — 핵심 내용 미리보기',m:'youtube.com · 추천'},
-       {i:'🎧',t:'라미 카민스키 인터뷰 — "경계인이라는 정체성"',m:'podcast.example.com · 추천'},
-       {i:'📄',t:"비슷한 책: 카뮈 '이방인' vs 이향인 비교",m:'blog.example.com · 추천'}
+       {i:'▶',t:'[검색] 이향인 — 유튜브 요약·리뷰',m:'https://www.youtube.com/results?search_query=%EC%9D%B4%ED%96%A5%EC%9D%B8+%EB%9D%BC%EB%AF%B8+%EC%B9%B4%EB%AF%BC%EC%8A%A4%ED%82%A4'},
+       {i:'📚',t:'교보문고 — 이향인 책 소개',m:'https://search.kyobobook.co.kr/search?keyword=%EC%9D%B4%ED%96%A5%EC%9D%B8'},
+       {i:'📄',t:"위키 — 카뮈 '이방인' (비교용)",m:'https://ko.wikipedia.org/wiki/%EC%9D%B4%EB%B0%A9%EC%9D%B8_(%EC%86%8C%EC%84%A4)'}
      ],
      questions:[
        '가장 마음에 남은 문장은? 왜 그 문장이 와닿았나요?',
@@ -628,7 +642,8 @@ var SEASON={
        {e:'🔬',t:'공학·과학 디테일 마니아',s:'설정을 직접 계산해 검증하는 편'}
      ],
      links:[
-       {i:'▶',t:'프로젝트 헤일메리 — 스포일러 없는 소개',m:'youtube.com · 추천'}
+       {i:'▶',t:'[검색] 프로젝트 헤일메리 — 유튜브 소개·리뷰',m:'https://www.youtube.com/results?search_query=%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8+%ED%97%A4%EC%9D%BC%EB%A9%94%EB%A6%AC'},
+       {i:'📚',t:'교보문고 — 프로젝트 헤일메리',m:'https://search.kyobobook.co.kr/search?keyword=%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8%20%ED%97%A4%EC%9D%BC%EB%A9%94%EB%A6%AC'}
      ],
      questions:[
        '가장 인상 깊었던 "연결"의 순간은?',
@@ -649,7 +664,7 @@ var SEASON={
 };
 var RATING_AXES=[
   {k:'length',label:'길이',hint:'분량이 적절했나요?'},
-  {k:'difficulty',label:'난이도',hint:'읽기 까다로웠나요? (높을수록 어려움)'},
+  {k:'difficulty',label:'난이도',hint:'적절하면 ★ 많이, 너무 어렵거나 쉬우면 적게'},
   {k:'fun',label:'재미',hint:'읽는 재미가 있었나요?'},
   {k:'novelty',label:'참신함',hint:'관점이 새로웠나요?'},
   {k:'overall',label:'총점',hint:'한마디로 이 책은?'}
@@ -658,10 +673,13 @@ var NICK_ADJ=['춤추는','배고픈','빛나는','꿈꾸는','용감한','졸�
 var NICK_NOUN=['고양이','판다','알파카','해파리','두부','수달','부엉이','고래','다람쥐','펭귄','여우','거북'];
 
 /* ═══════════ STATE & STORE ═══════════ */
-var STATE={phone4:null,bookId:null,meetingId:'m1',isHost:false};
-var M1={id:'m1',name:'사내 독서모임 · 인간 본성 탐구',code:'HUMAN-Q2',pw:'1234',kind:'season'};
+var STATE={phone4:null,bookId:null,clubId:null,meetingId:null,isHost:false};
+/* 시드 모임 = '未知의 서재'. 앱 브랜드 자체는 마스트헤드의 '같이읽자'. */
+var SEED_CLUB={id:'c1',name:'未知의 서재',code:'UNTOLD',pw:'1234',intro:'시드 모임 — 인간 본성 탐구 시즌(이향인 외 2권) 보유',isOpen:true};
+var M1={id:'m1',clubId:'c1',name:'未知의 서재',code:'HUMAN-Q2',pw:'1234',kind:'season'};
 var MEM={};               // localStorage 차단 시 폴백
-var MEET_CACHE=[];        // ONLINE: 모임+책 캐시
+var CLUBS_CACHE=[];       // ONLINE: 모임(club) 캐시
+var MEET_CACHE=[];        // ONLINE: 시즌(meeting)+책 캐시
 var NETSTORE={};          // ONLINE: 활성 책 내 상태 미러 (bookId→{answers,submitted,ratings,comments})
 function storeKey(){return 'rt:'+STATE.phone4;}
 function loadStore(){
@@ -697,7 +715,14 @@ function nickFor(phone4,bookId){
 }
 function customMeetings(){try{return JSON.parse(localStorage.getItem('rt:meetings'))||[];}catch(e){return MEM['rt:meetings']?JSON.parse(MEM['rt:meetings']):[];}}
 function saveCustomMeetings(a){var v=JSON.stringify(a);try{localStorage.setItem('rt:meetings',v);}catch(e){MEM['rt:meetings']=v;}}
+function customClubs(){try{return JSON.parse(localStorage.getItem('rt:clubs'))||[];}catch(e){return MEM['rt:clubs']?JSON.parse(MEM['rt:clubs']):[];}}
+function saveCustomClubs(a){var v=JSON.stringify(a);try{localStorage.setItem('rt:clubs',v);}catch(e){MEM['rt:clubs']=v;}}
+function allClubs(){return ONLINE?CLUBS_CACHE:[SEED_CLUB].concat(customClubs());}
+function clubById(id){var a=allClubs();for(var i=0;i<a.length;i++){if(a[i].id===id)return a[i];}return null;}
+function activeClub(){return clubById(STATE.clubId)||SEED_CLUB;}
+function activeClubName(){var c=activeClub();return (c&&c.name)||'未知의 서재';}
 function allMeetings(){return ONLINE?MEET_CACHE:[M1].concat(customMeetings());}
+function clubMeetings(clubId){return allMeetings().filter(function(m){return m.clubId===clubId;});}
 function meetingById(id){var a=allMeetings();for(var i=0;i<a.length;i++){if(a[i].id===id)return a[i];}return M1;}
 function activeMeeting(){return meetingById(STATE.meetingId);}
 function meetingBooks(){var m=activeMeeting();return m.kind==='custom'?m.season.books:SEASON.books;}
@@ -709,6 +734,16 @@ function bookById(id){
   return null;
 }
 function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+/* 링크 카드: t/m 안에서 URL/도메인을 추출. 없으면 null. */
+function extractUrl(){
+  for(var i=0;i<arguments.length;i++){
+    var s=String(arguments[i]||'').trim();if(!s)continue;
+    var m=s.match(/\bhttps?:\/\/[^\s,]+/i);if(m)return m[0].replace(/[.,)\]」]+$/,'');
+    var d=s.match(/\b((?:[a-z0-9-]+\.)+[a-z]{2,})(\/[^\s,]*)?/i);
+    if(d){var u=d[0].replace(/[.,)\]」]+$/,'');return 'https://'+u;}
+  }
+  return null;
+}
 
 /* ═══════════ 일정(연월) 헬퍼 ═══════════ */
 function ymNow(){var d=new Date();return ''+d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2);}
@@ -729,16 +764,36 @@ function applySchedule(books){
 /* ═══════════ RT — Supabase 데이터 계층 (ONLINE 일 때만 호출) ═══════════ */
 function rtErr(e){console.error('[Supabase]',e);toast('서버 오류: '+((e&&e.message)||'요청 실패'));}
 var RT={
+  async loadClubs(){
+    var r=await sb.from('club').select('id,name,code,password,intro,is_open');
+    if(r.error){rtErr(r.error);return;}
+    CLUBS_CACHE=(r.data||[]).map(function(c){return {id:c.id,name:c.name,code:c.code,pw:c.password,intro:c.intro||'',isOpen:(c.is_open!==false)};});
+  },
+  async createClub(name,intro){
+    var code=rndCode(),pw=String(Math.floor(1000+Math.random()*9000));
+    var r=await sb.from('club').insert({name:name,code:code,password:pw,intro:intro||''}).select('id').single();
+    if(r.error){rtErr(r.error);return null;}
+    await RT.loadClubs();
+    return {id:r.data.id,code:code,pw:pw};
+  },
+  async deleteClub(id){
+    var e=(await sb.from('club').delete().eq('id',id)).error;
+    if(e){rtErr(e);return false;} await RT.loadClubs(); await RT.loadMeetings(); return true;
+  },
+  async updateClubOpen(id,on){
+    var e=(await sb.from('club').update({is_open:!!on}).eq('id',id)).error;
+    if(e){rtErr(e);return false;} await RT.loadClubs(); return true;
+  },
   async loadMeetings(){
-    var r=await sb.from('meeting').select('id,name,code,password,season_title,season_sub,is_open,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links)');
+    var r=await sb.from('meeting').select('id,club_id,name,code,password,season_title,season_sub,is_open,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,closed_at,report)');
     if(r.error){rtErr(r.error);return;}
     MEET_CACHE=(r.data||[]).map(function(m){
       var books=(m.book||[]).slice().sort(function(a,b){return (a.ord||0)-(b.ord||0);}).map(function(bk){
         var qs=Array.isArray(bk.questions)?bk.questions:[];
-        return {id:bk.id,title:bk.title,author:bk.author||'(저자 미상)',spine:(bk.title||'?').charAt(0),status:'current',yearmonth:bk.yearmonth||'',month:fmtYM(bk.yearmonth)||((bk.ord||0)+'권'),angle:'',tagline:bk.title,intro:bk.intro||'(책 소개 미입력)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:bk.author_bio||'',bio:(Array.isArray(bk.author_facts)?bk.author_facts:[]),links:(Array.isArray(bk.links)?bk.links:[]),questions:qs,others:qs.map(function(){return [];})};
+        return {id:bk.id,title:bk.title,author:bk.author||'(저자 미상)',spine:(bk.title||'?').charAt(0),status:'current',yearmonth:bk.yearmonth||'',month:fmtYM(bk.yearmonth)||((bk.ord||0)+'권'),angle:'',tagline:bk.title,intro:bk.intro||'(책 소개 미입력)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:bk.author_bio||'',bio:(Array.isArray(bk.author_facts)?bk.author_facts:[]),links:(Array.isArray(bk.links)?bk.links:[]),questions:qs,others:qs.map(function(){return [];}),closed:!!bk.closed_at,closed_at:bk.closed_at||null,report:bk.report||null};
       });
       applySchedule(books);
-      return {id:m.id,name:m.name,code:m.code,pw:m.password,kind:'custom',isOpen:(m.is_open!==false),
+      return {id:m.id,clubId:m.club_id||null,name:m.name,code:m.code,pw:m.password,kind:'custom',isOpen:(m.is_open!==false),
         season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'코드 '+m.code,books:books}};
     });
   },
@@ -822,11 +877,11 @@ var RT={
     if(e){rtErr(e);return false;}
     await RT.loadBook(bookId);return true;
   },
-  async createMeeting(name,stitle,ssub,books){
+  async createMeeting(name,stitle,ssub,books,clubId){
     var code=rndCode(),pw=String(Math.floor(1000+Math.random()*9000));
-    var mi=await sb.from('meeting').insert({name:name,code:code,password:pw,season_title:stitle,season_sub:ssub||'',is_open:(BUILD.isOpen!==false)}).select('id').single();
+    var mi=await sb.from('meeting').insert({club_id:clubId||null,name:name,code:code,password:pw,season_title:stitle,season_sub:ssub||'',is_open:(BUILD.isOpen!==false)}).select('id').single();
     if(mi.error){rtErr(mi.error);return null;}
-    var rows=books.map(function(b,i){return {meeting_id:mi.data.id,ord:i+1,title:b.title,author:b.author||'(저자 미상)',intro:b.intro||'',author_bio:b.authorBio||'',yearmonth:b.yearmonth||'',questions:b.questions.filter(function(q){return q&&q.trim();}),author_facts:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {i:'🔗',t:s,m:''};})};});
+    var rows=books.map(function(b,i){return {meeting_id:mi.data.id,ord:i+1,title:b.title,author:b.author||'(저자 미상)',intro:b.intro||'',author_bio:b.authorBio||'',yearmonth:b.yearmonth||'',questions:b.questions.filter(function(q){return q&&q.trim();}),author_facts:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){var u=extractUrl(s);return u?{i:'🔗',t:s.replace(u.replace(/^https?:\/\//,''),'').replace(/\s*[—·-]\s*$/,'').trim()||s,m:u}:{i:'🔗',t:s,m:''};})};});
     var be=(await sb.from('book').insert(rows)).error;
     if(be){rtErr(be);return null;}
     await RT.loadMeetings();
@@ -858,6 +913,15 @@ var RT={
     var m=meetingById(meetingId),ord=((m&&m.season&&m.season.books.length)||0)+1;
     var e=(await sb.from('book').insert({meeting_id:meetingId,ord:ord,title:title,author:author||'',intro:'',author_bio:'',yearmonth:'',questions:[''],author_facts:[],links:[]})).error;
     if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  },
+  async closeBook(bookId,on){
+    var v=on?new Date().toISOString():null;
+    var e=(await sb.from('book').update({closed_at:v}).eq('id',bookId)).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  },
+  async saveReport(bookId,report){
+    var e=(await sb.from('book').update({report:report}).eq('id',bookId)).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
   }
 };
 
@@ -874,6 +938,8 @@ function go(name,nopush){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
   var el=document.getElementById('page-'+name);
   if(el) el.classList.add('active');
+  if(name==='clubs') renderClubs();
+  if(name==='create-club') renderCreateClub();
   if(name==='meetings') renderMeetings();
   if(name==='create') renderCreate();
   if(name==='manage') renderManage();
@@ -888,16 +954,17 @@ function go(name,nopush){
   if(inner){
     var bk=STATE.bookId?bookById(STATE.bookId):null;
     var label={book:'사전정보',discussion:'답변',history:'내 기록'}[name];
-    document.getElementById('subbar-crumb').innerHTML=(bk&&name!=='history'?'<b>'+esc(bk.title)+'</b> · ':'')+label;
+    var cn=esc(activeClubName());
+    document.getElementById('subbar-crumb').innerHTML=cn+(bk&&name!=='history'?' · <b>'+esc(bk.title)+'</b>':'')+' · '+label;
   }
   sessSave(name);
-  if(!nopush){ try{ history.pushState({rt:1,pg:name,p4:STATE.phone4,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId},''); }catch(e){} }
+  if(!nopush){ try{ history.pushState({rt:1,pg:name,p4:STATE.phone4,cid:STATE.clubId,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId},''); }catch(e){} }
   window.scrollTo(0,0);
 }
 /* ── 세션 기억 (새로고침해도 있던 화면 복원) ── */
 function sessSave(page){
   if(!STATE.phone4 && !STATE.isHost) return;
-  var s={p4:STATE.phone4,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId,pg:page||''};
+  var s={p4:STATE.phone4,cid:STATE.clubId,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId,pg:page||''};
   try{localStorage.setItem('rt:sess',JSON.stringify(s));}catch(e){MEM['rt:sess']=JSON.stringify(s);}
 }
 function sessRead(){
@@ -909,17 +976,17 @@ function syncAuthUI(){ var b=document.getElementById('logout-btn'); if(b)b.style
 function logout(){
   if(isStage) setStage(false);
   sessClear();
-  STATE.phone4=null;STATE.bookId=null;STATE.isHost=false;
+  STATE.phone4=null;STATE.bookId=null;STATE.clubId=null;STATE.meetingId=null;STATE.isHost=false;
   setNick();syncHostUI();syncAuthUI();
   go('login');toast('로그아웃됐어요');
 }
 async function sessRestore(){
   var s=sessRead(); if(!s||(!s.p4&&!s.host)) return false;
-  STATE.phone4=s.p4||null; STATE.meetingId=s.mid||STATE.meetingId; STATE.isHost=!!s.host; STATE.bookId=s.bid||null;
-  if(ONLINE){ try{ await RT.loadMeetings(); if(STATE.bookId) await RT.loadBook(STATE.bookId); }catch(e){ rtErr(e); } }
+  STATE.phone4=s.p4||null; STATE.clubId=s.cid||null; STATE.meetingId=s.mid||null; STATE.isHost=!!s.host; STATE.bookId=s.bid||null;
+  if(ONLINE){ try{ await RT.loadClubs(); await RT.loadMeetings(); if(STATE.bookId) await RT.loadBook(STATE.bookId); }catch(e){ rtErr(e); } }
   setNick(); syncHostUI(); syncAuthUI();
-  var ok=['meetings','season','book','discussion','history','create','manage'];
-  var pg=(ok.indexOf(s.pg)>=0)?s.pg:(STATE.isHost?'season':'meetings');
+  var ok=['clubs','create-club','meetings','season','book','discussion','history','create','manage'];
+  var pg=(ok.indexOf(s.pg)>=0)?s.pg:(STATE.isHost?(STATE.clubId?'meetings':'manage'):'clubs');
   go(pg); return true;
 }
 function back(){
@@ -928,67 +995,161 @@ function back(){
   if(id==='book'||id==='history') go('season');
   else if(id==='discussion') go('book');
   else if(id==='season') go('meetings');
+  else if(id==='meetings') go(STATE.phone4?'clubs':'login');
+  else if(id==='create'||id==='manage'||id==='create-club') go(STATE.phone4?'clubs':'login');
+  else if(id==='clubs') go('login');
   else go('login');
 }
 function goHome(){
   if(isStage) toggleMode();
-  if(STATE.isHost) go('season');
-  else go(STATE.phone4?'meetings':'login');
+  if(STATE.isHost) go(STATE.clubId?'meetings':'manage');
+  else go(STATE.phone4?'clubs':'login');
 }
 async function login(){
   var v=(document.getElementById('pin').value||'').trim();
   if(!/^[0-9]{4}$/.test(v)){toast('휴대폰 뒤 4자리 숫자를 입력해주세요');return;}
-  STATE.phone4=v;STATE.bookId=null;setNick();
-  if(ONLINE){try{await RT.loadMeetings();}catch(e){rtErr(e);}}
-  go('meetings');toast(v+' 으로 입장했어요');
+  STATE.phone4=v;STATE.bookId=null;STATE.clubId=null;STATE.meetingId=null;setNick();
+  if(ONLINE){try{await RT.loadClubs();await RT.loadMeetings();}catch(e){rtErr(e);}}
+  go('clubs');toast(v+' 으로 입장했어요');
 }
 function val(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
 function rndCode(){var s='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r='';for(var i=0;i<5;i++)r+=s.charAt(Math.floor(Math.random()*s.length));return r;}
 function syncHostUI(){var b=document.getElementById('mode-toggle-btn');if(b)b.style.display=isStage?'inline-flex':'none';}
 
-/* ═══════════ RENDER: 모임 리스트 ═══════════ */
+/* ═══════════ RENDER: 모임(club) 리스트 ═══════════ */
+function renderClubs(){
+  if(!STATE.phone4&&!STATE.isHost){go('login');return;}
+  var clubs=allClubs().slice().sort(function(a,b){
+    var oa=(a.isOpen!==false)?0:1,ob=(b.isOpen!==false)?0:1;return oa-ob;});
+  var h='<div class="section-hd"><div><div class="eyebrow">모임</div><h2 class="h-1 mt-4">어느 모임에<br>들어갈까요?</h2></div></div>'+
+   '<p class="body-2 mb-16">휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4||'')+'</b> · 모임을 골라 그 안의 시즌 목록을 봅니다. 공개 모임이 위에 파란색으로 표시돼요.</p>'+
+   '<div class="season-books">';
+  clubs.forEach(function(c){
+    var open=(c.isOpen!==false);
+    var nSeasons=clubMeetings(c.id).length;
+    h+='<div class="book-card '+(open?'current':'upcoming')+'" style="opacity:1" onclick="enterClub(\''+c.id+'\')">'+
+      '<div class="book-card__spine">'+esc((c.name||'?').charAt(0))+'</div>'+
+      '<div class="book-card__body"><div class="book-card__month">모임</div>'+
+      '<div class="book-card__title">'+esc(c.name)+'</div>'+
+      '<div class="book-card__author">'+nSeasons+'개 시즌'+(c.intro?' · '+esc(c.intro):'')+'</div></div>'+
+      (open?'<span class="book-card__go">입장 &rarr;</span>'
+           :'<span class="book-card__badge soon">마감</span>')+
+    '</div>';
+  });
+  h+='</div>'+
+   '<div class="host-links" style="margin-top:24px">'+
+     '<a onclick="go(\'create-club\')">+ 새 모임 만들기</a><span>·</span><a onclick="go(\'manage\')">모임 관리 (발표 모드)</a>'+
+   '</div>';
+  document.getElementById('page-clubs').innerHTML=h;
+}
+async function enterClub(id){
+  STATE.clubId=id;STATE.meetingId=null;STATE.bookId=null;setNick();
+  if(ONLINE){try{await RT.loadMeetings();}catch(e){rtErr(e);}}
+  go('meetings');toast('모임에 입장했어요');
+}
+
+/* ═══════════ RENDER: 모임 만들기 (club 발급) ═══════════ */
+var CBUILD={name:'',intro:'',isOpen:true};
+function renderCreateClub(){
+  document.getElementById('page-create-club').innerHTML=
+    '<div class="section-hd"><div><div class="eyebrow">새 모임 만들기</div><h2 class="h-1 mt-4">모임<br>만들기.</h2></div></div>'+
+    '<p class="body-2 mb-16">모임을 만들면 코드·비밀번호가 발급됩니다. 그 코드·비번으로 <b style="color:var(--ink)">모임의 모든 시즌</b>을 관리할 수 있어요.</p>'+
+    '<div class="sheet">'+
+      '<div class="field"><label>모임 이름</label><input class="input" id="cc-name" value="'+esc(CBUILD.name)+'" placeholder="예: 사내 독서모임"></div>'+
+      '<div class="field"><label>한 줄 소개 (선택)</label><input class="input" id="cc-intro" value="'+esc(CBUILD.intro)+'" placeholder="예: 매월 1권 · 점심 토론"></div>'+
+      '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer"><input type="checkbox" id="cc-open"'+(CBUILD.isOpen!==false?' checked':'')+' style="width:18px;height:18px;accent-color:var(--accent)"> 지금 공개 (모임 목록에 노출)</label>'+
+    '</div>'+
+    '<button class="btn btn-primary btn-pill" onclick="issueClub()">모임 발급하기 (코드·비번)</button>'+
+    '<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'clubs\')">&larr; 모임 목록</button>'+
+    '<div id="cc-result"></div>';
+}
+async function issueClub(){
+  var name=val('cc-name');if(!name){toast('모임 이름을 입력해주세요');return;}
+  var intro=val('cc-intro');var isOpen=(document.getElementById('cc-open')||{}).checked;
+  var code,pw,cid;
+  if(ONLINE){
+    var r=await RT.createClub(name,intro);
+    if(!r)return;
+    code=r.code;pw=r.pw;cid=r.id;
+    if(isOpen===false){try{await RT.updateClubOpen(cid,false);}catch(e){}}
+  } else {
+    code=rndCode();pw=String(Math.floor(1000+Math.random()*9000));cid='cc'+Date.now();
+    var cs=customClubs();cs.push({id:cid,name:name,intro:intro,code:code,pw:pw,isOpen:!!isOpen});saveCustomClubs(cs);
+  }
+  document.getElementById('cc-result').innerHTML='<div class="code-box">'+
+    '<div class="eyebrow mb-8">모임 발급 완료 — 모임장 인증 키</div>'+
+    '<div class="code-box__row">모임 <b>'+esc(name)+'</b></div>'+
+    '<div class="code-box__row">모임코드 <b>'+esc(code)+'</b></div>'+
+    '<div class="code-box__row">모임 비밀번호 <b>'+esc(pw)+'</b></div>'+
+    '<p class="body-2 mt-12" style="color:#D44;font-weight:700">⚠️ 코드·비번을 지금 메모하세요. 분실 시 복구 동선이 없습니다.</p>'+
+    '<p class="body-2 mt-12">이 코드·비번으로 모임 관리에 들어가면 시즌을 추가·발표·마감할 수 있어요.</p>'+
+    '<button class="btn btn-primary btn-pill mt-12" onclick="enterClub(\''+cid+'\')">이 모임으로 입장</button></div>';
+  CBUILD={name:'',intro:'',isOpen:true};
+  toast('모임 발급 완료: '+code);
+}
+
+/* ═══════════ RENDER: 시즌 리스트 (선택된 모임 안) ═══════════ */
 function renderMeetings(){
-  if(!STATE.phone4){go(STATE.isHost?'season':'login');return;}
-  var all=allMeetings().slice().sort(function(a,b){
+  if(!STATE.phone4&&!STATE.isHost){go('login');return;}
+  if(!STATE.clubId){go(STATE.phone4?'clubs':'manage');return;}
+  var club=activeClub();
+  var all=clubMeetings(STATE.clubId).slice().sort(function(a,b){
     var oa=(a.isOpen!==false)?0:1,ob=(b.isOpen!==false)?0:1;return oa-ob;});
   var h=''+
-   '<div class="section-hd"><div><div class="eyebrow">모임</div><h2 class="h-1 mt-4">모임<br>고르기.</h2></div></div>'+
-   '<p class="body-2 mb-16">휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4)+'</b> · 지금 참여 가능한 모임이 위에 파란색으로 표시됩니다.</p>'+
+   '<div class="section-hd"><div><div class="eyebrow">'+esc(club.name)+(club.intro?' · '+esc(club.intro):'')+'</div><h2 class="h-1 mt-4">시즌<br>고르기.</h2></div></div>'+
+   '<p class="body-2 mb-16">'+(STATE.phone4?'휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4)+'</b> · ':'')+'이 모임의 시즌입니다. 공개 시즌이 위에 파란색으로 표시돼요.</p>'+
+   (all.length?'':'<p class="body-2 dim center" style="padding:20px 0">아직 이 모임에 시즌이 없어요. '+(STATE.isHost?'아래 [+ 시즌 만들기]로 추가하세요.':'모임장이 시즌을 추가할 때까지 잠시 기다려 주세요.')+'</p>')+
    '<div class="season-books">';
   all.forEach(function(m){
     var sn=m.kind==='custom'?m.season:SEASON;
     var open=(m.isOpen!==false);
-    var sub=sn.books.length+'권 시즌'+(m.kind==='custom'?' · 모임장 개설':'');
+    var sub=(sn.sub?esc(sn.sub)+' · ':'')+sn.books.length+'권 시즌';
     h+='<div class="book-card '+(open?'current':'upcoming')+'" style="opacity:1" onclick="enterMeeting(\''+m.id+'\')">'+
       '<div class="book-card__spine">'+esc(sn.title.charAt(0))+'</div>'+
-      '<div class="book-card__body"><div class="book-card__month">'+esc(m.name)+'</div>'+
+      '<div class="book-card__body"><div class="book-card__month">시즌</div>'+
       '<div class="book-card__title">'+esc(sn.title)+'</div>'+
-      '<div class="book-card__author">'+esc(sub)+'</div></div>'+
+      '<div class="book-card__author">'+sub+'</div></div>'+
       (open?'<span class="book-card__go">입장 &rarr;</span>'
            :'<span class="book-card__badge soon">마감</span>')+
     '</div>';
   });
   h+='</div>';
+  if(STATE.isHost){
+    h+='<button class="btn btn-ghost btn-pill mt-16" onclick="go(\'create\')">+ 시즌 만들기</button>'+
+       '<div class="center mt-24"><button class="danger-link" onclick="delClubHost()">이 모임 삭제</button></div>';
+  } else {
+    h+='<button class="btn btn-ghost btn-pill mt-24" onclick="go(\'clubs\')">&larr; 다른 모임</button>';
+  }
   document.getElementById('page-meetings').innerHTML=h;
 }
-function enterMeeting(id){STATE.meetingId=id;STATE.bookId=null;setNick();go('season');toast('모임에 입장했어요');}
+function enterMeeting(id){STATE.meetingId=id;STATE.bookId=null;setNick();go('season');toast('시즌에 입장했어요');}
+async function delClubHost(){
+  if(!STATE.clubId)return;
+  var c=activeClub();
+  if(!confirm('모임 「'+(c&&c.name||'')+'」을 영구 삭제할까요?\n이 모임 안의 모든 시즌·책·답변·별점·댓글이 함께 삭제됩니다. 되돌릴 수 없어요.'))return;
+  if(ONLINE){if(!(await RT.deleteClub(STATE.clubId)))return;}
+  else {var cs=customClubs().filter(function(cl){return cl.id!==STATE.clubId;});saveCustomClubs(cs);var ms=customMeetings().filter(function(mm){return mm.clubId!==STATE.clubId;});saveCustomMeetings(ms);}
+  sessClear();STATE.clubId=null;STATE.meetingId=null;STATE.bookId=null;STATE.isHost=false;
+  setNick();syncHostUI();syncAuthUI();go(STATE.phone4?'clubs':'login');toast('모임을 삭제했어요');
+}
 
 /* ═══════════ RENDER: 모임 만들기 (시즌 빌더) ═══════════ */
 var BUILD={stage:'season',name:'',stitle:'',ssub:'',books:[],open:-1,isOpen:true};
 function renderCreate(){
-  var h='<div class="section-hd"><div><div class="eyebrow">모임장 · 시즌 만들기</div><h2 class="h-1 mt-4">'+(BUILD.stage==='season'?'시즌<br>만들기.':'책 ·<br>질문 넣기.')+'</h2></div></div>';
+  if(!STATE.clubId){go(STATE.isHost?'manage':(STATE.phone4?'clubs':'login'));return;}
+  BUILD.name=activeClubName();
+  var h='<div class="section-hd"><div><div class="eyebrow">'+esc(activeClubName())+' · 새 시즌 만들기</div><h2 class="h-1 mt-4">'+(BUILD.stage==='season'?'시즌<br>만들기.':'책 ·<br>질문 넣기.')+'</h2></div></div>';
   if(BUILD.stage==='season'){
-    h+='<p class="body-2 mb-16">먼저 시즌(주제)을 만든 뒤, 그 안에 책을 하나씩 추가하고 책마다 질문을 붙입니다.</p>'+
+    h+='<p class="body-2 mb-16">모임 <b style="color:var(--ink)">'+esc(activeClubName())+'</b> 안에 새 시즌을 추가합니다. 시즌(주제)을 만들고 그 안에 책·질문을 채워 주세요.</p>'+
      '<div class="sheet">'+
-       '<div class="field"><label>모임 이름</label><input class="input" id="cb-name" value="'+esc(BUILD.name)+'" placeholder="예: 사내 독서모임"></div>'+
        '<div class="field"><label>시즌 제목 (주제)</label><input class="input" id="cb-stitle" value="'+esc(BUILD.stitle)+'" placeholder="예: 인간 본성 탐구"></div>'+
        '<div class="field"><label>시즌 한 줄 설명 (선택)</label><input class="input" id="cb-ssub" value="'+esc(BUILD.ssub)+'" placeholder="예: 나 → 연결 → 관계의 그늘"></div>'+
-       '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer"><input type="checkbox" id="cb-open"'+(BUILD.isOpen!==false?' checked':'')+' style="width:18px;height:18px;accent-color:var(--accent)"> 지금 공개 (참여 가능한 모임 목록에 노출)</label>'+
+       '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer"><input type="checkbox" id="cb-open"'+(BUILD.isOpen!==false?' checked':'')+' style="width:18px;height:18px;accent-color:var(--accent)"> 지금 공개 (참여 가능한 시즌 목록에 노출)</label>'+
      '</div>'+
      '<button class="btn btn-primary btn-pill" onclick="buildToBooks()">다음 · 책 추가하기 &rarr;</button>'+
      '<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'login\')">&larr; 처음으로</button>';
   }else{
-    h+='<div class="host-banner" style="margin-bottom:16px">시즌 <b>'+esc(BUILD.stitle)+'</b> · '+esc(BUILD.name)+'</div>';
+    h+='<div class="host-banner" style="margin-bottom:16px">시즌 <b>'+esc(BUILD.stitle)+'</b></div>';
     if(!BUILD.books.length) h+='<p class="body-2 mb-16">아직 책이 없어요. 아래에서 책을 추가하고, 책 카드를 눌러 질문을 붙이세요.</p>';
     BUILD.books.forEach(function(bk,i){
       var nq=bk.questions.filter(function(q){return q&&q.trim();}).length;
@@ -1012,7 +1173,7 @@ function renderCreate(){
         });
         var lh='';
         bk.links.forEach(function(l,k){
-          lh+='<div class="qrow"><input class="input" id="bk-l-'+i+'-'+k+'" value="'+esc(l||'')+'" placeholder="예: 작가 인터뷰 — youtube.com">'+
+          lh+='<div class="qrow"><input class="input" id="bk-l-'+i+'-'+k+'" value="'+esc(l||'')+'" placeholder="예: 작가 인터뷰 — https://youtube.com/...">'+
             '<button class="qrow__del" title="삭제" onclick="removeBuildLink('+i+','+k+')">&times;</button></div>';
         });
         h+='<div onclick="event.stopPropagation()" style="margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:14px">'+
@@ -1047,9 +1208,9 @@ function renderCreate(){
   BUILD.justAdded=-1;
 }
 function buildToBooks(){
-  BUILD.name=val('cb-name');BUILD.stitle=val('cb-stitle');BUILD.ssub=val('cb-ssub');
+  BUILD.name=activeClubName();BUILD.stitle=val('cb-stitle');BUILD.ssub=val('cb-ssub');
   var ck=document.getElementById('cb-open'); if(ck) BUILD.isOpen=ck.checked;
-  if(!BUILD.name||!BUILD.stitle){toast('모임 이름과 시즌 제목을 입력해주세요');return;}
+  if(!BUILD.stitle){toast('시즌 제목을 입력해주세요');return;}
   BUILD.stage='books';renderCreate();
 }
 function readBuildBook(i){
@@ -1084,56 +1245,56 @@ function delBuildBook(i){BUILD.books.splice(i,1);BUILD.open=-1;renderCreate();to
 async function issueMeeting(){
   if(BUILD.open!==-1) readBuildBook(BUILD.open);
   if(!BUILD.books.length){toast('책을 최소 1권 추가해주세요');return;}
+  if(!STATE.clubId){toast('먼저 모임에 입장해 주세요');return;}
   for(var i=0;i<BUILD.books.length;i++){
     var qv=BUILD.books[i].questions.filter(function(q){return q&&q.trim();});
     if(!qv.length){toast((i+1)+'권 「'+BUILD.books[i].title+'」에 질문을 1개 이상 넣어주세요');BUILD.open=i;renderCreate();return;}
   }
-  var code,pw;
   if(ONLINE){
-    var res=await RT.createMeeting(BUILD.name,BUILD.stitle,BUILD.ssub,BUILD.books);
+    var res=await RT.createMeeting(BUILD.name,BUILD.stitle,BUILD.ssub,BUILD.books,STATE.clubId);
     if(!res) return;
-    code=res.code;pw=res.pw;
   } else {
-    code=rndCode();pw=String(Math.floor(1000+Math.random()*9000));var mid='c'+Date.now();
-    var season={title:BUILD.stitle,sub:BUILD.ssub,eyebrow:'모임 · '+BUILD.name,meta:'모임장이 개설한 시즌 · 코드 '+code,
+    var code=rndCode(),pw=String(Math.floor(1000+Math.random()*9000)),mid='c'+Date.now();
+    var season={title:BUILD.stitle,sub:BUILD.ssub,eyebrow:'모임 · '+BUILD.name,meta:'모임장이 개설한 시즌',
       books:BUILD.books.map(function(b,i){
         var qs=b.questions.filter(function(q){return q&&q.trim();});
-        return {id:mid+'-b'+i,title:b.title,author:b.author||'(저자 미상)',spine:b.title.charAt(0),status:'current',yearmonth:b.yearmonth||'',month:fmtYM(b.yearmonth)||((i+1)+'권'),angle:'',tagline:b.title,intro:b.intro||'(책 소개 미입력 — 모임장이 채울 수 있어요)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:b.authorBio||'',bio:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {i:'🔗',t:s,m:''};}),questions:qs,others:qs.map(function(){return [];})};
+        return {id:mid+'-b'+i,title:b.title,author:b.author||'(저자 미상)',spine:b.title.charAt(0),status:'current',yearmonth:b.yearmonth||'',month:fmtYM(b.yearmonth)||((i+1)+'권'),angle:'',tagline:b.title,intro:b.intro||'(책 소개 미입력 — 모임장이 채울 수 있어요)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:b.authorBio||'',bio:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){var u=extractUrl(s);return u?{i:'🔗',t:s.replace(u.replace(/^https?:\/\//,''),'').replace(/\s*[—·-]\s*$/,'').trim()||s,m:u}:{i:'🔗',t:s,m:''};}),questions:qs,others:qs.map(function(){return [];}),closed:false,closed_at:null,report:null};
       })};
     applySchedule(season.books);
-    var cs=customMeetings();cs.push({id:mid,name:BUILD.name,code:code,pw:pw,kind:'custom',isOpen:(BUILD.isOpen!==false),season:season});saveCustomMeetings(cs);
+    var cs=customMeetings();cs.push({id:mid,clubId:STATE.clubId,name:BUILD.name,code:code,pw:pw,kind:'custom',isOpen:(BUILD.isOpen!==false),season:season});saveCustomMeetings(cs);
   }
   document.getElementById('cb-result').innerHTML='<div class="code-box">'+
-    '<div class="eyebrow mb-8">발급 완료 — 회원에게 공유하세요</div>'+
-    '<div class="code-box__row">모임코드 <b>'+esc(code)+'</b></div>'+
-    '<div class="code-box__row">모임 비밀번호 <b>'+esc(pw)+'</b></div>'+
-    '<p class="body-2 mt-12">회원은 휴대폰 뒤 4자리 입장 후 목록에서 <b>'+esc(BUILD.name)+'</b>을 고릅니다. 모임장은 첫 화면의 [모임 관리]에서 이 코드·비번으로 발표 모드를 엽니다.</p>'+
-    '<button class="btn btn-primary btn-pill mt-12" onclick="go(\'manage\')">모임 관리로 이동</button></div>';
-  BUILD={stage:'season',name:'',stitle:'',ssub:'',books:[],open:-1};
-  toast('모임 발급 완료: '+code);
+    '<div class="eyebrow mb-8">시즌 추가 완료</div>'+
+    '<div class="code-box__row">모임 <b>'+esc(activeClubName())+'</b></div>'+
+    '<div class="code-box__row">시즌 <b>'+esc(BUILD.stitle)+'</b></div>'+
+    '<p class="body-2 mt-12">시즌 인증은 별도 발급되지 않아요. 회원은 휴대폰 뒤 4자리로, 모임장은 모임 코드·비번으로 들어와서 이 시즌에 접근합니다.</p>'+
+    '<button class="btn btn-primary btn-pill mt-12" onclick="go(\'meetings\')">시즌 목록으로</button></div>';
+  var doneTitle=BUILD.stitle;
+  BUILD={stage:'season',name:'',stitle:'',ssub:'',books:[],open:-1,isOpen:true};
+  toast('시즌 추가 완료: '+doneTitle);
 }
 
 /* ═══════════ RENDER: 모임 관리 (모임장 인증 게이트) ═══════════ */
 function renderManage(){
   document.getElementById('page-manage').innerHTML=''+
-   '<div class="section-hd"><div><div class="eyebrow">모임장</div><h2 class="h-1 mt-4">모임<br>관리.</h2></div></div>'+
-   '<p class="body-2 mb-16">모임 하나당 공용 계정입니다. 모임코드·비밀번호로 인증하면 발표 모드가 열려요. (개인 답변이 필요하면 첫 화면에서 휴대폰 4자리로 따로 입장하세요.)</p>'+
+   '<div class="section-hd"><div><div class="eyebrow">모임장 인증</div><h2 class="h-1 mt-4">모임<br>관리.</h2></div></div>'+
+   '<p class="body-2 mb-16">모임 코드·비밀번호로 인증하면 그 모임의 모든 시즌을 관리할 수 있어요(시즌 추가/마감/발표). 개인 답변은 첫 화면에서 휴대폰 4자리로 따로 입장.</p>'+
    '<div class="sheet">'+
-     '<div class="field"><label>모임코드</label><input class="input" id="mg-code" style="text-transform:uppercase" placeholder="예: HUMAN-Q2"></div>'+
+     '<div class="field"><label>모임코드</label><input class="input" id="mg-code" style="text-transform:uppercase" placeholder="예: UNTOLD"></div>'+
      '<div class="field"><label>모임 비밀번호</label><input class="input" id="mg-pw" inputmode="numeric" placeholder="모임 비밀번호" onkeydown="if(event.key===\'Enter\')managerLogin()"></div>'+
    '</div>'+
    '<button class="btn btn-primary btn-pill" onclick="managerLogin()">인증하고 입장</button>'+
-   '<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'login\')">&larr; 돌아가기</button>'+
-   '<p class="login-hint">데모 기본 모임 — 코드 <b>HUMAN-Q2</b> · 비번 <b>1234</b></p>';
+   '<button class="btn btn-ghost btn-pill mt-12" onclick="go(STATE.phone4?\'clubs\':\'login\')">&larr; 돌아가기</button>'+
+   '<p class="login-hint">기본 시드 모임 (未知의 서재) — 코드 <b>UNTOLD</b> · 비번 <b>1234</b></p>';
 }
 async function managerLogin(){
-  var code=val('mg-code').toUpperCase(),pw=val('mg-pw'),m=null;
-  if(ONLINE){try{await RT.loadMeetings();}catch(e){rtErr(e);}}
-  allMeetings().forEach(function(x){if(String(x.code).toUpperCase()===code&&String(x.pw)===pw)m=x;});
-  if(!m){toast('모임코드 또는 비밀번호가 맞지 않아요');return;}
-  STATE.meetingId=m.id;STATE.bookId=null;STATE.isHost=true;
+  var code=val('mg-code').toUpperCase(),pw=val('mg-pw'),c=null;
+  if(ONLINE){try{await RT.loadClubs();await RT.loadMeetings();}catch(e){rtErr(e);}}
+  allClubs().forEach(function(x){if(String(x.code).toUpperCase()===code&&String(x.pw)===pw)c=x;});
+  if(!c){toast('모임코드 또는 비밀번호가 맞지 않아요');return;}
+  STATE.clubId=c.id;STATE.meetingId=null;STATE.bookId=null;STATE.isHost=true;
   setNick();syncHostUI();
-  go('season');toast(m.name+' 모임장으로 입장 (발표 모드 사용 가능)');
+  go('meetings');toast(c.name+' 모임장으로 입장 (발표 모드 사용 가능)');
 }
 function setStage(on){
   isStage=on;
@@ -1206,7 +1367,7 @@ async function delQ2(id,k){
 }
 function renderSeason(){
   var m=activeMeeting(),custom=(m.kind==='custom'),sn=custom?m.season:SEASON,books=sn.books;
-  var eyebrow=custom?('모임 · '+m.name):SEASON.eyebrow;
+  var eyebrow=custom?(activeClubName()+' · 시즌'):SEASON.eyebrow;
   var title=sn.title;
   var sub=custom?(sn.sub||sn.books.length+'권 시즌'):SEASON.sub;
   var meta=custom?('모임장이 개설한 시즌 · 코드 '+m.code):SEASON.meta;
@@ -1221,11 +1382,12 @@ function renderSeason(){
   books.forEach(function(b,i){
     var cur=b.status==='current';
     var bl=(b.status==='past')?'지난':(cur?'이번 회차':'예정');
+    var closed=!!b.closed, hasReport=!!b.report;
     h+=
-     '<div class="book-card '+(cur?'current':'upcoming')+'"'+(STATE.isHost?'':' onclick="openBook(\''+b.id+'\')"')+'>'+
+     '<div class="book-card '+(cur?'current':'upcoming')+(closed?' is-closed':'')+'"'+(STATE.isHost?'':' onclick="openBook(\''+b.id+'\')"')+'>'+
        '<div class="book-card__spine">'+esc(b.spine)+'</div>'+
        '<div class="book-card__body">'+
-         '<div class="book-card__month">'+esc(b.month||'')+'</div>'+
+         '<div class="book-card__month">'+esc(b.month||'')+(closed?' · <span style="color:#D44">🔒 마감</span>':'')+(hasReport?' · <span style="color:var(--success)">📊 발표자료</span>':'')+'</div>'+
          '<div class="book-card__title">'+esc(b.title)+'</div>'+
          '<div class="book-card__author">'+esc(b.author)+'</div>'+
          '<div class="book-card__angle">'+esc(b.angle||'')+'</div>'+
@@ -1233,10 +1395,14 @@ function renderSeason(){
            '<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="startShare(\''+b.id+'\')">&#9654; 공유 시작하기</button>'+
            '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="openBook(\''+b.id+'\')">사전정보</button>'+
            '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="toggleEditQ(\''+b.id+'\')">질문 편집</button>'+
+           (closed
+             ? '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="hostCloseBook(\''+b.id+'\',\''+esc(b.title)+'\',false)">🔓 마감 해제</button>'+
+               '<button class="btn btn-primary btn-sm btn-pill" style="width:auto;background:var(--success);border-color:var(--success)" onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')">'+(hasReport?'📊 발표자료 재생성':'📊 발표자료 생성')+'</button>'
+             : '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="hostCloseBook(\''+b.id+'\',\''+esc(b.title)+'\',true)">🔒 마감</button>')+
            '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="delBookHost(\''+b.id+'\',\''+esc(b.title)+'\')">책 삭제</button>'+
          '</div>'):'')+
        '</div>'+
-       '<span class="book-card__badge '+(cur?'now':'soon')+'">'+bl+'</span>'+
+       '<span class="book-card__badge '+(closed?'soon':(cur?'now':'soon'))+'">'+(closed?'마감':bl)+'</span>'+
      '</div>';
     if(STATE.isHost&&EDIT.bookId===b.id){
       var qs=b.questions||[];
@@ -1261,11 +1427,11 @@ function renderSeason(){
   h+='</div>'+
    (STATE.isHost
      ? '<button class="btn btn-ghost btn-pill mt-16" onclick="addBookHost()">+ 책 추가</button>'+
-       '<div class="center mt-24"><button class="danger-link" onclick="delMeetingHost()">이 모임 삭제</button></div>'
+       '<div class="center mt-24"><button class="danger-link" onclick="delMeetingHost()">이 시즌 삭제</button></div>'
      : '<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>');
   document.getElementById('page-season').innerHTML=h;
 }
-async function openBook(id){STATE.bookId=id;setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
+async function openBook(id){STATE.bookId=id;DISC.view='mine';setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
 function _custMutate(fn){ var cs=customMeetings(),hit=false; cs.forEach(function(mm){ if(fn(mm))hit=true; }); if(hit)saveCustomMeetings(cs); return hit; }
 async function delBookHost(id,title){
   if(!confirm('「'+title+'」 책과 그 답변·댓글을 모두 삭제할까요?'))return;
@@ -1287,7 +1453,7 @@ async function addBookHost(){
   renderSeason();toast('「'+t+'」 추가됨 · 카드에서 질문·사전정보를 채우세요');
 }
 async function delMeetingHost(){
-  if(!confirm('이 모임 전체(시즌·책·답변·별점·댓글)를 영구 삭제할까요? 되돌릴 수 없습니다.'))return;
+  if(!confirm('이 시즌 전체(책·답변·별점·댓글)를 영구 삭제할까요? 되돌릴 수 없습니다.'))return;
   if(ONLINE){ if(!(await RT.deleteMeeting(STATE.meetingId)))return; }
   else { _custMutate(function(mm){ return mm.id===STATE.meetingId; }) || 0;
     var cs=customMeetings().filter(function(mm){return mm.id!==STATE.meetingId;}); saveCustomMeetings(cs); }
@@ -1303,7 +1469,7 @@ function renderBook(){
     if(!PENDNICK)PENDNICK=randomNick();
     document.getElementById('page-book').innerHTML=
       '<div class="section-hd"><div><div class="eyebrow">'+esc(b.title)+'</div><h2 class="h-1 mt-4">이 책에서의<br>내 이름.</h2></div></div>'+
-      '<div class="cover" style="padding:36px 20px;text-align:center"><div class="cover__top"><span>untoldChapter</span><span>'+esc(b.month||'')+'</span></div>'+
+      '<div class="cover" style="padding:36px 20px;text-align:center"><div class="cover__top"><span>같이읽자</span><span>'+esc(b.month||'')+'</span></div>'+
       '<div style="padding:30px 0"><div style="font-size:14px;opacity:.8;margin-bottom:10px">당신은</div>'+
       '<div class="cover__title" style="font-size:34px">'+esc(PENDNICK)+'</div>'+
       '<div style="font-size:15px;opacity:.85;margin-top:10px">입니다!!</div></div>'+
@@ -1317,7 +1483,7 @@ function renderBook(){
    '<div class="cover" style="padding:24px 20px">'+
      '<div class="cover__top"><span>'+esc(b.title)+'</span><span>'+esc(b.month||'')+'</span></div>'+
      '<div style="text-align:center;padding:20px 0"><div class="cover__title">'+esc(b.title)+'</div><div class="cover__author">'+esc(b.author)+'</div></div>'+
-     '<div class="cover__top"><span>untoldChapter</span><span>'+esc(b.month||'')+'</span></div>'+
+     '<div class="cover__top"><span>같이읽자</span><span>'+esc(b.month||'')+'</span></div>'+
    '</div>';
   if(STATE.isHost&&BINFO.editing){
     var bf=BINFO.buf||{intro:'',authorBio:'',yearmonth:'',facts:[],links:[]};
@@ -1330,7 +1496,7 @@ function renderBook(){
     var lh='';bf.links.forEach(function(l,k){
       lh+='<div class="bi-item"><div class="bi-item__hd"><span>콘텐츠 '+(k+1)+'</span><button class="bi-del" onclick="rmBILink('+k+')">&times;</button></div>'+
         '<input class="input" id="bi-lt-'+k+'" value="'+esc(l.t||'')+'" placeholder="제목 (예: 작가 인터뷰 영상)">'+
-        '<input class="input" id="bi-lm-'+k+'" value="'+esc(l.m||'')+'" placeholder="링크 / 출처 (예: youtube.com)"></div>';
+        '<input class="input" id="bi-lm-'+k+'" value="'+esc(l.m||'')+'" placeholder="URL (https:// 포함 권장)"></div>';
     });
     h+='<div class="sheet sheet--warm"><div class="eyebrow mb-12">사전정보 편집 · '+esc(b.title)+'</div>'+
       '<div class="field"><label>책 소개</label><textarea class="input" id="bi-intro" rows="3">'+esc(bf.intro||'')+'</textarea></div>'+
@@ -1352,12 +1518,20 @@ function renderBook(){
     }
     if(b.links&&b.links.length){
       h+='<div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">같이 볼 콘텐츠</div><h3 class="h-3 mt-4">읽기 전에 보면 좋은 것들</h3></div></div>';
-      b.links.forEach(function(x){h+='<div class="link-card"><div class="link-card__icon">'+(x.i||'🔗')+'</div><div class="link-card__body"><div class="link-card__title">'+esc(x.t)+'</div><div class="link-card__meta">'+esc(x.m||'')+'</div></div></div>';});
+      b.links.forEach(function(x){
+        var u=extractUrl(x.m,x.t);
+        var attr=u?(' onclick="openLink(\''+u.replace(/\\/g,'\\\\').replace(/\x27/g,"\\'")+'\')" style="cursor:pointer"'):' style="cursor:default"';
+        var meta=esc(x.m||'')+(u?'<span class="lk-go"> · 열기 ↗</span>':'');
+        h+='<div class="link-card"'+attr+'><div class="link-card__icon">'+(x.i||'🔗')+'</div><div class="link-card__body"><div class="link-card__title">'+esc(x.t)+'</div><div class="link-card__meta">'+meta+'</div></div></div>';
+      });
       h+='</div>';
     }
     if(STATE.isHost)
       h+='<div class="row mt-12"><button class="btn btn-ghost btn-pill" onclick="editBookInfo()">✏️ 사전정보 편집</button>'+
         '<button class="btn btn-primary btn-arrow btn-pill" onclick="startShare(\''+b.id+'\')">발표 시작 <span class="arr">&rarr;</span></button></div>';
+    else if(cur && b.closed)
+      h+='<div class="locked-note mt-12" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b>입니다.<br>답변·별점·댓글이 잠겨 있어요. 모임장이 마감을 해제하면 다시 열려요.</div>'+
+        '<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'discussion\')">읽기만 보기 &rarr;</button>';
     else if(cur)
       h+='<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">답변하러 가기 <span class="arr">&rarr;</span></button>';
     else
@@ -1398,11 +1572,22 @@ async function saveBookInfo(){
   BINFO.editing=false;BINFO.buf=null;renderBook();toast('사전정보를 저장했어요');
 }
 
-/* ═══════════ RENDER: 답변 ═══════════ */
+/* ═══════════ RENDER: 답변 (탭: 내 답변 / 다른 답변 / 별점) ═══════════ */
+var DISC={view:'mine'};
+function setDiscView(v){DISC.view=v;renderDiscussion();window.scrollTo(0,0);}
+function discSeasonTitle(){var m=activeMeeting();return (m&&m.kind==='custom'&&m.season&&m.season.title)?m.season.title:SEASON.title;}
 function bookHeadHtml(b){
   return '<div class="book-head"><div class="book-head__spine">'+esc(b.spine)+'</div>'+
     '<div><div class="book-head__title">'+esc(b.title)+'</div>'+
-    '<div class="book-head__meta">'+esc(b.author)+' · '+esc(b.month)+' · '+esc(SEASON.title)+'</div></div></div>';
+    '<div class="book-head__meta">'+esc(b.author)+' · '+esc(b.month)+' · '+esc(discSeasonTitle())+'</div></div></div>';
+}
+function discTabsHtml(b,bs){
+  var submitted=!!bs.submitted, lock=!submitted;
+  function tab(k,label){
+    var on=(DISC.view===k), dis=(lock&&(k==='others'||k==='rating'));
+    return '<button class="disc-tab'+(on?' active':'')+(dis?' lock':'')+'" '+(dis?'disabled title="답변 제출 후 열려요"':('onclick="setDiscView(\''+k+'\')"'))+'>'+esc(label)+(dis?' 🔒':'')+'</button>';
+  }
+  return '<div class="disc-tabs">'+tab('mine','내 답변')+tab('others','다른 사람의 답변')+tab('rating','별점')+'</div>';
 }
 function renderDiscussion(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
@@ -1412,71 +1597,133 @@ function renderDiscussion(){
     document.getElementById('page-discussion').innerHTML=h;return;
   }
   var bs=bookState(b.id);
-  h+='<div class="section-hd"><div><div class="eyebrow">답변</div><h2 class="h-1 mt-4">내 생각을<br>적어볼까요.</h2></div></div>';
+  if((DISC.view==='others'||DISC.view==='rating')&&!bs.submitted) DISC.view='mine';
+  if(b.closed){
+    h+='<div class="locked-note" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b>입니다.<br>'+
+      '답변·별점·댓글은 잠금 상태예요. 모임장이 마감을 해제하면 다시 열려요.'+
+      (b.report?'<br><span style="color:var(--success)">📊 발표자료가 생성되어 있어요 — 발표 모드의 [AI 분석] 탭에서 볼 수 있습니다.</span>':'')+
+    '</div>';
+  }
+  h+=discTabsHtml(b,bs);
 
-  if(!bs.submitted){
-    h+='<p class="body-2 mb-16">먼저 <b style="color:var(--ink)">내 답변</b>을 제출하면, 그 직후 다른 참가자의 답변(익명)을 읽고 댓글을 달 수 있어요.</p>';
-    b.questions.forEach(function(q,i){
-      h+='<div class="sheet">'+
-        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
-        '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
-        '<textarea class="input" id="ans-'+i+'" rows="3" placeholder="내 생각을 적어주세요">'+esc(bs.answers[i]||'')+'</textarea>'+
-      '</div>';
-    });
-    h+='<button class="btn btn-primary btn-pill" onclick="submitAnswers()">답변 제출하기</button>';
-  }else{
-    h+='<p class="body-2 mb-16">답변 제출 완료! 이제 다른 참가자의 답변(익명)을 읽고 댓글을 남길 수 있어요. 이 댓글은 모임 당일 토론 거리가 됩니다.</p>';
-    b.questions.forEach(function(q,i){
-      h+='<div class="sheet">'+
-        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
-        '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
-        '<div class="answer mine"><div class="answer__who"><span><b>나 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>'+(EDITANS.qi===i?'수정 중':'제출됨')+'</span></div>'+
-          (EDITANS.qi===i
-            ? '<textarea class="input" id="ea-'+i+'" rows="3">'+esc(bs.answers[i]||'')+'</textarea>'+
-              '<div class="row mt-12"><button class="btn btn-primary btn-sm btn-pill" onclick="saveAns('+i+')">저장</button>'+
-              '<button class="btn btn-ghost btn-sm btn-pill" onclick="cancelAns()">취소</button></div>'
-            : '<div class="answer__body">'+esc(bs.answers[i]||'')+'</div>'+
-              '<div class="reaction-row"><button class="reaction-btn" onclick="editAns('+i+')">✏️ 수정</button></div>')+
+  if(DISC.view==='mine'){
+    h+='<div class="section-hd"><div><div class="eyebrow">내 답변</div><h2 class="h-1 mt-4">내 생각을<br>적어볼까요.</h2></div></div>';
+    if(!bs.submitted){
+      if(b.closed){
+        h+='<p class="body-2 mb-16 dim">이 책은 마감돼서 새 답변을 받지 않아요.</p>';
+      } else {
+        h+='<p class="body-2 mb-16">먼저 <b style="color:var(--ink)">내 답변</b>을 제출하면, 그 직후 <b style="color:var(--ink)">다른 사람의 답변</b>·<b style="color:var(--ink)">별점</b> 탭이 열려요.</p>';
+        b.questions.forEach(function(q,i){
+          h+='<div class="sheet">'+
+            '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
+            '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
+            '<textarea class="input" id="ans-'+i+'" rows="3" placeholder="내 생각을 적어주세요">'+esc(bs.answers[i]||'')+'</textarea>'+
           '</div>';
-      (b.others[i]||[]).forEach(function(o,j){
+        });
+        h+='<button class="btn btn-primary btn-pill" onclick="submitAnswers()">답변 제출하기</button>';
+      }
+    } else {
+      h+='<p class="body-2 mb-16">'+(b.closed?'마감된 책입니다. 내 답변은 읽기만 가능해요.':'답변 제출 완료! 위 탭에서 <b style="color:var(--ink)">다른 사람의 답변</b>·<b style="color:var(--ink)">별점</b>을 확인하세요.')+'</p>';
+      b.questions.forEach(function(q,i){
+        var editing=(EDITANS.qi===i && !b.closed);
+        h+='<div class="sheet">'+
+          '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
+          '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
+          '<div class="answer mine"><div class="answer__who"><span><b>나 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>'+(editing?'수정 중':'제출됨')+'</span></div>'+
+            (editing
+              ? '<textarea class="input" id="ea-'+i+'" rows="3">'+esc(bs.answers[i]||'')+'</textarea>'+
+                '<div class="row mt-12"><button class="btn btn-primary btn-sm btn-pill" onclick="saveAns('+i+')">저장</button>'+
+                '<button class="btn btn-ghost btn-sm btn-pill" onclick="cancelAns()">취소</button></div>'
+              : '<div class="answer__body">'+esc(bs.answers[i]||'')+'</div>'+
+                (b.closed?'':'<div class="reaction-row"><button class="reaction-btn" onclick="editAns('+i+')">✏️ 수정</button></div>'))+
+            '</div>'+
+        '</div>';
+      });
+    }
+  } else if(DISC.view==='others'){
+    h+='<div class="section-hd"><div><div class="eyebrow">다른 사람의 답변</div><h2 class="h-1 mt-4">다른<br>생각들.</h2></div></div>';
+    h+='<p class="body-2 mb-16">익명으로 표시됩니다. 공감(💛)·댓글은 모임 당일 토론거리가 돼요.</p>';
+    var hasOthers=false;
+    b.questions.forEach(function(q,i){
+      var oas=(b.others[i]||[]);if(oas.length)hasOthers=true;
+      h+='<div class="sheet"><div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
+        '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>';
+      if(!oas.length) h+='<div class="dim" style="font-size:13px">아직 다른 답변이 없어요.</div>';
+      oas.forEach(function(o,j){
         var ck='q'+i+'a'+j, list=(bs.comments[ck]||[]);
         var rc=(b.reactions&&b.reactions[ck])||(bs.reactions&&bs.reactions[ck])||{count:0,mine:false};
         h+='<div class="answer"><div class="answer__who"><span><b>'+esc(o.n)+'</b> · 익명</span></div>'+
           '<div class="answer__body">'+esc(o.a)+'</div>'+
-          '<div class="reaction-row"><button class="reaction-btn'+(rc.mine?' react-on':'')+'" onclick="toggleReact('+i+','+j+')">💛 공감'+(rc.count?(' '+rc.count):'')+'</button></div>'+
+          (b.closed
+            ? '<div class="reaction-row dim" style="font-size:12px">💛 공감 '+(rc.count||0)+' · 마감</div>'
+            : '<div class="reaction-row"><button class="reaction-btn'+(rc.mine?' react-on':'')+'" onclick="toggleReact('+i+','+j+')">💛 공감'+(rc.count?(' '+rc.count):'')+'</button></div>')+
           '<div class="comment-box">';
         if(list.length){
           h+='<div class="comment-list">';
           list.forEach(function(c,ci){var txt=(typeof c==='string')?c:c.t;
-            h+='<div class="comment"><b>나</b> '+esc(txt)+'<button class="cmt-x" title="삭제" onclick="delComment('+i+','+j+','+ci+')">&times;</button></div>';});
+            h+='<div class="comment"><b>나</b> '+esc(txt)+(b.closed?'':'<button class="cmt-x" title="삭제" onclick="delComment('+i+','+j+','+ci+')">&times;</button>')+'</div>';});
           h+='</div>';
         }
-        h+='<div class="comment-form"><input class="input" id="cm-'+i+'-'+j+'" placeholder="댓글·궁금한 점을 남겨보세요" onkeydown="if(event.key===\'Enter\')addComment('+i+','+j+')">'+
-            '<button class="btn btn-ghost btn-sm btn-pill" onclick="addComment('+i+','+j+')">등록</button></div>'+
-          '</div></div>';
+        if(!b.closed){
+          h+='<div class="comment-form"><input class="input" id="cm-'+i+'-'+j+'" placeholder="댓글·궁금한 점을 남겨보세요" onkeydown="if(event.key===\'Enter\')addComment('+i+','+j+')">'+
+              '<button class="btn btn-ghost btn-sm btn-pill" onclick="addComment('+i+','+j+')">등록</button></div>';
+        }
+        h+='</div></div>';
       });
       h+='</div>';
     });
+    if(!hasOthers) h+='<p class="body-2 dim center">아직 다른 참가자의 답변이 없어요. 다른 분들이 제출하면 여기에 표시됩니다.</p>';
+  } else {
+    h+='<div class="section-hd"><div><div class="eyebrow">별점</div><h2 class="h-1 mt-4">이 책,<br>어땠나요.</h2></div></div>';
     h+=ratingHtml(b,bs);
+    h+=allRatingsHtml(b);
   }
   document.getElementById('page-discussion').innerHTML=h;
 }
+function allRatingsHtml(b){
+  /* 모두의 별점 분포: ONLINE 이면 STAGE_RATINGS(loadBook 결과 미러), 아니면 stageParts 의 데모 표본 */
+  var ps=[];
+  try{ ps=stageParts.call?stageParts():[]; }catch(e){ ps=[]; }
+  var includedMe=false;
+  var sums={},cnts={};
+  RATING_AXES.forEach(function(ax){sums[ax.k]=0;cnts[ax.k]=0;});
+  ps.forEach(function(p){RATING_AXES.forEach(function(ax){if(p.r&&p.r[ax.k]){sums[ax.k]+=p.r[ax.k];cnts[ax.k]++;}});});
+  var bs=bookState(b.id);
+  RATING_AXES.forEach(function(ax){if(bs.ratings&&bs.ratings[ax.k]){sums[ax.k]+=bs.ratings[ax.k];cnts[ax.k]++;includedMe=true;}});
+  var anyCnt=0;RATING_AXES.forEach(function(ax){if(cnts[ax.k]>anyCnt)anyCnt=cnts[ax.k];});
+  var h='<div class="sheet sheet--warm mt-16"><div class="sheet__hd"><div><div class="eyebrow">모두의 별점</div><h3 class="h-3 mt-4">'+
+    (anyCnt? '익명 분포 (평균)':'아직 별점이 없어요')+'</h3></div></div>';
+  if(!anyCnt){
+    h+='<p class="body-2 dim">참가자가 별점을 저장하면 여기에 항목별 평균이 표시돼요. 누가 줬는지는 보이지 않아요.</p></div>';
+    return h;
+  }
+  h+='<div>';
+  RATING_AXES.forEach(function(ax){
+    var n=cnts[ax.k]||0, avg=n?(sums[ax.k]/n):0, rounded=Math.round(avg);
+    h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'<span style="display:block;font-size:11px;color:var(--ink-dim);font-weight:400">'+esc(ax.hint)+'</span></div>'+
+      '<div><span class="rt-stars">'+starStr(rounded)+'</span><span class="rt-stars__num">'+(n?avg.toFixed(1):'-')+' · '+n+'명</span></div></div>';
+  });
+  h+='</div><p class="body-2 dim mt-12">※ 누가 어떤 점수를 줬는지는 보이지 않아요. 표본 '+anyCnt+'명'+(includedMe?' (나 포함)':'')+'.</p></div>';
+  return h;
+}
 function ratingHtml(b,bs){
+  var locked=!!b.closed;
   var h='<div class="sheet sheet--warm"><div class="sheet__hd"><div><div class="eyebrow">책 별점</div>'+
-    '<h3 class="h-3 mt-4">이 책, 어땠나요?</h3></div></div>'+
-    '<p class="body-2 mb-16">답변이 아니라 <b style="color:var(--ink)">책 자체</b>에 대한 평가예요. 발표에서는 누구 점수인지 보이지 않고 익명 분포만 공개됩니다.</p>'+
+    '<h3 class="h-3 mt-4">'+(locked?'마감된 책의 내 별점':'이 책, 어땠나요?')+'</h3></div></div>'+
+    '<p class="body-2 mb-16">'+(locked?'마감 시점에 저장된 내 점수예요. 더는 변경할 수 없어요.':'답변이 아니라 <b style="color:var(--ink)">책 자체</b>에 대한 평가예요. 발표에서는 누구 점수인지 보이지 않고 익명 분포만 공개됩니다.')+'</p>'+
     '<div class="rating-grid">';
   RATING_AXES.forEach(function(ax){
     var val=bs.ratings[ax.k]||0;
     h+='<div class="rating-row'+(ax.k==='overall'?' rating-row--total':'')+'">'+
       '<div class="rating-row__label">'+esc(ax.label)+'<span>'+esc(ax.hint)+'</span></div><div class="stars">';
-    for(var n=1;n<=5;n++) h+='<button class="star'+(n<=val?' on':'')+'" onclick="setRating(\''+ax.k+'\','+n+')">★</button>';
+    for(var n=1;n<=5;n++) h+='<button class="star'+(n<=val?' on':'')+'" '+(locked?'disabled':'onclick="setRating(\''+ax.k+'\','+n+')"')+'>★</button>';
     h+='</div></div>';
   });
-  h+='</div><button class="btn btn-primary btn-pill mt-16" onclick="saveRating()">별점 저장</button></div>';
+  h+='</div>'+(locked?'':'<button class="btn btn-primary btn-pill mt-16" onclick="saveRating()">별점 저장</button>')+'</div>';
   return h;
 }
 async function submitAnswers(){
+  if(closedGuard())return;
   var b=bookById(STATE.bookId),bs=bookState(b.id),filled=0,vals=[];
   b.questions.forEach(function(q,i){
     var t=(document.getElementById('ans-'+i).value||'').trim();
@@ -1485,12 +1732,14 @@ async function submitAnswers(){
   if(filled<b.questions.length){setBookState(b.id,bs);toast('모든 질문에 답한 뒤 제출해주세요 ('+filled+'/'+b.questions.length+')');return;}
   if(ONLINE){ if(!(await RT.submit(b.id,vals))) return; }
   else { bs.submitted=true;setBookState(b.id,bs); }
-  toast('답변 제출 완료! 다른 사람 답변이 열렸어요');
+  DISC.view='others';
+  toast('답변 제출 완료! 다른 사람 답변·별점 탭이 열렸어요');
   renderDiscussion();
 }
 function editAns(i){ EDITANS.qi=i; renderDiscussion(); }
 function cancelAns(){ EDITANS.qi=-1; renderDiscussion(); }
 async function saveAns(i){
+  if(closedGuard())return;
   var b=bookById(STATE.bookId),bs=bookState(b.id);
   var el=document.getElementById('ea-'+i),v=el?el.value.trim():'';
   if(!v){toast('답변을 입력해주세요');return;}
@@ -1500,10 +1749,12 @@ async function saveAns(i){
   EDITANS.qi=-1; renderDiscussion(); toast('답변을 수정했어요');
 }
 function setRating(k,n){
+  if(closedGuard())return;
   var b=bookById(STATE.bookId),bs=bookState(b.id);
   bs.ratings[k]=n;setBookState(b.id,bs);renderDiscussion();
 }
 async function saveRating(){
+  if(closedGuard())return;
   var b=bookById(STATE.bookId),bs=bookState(b.id),done=0;
   RATING_AXES.forEach(function(ax){if(bs.ratings[ax.k])done++;});
   if(!done){toast('별을 하나 이상 눌러주세요');return;}
@@ -1511,6 +1762,7 @@ async function saveRating(){
   toast('별점 저장 완료 ('+done+'/'+RATING_AXES.length+' 항목)');
 }
 async function addComment(i,j){
+  if(closedGuard())return;
   var inp=document.getElementById('cm-'+i+'-'+j),t=(inp.value||'').trim();
   if(!t){toast('댓글을 입력해주세요');return;}
   var b=bookById(STATE.bookId),bs=bookState(b.id),ck='q'+i+'a'+j;
@@ -1526,6 +1778,7 @@ async function addComment(i,j){
   renderDiscussion();
 }
 async function delComment(i,j,ci){
+  if(closedGuard())return;
   if(!confirm('이 댓글을 삭제할까요?'))return;
   var b=bookById(STATE.bookId),bs=bookState(b.id),ck='q'+i+'a'+j,list=(bs.comments&&bs.comments[ck])||[];
   var c=list[ci];if(c===undefined)return;
@@ -1539,6 +1792,7 @@ async function delComment(i,j,ci){
   toast('댓글을 삭제했어요');renderDiscussion();
 }
 async function toggleReact(i,j){
+  if(closedGuard())return;
   var b=bookById(STATE.bookId);
   var tgt=((b.others[i]||[])[j]||{}).phone4;
   if(ONLINE){
@@ -1602,6 +1856,79 @@ function renderHistory(){
 }
 
 /* ═══════════ TOAST ═══════════ */
+function openLink(u){try{window.open(u,'_blank','noopener,noreferrer');}catch(e){toast('링크를 열 수 없어요');}}
+
+/* ═══════════ 책 마감(잠금) — closure helpers ═══════════ */
+function isBookClosed(id){var b=bookById(id||STATE.bookId);return !!(b&&b.closed);}
+function closedGuard(id){if(isBookClosed(id)){toast('🔒 마감된 책이라 변경할 수 없어요');return true;}return false;}
+function _setBookClosedLocal(id,on){
+  var b=bookById(id);if(b){b.closed=!!on;b.closed_at=on?new Date().toISOString():null;}
+  _custMutate(function(mm){var hit=false;((mm.season&&mm.season.books)||[]).forEach(function(x){if(x.id===id){x.closed=!!on;x.closed_at=on?new Date().toISOString():null;hit=true;}});return hit;});
+}
+function _setBookReportLocal(id,rep){
+  var b=bookById(id);if(b)b.report=rep;
+  _custMutate(function(mm){var hit=false;((mm.season&&mm.season.books)||[]).forEach(function(x){if(x.id===id){x.report=rep;hit=true;}});return hit;});
+}
+
+/* mock 보고서 생성기 — 외부 AI 미연결 자리.
+ * 추후 generateReportAI(book) 로 교체하면 됨. report.source 로 구분. */
+function generateReportMock(b){
+  /* 1) 답변 본문 수집 (다른 사람 + 나) */
+  var answers=[];
+  (b.others||[]).forEach(function(qOthers){(qOthers||[]).forEach(function(o){if(o&&o.a)answers.push(String(o.a));});});
+  if(STATE.phone4){var bs=bookState(b.id);(bs.answers||[]).forEach(function(a){if(a)answers.push(String(a));});}
+  /* 2) 단순 토큰 빈도 (한국어 조사 제거 단순화) */
+  var stop={'그리고':1,'하지만':1,'그래서':1,'그런데':1,'있어요':1,'없어요':1,'있는':1,'없는':1,'했다':1,'한다':1,'하는':1,'합니다':1,'정말':1,'너무':1,'좀더':1,'우리':1,'저는':1,'나는':1,'그건':1,'이건':1,'있고':1,'없고':1};
+  var tokens={};
+  answers.forEach(function(t){
+    String(t).split(/[\s,.\!?。、…·"'()「」『』《》\[\]\-—~]+/).forEach(function(w){
+      if(!w||w.length<2)return;
+      var x=w.replace(/[은는이가을를의에도만와과로으로요다며서야지죠께서한테에서까지부터처럼]+$/,'');
+      if(x.length<2||stop[x]||/^[0-9]+$/.test(x))return;
+      tokens[x]=(tokens[x]||0)+1;
+    });
+  });
+  var arr=Object.keys(tokens).map(function(k){return [k,tokens[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
+  var maxF=arr.length?arr[0][1]:1;
+  var keywords=arr.map(function(p){return {w:p[0],c:p[1],size:(p[1]>=maxF*0.66?'lg':(p[1]>=maxF*0.33?'md':'sm'))};});
+  /* 3) 평균 별점 (STAGE_RATINGS 표본 + 내 점수) */
+  var sums={},cnts={};
+  RATING_AXES.forEach(function(ax){sums[ax.k]=0;cnts[ax.k]=0;});
+  Object.keys(STAGE_RATINGS||{}).forEach(function(nm){
+    var r=STAGE_RATINGS[nm]||{};
+    RATING_AXES.forEach(function(ax){if(r[ax.k]){sums[ax.k]+=r[ax.k];cnts[ax.k]++;}});
+  });
+  if(STATE.phone4){var bs2=bookState(b.id);RATING_AXES.forEach(function(ax){if(bs2.ratings&&bs2.ratings[ax.k]){sums[ax.k]+=bs2.ratings[ax.k];cnts[ax.k]++;}});}
+  var ratings={};RATING_AXES.forEach(function(ax){ratings[ax.k]={avg:cnts[ax.k]?+(sums[ax.k]/cnts[ax.k]).toFixed(1):0,n:cnts[ax.k]};});
+  /* 4) 통계 */
+  var nAns=answers.length;
+  var nCmt=0;Object.keys(STAGE_COMMENTS||{}).forEach(function(k){nCmt+=(STAGE_COMMENTS[k]||[]).length;});
+  var nPart=Object.keys(STAGE_RATINGS||{}).length+(STATE.phone4?1:0);
+  /* 5) summary — 외부 AI 자리. 지금은 통계 한 줄. */
+  var topRated=RATING_AXES.slice().sort(function(a,b){return (ratings[b.k].avg||0)-(ratings[a.k].avg||0);})[0];
+  var summary='「'+(b.title||'')+'」 모임 마감 — 답변 '+nAns+'개·댓글 '+nCmt+'개·참가자 '+nPart+'명. '+
+    '평균 별점은 '+(topRated?topRated.label+' '+(ratings[topRated.k].avg||0)+'★':'-')+'가 가장 높았어요. '+
+    '※ 외부 AI 미연결 — 통계 기반 자동 요약입니다.';
+  return {source:'mock',generated_at:new Date().toISOString(),keywords:keywords,ratings:ratings,summary:summary,stats:{answers:nAns,comments:nCmt,participants:nPart}};
+}
+
+async function hostCloseBook(id,title,on){
+  var msg=on?('「'+title+'」 모임을 마감할까요?\n마감 후엔 답변·별점·댓글이 모두 잠겨요. (마감 해제로 되돌릴 수 있어요)'):('「'+title+'」 마감을 해제할까요?\n다시 답변·별점·댓글을 받을 수 있어요.');
+  if(!confirm(msg))return;
+  if(ONLINE){if(!(await RT.closeBook(id,on)))return;}
+  else {_setBookClosedLocal(id,on);}
+  renderSeason();toast(on?'마감했어요 · 발표자료 생성을 누를 수 있어요':'마감을 해제했어요');
+}
+async function hostGenerateReport(id,title){
+  var b=bookById(id);if(!b)return;
+  var regen=!!(b.report);
+  if(!confirm((regen?'발표자료를 다시 생성할까요?':'발표자료를 생성할까요?')+'\n외부 AI 미연결 — 지금은 mock(통계 기반) 보고서가 만들어집니다.'))return;
+  if(ONLINE){try{await RT.loadBook(id);}catch(e){}}
+  var rep=generateReportMock(bookById(id)||b);
+  if(ONLINE){if(!(await RT.saveReport(id,rep)))return;}
+  else {_setBookReportLocal(id,rep);}
+  renderSeason();toast(regen?'발표자료를 다시 생성했어요 (mock)':'발표자료를 생성했어요 (mock)');
+}
 function toast(msg){
   var el=document.createElement('div');el.className='alert';el.textContent=msg;
   document.getElementById('toast-area').appendChild(el);
@@ -1683,6 +2010,29 @@ function renderStageRoadmap(){
 }
 function renderStageRating(){
   var host=document.getElementById('stage-rating-rows');if(!host)return;
+  var b=bookById(STAGE.bookId);
+  var sub=document.querySelector('.scene-analysis__sub');
+  var kwHost=document.querySelector('#scene-analysis .analysis-keywords');
+  var smHost=document.querySelector('#scene-analysis .analysis-summary');
+  /* 발표자료(report)가 있으면 그 데이터로 키워드·별점·요약 전체 교체 */
+  if(b&&b.report){
+    var rep=b.report,h='';
+    RATING_AXES.forEach(function(ax){
+      var rr=(rep.ratings||{})[ax.k]||{avg:0,n:0};
+      h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'</div>'+
+        '<div><span class="rt-stars">'+starStr(Math.round(rr.avg||0))+'</span><span class="rt-stars__num">'+(rr.avg||0).toFixed(1)+' · '+rr.n+'명</span></div></div>';
+    });
+    host.innerHTML=h;
+    if(kwHost){
+      if(rep.keywords&&rep.keywords.length) kwHost.innerHTML=rep.keywords.map(function(k){return '<span class="kw kw-'+esc(k.size||'md')+'">'+esc(k.w)+'</span>';}).join('');
+      else kwHost.innerHTML='<span class="dim">키워드가 없어요.</span>';
+    }
+    if(smHost) smHost.textContent=rep.summary||'';
+    if(sub) sub.innerHTML='발표자료 — '+esc(rep.source||'mock')+' · '+esc((rep.generated_at||'').slice(0,16).replace('T',' '))+(STATE.isHost?(' · <a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 다시 생성</a>'):'');
+    return;
+  }
+  /* 보고서가 없으면: 모임장에게 생성 안내, 아니면 라이브 표본 평균 */
+  if(sub) sub.innerHTML='AI가 참가자들의 답변을 분석했어요 &middot; 사람은 공감만, 분석은 AI'+(STATE.isHost&&b?(' · '+(b.closed?'<a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 발표자료 생성</a>':'<span class="dim">발표자료는 책을 마감한 뒤 생성할 수 있어요</span>')):'');
   var ps=stageParts(),h='';
   if(!ps.length){host.innerHTML='<div class="sl-empty">회원 별점 표본이 없어요. 서버 연동 후 표시됩니다(기본 데모 모임에서 시연 가능).</div>';return;}
   RATING_AXES.forEach(function(ax){
@@ -1775,17 +2125,18 @@ async function onPop(ev){
   var s=ev.state;
   if(isStage) setStage(false);
   if(s&&s.rt){
-    STATE.phone4=s.p4||null;STATE.meetingId=s.mid||STATE.meetingId;STATE.isHost=!!s.host;STATE.bookId=s.bid||null;
+    STATE.phone4=s.p4||null;STATE.clubId=s.cid||null;STATE.meetingId=s.mid||null;STATE.isHost=!!s.host;STATE.bookId=s.bid||null;
     setNick();syncHostUI();syncAuthUI();
     if(ONLINE){
       try{
+        if(!CLUBS_CACHE.length) await RT.loadClubs();
         if(!MEET_CACHE.length) await RT.loadMeetings();
         if(s.bid&&(s.pg==='book'||s.pg==='discussion'||s.pg==='history')) await RT.loadBook(s.bid);
       }catch(e){ rtErr(e); }
     }
     go(s.pg||'login',true);
   } else {
-    go(STATE.phone4?'meetings':(STATE.isHost?'season':'login'),true);
+    go(STATE.phone4?'clubs':(STATE.isHost?'manage':'login'),true);
   }
 }
 window.addEventListener('popstate',onPop);
@@ -1795,7 +2146,7 @@ applyQEdits();
 setNick();
 syncHostUI();
 syncAuthUI();
-try{ history.replaceState({rt:1,pg:'login',p4:null,mid:STATE.meetingId,host:false,bid:null},''); }catch(e){}
+try{ history.replaceState({rt:1,pg:'login',p4:null,cid:null,mid:null,host:false,bid:null},''); }catch(e){}
 (async function(){ try{ await sessRestore(); }catch(e){ console.error(e); } })();
 </script>
 </body>
