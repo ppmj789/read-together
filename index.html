@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>같이읽자 — 모임과 시즌을 함께 만들어요</title>
+<title>未知의 서재 — 우리만의 다음 페이지</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -421,7 +421,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <!-- ═══ MASTHEAD ═══ -->
 <header class="masthead">
   <div class="masthead__row">
-    <span class="masthead__title" onclick="goHome()">같이<span class="mh-accent">읽자</span></span>
+    <span class="masthead__title" onclick="goHome()"><span class="mh-accent">未知</span>의 서재</span>
     <span class="masthead__center"><b id="hdr-nick">—</b></span>
     <div style="display:flex;align-items:center;gap:8px">
       <button class="mode-toggle" onclick="toggleMode()" id="mode-toggle-btn" style="display:none">발표 모드</button>
@@ -454,9 +454,9 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <!-- PAGE: 로그인 (휴대폰 뒤 4자리) -->
 <div class="page active" id="page-login">
   <div class="hero">
-    <div class="hero__issue">같이읽자</div>
-    <h1 class="hero__title">같이<br><span class="accent">읽자.</span></h1>
-    <p class="hero__sub">모임과 시즌을 만들어,<br>함께 다음 페이지를 펼쳐요.</p>
+    <div class="hero__issue">未知의 서재</div>
+    <h1 class="hero__title">未知의<br><span class="accent">서재.</span></h1>
+    <p class="hero__sub">아직 펼치지 않은 다음 페이지를,<br>우리 함께 읽어요.</p>
   </div>
   <div class="login-wrap">
     <div class="field" style="text-align:left">
@@ -465,10 +465,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
              oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')login()">
     </div>
     <button class="btn btn-primary btn-arrow btn-pill" onclick="login()">들어가기 <span class="arr">&rarr;</span></button>
-    <p class="login-hint">번호 뒤 4자리만으로 입장합니다. 닉네임은 책마다 자동으로 새로 정해지고,<br>이 4자리로 내가 읽은 책 기록이 이어집니다.</p>
-    <div class="host-links">
-      <a onclick="go('create-club')">+ 모임 만들기</a><span>·</span><a onclick="go('manage')">모임 관리 (발표 모드)</a>
-    </div>
+    <p class="login-hint">번호 뒤 4자리만으로 입장합니다.<br>로그인 후 내가 운영하는 모임과 공개 모임 목록을 볼 수 있어요.</p>
   </div>
 </div>
 
@@ -707,6 +704,14 @@ function confirmNick(){
   var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=PENDNICK;nkSave(o);
   var nm=PENDNICK;PENDNICK=null;setNick();renderBook();toast('닉네임 확정: '+nm);
 }
+function confirmCustomNick(){
+  var el=document.getElementById('nk-custom');
+  var v=el?(el.value||'').trim():'';
+  if(!v){toast('직접 입력할 이름을 적어주세요');return;}
+  if(v.length>20){toast('최대 20자까지 가능해요');return;}
+  var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=v;nkSave(o);
+  PENDNICK=null;setNick();renderBook();toast('닉네임 확정: '+v);
+}
 function nickFor(phone4,bookId){
   var f=fixedNick(phone4,bookId); if(f) return f;
   var str=String(phone4)+'|'+bookId,h=0;
@@ -765,16 +770,20 @@ function applySchedule(books){
 function rtErr(e){console.error('[Supabase]',e);toast('서버 오류: '+((e&&e.message)||'요청 실패'));}
 var RT={
   async loadClubs(){
-    var r=await sb.from('club').select('id,name,code,password,intro,is_open');
+    var r=await sb.from('club').select('id,name,code,password,intro,is_open,owner_phone4');
     if(r.error){rtErr(r.error);return;}
-    CLUBS_CACHE=(r.data||[]).map(function(c){return {id:c.id,name:c.name,code:c.code,pw:c.password,intro:c.intro||'',isOpen:(c.is_open!==false)};});
+    CLUBS_CACHE=(r.data||[]).map(function(c){return {id:c.id,name:c.name,code:c.code,pw:c.password,intro:c.intro||'',isOpen:(c.is_open!==false),ownerPhone4:c.owner_phone4||null};});
   },
-  async createClub(name,intro){
+  async createClub(name,intro,ownerPhone4){
     var code=rndCode(),pw=String(Math.floor(1000+Math.random()*9000));
-    var r=await sb.from('club').insert({name:name,code:code,password:pw,intro:intro||''}).select('id').single();
+    var r=await sb.from('club').insert({name:name,code:code,password:pw,intro:intro||'',owner_phone4:ownerPhone4||null}).select('id').single();
     if(r.error){rtErr(r.error);return null;}
     await RT.loadClubs();
     return {id:r.data.id,code:code,pw:pw};
+  },
+  async claimClub(clubId,ownerPhone4){
+    var e=(await sb.from('club').update({owner_phone4:ownerPhone4}).eq('id',clubId)).error;
+    if(e){rtErr(e);return false;} await RT.loadClubs(); return true;
   },
   async deleteClub(id){
     var e=(await sb.from('club').delete().eq('id',id)).error;
@@ -1019,33 +1028,56 @@ function syncHostUI(){var b=document.getElementById('mode-toggle-btn');if(b)b.st
 /* ═══════════ RENDER: 모임(club) 리스트 ═══════════ */
 function renderClubs(){
   if(!STATE.phone4&&!STATE.isHost){go('login');return;}
-  var clubs=allClubs().slice().sort(function(a,b){
-    var oa=(a.isOpen!==false)?0:1,ob=(b.isOpen!==false)?0:1;return oa-ob;});
-  var h='<div class="section-hd"><div><div class="eyebrow">모임</div><h2 class="h-1 mt-4">어느 모임에<br>들어갈까요?</h2></div></div>'+
-   '<p class="body-2 mb-16">휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4||'')+'</b> · 모임을 골라 그 안의 시즌 목록을 봅니다. 공개 모임이 위에 파란색으로 표시돼요.</p>'+
-   '<div class="season-books">';
-  clubs.forEach(function(c){
+  var clubs=allClubs();
+  var me=STATE.phone4;
+  var mine=clubs.filter(function(c){return me&&c.ownerPhone4===me;});
+  var others=clubs.filter(function(c){return !(me&&c.ownerPhone4===me)&&(c.isOpen!==false);}).slice();
+  var closedOthers=clubs.filter(function(c){return !(me&&c.ownerPhone4===me)&&(c.isOpen===false);});
+  function card(c,opts){
+    opts=opts||{};
     var open=(c.isOpen!==false);
     var nSeasons=clubMeetings(c.id).length;
-    h+='<div class="book-card '+(open?'current':'upcoming')+'" style="opacity:1" onclick="enterClub(\''+c.id+'\')">'+
+    var cls=opts.host?'current':(open?'current':'upcoming');
+    return '<div class="book-card '+cls+'" style="opacity:1" onclick="enterClub(\''+c.id+'\')">'+
       '<div class="book-card__spine">'+esc((c.name||'?').charAt(0))+'</div>'+
-      '<div class="book-card__body"><div class="book-card__month">모임</div>'+
+      '<div class="book-card__body"><div class="book-card__month">'+(opts.host?'<span style="color:var(--accent)">👑 내가 운영</span>':'모임')+'</div>'+
       '<div class="book-card__title">'+esc(c.name)+'</div>'+
       '<div class="book-card__author">'+nSeasons+'개 시즌'+(c.intro?' · '+esc(c.intro):'')+'</div></div>'+
       (open?'<span class="book-card__go">입장 &rarr;</span>'
            :'<span class="book-card__badge soon">마감</span>')+
     '</div>';
-  });
-  h+='</div>'+
-   '<div class="host-links" style="margin-top:24px">'+
-     '<a onclick="go(\'create-club\')">+ 새 모임 만들기</a><span>·</span><a onclick="go(\'manage\')">모임 관리 (발표 모드)</a>'+
-   '</div>';
+  }
+  var h='<div class="section-hd"><div><div class="eyebrow">'+esc(STATE.phone4||'')+'</div><h2 class="h-1 mt-4">어느 모임에<br>들어갈까요?</h2></div></div>';
+  if(mine.length){
+    h+='<p class="body-2 mb-12"><b style="color:var(--accent)">👑 내가 운영하는 모임</b></p><div class="season-books">';
+    mine.forEach(function(c){h+=card(c,{host:true});});
+    h+='</div><hr class="rule">';
+  }
+  h+='<p class="body-2 mb-12"><b style="color:var(--ink)">공개 모임</b></p><div class="season-books">';
+  if(!others.length) h+='<p class="body-2 dim center" style="padding:20px 0">아직 공개된 모임이 없어요.</p>';
+  others.forEach(function(c){h+=card(c);});
+  h+='</div>';
+  if(closedOthers.length){
+    h+='<details style="margin-top:16px"><summary class="dim" style="cursor:pointer;font-size:13px">마감된 모임 '+closedOthers.length+'개 보기</summary><div class="season-books mt-12">';
+    closedOthers.forEach(function(c){h+=card(c);});
+    h+='</div></details>';
+  }
+  h+='<div class="sheet sheet--warm mt-24" style="text-align:center;cursor:pointer" onclick="go(\'create-club\')">'+
+       '<div class="eyebrow">+ 새 모임 만들기</div>'+
+       '<p class="body-2 mt-8">읽고 싶은 책을 모아 새 모임을 운영해보세요. 발급 후 이 4자리로 모임장 권한이 자동 부여됩니다.</p>'+
+     '</div>'+
+     '<div class="host-links" style="margin-top:16px">'+
+       '<a onclick="go(\'manage\')" style="font-size:12px">백업 코드로 모임 위임받기</a>'+
+     '</div>';
   document.getElementById('page-clubs').innerHTML=h;
 }
 async function enterClub(id){
-  STATE.clubId=id;STATE.meetingId=null;STATE.bookId=null;setNick();
+  STATE.clubId=id;STATE.meetingId=null;STATE.bookId=null;
+  var c=clubById(id);
+  STATE.isHost=!!(c&&STATE.phone4&&c.ownerPhone4&&c.ownerPhone4===STATE.phone4);
+  setNick();syncHostUI();
   if(ONLINE){try{await RT.loadMeetings();}catch(e){rtErr(e);}}
-  go('meetings');toast('모임에 입장했어요');
+  go('meetings');toast(STATE.isHost?'모임장 권한으로 입장':'모임에 입장했어요');
 }
 
 /* ═══════════ RENDER: 모임 만들기 (club 발급) ═══════════ */
@@ -1064,25 +1096,26 @@ function renderCreateClub(){
     '<div id="cc-result"></div>';
 }
 async function issueClub(){
+  if(!STATE.phone4){toast('먼저 휴대폰 4자리로 로그인해 주세요');return;}
   var name=val('cc-name');if(!name){toast('모임 이름을 입력해주세요');return;}
   var intro=val('cc-intro');var isOpen=(document.getElementById('cc-open')||{}).checked;
   var code,pw,cid;
   if(ONLINE){
-    var r=await RT.createClub(name,intro);
+    var r=await RT.createClub(name,intro,STATE.phone4);
     if(!r)return;
     code=r.code;pw=r.pw;cid=r.id;
     if(isOpen===false){try{await RT.updateClubOpen(cid,false);}catch(e){}}
   } else {
     code=rndCode();pw=String(Math.floor(1000+Math.random()*9000));cid='cc'+Date.now();
-    var cs=customClubs();cs.push({id:cid,name:name,intro:intro,code:code,pw:pw,isOpen:!!isOpen});saveCustomClubs(cs);
+    var cs=customClubs();cs.push({id:cid,name:name,intro:intro,code:code,pw:pw,isOpen:!!isOpen,ownerPhone4:STATE.phone4});saveCustomClubs(cs);
   }
   document.getElementById('cc-result').innerHTML='<div class="code-box">'+
-    '<div class="eyebrow mb-8">모임 발급 완료 — 모임장 인증 키</div>'+
+    '<div class="eyebrow mb-8">모임 발급 완료</div>'+
     '<div class="code-box__row">모임 <b>'+esc(name)+'</b></div>'+
-    '<div class="code-box__row">모임코드 <b>'+esc(code)+'</b></div>'+
-    '<div class="code-box__row">모임 비밀번호 <b>'+esc(pw)+'</b></div>'+
-    '<p class="body-2 mt-12" style="color:#D44;font-weight:700">⚠️ 코드·비번을 지금 메모하세요. 분실 시 복구 동선이 없습니다.</p>'+
-    '<p class="body-2 mt-12">이 코드·비번으로 모임 관리에 들어가면 시즌을 추가·발표·마감할 수 있어요.</p>'+
+    '<p class="body-2 mt-12">이 휴대폰 4자리(<b>'+esc(STATE.phone4||'')+'</b>)로 로그인하시면 자동으로 모임장 권한이 부여돼요. 다른 디바이스에서도 같은 4자리로 들어오면 운영 가능.</p>'+
+    '<div class="code-box__row mt-12">백업 코드 <b>'+esc(code)+'</b></div>'+
+    '<div class="code-box__row">백업 비밀번호 <b>'+esc(pw)+'</b></div>'+
+    '<p class="body-2 mt-12" style="color:#D44;font-weight:700">⚠️ 백업 코드·비번은 다른 사람에게 운영 권한을 위임하거나 4자리를 잊었을 때 쓰는 키예요. 메모해 두세요.</p>'+
     '<button class="btn btn-primary btn-pill mt-12" onclick="enterClub(\''+cid+'\')">이 모임으로 입장</button></div>';
   CBUILD={name:'',intro:'',isOpen:true};
   toast('모임 발급 완료: '+code);
@@ -1277,24 +1310,29 @@ async function issueMeeting(){
 /* ═══════════ RENDER: 모임 관리 (모임장 인증 게이트) ═══════════ */
 function renderManage(){
   document.getElementById('page-manage').innerHTML=''+
-   '<div class="section-hd"><div><div class="eyebrow">모임장 인증</div><h2 class="h-1 mt-4">모임<br>관리.</h2></div></div>'+
-   '<p class="body-2 mb-16">모임 코드·비밀번호로 인증하면 그 모임의 모든 시즌을 관리할 수 있어요(시즌 추가/마감/발표). 개인 답변은 첫 화면에서 휴대폰 4자리로 따로 입장.</p>'+
+   '<div class="section-hd"><div><div class="eyebrow">백업 코드로 위임받기</div><h2 class="h-1 mt-4">모임<br>위임.</h2></div></div>'+
+   '<p class="body-2 mb-16">평소엔 휴대폰 4자리로 자동 모임장 인식이 됩니다. 4자리를 잊었거나 다른 사람의 모임을 이어받을 때만 백업 코드·비번이 필요해요. 인증 성공 시 현재 4자리(<b style="color:var(--ink)">'+esc(STATE.phone4||'미로그인')+'</b>)가 새 운영자로 등록됩니다.</p>'+
    '<div class="sheet">'+
-     '<div class="field"><label>모임코드</label><input class="input" id="mg-code" style="text-transform:uppercase" placeholder="예: UNTOLD"></div>'+
-     '<div class="field"><label>모임 비밀번호</label><input class="input" id="mg-pw" inputmode="numeric" placeholder="모임 비밀번호" onkeydown="if(event.key===\'Enter\')managerLogin()"></div>'+
+     '<div class="field"><label>백업 코드</label><input class="input" id="mg-code" style="text-transform:uppercase" placeholder="예: UNTOLD"></div>'+
+     '<div class="field"><label>백업 비밀번호</label><input class="input" id="mg-pw" inputmode="numeric" placeholder="백업 비밀번호" onkeydown="if(event.key===\'Enter\')managerLogin()"></div>'+
    '</div>'+
-   '<button class="btn btn-primary btn-pill" onclick="managerLogin()">인증하고 입장</button>'+
+   '<button class="btn btn-primary btn-pill" onclick="managerLogin()">인증하고 위임받기</button>'+
    '<button class="btn btn-ghost btn-pill mt-12" onclick="go(STATE.phone4?\'clubs\':\'login\')">&larr; 돌아가기</button>'+
-   '<p class="login-hint">기본 시드 모임 (未知의 서재) — 코드 <b>UNTOLD</b> · 비번 <b>1234</b></p>';
+   '<p class="login-hint">시드 모임(未知의 서재) 백업 — 코드 <b>UNTOLD</b> · 비번 <b>1234</b></p>';
 }
 async function managerLogin(){
   var code=val('mg-code').toUpperCase(),pw=val('mg-pw'),c=null;
   if(ONLINE){try{await RT.loadClubs();await RT.loadMeetings();}catch(e){rtErr(e);}}
   allClubs().forEach(function(x){if(String(x.code).toUpperCase()===code&&String(x.pw)===pw)c=x;});
   if(!c){toast('모임코드 또는 비밀번호가 맞지 않아요');return;}
+  /* 백업 코드로 인증 성공 시, 현재 phone4 를 owner 로 claim 해서 다음부터 자동 인식되도록 */
+  if(STATE.phone4&&!c.ownerPhone4){
+    if(ONLINE){try{await RT.claimClub(c.id,STATE.phone4);}catch(e){}}
+    else { var cs=customClubs(); cs.forEach(function(x){if(x.id===c.id)x.ownerPhone4=STATE.phone4;}); saveCustomClubs(cs); }
+  }
   STATE.clubId=c.id;STATE.meetingId=null;STATE.bookId=null;STATE.isHost=true;
   setNick();syncHostUI();
-  go('meetings');toast(c.name+' 모임장으로 입장 (발표 모드 사용 가능)');
+  go('meetings');toast(c.name+' 모임장 권한으로 입장'+(STATE.phone4?' · 다음부턴 자동 인식돼요':''));
 }
 function setStage(on){
   isStage=on;
@@ -1431,7 +1469,7 @@ function renderSeason(){
      : '<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>');
   document.getElementById('page-season').innerHTML=h;
 }
-async function openBook(id){STATE.bookId=id;DISC.view='mine';setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
+async function openBook(id){STATE.bookId=id;DISC.view='rating';setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
 function _custMutate(fn){ var cs=customMeetings(),hit=false; cs.forEach(function(mm){ if(fn(mm))hit=true; }); if(hit)saveCustomMeetings(cs); return hit; }
 async function delBookHost(id,title){
   if(!confirm('「'+title+'」 책과 그 답변·댓글을 모두 삭제할까요?'))return;
@@ -1469,21 +1507,27 @@ function renderBook(){
     if(!PENDNICK)PENDNICK=randomNick();
     document.getElementById('page-book').innerHTML=
       '<div class="section-hd"><div><div class="eyebrow">'+esc(b.title)+'</div><h2 class="h-1 mt-4">이 책에서의<br>내 이름.</h2></div></div>'+
-      '<div class="cover" style="padding:36px 20px;text-align:center"><div class="cover__top"><span>같이읽자</span><span>'+esc(b.month||'')+'</span></div>'+
+      '<div class="cover" style="padding:36px 20px;text-align:center"><div class="cover__top"><span>未知의 서재</span><span>'+esc(b.month||'')+'</span></div>'+
       '<div style="padding:30px 0"><div style="font-size:14px;opacity:.8;margin-bottom:10px">당신은</div>'+
       '<div class="cover__title" style="font-size:34px">'+esc(PENDNICK)+'</div>'+
       '<div style="font-size:15px;opacity:.85;margin-top:10px">입니다!!</div></div>'+
       '<div class="cover__top"><span>책마다 새 이름</span><span>익명</span></div></div>'+
-      '<p class="body-2 center mb-16">이 이름으로 「'+esc(b.title)+'」에 참여합니다. 마음에 들면 확정하세요.</p>'+
-      '<div class="row"><button class="btn btn-ghost btn-pill" onclick="rollNick()">🎲 다시 뽑기</button>'+
-      '<button class="btn btn-primary btn-pill" onclick="confirmNick()">이 이름으로 확정</button></div>';
+      '<p class="body-2 center mb-16">랜덤 닉네임이 마음에 들지 않으면 다시 뽑거나, 원하는 이름을 직접 적어 확정하세요.</p>'+
+      '<div class="row mb-12"><button class="btn btn-ghost btn-pill" onclick="rollNick()">🎲 다시 뽑기</button>'+
+      '<button class="btn btn-primary btn-pill" onclick="confirmNick()">랜덤 이름 확정</button></div>'+
+      '<div class="sheet">'+
+        '<div class="field"><label>원하는 이름이 있다면 직접 입력</label>'+
+        '<input class="input" id="nk-custom" maxlength="20" placeholder="예: 책읽는 미지" onkeydown="if(event.key===\'Enter\')confirmCustomNick()"></div>'+
+        '<button class="btn btn-primary btn-pill" onclick="confirmCustomNick()">이 이름으로 확정</button>'+
+        '<p class="body-2 dim mt-8" style="font-size:12px">최대 20자. 한 책에서 한 번 정하면 그 책에선 못 바꿔요. 다른 책에서는 또 다른 이름을 정할 수 있어요.</p>'+
+      '</div>';
     return;
   }
   var h='<div class="section-hd"><div><div class="eyebrow">사전정보</div><h2 class="h-2 mt-4">모임 전에 워밍업!</h2></div></div>'+
    '<div class="cover" style="padding:24px 20px">'+
      '<div class="cover__top"><span>'+esc(b.title)+'</span><span>'+esc(b.month||'')+'</span></div>'+
      '<div style="text-align:center;padding:20px 0"><div class="cover__title">'+esc(b.title)+'</div><div class="cover__author">'+esc(b.author)+'</div></div>'+
-     '<div class="cover__top"><span>같이읽자</span><span>'+esc(b.month||'')+'</span></div>'+
+     '<div class="cover__top"><span>未知의 서재</span><span>'+esc(b.month||'')+'</span></div>'+
    '</div>';
   if(STATE.isHost&&BINFO.editing){
     var bf=BINFO.buf||{intro:'',authorBio:'',yearmonth:'',facts:[],links:[]};
@@ -1533,7 +1577,7 @@ function renderBook(){
       h+='<div class="locked-note mt-12" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b>입니다.<br>답변·별점·댓글이 잠겨 있어요. 모임장이 마감을 해제하면 다시 열려요.</div>'+
         '<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'discussion\')">읽기만 보기 &rarr;</button>';
     else if(cur)
-      h+='<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">답변하러 가기 <span class="arr">&rarr;</span></button>';
+      h+='<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">별점·답변 매기러 가기 <span class="arr">&rarr;</span></button>';
     else
       h+='<div class="locked-note mt-12">이 책은 <b>'+esc(b.month)+'</b>에 모임이 열려요.<br>지금은 미리 워밍업만 할 수 있어요.</div>';
   }
@@ -1573,7 +1617,7 @@ async function saveBookInfo(){
 }
 
 /* ═══════════ RENDER: 답변 (탭: 내 답변 / 다른 답변 / 별점) ═══════════ */
-var DISC={view:'mine'};
+var DISC={view:'rating'};
 function setDiscView(v){DISC.view=v;renderDiscussion();window.scrollTo(0,0);}
 function discSeasonTitle(){var m=activeMeeting();return (m&&m.kind==='custom'&&m.season&&m.season.title)?m.season.title:SEASON.title;}
 function bookHeadHtml(b){
@@ -1581,13 +1625,20 @@ function bookHeadHtml(b){
     '<div><div class="book-head__title">'+esc(b.title)+'</div>'+
     '<div class="book-head__meta">'+esc(b.author)+' · '+esc(b.month)+' · '+esc(discSeasonTitle())+'</div></div></div>';
 }
+function ratedAny(bs){var n=0;RATING_AXES.forEach(function(ax){if(bs.ratings&&bs.ratings[ax.k])n++;});return n;}
+function ratedAll(bs){var n=ratedAny(bs);return n>=RATING_AXES.length;}
 function discTabsHtml(b,bs){
-  var submitted=!!bs.submitted, lock=!submitted;
-  function tab(k,label){
-    var on=(DISC.view===k), dis=(lock&&(k==='others'||k==='rating'));
-    return '<button class="disc-tab'+(on?' active':'')+(dis?' lock':'')+'" '+(dis?'disabled title="답변 제출 후 열려요"':('onclick="setDiscView(\''+k+'\')"'))+'>'+esc(label)+(dis?' 🔒':'')+'</button>';
+  var lockMine=!ratedAny(bs);
+  var lockOthers=!bs.submitted;
+  function tab(k,label,locked,tip){
+    var on=(DISC.view===k);
+    return '<button class="disc-tab'+(on?' active':'')+(locked?' lock':'')+'" '+(locked?('disabled title="'+esc(tip||'')+'"'):('onclick="setDiscView(\''+k+'\')"'))+'>'+esc(label)+(locked?' 🔒':'')+'</button>';
   }
-  return '<div class="disc-tabs">'+tab('mine','내 답변')+tab('others','다른 사람의 답변')+tab('rating','별점')+'</div>';
+  return '<div class="disc-tabs">'+
+    tab('rating','① 별점',false,'')+
+    tab('mine','② 내 답변',lockMine,'먼저 별점을 1개 이상 저장하면 열려요')+
+    tab('others','③ 다른 사람의 답변',lockOthers,'내 답변을 제출하면 열려요')+
+  '</div>';
 }
 function renderDiscussion(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
@@ -1597,7 +1648,9 @@ function renderDiscussion(){
     document.getElementById('page-discussion').innerHTML=h;return;
   }
   var bs=bookState(b.id);
-  if((DISC.view==='others'||DISC.view==='rating')&&!bs.submitted) DISC.view='mine';
+  /* 잠긴 탭에 머물러 있으면 가능한 가장 앞 탭으로 강등 */
+  if(DISC.view==='others' && !bs.submitted) DISC.view=ratedAny(bs)?'mine':'rating';
+  if(DISC.view==='mine'   && !ratedAny(bs)) DISC.view='rating';
   if(b.closed){
     h+='<div class="locked-note" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b>입니다.<br>'+
       '답변·별점·댓글은 잠금 상태예요. 모임장이 마감을 해제하면 다시 열려요.'+
@@ -1607,12 +1660,15 @@ function renderDiscussion(){
   h+=discTabsHtml(b,bs);
 
   if(DISC.view==='mine'){
-    h+='<div class="section-hd"><div><div class="eyebrow">내 답변</div><h2 class="h-1 mt-4">내 생각을<br>적어볼까요.</h2></div></div>';
+    h+='<div class="section-hd"><div><div class="eyebrow">② 내 답변</div><h2 class="h-1 mt-4">내 생각을<br>적어볼까요.</h2></div></div>';
+    if(!ratedAll(bs)){
+      h+='<div class="locked-note" style="margin-bottom:14px;padding:14px 18px;border-color:var(--accent);color:var(--accent)">⭐ <b>별점</b>이 '+(RATING_AXES.length-ratedAny(bs))+'개 비어 있어요. <a onclick="setDiscView(\'rating\')" style="color:var(--accent);font-weight:700;text-decoration:underline;cursor:pointer">별점 마저 매기기</a></div>';
+    }
     if(!bs.submitted){
       if(b.closed){
         h+='<p class="body-2 mb-16 dim">이 책은 마감돼서 새 답변을 받지 않아요.</p>';
       } else {
-        h+='<p class="body-2 mb-16">먼저 <b style="color:var(--ink)">내 답변</b>을 제출하면, 그 직후 <b style="color:var(--ink)">다른 사람의 답변</b>·<b style="color:var(--ink)">별점</b> 탭이 열려요.</p>';
+        h+='<p class="body-2 mb-16">제출하면 <b style="color:var(--ink)">다른 사람의 답변</b> 탭이 열려요.</p>';
         b.questions.forEach(function(q,i){
           h+='<div class="sheet">'+
             '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
@@ -1641,7 +1697,7 @@ function renderDiscussion(){
       });
     }
   } else if(DISC.view==='others'){
-    h+='<div class="section-hd"><div><div class="eyebrow">다른 사람의 답변</div><h2 class="h-1 mt-4">다른<br>생각들.</h2></div></div>';
+    h+='<div class="section-hd"><div><div class="eyebrow">③ 다른 사람의 답변</div><h2 class="h-1 mt-4">다른<br>생각들.</h2></div></div>';
     h+='<p class="body-2 mb-16">익명으로 표시됩니다. 공감(💛)·댓글은 모임 당일 토론거리가 돼요.</p>';
     var hasOthers=false;
     b.questions.forEach(function(q,i){
@@ -1674,29 +1730,29 @@ function renderDiscussion(){
     });
     if(!hasOthers) h+='<p class="body-2 dim center">아직 다른 참가자의 답변이 없어요. 다른 분들이 제출하면 여기에 표시됩니다.</p>';
   } else {
-    h+='<div class="section-hd"><div><div class="eyebrow">별점</div><h2 class="h-1 mt-4">이 책,<br>어땠나요.</h2></div></div>';
+    h+='<div class="section-hd"><div><div class="eyebrow">① 별점</div><h2 class="h-1 mt-4">이 책,<br>어땠나요.</h2></div></div>';
+    h+='<p class="body-2 mb-16">먼저 별점을 매기면 다음 단계(<b style="color:var(--ink)">내 답변 → 다른 답변</b>)가 차례로 열려요.</p>';
     h+=ratingHtml(b,bs);
     h+=allRatingsHtml(b);
   }
   document.getElementById('page-discussion').innerHTML=h;
 }
 function allRatingsHtml(b){
-  /* 모두의 별점 분포: ONLINE 이면 STAGE_RATINGS(loadBook 결과 미러), 아니면 stageParts 의 데모 표본 */
+  /* 모두의 별점 분포: 내가 별점을 1개 이상 저장한 후에만 노출 */
+  var bs=bookState(b.id);
+  if(!ratedAny(bs)){
+    return '<div class="sheet sheet--warm mt-16"><div class="sheet__hd"><div><div class="eyebrow">모두의 별점</div><h3 class="h-3 mt-4">🔒 잠긴 영역</h3></div></div>'+
+      '<p class="body-2 dim">먼저 위에서 별점을 1개 이상 저장하면 모두의 익명 분포가 열려요. (누가 어떤 점수를 줬는지는 보이지 않아요.)</p></div>';
+  }
   var ps=[];
   try{ ps=stageParts.call?stageParts():[]; }catch(e){ ps=[]; }
   var includedMe=false;
   var sums={},cnts={};
   RATING_AXES.forEach(function(ax){sums[ax.k]=0;cnts[ax.k]=0;});
   ps.forEach(function(p){RATING_AXES.forEach(function(ax){if(p.r&&p.r[ax.k]){sums[ax.k]+=p.r[ax.k];cnts[ax.k]++;}});});
-  var bs=bookState(b.id);
   RATING_AXES.forEach(function(ax){if(bs.ratings&&bs.ratings[ax.k]){sums[ax.k]+=bs.ratings[ax.k];cnts[ax.k]++;includedMe=true;}});
   var anyCnt=0;RATING_AXES.forEach(function(ax){if(cnts[ax.k]>anyCnt)anyCnt=cnts[ax.k];});
-  var h='<div class="sheet sheet--warm mt-16"><div class="sheet__hd"><div><div class="eyebrow">모두의 별점</div><h3 class="h-3 mt-4">'+
-    (anyCnt? '익명 분포 (평균)':'아직 별점이 없어요')+'</h3></div></div>';
-  if(!anyCnt){
-    h+='<p class="body-2 dim">참가자가 별점을 저장하면 여기에 항목별 평균이 표시돼요. 누가 줬는지는 보이지 않아요.</p></div>';
-    return h;
-  }
+  var h='<div class="sheet sheet--warm mt-16"><div class="sheet__hd"><div><div class="eyebrow">모두의 별점</div><h3 class="h-3 mt-4">익명 분포 (평균)</h3></div></div>';
   h+='<div>';
   RATING_AXES.forEach(function(ax){
     var n=cnts[ax.k]||0, avg=n?(sums[ax.k]/n):0, rounded=Math.round(avg);
@@ -1724,7 +1780,14 @@ function ratingHtml(b,bs){
 }
 async function submitAnswers(){
   if(closedGuard())return;
-  var b=bookById(STATE.bookId),bs=bookState(b.id),filled=0,vals=[];
+  var b=bookById(STATE.bookId),bs=bookState(b.id);
+  if(!ratedAll(bs)){
+    var miss=RATING_AXES.length-ratedAny(bs);
+    if(!confirm('아직 별점 '+miss+'개 항목이 비어 있어요.\n그래도 답변을 제출할까요?\n(취소하면 별점 탭으로 돌아갑니다)')){
+      DISC.view='rating';renderDiscussion();return;
+    }
+  }
+  var filled=0,vals=[];
   b.questions.forEach(function(q,i){
     var t=(document.getElementById('ans-'+i).value||'').trim();
     bs.answers[i]=t;vals[i]=t;if(t)filled++;
@@ -1759,7 +1822,10 @@ async function saveRating(){
   RATING_AXES.forEach(function(ax){if(bs.ratings[ax.k])done++;});
   if(!done){toast('별을 하나 이상 눌러주세요');return;}
   if(ONLINE){ if(!(await RT.saveRatings(b.id,bs.ratings))) return; }
-  toast('별점 저장 완료 ('+done+'/'+RATING_AXES.length+' 항목)');
+  toast('별점 저장 완료 ('+done+'/'+RATING_AXES.length+' 항목) · 답변 탭이 열렸어요');
+  /* 답변 탭으로 가이드 (잠금이 풀린 직후) */
+  if(!bs.submitted) DISC.view='mine';
+  renderDiscussion();
 }
 async function addComment(i,j){
   if(closedGuard())return;
