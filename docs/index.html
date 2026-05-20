@@ -292,6 +292,8 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .comment-form{display:flex;gap:8px}
 .comment-form .input{min-height:42px;font-size:14px}
 .comment-form .btn{width:auto;min-height:42px;flex:0 0 auto}
+.ans-x{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.06);color:var(--ink-soft);cursor:pointer;font-size:18px;line-height:1;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;padding:0}
+.ans-x:hover{background:#D44;color:#fff}
 .locked-note{text-align:center;padding:30px 18px;color:var(--ink-dim);font-size:14px;line-height:1.7;background:var(--paper-warm);border:1px dashed var(--rule);border-radius:var(--radius-md)}
 .locked-note b{color:var(--ink-soft)}
 
@@ -946,6 +948,16 @@ var RT={
   async deleteComment(bookId,id){
     var e=(await sb.from('comment').delete().eq('id',id)).error;
     if(e){rtErr(e);return false;} await RT.loadBook(bookId); return true;
+  },
+  async deleteMyAnswer(bookId,qIndex){
+    /* 내 답변 + 그에 달린 댓글·공감을 한 번에 삭제 (cascade by hand).
+       마감 여부와 무관하게 항상 호출 가능 — closedGuard 우회. */
+    var me=STATE.phone4; if(!me) return false;
+    var e1=(await sb.from('comment').delete().eq('book_id',bookId).eq('q_index',qIndex).eq('target_phone4',me)).error;
+    var e2=(await sb.from('reaction').delete().eq('book_id',bookId).eq('q_index',qIndex).eq('target_phone4',me)).error;
+    var e3=(await sb.from('answer').delete().eq('book_id',bookId).eq('phone4',me).eq('q_index',qIndex)).error;
+    if(e1||e2||e3){rtErr(e1||e2||e3);return false;}
+    await RT.loadBook(bookId); return true;
   },
   async deleteBook(bookId){
     var e=(await sb.from('book').delete().eq('id',bookId)).error;
@@ -1706,7 +1718,7 @@ async function delMeetingHost(){
 function renderBook(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
   var st=bookStatus(b),cur=(st==='open');
-  if(STATE.phone4&&!STATE.isHost&&!fixedNick(STATE.phone4,STATE.bookId)){
+  if(STATE.phone4&&!fixedNick(STATE.phone4,STATE.bookId)){
     if(!PENDNICK)PENDNICK=randomNick();
     document.getElementById('page-book').innerHTML=
       '<div class="section-hd"><div><div class="eyebrow">'+esc(b.title)+'</div><h2 class="h-1 mt-4">이 책에서의<br>내 이름.</h2></div></div>'+
@@ -1783,6 +1795,13 @@ function renderBook(){
       h+='</div>';
     }
     if(STATE.isHost){
+      /* 모임장도 일반 참가자처럼 답변·별점 가능 — 책이 열렸을 때 별점·답변 진입 / 마감일 때 읽기 전용 진입 */
+      if(STATE.phone4){
+        if(cur)
+          h+='<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">📝 모임장도 답변·별점 매기러 가기 <span class="arr">&rarr;</span></button>';
+        else if(b.closed)
+          h+='<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'discussion\')">📖 마감된 책 — 내 기록 보기 &rarr;</button>';
+      }
       h+='<div class="row mt-12"><button class="btn btn-ghost btn-pill" onclick="editBookInfo()">✏️ 사전정보 편집</button>'+
         (b.report
           ? '<button class="btn btn-primary btn-arrow btn-pill" onclick="startShare(\''+b.id+'\')">발표 시작 <span class="arr">&rarr;</span></button>'
@@ -1808,9 +1827,9 @@ function renderBook(){
       /* 책 삭제 */
       h+='<div class="center mt-24"><button class="danger-link" onclick="delBookHost(\''+b.id+'\',\''+esc(b.title)+'\')">이 책 삭제</button></div>';
     }
-    else if(cur && b.closed)
-      h+='<div class="locked-note mt-12" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b>입니다.<br>답변·별점·댓글이 잠겨 있어요. 모임장이 마감을 해제하면 다시 열려요.</div>'+
-        '<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'discussion\')">읽기만 보기 &rarr;</button>';
+    else if(b.closed)
+      h+='<div class="locked-note mt-12" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b>이에요 (읽기 전용).<br>새 답변·별점·공감은 받지 않지만, 내가 작성한 기록은 그대로 다시 볼 수 있어요.<br><span style="font-size:12px;color:var(--ink-dim)">내 답변이 부끄러우면 [답변 카드의 ×] 로 삭제할 수 있어요.</span></div>'+
+        '<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">📖 내 기록 보기 <span class="arr">&rarr;</span></button>';
     else if(cur)
       h+='<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">별점·답변 매기러 가기 <span class="arr">&rarr;</span></button>';
     else
@@ -1886,10 +1905,12 @@ function renderDiscussion(){
   var bs=bookState(b.id);
   /* 잠긴 탭에 머물러 있으면 가능한 가장 앞 탭으로 강등 */
   if(DISC.view==='others' && !bs.submitted) DISC.view=ratedAny(bs)?'mine':'rating';
-  if(DISC.view==='mine'   && !ratedAny(bs)) DISC.view='rating';
+  if(DISC.view==='mine'   && !ratedAny(bs) && !bs.submitted) DISC.view='rating';
+  /* 마감 + 내가 제출한 게 있으면 첫 진입 시 mine 탭으로 — 내 기록 다시 보기 우선 */
+  if(b.closed && bs.submitted && DISC.view==='rating') DISC.view='mine';
   if(b.closed){
-    h+='<div class="locked-note" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b>입니다.<br>'+
-      '답변·별점·댓글은 잠금 상태예요. 모임장이 마감을 해제하면 다시 열려요.'+
+    h+='<div class="locked-note" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b> · 읽기 전용<br>'+
+      '내가 남긴 답변·별점·공감은 그대로 볼 수 있어요. 새 입력은 받지 않지만, <b>내 답변은 × 로 언제든 삭제</b>할 수 있어요.'+
       (b.report?'<br><span style="color:var(--success)">📊 발표자료가 생성되어 있어요 — 발표 모드의 [AI 분석] 탭에서 볼 수 있습니다.</span>':'')+
     '</div>';
   }
@@ -1915,21 +1936,33 @@ function renderDiscussion(){
         h+='<button class="btn btn-primary btn-pill" onclick="submitAnswers()">답변 제출하기</button>';
       }
     } else {
-      h+='<p class="body-2 mb-16">'+(b.closed?'마감된 책입니다. 내 답변은 읽기만 가능해요.':'답변 제출 완료! 위 탭에서 <b style="color:var(--ink)">다른 사람의 답변</b>·<b style="color:var(--ink)">별점</b>을 확인하세요.')+'</p>';
+      h+='<p class="body-2 mb-16">'+(b.closed?'마감된 책이에요 — 내 기록을 다시 볼 수 있어요. 부끄러우면 우상단 <b style="color:var(--ink)">×</b> 로 삭제하세요.':'답변 제출 완료! 위 탭에서 <b style="color:var(--ink)">다른 사람의 답변</b>·<b style="color:var(--ink)">별점</b>을 확인하세요.')+'</p>';
       b.questions.forEach(function(q,i){
         var editing=(EDITANS.qi===i && !b.closed);
+        var ansBody=(bs.answers[i]||'').trim();
+        var isEmpty=!ansBody;
         h+='<div class="sheet">'+
           '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
-          '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
-          '<div class="answer mine"><div class="answer__who"><span><b>나 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>'+(editing?'수정 중':'제출됨')+'</span></div>'+
+          '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>';
+        if(isEmpty && !editing){
+          /* 삭제됐거나 미작성 — 마감 무관 다시 작성 허용 (마감일 땐 안내만) */
+          h+='<div class="locked-note" style="padding:18px;font-size:13px;border-style:dashed">🗑️ 이 질문의 답변은 삭제됐어요.'+
+              (b.closed?'':'<br><button class="btn btn-ghost btn-sm btn-pill mt-12" style="width:auto" onclick="editAns('+i+')">다시 작성하기</button>')+
+            '</div>';
+        } else {
+          h+='<div class="answer mine" style="position:relative">'+
+            /* 우상단 × — 마감 여부와 무관하게 항상 노출. 클릭 시 confirm 후 삭제 (cascade) */
+            (editing?'':'<button class="ans-x" title="이 답변과 딸린 댓글·공감 모두 삭제" onclick="delMyAnswer('+i+')">&times;</button>')+
+            '<div class="answer__who"><span><b>나 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>'+(editing?'수정 중':'제출됨')+'</span></div>'+
             (editing
-              ? '<textarea class="input" id="ea-'+i+'" rows="3">'+esc(bs.answers[i]||'')+'</textarea>'+
+              ? '<textarea class="input" id="ea-'+i+'" rows="3">'+esc(ansBody)+'</textarea>'+
                 '<div class="row mt-12"><button class="btn btn-primary btn-sm btn-pill" onclick="saveAns('+i+')">저장</button>'+
                 '<button class="btn btn-ghost btn-sm btn-pill" onclick="cancelAns()">취소</button></div>'
-              : '<div class="answer__body">'+esc(bs.answers[i]||'')+'</div>'+
+              : '<div class="answer__body">'+esc(ansBody)+'</div>'+
                 (b.closed?'':'<div class="reaction-row"><button class="reaction-btn" onclick="editAns('+i+')">✏️ 수정</button></div>'))+
-            '</div>'+
-        '</div>';
+            '</div>';
+        }
+        h+='</div>';
       });
     }
   } else if(DISC.view==='others'){
@@ -2037,6 +2070,29 @@ async function submitAnswers(){
 }
 function editAns(i){ EDITANS.qi=i; renderDiscussion(); }
 function cancelAns(){ EDITANS.qi=-1; renderDiscussion(); }
+async function delMyAnswer(i){
+  /* 내 답변 삭제 — 마감 여부와 무관하게 항상 호출 가능.
+     서버에서 그 답변에 달린 댓글·공감까지 함께 삭제 (cascade by hand). */
+  var b=bookById(STATE.bookId);if(!b)return;
+  if(!confirm('Q'+(i+1)+' 답변과 거기 달린 댓글·공감을 모두 삭제할까요? 되돌릴 수 없어요.'))return;
+  if(ONLINE){
+    if(!(await RT.deleteMyAnswer(b.id,i)))return;
+  } else {
+    var bs=bookState(b.id);
+    bs.answers[i]='';
+    /* 로컬: 그 질문에 달린 내 답변의 댓글·공감 정리 */
+    var ck='q'+i+'a0'; /* 로컬 모드에선 내 답변이 others[i] 의 0번 슬롯에 있다고 가정 — 단순화 */
+    if(bs.comments)delete bs.comments[ck];
+    if(bs.reactions)delete bs.reactions[ck];
+    /* 답변이 전부 비면 submitted=false 로 강등 */
+    var any=(bs.answers||[]).some(function(x){return x&&x.trim();});
+    if(!any)bs.submitted=false;
+    setBookState(b.id,bs);
+  }
+  EDITANS.qi=-1;
+  toast('Q'+(i+1)+' 답변과 딸린 댓글·공감을 삭제했어요');
+  renderDiscussion();
+}
 async function saveAns(i){
   if(closedGuard())return;
   var b=bookById(STATE.bookId),bs=bookState(b.id);
