@@ -930,6 +930,9 @@ var RT={
     }); });
     var SR={},SC={};
     members.forEach(function(o){var rr=o.ratings||{};SR[o.nickname]={length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0,empathy:empByNick[o.nickname]||0};});
+    /* allRatings — 답변 페이지의 [모두의 별점] 통계용. phone4 단위로 보관(닉네임 변경 안전).
+     * 자기 자신 포함 모든 member_book row. 한 항목이라도 0보다 큰 사용자만 통계 대상. */
+    bk.allRatings=members.map(function(o){var rr=o.ratings||{};return {phone4:o.phone4,nickname:o.nickname,length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0};});
     (cm.data||[]).forEach(function(c){
       if(c.author_phone4===me) return;
       var tm=members.filter(function(x){return x.phone4===c.target_phone4;})[0];
@@ -1808,6 +1811,12 @@ function renderBook(){
     h+='<div class="center mt-24"><button class="danger-link" onclick="delBookHost(\''+b.id+'\',\''+esc(b.title)+'\')">이 책 삭제</button></div>';
   } else {
     /* ───── 참가자 모드 — 회원용 책 정보 카드 + 답변 진입 ───── */
+    /* 별점·답변 진입 버튼을 책 소개 위쪽에 — 스크롤 부담 줄이기 위함 */
+    if(b.closed)
+      h+='<div class="locked-note mt-12" style="border-color:#D44;color:#D44;margin-bottom:16px"><b>🔒 마감된 책</b>이에요 (읽기 전용).<br>새 답변·별점·공감은 받지 않지만, 내가 작성한 기록은 그대로 다시 볼 수 있어요.</div>'+
+        '<button class="btn btn-primary btn-arrow btn-pill" style="margin-bottom:20px" onclick="go(\'discussion\')">📖 내 기록 보기 <span class="arr">&rarr;</span></button>';
+    else if(cur)
+      h+='<button class="btn btn-primary btn-arrow btn-pill" style="margin-bottom:20px" onclick="go(\'discussion\')">⭐ 별점·답변 매기러 가기 <span class="arr">&rarr;</span></button>';
     h+='<div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">책 소개</div><h3 class="h-3 mt-4">'+esc(b.tagline)+'</h3></div></div>'+
       '<p class="lead" style="font-size:15px">'+esc(b.intro)+'</p>'+
       (b.intro_note?'<p class="body-2 mt-12" style="color:var(--ink-dim)">'+esc(b.intro_note)+'</p>':'')+'</div>';
@@ -1827,13 +1836,17 @@ function renderBook(){
       });
       h+='</div>';
     }
-    if(b.closed)
-      h+='<div class="locked-note mt-12" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b>이에요 (읽기 전용).<br>새 답변·별점·공감은 받지 않지만, 내가 작성한 기록은 그대로 다시 볼 수 있어요.<br><span style="font-size:12px;color:var(--ink-dim)">내 답변이 부끄러우면 [답변 카드의 ×] 로 삭제할 수 있어요.</span></div>'+
-        '<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">📖 내 기록 보기 <span class="arr">&rarr;</span></button>';
-    else if(cur)
-      h+='<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">별점·답변 매기러 가기 <span class="arr">&rarr;</span></button>';
-    else
+    /* 마감/열림 진입 버튼은 책 소개 위쪽에서 이미 노출. 여기선 예정 책에 한해 안내만 */
+    if(!b.closed && !cur)
       h+='<div class="locked-note mt-12">이 책은 <b>'+esc(b.month)+'</b>에 모임이 열려요.<br>지금은 미리 워밍업만 할 수 있어요.</div>';
+    /* 마감일 땐 책 정보 아래에 X 삭제 안내 (보조) */
+    if(b.closed)
+      h+='<p class="body-2 dim center mt-16" style="font-size:12px">내 답변이 부끄러우면 답변 페이지에서 카드의 [×] 로 삭제할 수 있어요.</p>';
+    /* 책 소개 다 보고 다시 답변하러 가고 싶을 때 — 마감/열림이면 아래에도 버튼 한 번 더 */
+    if(cur)
+      h+='<button class="btn btn-ghost btn-pill mt-24" onclick="go(\'discussion\')">⭐ 별점·답변 매기러 가기 &rarr;</button>';
+    else if(b.closed)
+      h+='<button class="btn btn-ghost btn-pill mt-24" onclick="go(\'discussion\')">📖 내 기록 보기 &rarr;</button>';
   }
   document.getElementById('page-book').innerHTML=h;
 }
@@ -2025,20 +2038,23 @@ function renderDiscussion(){
   document.getElementById('page-discussion').innerHTML=h;
 }
 function allRatingsHtml(b){
-  /* 모두의 별점 분포: 내가 별점을 1개 이상 저장한 후에만 노출 */
+  /* 모두의 별점 분포: 내가 별점을 1개 이상 저장한 후에만 노출.
+   * 데이터 소스: b.allRatings (RT.loadBook 에서 member_book 전체 보존, phone4 기반). */
   var bs=bookState(b.id);
   if(!ratedAny(bs)){
     return '<div class="sheet sheet--warm mt-16"><div class="sheet__hd"><div><div class="eyebrow">모두의 별점</div><h3 class="h-3 mt-4">🔒 잠긴 영역</h3></div></div>'+
       '<p class="body-2 dim">먼저 위에서 별점을 1개 이상 저장하면 모두의 익명 분포가 열려요. (누가 어떤 점수를 줬는지는 보이지 않아요.)</p></div>';
   }
-  var ps=[];
-  try{ ps=stageParts.call?stageParts():[]; }catch(e){ ps=[]; }
-  var includedMe=false;
+  var me=STATE.phone4;
   var sums={},cnts={};
   RATING_AXES.forEach(function(ax){sums[ax.k]=0;cnts[ax.k]=0;});
-  ps.forEach(function(p){RATING_AXES.forEach(function(ax){if(p.r&&p.r[ax.k]){sums[ax.k]+=p.r[ax.k];cnts[ax.k]++;}});});
-  RATING_AXES.forEach(function(ax){if(bs.ratings&&bs.ratings[ax.k]){sums[ax.k]+=bs.ratings[ax.k];cnts[ax.k]++;includedMe=true;}});
-  var anyCnt=0;RATING_AXES.forEach(function(ax){if(cnts[ax.k]>anyCnt)anyCnt=cnts[ax.k];});
+  /* 다른 사람들 (DB) — 자기 자신은 제외하고 bs.ratings 로 별도 합산 (최신값 반영) */
+  var rows=(b.allRatings||[]);
+  var others=rows.filter(function(r){return r.phone4!==me;});
+  others.forEach(function(r){RATING_AXES.forEach(function(ax){if(r[ax.k]){sums[ax.k]+=r[ax.k];cnts[ax.k]++;}});});
+  /* 내 별점 — bs.ratings 가 최신. 한 항목이라도 있으면 표본에 포함 */
+  var myAny=false;RATING_AXES.forEach(function(ax){if(bs.ratings&&bs.ratings[ax.k]){sums[ax.k]+=bs.ratings[ax.k];cnts[ax.k]++;myAny=true;}});
+  var nVoters=others.filter(function(r){return RATING_AXES.some(function(ax){return r[ax.k];});}).length+(myAny?1:0);
   var h='<div class="sheet sheet--warm mt-16"><div class="sheet__hd"><div><div class="eyebrow">모두의 별점</div><h3 class="h-3 mt-4">익명 분포 (평균)</h3></div></div>';
   h+='<div>';
   RATING_AXES.forEach(function(ax){
@@ -2046,7 +2062,7 @@ function allRatingsHtml(b){
     h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'<span style="display:block;font-size:11px;color:var(--ink-dim);font-weight:400">'+esc(ax.hint)+'</span></div>'+
       '<div><span class="rt-stars">'+starStr(rounded)+'</span><span class="rt-stars__num">'+(n?avg.toFixed(1):'-')+' · '+n+'명</span></div></div>';
   });
-  h+='</div><p class="body-2 dim mt-12">※ 누가 어떤 점수를 줬는지는 보이지 않아요. 표본 '+anyCnt+'명'+(includedMe?' (나 포함)':'')+'.</p></div>';
+  h+='</div><p class="body-2 dim mt-12">※ 누가 어떤 점수를 줬는지는 보이지 않아요. 표본 '+nVoters+'명'+(myAny?' (나 포함)':'')+'.</p></div>';
   return h;
 }
 function ratingHtml(b,bs){
