@@ -930,8 +930,11 @@ var RT={
     var mi=await sb.from('meeting').insert({club_id:clubId||null,name:name,code:code,password:pw,season_title:stitle,season_sub:ssub||'',is_open:true}).select('id').single();
     if(mi.error){rtErr(mi.error);return null;}
     var rows=books.map(function(b,i){return {meeting_id:mi.data.id,ord:i+1,title:b.title,author:b.author||'(저자 미상)',intro:b.intro||'',author_bio:b.authorBio||'',yearmonth:b.yearmonth||'',questions:b.questions.filter(function(q){return q&&q.trim();}),author_facts:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){var u=extractUrl(s);return u?{i:'🔗',t:s.replace(u.replace(/^https?:\/\//,''),'').replace(/\s*[—·-]\s*$/,'').trim()||s,m:u}:{i:'🔗',t:s,m:''};})};});
-    var be=(await sb.from('book').insert(rows)).error;
-    if(be){rtErr(be);return null;}
+    /* 책 0권으로도 시즌 발급 가능 — 책은 시즌 페이지에서 따로 추가 */
+    if(rows.length){
+      var be=(await sb.from('book').insert(rows)).error;
+      if(be){rtErr(be);return null;}
+    }
     await RT.loadMeetings();
     return {code:code,pw:pw};
   },
@@ -1356,173 +1359,54 @@ async function delClubHost(){
   setNick();syncHostUI();syncAuthUI();go(STATE.phone4?'clubs':'login');toast('모임을 삭제했어요');
 }
 
-/* ═══════════ RENDER: 모임 만들기 (시즌 빌더) ═══════════ */
-var BUILD={stage:'season',name:'',stitle:'',ssub:'',books:[],open:-1};
+/* ═══════════ RENDER: 시즌 만들기 (가벼운 단일 폼 — 책·질문 분리 정책) ═══════════
+ * 정책 (2026-05-21 박진형 피드백): 모임·시즌·책은 각자 독립 CRUD.
+ * 시즌은 제목만 정하면 끝. 책 등록은 시즌 페이지에서, 질문은 책 페이지에서 따로. */
+var BUILD={name:'',stitle:'',ssub:''};
 function renderCreate(){
   if(!STATE.clubId){go(STATE.isHost?'manage':(STATE.phone4?'clubs':'login'));return;}
   BUILD.name=activeClubName();
-  var step=(BUILD.stage==='season')?1:2;
   var h=''+
     '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto;margin-bottom:12px" onclick="exitBuilder()">&larr; 시즌 목록</button>'+
-    '<div class="build-stepper">'+
-      '<div class="build-stepper__item '+(step===1?'is-active':'is-done')+'"><span class="build-stepper__num">1</span><span class="build-stepper__lbl">시즌 정보</span></div>'+
-      '<div class="build-stepper__bar"></div>'+
-      '<div class="build-stepper__item '+(step===2?'is-active':'')+'"><span class="build-stepper__num">2</span><span class="build-stepper__lbl">책·질문</span></div>'+
+    '<div class="section-hd"><div><div class="eyebrow">'+esc(activeClubName())+' · 새 시즌 만들기</div><h2 class="h-1 mt-4">시즌<br>만들기.</h2></div></div>'+
+    '<div class="sheet sheet--warm mb-16" style="background:var(--accent-tint);border-color:var(--accent)">'+
+       '<div class="eyebrow mb-8">🧭 가볍게 시작</div>'+
+       '<p class="body-2" style="font-size:13px;line-height:1.6"><b>시즌</b>은 <b>'+esc(activeClubName())+'</b> 모임 안의 한 주제 묶음이에요. 지금은 <b>제목만</b> 정하면 끝 — 책·질문은 만든 뒤 시즌 페이지에서 천천히 채우세요.</p>'+
+       '<p class="body-2 dim mt-8" style="font-size:12px">예: 모임 「사내 독서모임」 → 시즌 「인간 본성 탐구」 → (책은 나중에 추가)</p>'+
     '</div>'+
-    '<div class="section-hd"><div><div class="eyebrow">'+esc(activeClubName())+' · 새 시즌 만들기 ('+step+'/2)</div><h2 class="h-1 mt-4">'+(step===1?'시즌<br>만들기.':'책 ·<br>질문 넣기.')+'</h2></div></div>';
-  if(BUILD.stage==='season'){
-    h+='<div class="sheet sheet--warm mb-16" style="background:var(--accent-tint);border-color:var(--accent)">'+
-         '<div class="eyebrow mb-8">🧭 지금 만드는 것</div>'+
-         '<p class="body-2" style="font-size:13px;line-height:1.6"><b>시즌</b>은 <b>'+esc(activeClubName())+'</b> 모임 안의 한 주제 묶음이에요. 시즌 안에 여러 권의 책이 들어가요.</p>'+
-         '<p class="body-2 dim mt-8" style="font-size:12px">예: 모임 「사내 독서모임」 → 시즌 「인간 본성 탐구」 → 책 1·2·3권</p>'+
-       '</div>'+
-     '<div class="sheet">'+
+    '<div class="sheet">'+
        '<div class="field"><label>시즌 제목 (주제)</label><input class="input" id="cb-stitle" value="'+esc(BUILD.stitle)+'" placeholder="예: 인간 본성 탐구"></div>'+
        '<div class="field"><label>시즌 한 줄 설명 (선택)</label><input class="input" id="cb-ssub" value="'+esc(BUILD.ssub)+'" placeholder="예: 나 → 연결 → 관계의 그늘"></div>'+
-     '</div>'+
-     '<button class="btn btn-primary btn-pill" onclick="buildToBooks()">다음 · 책 추가하기 &rarr;</button>'+
-     '<button class="btn btn-ghost btn-pill mt-12" onclick="exitBuilder()">&larr; 시즌 목록으로</button>';
-  }else{
-    h+='<div class="sheet sheet--warm" style="margin-bottom:16px;background:var(--accent-tint);border-color:var(--accent)">'+
-        '<div class="eyebrow mb-8">📚 지금 만드는 것</div>'+
-        '<div style="font-family:var(--display);font-weight:800;font-size:18px;line-height:1.3">시즌 「'+esc(BUILD.stitle)+'」</div>'+
-        (BUILD.ssub?'<div class="body-2 mt-4" style="color:var(--ink-soft)">'+esc(BUILD.ssub)+'</div>':'')+
-        '<p class="body-2 dim mt-8" style="font-size:12px">이 시즌을 <b>'+esc(activeClubName())+'</b> 모임에 추가합니다. 아래에 책을 1권 이상 넣고, 책마다 질문도 1개 이상 적어주세요.</p>'+
-      '</div>';
-    if(!BUILD.books.length) h+='<p class="body-2 mb-16 dim center" style="padding:16px 0">아직 책이 없어요. 아래 [+ 책 추가하기]로 시작하세요.</p>';
-    BUILD.books.forEach(function(bk,i){
-      var nq=bk.questions.filter(function(q){return q&&q.trim();}).length;
-      var editing=(BUILD.open===i);
-      h+='<div class="sheet'+(BUILD.justAdded===i?' just-added':'')+(editing?' is-editing':'')+'">'+
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div>'+
-        '<div class="eyebrow">'+(i+1)+'권'+(bk.yearmonth?(' · '+esc(fmtYM(bk.yearmonth)||bk.yearmonth)):'')+'</div><h3 class="h-3 mt-4">'+esc(bk.title)+'</h3>'+
-        '<div class="body-2">'+esc(bk.author||'저자 미상')+'</div></div>'+
-        '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">'+
-          '<span class="tag '+(nq?'tag-accent':'')+'">질문 '+nq+'</span>'+
-          (editing?'':'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="toggleBuildBook('+i+')">✏️ 편집</button>')+
-        '</div></div>';
-      if(BUILD.open===i){
-        bk.facts=bk.facts||[];bk.links=bk.links||[];
-        var lab='style="display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin:16px 0 6px"';
-        var qh='';
-        bk.questions.forEach(function(q,k){
-          qh+='<div class="qrow"><input class="input" id="bk-q-'+i+'-'+k+'" value="'+esc(q||'')+'" placeholder="질문 '+(k+1)+'">'+
-            (bk.questions.length>1?'<button class="qrow__del" title="삭제" onclick="removeBuildQ('+i+','+k+')">&times;</button>':'')+'</div>';
-        });
-        var fh='';
-        bk.facts.forEach(function(f,k){
-          fh+='<div class="qrow"><input class="input" id="bk-f-'+i+'-'+k+'" value="'+esc(f||'')+'" placeholder="예: 글 쓸 때 늘 재즈를 듣는다">'+
-            '<button class="qrow__del" title="삭제" onclick="removeBuildFact('+i+','+k+')">&times;</button></div>';
-        });
-        var lh='';
-        bk.links.forEach(function(l,k){
-          lh+='<div class="qrow"><input class="input" id="bk-l-'+i+'-'+k+'" value="'+esc(l||'')+'" placeholder="예: 작가 인터뷰 — https://youtube.com/...">'+
-            '<button class="qrow__del" title="삭제" onclick="removeBuildLink('+i+','+k+')">&times;</button></div>';
-        });
-        h+='<div onclick="event.stopPropagation()" style="margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:14px">'+
-          '<div class="field"><label>책 소개 (선택 · 교보문고 등에서 복사)</label><textarea class="input" id="bk-intro-'+i+'" rows="2" placeholder="이 책은…">'+esc(bk.intro||'')+'</textarea></div>'+
-          '<div class="field"><label>작가 소개 (선택)</label><textarea class="input" id="bk-bio-'+i+'" rows="2" placeholder="작가는…">'+esc(bk.authorBio||'')+'</textarea></div>'+
-          '<div class="field"><label>회차 연월 (예: 202607)</label><input class="input" id="bk-ym-'+i+'" value="'+esc(bk.yearmonth||'')+'" inputmode="numeric" maxlength="6" placeholder="YYYYMM"></div>'+
-          '<label '+lab+'>질문 ('+bk.questions.length+'개)</label>'+qh+
-          '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBuildQ('+i+')">+ 질문 추가</button>'+
-          '<label '+lab+'>재미있는 사실 (선택)</label>'+fh+
-          '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBuildFact('+i+')">+ 사실 추가</button>'+
-          '<label '+lab+'>같이 볼 콘텐츠 (선택)</label>'+lh+
-          '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBuildLink('+i+')">+ 콘텐츠 추가</button>'+
-          '<div class="row mt-16"><button class="btn btn-primary btn-sm btn-pill" onclick="saveBuildBook('+i+')">💾 저장</button>'+
-          '<button class="btn btn-ghost btn-sm btn-pill" onclick="closeBuildBook()">닫기</button>'+
-          '<button class="btn btn-ghost btn-sm btn-pill" onclick="delBuildBook('+i+')">책 삭제</button></div></div>';
-      }
-      h+='</div>';
-    });
-    if(BUILD.adding){
-      h+='<div class="sheet sheet--warm"><div class="eyebrow mb-8">새 책</div>'+
-        '<div class="field"><label>책 제목</label><input class="input" id="ab-title" placeholder="예: 프로젝트 헤일메리"></div>'+
-        '<div class="field"><label>저자</label><input class="input" id="ab-author" placeholder="예: 앤디 위어"></div>'+
-        '<div class="row"><button class="btn btn-primary btn-sm btn-pill" onclick="addBuildBook()">추가</button>'+
-        '<button class="btn btn-ghost btn-sm btn-pill" onclick="BUILD.adding=false;renderCreate()">취소</button></div></div>';
-    } else {
-      h+='<button class="btn btn-pill" onclick="BUILD.adding=true;renderCreate()">+ 책 추가하기</button>';
-    }
-    h+='<button class="btn btn-primary btn-pill mt-12" onclick="issueMeeting()">✅ 이 시즌 만들기</button>'+
-      '<p class="body-2 dim mt-8" style="text-align:center;font-size:12px">버튼을 누르면 시즌이 즉시 추가되고 시즌 목록으로 이동합니다.</p>'+
-      '<button class="btn btn-ghost btn-pill mt-12" onclick="BUILD.stage=\'season\';renderCreate()">&larr; 시즌 정보 다시 편집</button>';
-  }
+    '</div>'+
+    '<button class="btn btn-primary btn-pill" onclick="issueMeeting()">✅ 시즌 만들기</button>'+
+    '<p class="body-2 dim mt-8" style="text-align:center;font-size:12px">즉시 시즌 목록에 추가돼요. 책·질문은 시즌 페이지에서 추가하세요.</p>'+
+    '<button class="btn btn-ghost btn-pill mt-12" onclick="exitBuilder()">&larr; 시즌 목록으로</button>';
   document.getElementById('page-create').innerHTML=h;
-  BUILD.justAdded=-1;
-}
-function buildToBooks(){
-  BUILD.name=activeClubName();BUILD.stitle=val('cb-stitle');BUILD.ssub=val('cb-ssub');
-  if(!BUILD.stitle){toast('시즌 제목을 입력해주세요');return;}
-  BUILD.stage='books';renderCreate();
 }
 function exitBuilder(){
-  /* 시즌 빌더 중단 — 입력 비어있지 않으면 확인 */
-  var hasData=BUILD.stitle||BUILD.ssub||(BUILD.books&&BUILD.books.length);
+  var hasData=BUILD.stitle||BUILD.ssub;
   if(hasData && !confirm('만들던 시즌 정보가 사라져요. 정말 나가시겠어요?'))return;
-  BUILD={stage:'season',name:'',stitle:'',ssub:'',books:[],open:-1};
+  BUILD={name:'',stitle:'',ssub:''};
   go(STATE.clubId?'meetings':'clubs');
 }
-function readBuildBook(i){
-  var bk=BUILD.books[i];if(!bk)return;
-  if(document.getElementById('bk-intro-'+i)==null)return;
-  bk.intro=val('bk-intro-'+i);bk.authorBio=val('bk-bio-'+i);
-  bk.yearmonth=(val('bk-ym-'+i)||'').replace(/[^0-9]/g,'').slice(0,6);
-  var qs=[];for(var k=0;k<bk.questions.length;k++){var el=document.getElementById('bk-q-'+i+'-'+k);qs.push(el?el.value.trim():(bk.questions[k]||''));}
-  bk.questions=qs;
-  bk.facts=bk.facts||[];var fs=[];for(var a=0;a<bk.facts.length;a++){var fe=document.getElementById('bk-f-'+i+'-'+a);fs.push(fe?fe.value.trim():(bk.facts[a]||''));}bk.facts=fs;
-  bk.links=bk.links||[];var ls=[];for(var c=0;c<bk.links.length;c++){var le=document.getElementById('bk-l-'+i+'-'+c);ls.push(le?le.value.trim():(bk.links[c]||''));}bk.links=ls;
-}
-function addBuildBook(){
-  var t=val('ab-title');if(!t){toast('책 제목을 입력해주세요');return;}
-  BUILD.books.push({title:t,author:val('ab-author'),intro:'',authorBio:'',yearmonth:'',questions:[''],facts:[],links:[]});
-  BUILD.open=BUILD.books.length-1;BUILD.justAdded=BUILD.open;BUILD.adding=false;renderCreate();
-  toast('「'+t+'」 추가됨 · 카드를 눌러 내용을 채우세요');
-}
-function toggleBuildBook(i){ if(BUILD.open!==-1)readBuildBook(BUILD.open); BUILD.open=(BUILD.open===i?-1:i);renderCreate(); }
-function addBuildQ(i){ readBuildBook(i); BUILD.books[i].questions.push(''); renderCreate(); }
-function removeBuildQ(i,k){ readBuildBook(i); if(BUILD.books[i].questions.length<=1)return; BUILD.books[i].questions.splice(k,1); renderCreate(); }
-function addBuildFact(i){ readBuildBook(i); (BUILD.books[i].facts=BUILD.books[i].facts||[]).push(''); renderCreate(); }
-function removeBuildFact(i,k){ readBuildBook(i); BUILD.books[i].facts.splice(k,1); renderCreate(); }
-function addBuildLink(i){ readBuildBook(i); (BUILD.books[i].links=BUILD.books[i].links||[]).push(''); renderCreate(); }
-function removeBuildLink(i,k){ readBuildBook(i); BUILD.books[i].links.splice(k,1); renderCreate(); }
-function saveBuildBook(i){
-  readBuildBook(i);
-  var n=BUILD.books[i].questions.filter(function(q){return q&&q.trim();}).length;
-  BUILD.open=-1; /* 저장 후 편집 폼 접기 */
-  renderCreate();toast(n?('저장됨 · 질문 '+n+'개'):'저장됨 (질문이 비어 있어요)');
-}
-function delBuildBook(i){BUILD.books.splice(i,1);BUILD.open=-1;renderCreate();toast('책을 삭제했어요');}
-function closeBuildBook(){if(BUILD.open!==-1)readBuildBook(BUILD.open);BUILD.open=-1;renderCreate();}
 async function issueMeeting(){
-  if(BUILD.open!==-1) readBuildBook(BUILD.open);
-  /* 시즌 정보 폼이 화면에 있으면 마지막 입력값까지 한 번 더 동기화 */
   var el=document.getElementById('cb-stitle');if(el)BUILD.stitle=el.value.trim()||BUILD.stitle;
   var el2=document.getElementById('cb-ssub');if(el2)BUILD.ssub=el2.value.trim()||BUILD.ssub;
-  if(!BUILD.stitle){toast('시즌 제목을 입력해 주세요');BUILD.stage='season';renderCreate();return;}
-  if(!BUILD.books.length){toast('책을 최소 1권 추가해주세요');return;}
+  if(!BUILD.stitle){toast('시즌 제목을 입력해 주세요');return;}
   if(!STATE.clubId){toast('먼저 모임에 입장해 주세요');return;}
-  for(var i=0;i<BUILD.books.length;i++){
-    var qv=BUILD.books[i].questions.filter(function(q){return q&&q.trim();});
-    if(!qv.length){toast((i+1)+'권 「'+BUILD.books[i].title+'」에 질문을 1개 이상 넣어주세요');BUILD.open=i;renderCreate();return;}
-  }
+  BUILD.name=activeClubName();
   if(ONLINE){
-    var res=await RT.createMeeting(BUILD.name,BUILD.stitle,BUILD.ssub,BUILD.books,STATE.clubId);
+    /* 책 없이 시즌만 발급 — RT.createMeeting 이 빈 books 배열을 안전하게 처리함 */
+    var res=await RT.createMeeting(BUILD.name,BUILD.stitle,BUILD.ssub,[],STATE.clubId);
     if(!res) return;
   } else {
     var code=rndCode(),pw=String(Math.floor(1000+Math.random()*9000)),mid='c'+Date.now();
-    var season={title:BUILD.stitle,sub:BUILD.ssub,eyebrow:'모임 · '+BUILD.name,meta:'모임장이 개설한 시즌',
-      books:BUILD.books.map(function(b,i){
-        var qs=b.questions.filter(function(q){return q&&q.trim();});
-        return {id:mid+'-b'+i,title:b.title,author:b.author||'(저자 미상)',spine:b.title.charAt(0),status:'current',yearmonth:b.yearmonth||'',month:fmtYM(b.yearmonth)||((i+1)+'권'),angle:'',tagline:b.title,intro:b.intro||'(책 소개 미입력 — 모임장이 채울 수 있어요)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:b.authorBio||'',bio:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){var u=extractUrl(s);return u?{i:'🔗',t:s.replace(u.replace(/^https?:\/\//,''),'').replace(/\s*[—·-]\s*$/,'').trim()||s,m:u}:{i:'🔗',t:s,m:''};}),questions:qs,others:qs.map(function(){return [];}),closed:false,closed_at:null,report:null};
-      })};
-    applySchedule(season.books);
+    var season={title:BUILD.stitle,sub:BUILD.ssub,eyebrow:'모임 · '+BUILD.name,meta:'모임장이 개설한 시즌',books:[]};
     var cs=customMeetings();cs.push({id:mid,clubId:STATE.clubId,name:BUILD.name,code:code,pw:pw,kind:'custom',isOpen:true,season:season});saveCustomMeetings(cs);
   }
   var doneTitle=BUILD.stitle;
-  BUILD={stage:'season',name:'',stitle:'',ssub:'',books:[],open:-1};
-  toast('시즌 추가 완료: '+doneTitle);
-  /* 발급 즉시 시즌 목록으로 — 결과 박스 없이 바로 이동 */
+  BUILD={name:'',stitle:'',ssub:''};
+  toast('시즌 추가됨: '+doneTitle+' · 이제 책을 추가해보세요');
   go('meetings');
 }
 
@@ -1584,9 +1468,12 @@ function showStageScene(name){
 }
 
 /* ═══════════ RENDER: 시즌 포탈 ═══════════ */
-var EDIT={bookId:null,qi:-1};
+/* 답변 수정 인덱스 (참가자) */
 var EDITANS={qi:-1};
-var BINFO={editing:false,buf:null};
+/* 호스트 책 정보 편집 임시 버퍼 (책 진입 시 자동 init, 저장 시 null로 reset) */
+var BINFO={buf:null};
+/* 호스트 질문 편집 임시 버퍼 — 한 번에 N개 입력 + [💾 질문 저장] 1번 */
+var QEDIT={buf:null};
 function qeStore(){try{return JSON.parse(localStorage.getItem('rt:qedits'))||{};}catch(e){return MEM['rt:qedits']?JSON.parse(MEM['rt:qedits']):{};}}
 function qeSave(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:qedits',v);}catch(e){MEM['rt:qedits']=v;}}
 function applyQEdits(){var o=qeStore();SEASON.books.forEach(function(b){if(o[b.id])b.questions=o[b.id].slice();});}
@@ -1596,33 +1483,36 @@ function saveBookQuestions(id,arr){
   if(done){saveCustomMeetings(cs);return;}
   var o=qeStore();o[id]=arr;qeSave(o);applyQEdits();
 }
-function toggleEditQ(id){EDIT.bookId=(EDIT.bookId===id?null:id);EDIT.qi=-1;renderBook();}
-function editQ(id,k){EDIT.bookId=id;EDIT.qi=k;renderBook();}
-function cancelQ(){EDIT.qi=-1;renderBook();}
 async function persistQuestions(id,arr){
   if(ONLINE){ return await RT.saveQuestions(id,arr); }
   saveBookQuestions(id,arr); return true;
 }
-async function saveQ1(id,k){
-  var b=bookById(id);if(!b)return;
-  var el=document.getElementById('eq-'+k),v=el?el.value.trim():'';
-  if(!v){toast('질문을 입력해주세요');return;}
-  var arr=(b.questions||[]).slice();arr[k]=v;
-  if(!(await persistQuestions(id,arr)))return;
-  EDIT.qi=-1;renderBook();toast('질문 저장됨');
+/* QEDIT (질문 일괄 편집) 헬퍼 — 박진형 피드백: 책정보·질문 분리 + 저장 버튼 한 번만 */
+function _readQEdit(){
+  if(!QEDIT.buf||!QEDIT.buf.list)return;
+  var arr=[];
+  for(var k=0;k<QEDIT.buf.list.length;k++){
+    var el=document.getElementById('qe-'+k);
+    arr.push(el?el.value:QEDIT.buf.list[k]);
+  }
+  QEDIT.buf.list=arr;
 }
-function addQ2(id){
-  var b=bookById(id);if(!b)return;
-  b.questions=(b.questions||[]).slice();b.questions.push('');
-  EDIT.bookId=id;EDIT.qi=b.questions.length-1;renderBook();
+function qsAdd(){_readQEdit();QEDIT.buf.list.push('');renderBook();}
+function qsDel(k){
+  _readQEdit();
+  if(QEDIT.buf.list.length<=1){toast('질문은 최소 1칸 필요해요');return;}
+  QEDIT.buf.list.splice(k,1);renderBook();
 }
-async function delQ2(id,k){
-  var b=bookById(id);if(!b)return;
-  var arr=(b.questions||[]).slice();
-  if(arr.length<=1){toast('질문은 최소 1개 필요해요');return;}
-  arr.splice(k,1);
-  if(!(await persistQuestions(id,arr)))return;
-  EDIT.qi=-1;renderBook();toast('질문 삭제됨');
+async function qsSave(){
+  _readQEdit();
+  var b=bookById(STATE.bookId);if(!b)return;
+  var arr=QEDIT.buf.list.map(function(s){return (s||'').trim();}).filter(function(s){return s;});
+  if(!arr.length){toast('질문을 1개 이상 입력해 주세요 (빈 칸은 무시돼요)');return;}
+  if(!(await persistQuestions(b.id,arr)))return;
+  b.questions=arr;
+  QEDIT.buf=null; /* 저장 후 다음 렌더 시 b.questions 기준으로 재초기화 */
+  renderBook();
+  toast('질문 저장됨 ('+arr.length+'개)');
 }
 function renderSeason(){
   var m=activeMeeting(),custom=(m.kind==='custom'),sn=custom?m.season:SEASON,books=sn.books;
@@ -1682,7 +1572,7 @@ function renderSeason(){
      : '<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>');
   document.getElementById('page-season').innerHTML=h;
 }
-async function openBook(id){STATE.bookId=id;DISC.view='rating';EDIT.bookId=id;EDIT.qi=-1;setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
+async function openBook(id){STATE.bookId=id;DISC.view='rating';BINFO.buf=null;QEDIT.buf=null;setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
 function _custMutate(fn){ var cs=customMeetings(),hit=false; cs.forEach(function(mm){ if(fn(mm))hit=true; }); if(hit)saveCustomMeetings(cs); return hit; }
 async function delBookHost(id,title){
   if(!confirm('「'+title+'」 책과 그 답변·댓글을 모두 삭제할까요?'))return;
@@ -1744,9 +1634,23 @@ function renderBook(){
      '<div style="text-align:center;padding:20px 0"><div class="cover__title">'+esc(b.title)+'</div><div class="cover__author">'+esc(b.author)+'</div></div>'+
      '<div class="cover__top"><span>未知의 서재</span><span>'+esc(b.month||'')+'</span></div>'+
    '</div>';
-  if(STATE.isHost&&BINFO.editing){
-    var bf=BINFO.buf||{intro:'',authorBio:'',yearmonth:'',facts:[],links:[]};
-    var lab='style="display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin:16px 0 6px"';
+  if(STATE.isHost){
+    /* ───── 모임장 모드 — 책 정보 / 질문 두 섹션 독립 CRUD (박진형 정책) ─────
+     * 두 폼은 한 화면에 모두 노출. 각자 [💾 저장] 1번씩. 마감 여부 무관 항상 편집 가능. */
+    /* 답변 진입 (참가자 시점) */
+    if(STATE.phone4){
+      if(cur)
+        h+='<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">📝 모임장도 답변·별점 매기러 가기 <span class="arr">&rarr;</span></button>';
+      else if(b.closed)
+        h+='<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'discussion\')">📖 마감된 책 — 내 기록 보기 &rarr;</button>';
+    }
+    /* ─ 책 정보 편집 sheet ─ */
+    if(!BINFO.buf||BINFO.buf._bookId!==b.id){
+      BINFO.buf={_bookId:b.id, intro:b.intro||'',authorBio:b.authorBio||'',yearmonth:b.yearmonth||'',
+        facts:(b.bio||[]).map(function(x){return {e:x.e||'📌',t:x.t||'',s:x.s||''};}),
+        links:(b.links||[]).map(function(x){return {i:x.i||'🔗',t:x.t||'',m:x.m||''};})};
+    }
+    var bf=BINFO.buf;
     var fh='';bf.facts.forEach(function(f,k){
       fh+='<div class="bi-item"><div class="bi-item__hd"><span>사실 '+(k+1)+'</span><button class="bi-del" onclick="rmBIFact('+k+')">&times;</button></div>'+
         '<input class="input" id="bi-ft-'+k+'" value="'+esc(f.t||'')+'" placeholder="제목 (예: 글 쓸 때 재즈를 듣는다)">'+
@@ -1758,23 +1662,45 @@ function renderBook(){
         '<input class="input" id="bi-lm-'+k+'" value="'+esc(l.m||'')+'" placeholder="URL (https:// 포함 권장)"></div>';
     });
     var sec='style="margin:20px 0 8px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--accent-tint);font-family:var(--display);font-weight:800;font-size:15px;color:var(--ink);border-radius:0 6px 6px 0"';
-    h+='<div class="sheet sheet--warm"><div class="eyebrow mb-12">사전정보 편집 · '+esc(b.title)+'</div>'+
-      /* ── ① 책 정보 ── */
+    h+='<hr class="rule">'+
+      '<div class="sheet sheet--warm"><div class="eyebrow mb-12">📖 책 정보 편집 · '+esc(b.title)+'</div>'+
+      '<p class="body-2 dim mb-12" style="font-size:12px">참가자가 보는 사전정보예요. 책 소개·작가·사실·관련 콘텐츠를 채우고 아래 [💾 책 정보 저장] 한 번이면 끝.</p>'+
       '<div '+sec+'>① 책 정보</div>'+
       '<div class="field"><label>책 소개</label><textarea class="input" id="bi-intro" rows="3" placeholder="교보문고·알라딘 등의 책 소개를 옮겨 적어주세요">'+esc(bf.intro||'')+'</textarea></div>'+
       '<div class="field"><label>작가 소개</label><textarea class="input" id="bi-bio" rows="2" placeholder="작가가 어떤 사람인지 1~2 줄로">'+esc(bf.authorBio||'')+'</textarea></div>'+
       '<div class="field"><label>회차 연월 (예: 202607)</label><input class="input" id="bi-ym" value="'+esc(bf.yearmonth||'')+'" inputmode="numeric" maxlength="6" placeholder="YYYYMM"></div>'+
-      /* ── ② 재미있는 사실 ── */
       '<div '+sec+'>② 재미있는 사실</div>'+
       '<p class="bi-cap" style="margin-top:0">작가에 대한 흥미로운 단편 — 카드 1개당 제목 + (선택) 부연 설명. 아이콘은 자동(📌).</p>'+
       fh+'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBIFact()">+ 사실 추가</button>'+
-      /* ── ③ 같이 볼 콘텐츠 ── */
       '<div '+sec+'>③ 같이 볼 콘텐츠</div>'+
       '<p class="bi-cap" style="margin-top:0">관련 영상·기사·인터뷰 등 외부 링크. 카드 1개당 제목 + URL. 아이콘 자동(🔗).</p>'+
       lh+'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="addBILink()">+ 콘텐츠 추가</button>'+
-      '<div class="row mt-20" style="border-top:1px solid var(--rule-soft);padding-top:16px;margin-top:24px"><button class="btn btn-primary btn-sm btn-pill" onclick="saveBookInfo()">💾 저장</button>'+
-      '<button class="btn btn-ghost btn-sm btn-pill" onclick="cancelBookInfo()">취소</button></div></div>';
+      '<div class="row mt-20" style="border-top:1px solid var(--rule-soft);padding-top:16px;margin-top:24px"><button class="btn btn-primary btn-pill" onclick="saveBookInfo()">💾 책 정보 저장</button></div></div>';
+    /* ─ 질문 편집 sheet (독립) ─ */
+    if(!QEDIT.buf||QEDIT.buf._bookId!==b.id){
+      QEDIT.buf={_bookId:b.id, list:(b.questions||[]).slice()};
+      if(!QEDIT.buf.list.length) QEDIT.buf.list=[''];
+    }
+    var qList=QEDIT.buf.list;
+    h+='<div class="sheet sheet--warm" style="background:#FFF5E1;border-color:#E8B96A"><div class="eyebrow mb-12">❓ 질문 편집 · '+esc(b.title)+'</div>'+
+      '<p class="body-2 dim mb-12" style="font-size:12px">참가자가 답할 질문이에요. 여러 개 추가 가능. 빈 칸은 저장 시 자동 제외돼요. (책 정보와 별도로 저장)</p>';
+    qList.forEach(function(q,k){
+      h+='<div class="qrow" style="margin-bottom:8px"><textarea class="input" id="qe-'+k+'" rows="2" placeholder="질문 '+(k+1)+' — 예: 가장 인상 깊은 장면은?">'+esc(q||'')+'</textarea>'+
+        (qList.length>1?'<button class="qrow__del" title="이 질문 삭제" onclick="qsDel('+k+')">&times;</button>':'')+'</div>';
+    });
+    h+='<div class="row mt-12"><button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="qsAdd()">+ 질문 추가</button>'+
+      '<button class="btn btn-primary btn-pill" style="width:auto" onclick="qsSave()">💾 질문 저장</button></div>'+
+      '<p class="body-2 dim mt-8" style="font-size:11px">📌 책을 열려면 질문이 최소 1개 필요해요 (등록 시엔 자유, 오픈 시에만 검증).</p>'+
+      '</div>';
+    /* ─ 발표 / 책 삭제 ─ */
+    h+='<hr class="rule">';
+    if(b.report)
+      h+='<button class="btn btn-primary btn-arrow btn-pill" onclick="startShare(\''+b.id+'\')">▶ 발표 시작 <span class="arr">&rarr;</span></button>';
+    else
+      h+='<div class="locked-note" style="font-size:13px">📊 발표자료 없음 — 시즌 페이지에서 책을 닫고(마감) → 발표자료 생성 후 발표를 시작할 수 있어요.</div>';
+    h+='<div class="center mt-24"><button class="danger-link" onclick="delBookHost(\''+b.id+'\',\''+esc(b.title)+'\')">이 책 삭제</button></div>';
   } else {
+    /* ───── 참가자 모드 — 회원용 책 정보 카드 + 답변 진입 ───── */
     h+='<div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">책 소개</div><h3 class="h-3 mt-4">'+esc(b.tagline)+'</h3></div></div>'+
       '<p class="lead" style="font-size:15px">'+esc(b.intro)+'</p>'+
       (b.intro_note?'<p class="body-2 mt-12" style="color:var(--ink-dim)">'+esc(b.intro_note)+'</p>':'')+'</div>';
@@ -1794,40 +1720,7 @@ function renderBook(){
       });
       h+='</div>';
     }
-    if(STATE.isHost){
-      /* 모임장도 일반 참가자처럼 답변·별점 가능 — 책이 열렸을 때 별점·답변 진입 / 마감일 때 읽기 전용 진입 */
-      if(STATE.phone4){
-        if(cur)
-          h+='<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">📝 모임장도 답변·별점 매기러 가기 <span class="arr">&rarr;</span></button>';
-        else if(b.closed)
-          h+='<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'discussion\')">📖 마감된 책 — 내 기록 보기 &rarr;</button>';
-      }
-      h+='<div class="row mt-12"><button class="btn btn-ghost btn-pill" onclick="editBookInfo()">✏️ 사전정보 편집</button>'+
-        (b.report
-          ? '<button class="btn btn-primary btn-arrow btn-pill" onclick="startShare(\''+b.id+'\')">발표 시작 <span class="arr">&rarr;</span></button>'
-          : '<button class="btn btn-pill" disabled style="opacity:.5;cursor:not-allowed">🔒 발표자료 먼저 생성</button>')+'</div>';
-      if(!b.report) h+='<p class="body-2 dim mt-12" style="text-align:center;font-size:12px">시즌 페이지에서 책을 닫고(마감) → 발표자료 생성 후 발표를 시작할 수 있어요.</p>';
-      /* 질문 편집 섹션 */
-      var qs=b.questions||[];
-      h+='<hr class="rule">'+
-        '<div class="sheet sheet--warm"><div class="eyebrow mb-12">❓ 질문 편집</div>'+
-        '<p class="body-2 dim mb-12" style="font-size:12px">이 책에 대해 참가자가 답할 질문을 추가하거나 수정할 수 있어요.</p>';
-      qs.forEach(function(q,k){
-        if(EDIT.qi===k){
-          h+='<div class="qrow"><input class="input" id="eq-'+k+'" value="'+esc(q||'')+'" placeholder="질문 '+(k+1)+'">'+
-            '<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="saveQ1(\''+b.id+'\','+k+')">저장</button>'+
-            '<button class="qrow__del" title="취소" onclick="cancelQ()">&times;</button></div>';
-        } else {
-          h+='<div class="qfix"><span class="qfix__t">Q'+(k+1)+'. '+(q?esc(q):'<span class="dim">빈 질문 — 편집을 눌러 작성</span>')+'</span>'+
-            '<button class="qfix__btn" onclick="editQ(\''+b.id+'\','+k+')">편집</button>'+
-            (qs.length>1?'<button class="qfix__btn" onclick="delQ2(\''+b.id+'\','+k+')">삭제</button>':'')+'</div>';
-        }
-      });
-      h+='<div class="row mt-12"><button class="btn btn-ghost btn-sm btn-pill" onclick="addQ2(\''+b.id+'\')">+ 질문 추가</button></div></div>';
-      /* 책 삭제 */
-      h+='<div class="center mt-24"><button class="danger-link" onclick="delBookHost(\''+b.id+'\',\''+esc(b.title)+'\')">이 책 삭제</button></div>';
-    }
-    else if(b.closed)
+    if(b.closed)
       h+='<div class="locked-note mt-12" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b>이에요 (읽기 전용).<br>새 답변·별점·공감은 받지 않지만, 내가 작성한 기록은 그대로 다시 볼 수 있어요.<br><span style="font-size:12px;color:var(--ink-dim)">내 답변이 부끄러우면 [답변 카드의 ×] 로 삭제할 수 있어요.</span></div>'+
         '<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">📖 내 기록 보기 <span class="arr">&rarr;</span></button>';
     else if(cur)
@@ -1836,13 +1729,6 @@ function renderBook(){
       h+='<div class="locked-note mt-12">이 책은 <b>'+esc(b.month)+'</b>에 모임이 열려요.<br>지금은 미리 워밍업만 할 수 있어요.</div>';
   }
   document.getElementById('page-book').innerHTML=h;
-}
-function editBookInfo(){
-  var b=bookById(STATE.bookId);if(!b)return;
-  BINFO.buf={intro:b.intro||'',authorBio:b.authorBio||'',yearmonth:b.yearmonth||'',
-    facts:(b.bio||[]).map(function(x){return {e:x.e||'📌',t:x.t||'',s:x.s||''};}),
-    links:(b.links||[]).map(function(x){return {i:x.i||'🔗',t:x.t||'',m:x.m||''};})};
-  BINFO.editing=true;renderBook();
 }
 function readBINFO(){
   var bf=BINFO.buf;if(!bf||document.getElementById('bi-intro')==null)return;
@@ -1854,7 +1740,6 @@ function addBIFact(){readBINFO();BINFO.buf.facts.push({e:'📌',t:'',s:''});rend
 function rmBIFact(k){readBINFO();BINFO.buf.facts.splice(k,1);renderBook();}
 function addBILink(){readBINFO();BINFO.buf.links.push({i:'🔗',t:'',m:''});renderBook();}
 function rmBILink(k){readBINFO();BINFO.buf.links.splice(k,1);renderBook();}
-function cancelBookInfo(){BINFO.editing=false;BINFO.buf=null;renderBook();}
 async function saveBookInfo(){
   readBINFO();var b=bookById(STATE.bookId),bf=BINFO.buf;if(!b||!bf)return;
   var facts=bf.facts.filter(function(f){return f.t&&f.t.trim();});
@@ -1867,7 +1752,8 @@ async function saveBookInfo(){
     cs.forEach(function(mm){((mm.season&&mm.season.books)||[]).forEach(function(x){if(x.id===b.id){x.intro=b.intro;x.authorBio=b.authorBio;x.yearmonth=b.yearmonth;x.bio=facts;x.links=links;x.month=b.month;hit=true;}});});
     if(hit){ cs.forEach(function(mm){ if(mm.season&&mm.season.books) applySchedule(mm.season.books); }); saveCustomMeetings(cs); }
   }
-  BINFO.editing=false;BINFO.buf=null;renderBook();toast('사전정보를 저장했어요');
+  BINFO.buf=null; /* 저장 후 b.* 로부터 재초기화 */
+  renderBook();toast('책 정보를 저장했어요');
 }
 
 /* ═══════════ RENDER: 답변 (탭: 내 답변 / 다른 답변 / 별점) ═══════════ */
@@ -2291,7 +2177,14 @@ function generateReportMock(b){
 }
 
 async function hostOpenBook(id,title){
-  if(!confirm('「'+title+'」 책을 열까요?\n열면 참가자가 답변·별점·댓글을 남길 수 있어요.'))return;
+  /* 박진형 정책: 등록 시엔 자유, 오픈 시에만 validation. 질문이 1개 이상 있어야 참가자가 답할 게 있음 */
+  var b=bookById(id);
+  var qs=((b&&b.questions)||[]).filter(function(q){return q&&q.trim();});
+  if(!qs.length){
+    toast('이 책을 열려면 질문이 1개 이상 필요해요 — 책 카드의 ✏️ 편집에서 질문을 추가해 주세요');
+    return;
+  }
+  if(!confirm('「'+title+'」 책을 열까요? (질문 '+qs.length+'개)\n열면 참가자가 답변·별점·댓글을 남길 수 있어요.'))return;
   if(ONLINE){if(!(await RT.openBook(id,true)))return;}
   else {_setBookOpenedLocal(id,true);}
   renderSeason();toast('🟢 책을 열었어요 · 참가자 답변을 받습니다');
