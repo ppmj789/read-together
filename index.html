@@ -294,6 +294,10 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .comment-form .btn{width:auto;min-height:42px;flex:0 0 auto}
 .ans-x{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.06);color:var(--ink-soft);cursor:pointer;font-size:18px;line-height:1;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;padding:0}
 .ans-x:hover{background:#D44;color:#fff}
+.disc-nick-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:8px 0 14px;padding:10px 14px;background:var(--paper-warm);border:1px solid var(--rule-soft);border-radius:var(--radius-pill);font-size:13px;color:var(--ink-soft)}
+.disc-nick-bar b{color:var(--ink);font-family:var(--display);font-weight:800}
+.disc-nick-bar__edit{cursor:pointer;color:var(--accent);font-weight:700;font-size:13px}
+.disc-nick-bar__edit:hover{text-decoration:underline}
 .locked-note{text-align:center;padding:30px 18px;color:var(--ink-dim);font-size:14px;line-height:1.7;background:var(--paper-warm);border:1px dashed var(--rule);border-radius:var(--radius-md)}
 .locked-note b{color:var(--ink-soft)}
 
@@ -726,19 +730,70 @@ function nkSave(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:nick',v)
 function fixedNick(p4,bid){return (nkLoad()[p4+'|'+bid])||null;}
 function randomNick(){return NICK_ADJ[Math.floor(Math.random()*NICK_ADJ.length)]+' '+NICK_NOUN[Math.floor(Math.random()*NICK_NOUN.length)];}
 var PENDNICK=null;
-function rollNick(){PENDNICK=randomNick();renderBook();}
-function confirmNick(){
+/* NICKMODE: true 면 닉네임이 이미 있어도 픽커 강제 노출 (변경 모드). 마감 전까지 작동 */
+var NICKMODE=false;
+/* 닉네임 픽커 진입 시작 — 답변 페이지에서 [변경] 버튼 등으로 호출. 마감 책은 차단. */
+function startNickChange(){
+  if(closedGuard())return;
+  PENDNICK=randomNick(); NICKMODE=true;
+  _rerenderCurrent();
+}
+/* 어느 페이지에 있든 다시 렌더 — book/discussion 만 픽커 표시 */
+function _rerenderCurrent(){
+  var p=document.querySelector('.page.active'); if(!p)return;
+  var n=p.id.replace('page-','');
+  if(n==='book') renderBook();
+  else if(n==='discussion') renderDiscussion();
+}
+function rollNick(){PENDNICK=randomNick();_rerenderCurrent();}
+async function _persistNick(nick){
+  /* member_book.nickname 즉시 sync — 다른 곳(댓글·답변·공감)에서 RT.loadBook 후 새 닉네임 노출 */
+  if(ONLINE && STATE.phone4 && STATE.bookId){
+    try{ await sb.from('member_book').upsert({book_id:STATE.bookId,phone4:STATE.phone4,nickname:nick},{onConflict:'book_id,phone4'}); }catch(e){}
+  }
+}
+async function confirmNick(){
   if(!PENDNICK)PENDNICK=randomNick();
   var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=PENDNICK;nkSave(o);
-  var nm=PENDNICK;PENDNICK=null;setNick();renderBook();toast('닉네임 확정: '+nm);
+  var nm=PENDNICK;PENDNICK=null;NICKMODE=false;
+  await _persistNick(nm);
+  setNick();_rerenderCurrent();toast('닉네임 확정: '+nm);
 }
-function confirmCustomNick(){
+async function confirmCustomNick(){
   var el=document.getElementById('nk-custom');
   var v=el?(el.value||'').trim():'';
   if(!v){toast('직접 입력할 이름을 적어주세요');return;}
   if(v.length>20){toast('최대 20자까지 가능해요');return;}
   var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=v;nkSave(o);
-  PENDNICK=null;setNick();renderBook();toast('닉네임 확정: '+v);
+  PENDNICK=null;NICKMODE=false;
+  await _persistNick(v);
+  setNick();_rerenderCurrent();toast('닉네임 확정: '+v);
+}
+function cancelNickChange(){
+  /* 변경 모드를 그냥 닫기 — 기존 닉네임 유지 */
+  PENDNICK=null;NICKMODE=false;_rerenderCurrent();
+}
+/* 닉네임 픽커 HTML 생성 — renderBook / renderDiscussion 양쪽에서 공유 */
+function nickPickerHtml(b,opts){
+  opts=opts||{};
+  if(!PENDNICK)PENDNICK=randomNick();
+  var titleTxt=opts.change?'<span style="opacity:.85">이 책에서<br>다른 이름.</span>':'이 책에서의<br>내 이름.';
+  return '<div class="section-hd"><div><div class="eyebrow">'+esc(b.title)+(opts.change?' · 닉네임 변경':'')+'</div><h2 class="h-1 mt-4">'+titleTxt+'</h2></div></div>'+
+    '<div class="cover" style="padding:36px 20px;text-align:center"><div class="cover__top"><span>未知의 서재</span><span>'+esc(b.month||'')+'</span></div>'+
+    '<div style="padding:30px 0"><div style="font-size:14px;opacity:.8;margin-bottom:10px">당신은</div>'+
+    '<div class="cover__title" style="font-size:34px">'+esc(PENDNICK)+'</div>'+
+    '<div style="font-size:15px;opacity:.85;margin-top:10px">입니다!!</div></div>'+
+    '<div class="cover__top"><span>책마다 새 이름</span><span>익명</span></div></div>'+
+    '<p class="body-2 center mb-16">'+(opts.change?'새 이름으로 바꿀게요. 마음에 들 때까지 다시 뽑거나, 원하는 이름을 직접 적어주세요.':'랜덤 닉네임이 마음에 들지 않으면 다시 뽑거나, 원하는 이름을 직접 적어 확정하세요.')+'</p>'+
+    '<div class="row mb-12"><button class="btn btn-ghost btn-pill" onclick="rollNick()">🎲 다시 뽑기</button>'+
+    '<button class="btn btn-primary btn-pill" onclick="confirmNick()">'+(opts.change?'이 이름으로 변경':'랜덤 이름 확정')+'</button></div>'+
+    '<div class="sheet">'+
+      '<div class="field"><label>원하는 이름이 있다면 직접 입력</label>'+
+      '<input class="input" id="nk-custom" maxlength="20" placeholder="예: 책읽는 미지" onkeydown="if(event.key===\'Enter\')confirmCustomNick()"></div>'+
+      '<button class="btn btn-primary btn-pill" onclick="confirmCustomNick()">이 이름으로 '+(opts.change?'변경':'확정')+'</button>'+
+      '<p class="body-2 dim mt-8" style="font-size:12px">최대 20자. <b>마감 전까지는 언제든 다시 변경</b>할 수 있어요. (책마다 따로)</p>'+
+    '</div>'+
+    (opts.change?'<button class="btn btn-ghost btn-pill mt-12" onclick="cancelNickChange()">&larr; 변경 취소</button>':'');
 }
 function nickFor(phone4,bookId){
   var f=fixedNick(phone4,bookId); if(f) return f;
@@ -999,7 +1054,11 @@ function setNick(){
   var el=document.getElementById('hdr-nick');
   if(!el) return;
   var t='';
-  if(STATE.bookId&&STATE.phone4) t=nickFor(STATE.phone4,STATE.bookId);
+  if(STATE.bookId&&STATE.phone4){
+    /* 호스트는 fixedNick 을 직접 정했을 때만 그 닉네임 표시. 안 정했으면 마스트헤드는 '모임장' 유지 (auto-hash nick 노출 X) */
+    if(STATE.isHost && !fixedNick(STATE.phone4,STATE.bookId)) t='모임장';
+    else t=nickFor(STATE.phone4,STATE.bookId);
+  }
   else if(STATE.phone4) t='•••• '+STATE.phone4;
   else if(STATE.isHost) t='모임장';
   el.textContent=t;
@@ -1608,24 +1667,9 @@ async function delMeetingHost(){
 function renderBook(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
   var st=bookStatus(b),cur=(st==='open');
-  if(STATE.phone4&&!fixedNick(STATE.phone4,STATE.bookId)){
-    if(!PENDNICK)PENDNICK=randomNick();
-    document.getElementById('page-book').innerHTML=
-      '<div class="section-hd"><div><div class="eyebrow">'+esc(b.title)+'</div><h2 class="h-1 mt-4">이 책에서의<br>내 이름.</h2></div></div>'+
-      '<div class="cover" style="padding:36px 20px;text-align:center"><div class="cover__top"><span>未知의 서재</span><span>'+esc(b.month||'')+'</span></div>'+
-      '<div style="padding:30px 0"><div style="font-size:14px;opacity:.8;margin-bottom:10px">당신은</div>'+
-      '<div class="cover__title" style="font-size:34px">'+esc(PENDNICK)+'</div>'+
-      '<div style="font-size:15px;opacity:.85;margin-top:10px">입니다!!</div></div>'+
-      '<div class="cover__top"><span>책마다 새 이름</span><span>익명</span></div></div>'+
-      '<p class="body-2 center mb-16">랜덤 닉네임이 마음에 들지 않으면 다시 뽑거나, 원하는 이름을 직접 적어 확정하세요.</p>'+
-      '<div class="row mb-12"><button class="btn btn-ghost btn-pill" onclick="rollNick()">🎲 다시 뽑기</button>'+
-      '<button class="btn btn-primary btn-pill" onclick="confirmNick()">랜덤 이름 확정</button></div>'+
-      '<div class="sheet">'+
-        '<div class="field"><label>원하는 이름이 있다면 직접 입력</label>'+
-        '<input class="input" id="nk-custom" maxlength="20" placeholder="예: 책읽는 미지" onkeydown="if(event.key===\'Enter\')confirmCustomNick()"></div>'+
-        '<button class="btn btn-primary btn-pill" onclick="confirmCustomNick()">이 이름으로 확정</button>'+
-        '<p class="body-2 dim mt-8" style="font-size:12px">최대 20자. 한 책에서 한 번 정하면 그 책에선 못 바꿔요. 다른 책에서는 또 다른 이름을 정할 수 있어요.</p>'+
-      '</div>';
+  /* 닉네임 픽커는 참가자(=답변할 사람)에게만 필요. 모임장은 책 편집 진입 시 픽커 차단 — 답변 페이지 진입 시에만 닉네임 정함 */
+  if(STATE.phone4&&!STATE.isHost&&!fixedNick(STATE.phone4,STATE.bookId)){
+    document.getElementById('page-book').innerHTML=nickPickerHtml(b,{change:false});
     return;
   }
   var h='<div class="section-hd"><div><div class="eyebrow">사전정보</div><h2 class="h-2 mt-4">모임 전에 워밍업!</h2></div></div>'+
@@ -1782,6 +1826,14 @@ function discTabsHtml(b,bs){
 }
 function renderDiscussion(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
+  /* ── 닉네임 픽커 (답변할 사람만): nick 없거나 NICKMODE 면 픽커. 마감 책에선 강제 진입 X (NICKMODE는 정상 진입로만 활성) ── */
+  if(STATE.phone4){
+    var hasNick=!!fixedNick(STATE.phone4,STATE.bookId);
+    if(!hasNick || NICKMODE){
+      document.getElementById('page-discussion').innerHTML=nickPickerHtml(b,{change:hasNick});
+      return;
+    }
+  }
   var h=bookHeadHtml(b);
   var st=bookStatus(b);
   if(st==='upcoming'){
@@ -1789,6 +1841,14 @@ function renderDiscussion(){
     document.getElementById('page-discussion').innerHTML=h;return;
   }
   var bs=bookState(b.id);
+  /* 내 닉네임 표시 + (마감 전이면) 변경 링크 */
+  if(STATE.phone4){
+    var myNick=nickFor(STATE.phone4,b.id);
+    h+='<div class="disc-nick-bar">'+
+      '<span>이 책에서 내 이름: <b>'+esc(myNick)+'</b></span>'+
+      (b.closed?'<span class="dim" style="font-size:11px">마감 — 변경 불가</span>':'<a onclick="startNickChange()" class="disc-nick-bar__edit">✏️ 변경</a>')+
+      '</div>';
+  }
   /* 잠긴 탭에 머물러 있으면 가능한 가장 앞 탭으로 강등 */
   if(DISC.view==='others' && !bs.submitted) DISC.view=ratedAny(bs)?'mine':'rating';
   if(DISC.view==='mine'   && !ratedAny(bs) && !bs.submitted) DISC.view='rating';
