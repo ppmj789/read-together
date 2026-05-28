@@ -729,6 +729,18 @@ function nkLoad(){try{return JSON.parse(localStorage.getItem('rt:nick'))||{};}ca
 function nkSave(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:nick',v);}catch(e){MEM['rt:nick']=v;}}
 function fixedNick(p4,bid){return (nkLoad()[p4+'|'+bid])||null;}
 function randomNick(){return NICK_ADJ[Math.floor(Math.random()*NICK_ADJ.length)]+' '+NICK_NOUN[Math.floor(Math.random()*NICK_NOUN.length)];}
+/* 닉네임 정규화: 연속 공백 축약 + 앞뒤 trim + 소문자 (중복 판정 기준 · v13 인덱스와 동일) */
+function normNick(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim();}
+/* 같은 책에서 이미 쓰이는 닉네임 집합(본인 phone4 제외). 오프라인이면 항상 비어있음. */
+async function takenNickSet(){
+  var set={};
+  if(!ONLINE||!STATE.bookId)return {has:function(){return false;}};
+  try{
+    var r=await sb.from('member_book').select('phone4,nickname').eq('book_id',STATE.bookId);
+    (r.data||[]).forEach(function(m){if(m.phone4!==STATE.phone4){var k=normNick(m.nickname);if(k)set[k]=1;}});
+  }catch(e){}
+  return {has:function(k){return !!set[k];}};
+}
 var PENDNICK=null;
 /* NICKMODE: true 면 닉네임이 이미 있어도 픽커 강제 노출 (변경 모드). 마감 전까지 작동 */
 var NICKMODE=false;
@@ -747,16 +759,27 @@ function _rerenderCurrent(){
 }
 function rollNick(){PENDNICK=randomNick();_rerenderCurrent();}
 async function _persistNick(nick){
-  /* member_book.nickname 즉시 sync — 다른 곳(댓글·답변·공감)에서 RT.loadBook 후 새 닉네임 노출 */
+  /* member_book.nickname 즉시 sync — 다른 곳(댓글·답변·공감)에서 RT.loadBook 후 새 닉네임 노출.
+     v13 유니크 인덱스 위반(동시성으로 같은 이름이 먼저 등록된 경우)은 에러를 표면화. */
   if(ONLINE && STATE.phone4 && STATE.bookId){
-    try{ await sb.from('member_book').upsert({book_id:STATE.bookId,phone4:STATE.phone4,nickname:nick},{onConflict:'book_id,phone4'}); }catch(e){}
+    var e=(await sb.from('member_book').upsert({book_id:STATE.bookId,phone4:STATE.phone4,nickname:nick},{onConflict:'book_id,phone4'})).error;
+    if(e){toast('닉네임 저장 실패 — 이미 같은 이름을 쓰는 분이 있어요');return false;}
   }
+  return true;
 }
 async function confirmNick(){
   if(!PENDNICK)PENDNICK=randomNick();
-  var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=PENDNICK;nkSave(o);
-  var nm=PENDNICK;PENDNICK=null;NICKMODE=false;
-  await _persistNick(nm);
+  var taken=await takenNickSet();
+  var nm=PENDNICK;
+  if(taken.has(normNick(nm))){
+    var free=null;
+    for(var i=0;i<80;i++){var c=randomNick();if(!taken.has(normNick(c))){free=c;break;}}
+    nm=free||(randomNick()+' '+(Math.floor(Math.random()*98)+2));
+    toast('그 이름은 이미 있어 다른 이름으로 확정해요 — 「'+nm+'」');
+  }
+  if(!(await _persistNick(nm)))return;
+  var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=nm;nkSave(o);
+  PENDNICK=null;NICKMODE=false;
   setNick();_rerenderCurrent();toast('닉네임 확정: '+nm);
 }
 async function confirmCustomNick(){
@@ -764,9 +787,11 @@ async function confirmCustomNick(){
   var v=el?(el.value||'').trim():'';
   if(!v){toast('직접 입력할 이름을 적어주세요');return;}
   if(v.length>20){toast('최대 20자까지 가능해요');return;}
+  var taken=await takenNickSet();
+  if(taken.has(normNick(v))){toast('이미 같은 이름을 쓰는 분이 있어요 — 다른 이름으로 해주세요');return;}
+  if(!(await _persistNick(v)))return;
   var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=v;nkSave(o);
   PENDNICK=null;NICKMODE=false;
-  await _persistNick(v);
   setNick();_rerenderCurrent();toast('닉네임 확정: '+v);
 }
 function cancelNickChange(){
