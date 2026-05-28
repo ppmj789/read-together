@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>나는 이향인인가? — 내향성 자가 진단</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#121212;
+  --surface:#1a1a1a;
+  --surface2:#242424;
+  --border:#2a2a2a;
+  --green:#1db954;
+  --green-dim:#158a3e;
+  --green-light:#1ed760;
+  --text:#ffffff;
+  --text-sub:#b3b3b3;
+  --text-dim:#535353;
+  --serif:'Noto Serif KR',serif;
+  --sans:'Noto Sans KR',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+
+/* canvas overlay */
+#canvas-overlay{position:fixed;inset:0;pointer-events:none;z-index:999;}
+
+.wrap{max-width:620px;margin:0 auto;padding:2.5rem 1.2rem 5rem;display:flex;flex-direction:column;align-items:center;}
+
+/* HEADER */
+.site-header{text-align:center;margin-bottom:2.5rem;width:100%;animation:fadeDown .6s ease both;}
+.eyebrow{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--text-dim);margin-bottom:1rem;}
+.logo-dot{display:inline-block;width:10px;height:10px;background:var(--green);border-radius:50%;margin-right:6px;vertical-align:middle;}
+.title{font-family:var(--serif);font-size:clamp(1.9rem,5.5vw,2.8rem);font-weight:300;line-height:1.25;color:var(--text);}
+.title span{color:var(--green);font-style:italic;}
+.title-divider{width:32px;height:2px;background:var(--green);margin:1.1rem auto;border-radius:1px;}
+.subtitle{font-size:.76rem;color:var(--text-sub);letter-spacing:.06em;}
+
+/* PROGRESS */
+.progress-bar-outer{width:100%;max-width:580px;margin-bottom:1.8rem;}
+.progress-meta{display:flex;justify-content:space-between;font-size:.68rem;color:var(--text-dim);margin-bottom:6px;letter-spacing:.04em;}
+.progress-track{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--green);border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+
+/* SCREENS */
+.screen{display:none;width:100%;}
+.screen.active{display:flex;flex-direction:column;align-items:center;}
+
+/* INTRO */
+.intro-box{background:var(--surface);border-radius:16px;padding:2.4rem 2rem;margin-bottom:2rem;width:100%;animation:fadeUp .55s .1s ease both;}
+.intro-box p{font-family:var(--serif);font-size:.9rem;line-height:2.1;color:var(--text-sub);text-align:center;font-weight:300;}
+.intro-box .note{font-family:var(--sans);font-size:.7rem;color:var(--text-dim);text-align:center;margin-top:1.2rem;letter-spacing:.05em;}
+.intro-box .note strong{color:var(--green);}
+.btn-start{background:var(--green);color:#000;border:none;padding:.95rem 3.2rem;border-radius:50px;font-family:var(--sans);font-size:.88rem;font-weight:700;letter-spacing:.08em;cursor:pointer;transition:transform .18s,background .18s;animation:fadeUp .55s .25s ease both;}
+.btn-start:hover{background:var(--green-light);transform:scale(1.04);}
+
+/* QUESTION CARD */
+.q-card{background:var(--surface);border-radius:12px;padding:1.7rem 1.4rem;width:100%;margin-bottom:.9rem;transition:background .2s;}
+.q-card:hover{background:var(--surface2);}
+.q-no{font-size:.62rem;letter-spacing:.22em;color:var(--green);margin-bottom:.5rem;font-weight:500;}
+.q-text{font-family:var(--serif);font-size:.92rem;line-height:1.75;color:var(--text);margin-bottom:1.3rem;font-weight:400;}
+.scale-row{display:flex;gap:4px;}
+.s-btn{flex:1;border:2px solid transparent;border-radius:8px;background:var(--surface2);color:var(--text-dim);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 2px;gap:3px;min-height:56px;transition:all .14s ease;font-family:var(--sans);}
+.s-btn .n{font-size:.88rem;font-weight:700;}
+.s-btn .l{font-size:.48rem;line-height:1.3;text-align:center;word-break:keep-all;}
+.s-btn:hover{border-color:var(--green);color:var(--green);background:#1a2a1e;}
+.s-btn.sel{border-color:var(--green);background:#1a2a1e;color:var(--green);}
+.scale-ends{display:flex;justify-content:space-between;font-size:.58rem;color:var(--text-dim);margin-top:5px;padding:0 2px;}
+
+/* NAV */
+.nav-row{display:flex;gap:.8rem;width:100%;max-width:580px;margin-top:.5rem;}
+.btn-nav{flex:1;padding:.88rem;border-radius:50px;font-family:var(--sans);font-size:.84rem;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:all .18s;}
+.btn-ghost{background:transparent;border:2px solid var(--border);color:var(--text-sub);}
+.btn-ghost:hover{border-color:var(--text-sub);color:var(--text);}
+.btn-primary{background:var(--green);border:none;color:#000;}
+.btn-primary:hover{background:var(--green-light);transform:scale(1.02);}
+.btn-primary:disabled{background:var(--border);color:var(--text-dim);cursor:not-allowed;transform:none;pointer-events:none;}
+
+/* RESULT */
+#screen-result{animation:fadeUp .7s ease both;}
+.result-card{background:var(--surface);border-radius:20px;padding:3rem 2rem 2.5rem;width:100%;text-align:center;margin-bottom:1.4rem;position:relative;overflow:hidden;}
+.result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green-dim),var(--green),var(--green-dim));}
+.result-emoji{font-size:3.8rem;display:block;margin-bottom:1rem;}
+.result-badge{display:inline-block;background:rgba(29,185,84,.15);border:1px solid rgba(29,185,84,.4);border-radius:50px;padding:.3rem 1.2rem;font-size:.68rem;letter-spacing:.18em;color:var(--green);margin-bottom:.9rem;}
+.result-type{font-family:var(--serif);font-size:clamp(1.5rem,4.5vw,2rem);font-weight:600;color:var(--text);margin-bottom:.4rem;line-height:1.3;}
+.result-type.ihyang{color:var(--green);}
+.result-score-line{font-size:.72rem;color:var(--text-dim);letter-spacing:.08em;margin-bottom:1.6rem;}
+.score-gauge{margin:0 auto 1.6rem;max-width:360px;}
+.gauge-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:.45rem;}
+.gauge-fill{height:100%;background:linear-gradient(90deg,var(--green-dim),var(--green));border-radius:3px;transition:width 1.3s cubic-bezier(.4,0,.2,1);width:0%;}
+.gauge-ends{display:flex;justify-content:space-between;font-size:.6rem;color:var(--text-dim);}
+.result-desc{font-family:var(--serif);font-size:.9rem;line-height:2;color:var(--text-sub);font-weight:300;}
+.result-divider{width:40px;height:2px;background:var(--border);margin:1.8rem auto;}
+
+/* SHARE */
+.share-card{background:var(--surface);border-radius:16px;padding:1.5rem 1.6rem;width:100%;margin-bottom:1.2rem;text-align:center;}
+.share-card > p{font-size:.78rem;color:var(--text-sub);margin-bottom:.9rem;}
+.share-text-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1rem 1.1rem;font-family:var(--serif);font-size:.8rem;line-height:1.9;color:var(--text-sub);text-align:left;margin-bottom:.9rem;user-select:all;white-space:pre-line;}
+.btn-copy{background:transparent;border:2px solid var(--green);color:var(--green);padding:.6rem 2rem;border-radius:50px;font-family:var(--sans);font-size:.78rem;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .2s;}
+.btn-copy:hover{background:rgba(29,185,84,.1);}
+.btn-copy.copied{background:rgba(29,185,84,.15);color:var(--green-light);}
+.btn-restart{background:transparent;border:2px solid var(--border);color:var(--text-sub);padding:.8rem;border-radius:50px;font-family:var(--sans);font-size:.78rem;font-weight:700;letter-spacing:.08em;cursor:pointer;transition:all .2s;width:100%;}
+.btn-restart:hover{border-color:var(--text-sub);color:var(--text);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:480px){
+  .s-btn .l{display:none;}
+  .s-btn{min-height:44px;}
+}
+</style>
+</head>
+<body>
+<canvas id="canvas-overlay"></canvas>
+<div class="wrap">
+
+  <header class="site-header">
+    <div class="eyebrow"><span class="logo-dot"></span>Book21 · 경제경영-인문</div>
+    <h1 class="title">나는 <span>이향인</span>인가?</h1>
+    <div class="title-divider"></div>
+    <p class="subtitle">내향성 자가 진단 · 40문항</p>
+  </header>
+
+  <div class="progress-bar-outer" id="progress-bar" style="display:none">
+    <div class="progress-meta">
+      <span id="pg-page">1 / 8 페이지</span>
+      <span id="pg-count">0 / 40 답변</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- INTRO -->
+  <section class="screen active" id="screen-intro">
+    <div class="intro-box">
+      <p>이 설문은 《이향인》의 내용을 바탕으로<br>당신의 내향성 성향을 측정합니다.<br><br>총 40개의 문항에 솔직하게 답해주세요.<br>정답은 없습니다. 지금 느끼는 대로.</p>
+      <p class="note">총 40문항 · 약 5~7분 소요 · <strong>188점 이상 = 이향인</strong></p>
+    </div>
+    <button class="btn-start" onclick="startSurvey()">▶ 시작하기</button>
+  </section>
+
+  <!-- SURVEY -->
+  <section class="screen" id="screen-survey">
+    <div id="q-container" style="width:100%"></div>
+    <div class="nav-row">
+      <button class="btn-nav btn-ghost" id="btn-prev" onclick="prevPage()" style="display:none">← 이전</button>
+      <button class="btn-nav btn-primary" id="btn-next" onclick="nextPage()" disabled>다음 →</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="screen-result">
+    <div class="result-card">
+      <span class="result-emoji" id="res-emoji"></span>
+      <div class="result-badge" id="res-badge"></div>
+      <div class="result-type" id="res-type"></div>
+      <div class="result-score-line" id="res-score"></div>
+      <div class="score-gauge">
+        <div class="gauge-track"><div class="gauge-fill" id="gauge-fill"></div></div>
+        <div class="gauge-ends"><span>외향 0점</span><span id="gauge-pct"></span><span>280점 내향</span></div>
+      </div>
+      <p class="result-desc" id="res-desc"></p>
+      <div class="result-divider"></div>
+    </div>
+    <div class="share-card">
+      <p>결과를 친구에게 공유해보세요 🎵</p>
+      <div class="share-text-box" id="share-text"></div>
+      <button class="btn-copy" id="btn-copy" onclick="copyResult()">결과 복사하기</button>
+    </div>
+    <button class="btn-restart" onclick="restart()">↺ 다시 하기</button>
+  </section>
+
+</div>
+
+<script>
+// ── 문항 데이터
+// reverse:false → 7점=매우그렇다(7), 1점=전혀그렇지않다(1)  — 점수 그대로
+// reverse:true  → 1점=매우그렇다(1), 7점=전혀그렇지않다(7)  — 점수 반전 (8-v)
+const Qs = [
+  {id:1,  t:"나는 사람들이 많이 모인 곳에 있으면 외로움을 느낀다.",                            r:false},
+  {id:2,  t:"내 삶에서 진정으로 가까운 사람은 극소수다.",                                     r:false},
+  {id:3,  t:"나는 파티를 즐기며 가능한 한 자주 참석한다.",                                    r:true},
+  {id:4,  t:"나는 혼자만의 시간이 많이 필요하다.",                                           r:false},
+  {id:5,  t:"슬플 때 나는 사람들이 곁에서 나를 위로해주길 바란다.",                           r:true},
+  {id:6,  t:"나는 혼자 있는 것을 좋아한다. 나 자신이 최고의 친구다.",                        r:false},
+  {id:7,  t:"나는 요즘 유행하는 인기 장소에 관한 소식을 가장 먼저 듣는다.",                  r:true},
+  {id:8,  t:"나는 혼자 일하는 것을 좋아한다.",                                              r:false},
+  {id:9,  t:"나는 내 신념을 따르는 데 타인의 동의를 구하지 않는다.",                         r:false},
+  {id:10, t:"나는 조직화된 종교의 신자다.",                                                 r:true},
+  {id:11, t:"나는 소셜미디어를 자주 사용한다.",                                             r:true},
+  {id:12, t:"숨길 것은 있지만, 내 삶은 되도록 남에게 드러내지 않고 싶다.",                  r:false},
+  {id:13, t:"나는 통념을 믿지 않는다. 그것은 집단 사고일 뿐이다.",                          r:false},
+  {id:14, t:"나는 사색을 하나의 활동으로 여긴다.",                                          r:false},
+  {id:15, t:"나는 삶의 적극적 참여자가 아닌 관찰자다.",                                     r:false},
+  {id:16, t:"나는 혼자 있는 것을 좋아하지 않는다.",                                        r:true},
+  {id:17, t:"대부분의 사람이 내가 수줍음이 많다는 걸 모르는 것 같다.",                      r:false},
+  {id:18, t:"나는 밝은색 옷을 좋아한다. 그래야 군중 속에서 내가 두드러지기 때문이다.",      r:true},
+  {id:19, t:"나는 주변 사람들로부터 관심받는 것을 좋아한다.",                               r:true},
+  {id:20, t:"다른 사람들의 의견은 내게 매우 중요하다.",                                     r:true},
+  {id:21, t:"일하는 공간을 공유하면 아이디어를 나누기에 좋다고 생각한다.",                  r:true},
+  {id:22, t:"나는 다른 사람들이 내 의견에 동의할 때 기분이 좋다.",                          r:true},
+  {id:23, t:"나는 소수자가 되어도 개의치 않는다.",                                          r:false},
+  {id:24, t:"나는 외부에서 주어진 생각을 따르기보다 내 삶을 이끌 나만의 철학을 세우는 편이다.", r:false},
+  {id:25, t:"나는 이해받기를 원한다.",                                                     r:true},
+  {id:26, t:"나는 가끔 내 생각이 두려울 때가 있다.",                                       r:false},
+  {id:27, t:"나는 내 견해를 갖고 있으며 그것이 맞다고 생각한다.",                           r:false},
+  {id:28, t:"모든 질문에는 답이 있다고 생각한다.",                                          r:true},
+  {id:29, t:"나는 어떤 생각이나 개념이든 스스로 검토해보기 전에는 받아들이지 않는다.",      r:false},
+  {id:30, t:"나는 나 자신의 주인이어야 한다.",                                              r:false},
+  {id:31, t:"모든 문제에는 가능한 여러 해결책이 있다고 생각한다.",                          r:false},
+  {id:32, t:"나는 선생님이나 상사는 언제나 옳다고 생각한다.",                               r:true},
+  {id:33, t:"나는 회의를 할 때 가장 좋은 아이디어가 떠오르곤 한다.",                        r:true},
+  {id:34, t:"나는 전문 분야 하나에만 집중하기보다 다방면에 관심이 많다.",                   r:false},
+  {id:35, t:"나는 스스로에게 의지한다. 타인에게 도움을 청하는 것은 내게 어려운 일이다.",   r:false},
+  {id:36, t:"나에 관한 이야기를 공유할 때, 모든 세부 사항까지 정확히 전달하려 한다.",      r:true},
+  {id:37, t:"진정한 지혜는 세대를 거쳐 내려오는 것뿐이라고 믿는다.",                       r:true},
+  {id:38, t:"나는 권위 있는 인물들을 깊이 존경한다.",                                      r:true},
+  {id:39, t:"나는 새로운 생각을 좋아한다.",                                                r:false},
+  {id:40, t:"나는 종종 스스로에게 질문을 던진다.",                                         r:false},
+];
+
+// 항상 왼쪽=매우그렇다, 오른쪽=전혀그렇지않다
+// reverse:false → 버튼 표시 [7,6,5,4,3,2,1], 점수=표시값 그대로
+// reverse:true  → 버튼 표시 [1,2,3,4,5,6,7], 점수=표시값 그대로(매우그렇다=1점이 내향점수 낮음을 의미)
+// 라벨은 항상 동일: 왼쪽부터 매우그렇다→전혀그렇지않다
+const LABELS = ["매우\n그렇다","꽤\n그렇다","그렇다","보통이다","그렇지\n않다","꽤 그렇지\n않다","전혀\n그렇지 않다"];
+
+const PER = 5;
+const TOTAL = 40;
+const MAX = TOTAL * 7; // 280
+const THRESHOLD = 188;
+
+let answers = {};
+let page = 0;
+const totalPages = Math.ceil(TOTAL / PER);
+
+// ── particle system
+const canvas = document.getElementById('canvas-overlay');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let animId = null;
+
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// CONFETTI (폭죽)
+function launchConfetti(){
+  stopParticles();
+  const colors = ['#1db954','#1ed760','#ffffff','#a8ff78','#ffdd57','#ff6b6b','#74b9ff'];
+  for(let i=0;i<180;i++){
+    particles.push({
+      type:'confetti',
+      x: Math.random()*canvas.width,
+      y: -10 - Math.random()*200,
+      vx: (Math.random()-0.5)*5,
+      vy: 2 + Math.random()*4,
+      w: 6 + Math.random()*8,
+      h: 4 + Math.random()*4,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360,
+      rotV: (Math.random()-0.5)*8,
+      alpha: 1,
+      life: 1
+    });
+  }
+  animateParticles();
+}
+
+// PETALS (꽃잎)
+function launchPetals(){
+  stopParticles();
+  const colors = ['#ffb7c5','#ff8fab','#ffc8dd','#ffafcc','#e0aaff','#c8b6ff','#f9c6d0'];
+  for(let i=0;i<120;i++){
+    particles.push({
+      type:'petal',
+      x: Math.random()*canvas.width,
+      y: -10 - Math.random()*300,
+      vx: (Math.random()-0.5)*1.5,
+      vy: 1 + Math.random()*2,
+      r: 5 + Math.random()*8,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360,
+      rotV: (Math.random()-0.5)*3,
+      swing: Math.random()*2*Math.PI,
+      swingV: 0.03 + Math.random()*0.04,
+      alpha: 0.85,
+      life: 1
+    });
+  }
+  animateParticles();
+}
+
+function stopParticles(){
+  if(animId){cancelAnimationFrame(animId);animId=null;}
+  particles=[];
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+function animateParticles(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p=>{
+    p.y += p.vy;
+    p.x += p.vx;
+    p.rot += p.rotV;
+    if(p.type==='petal'){
+      p.swing += p.swingV;
+      p.x += Math.sin(p.swing)*0.8;
+    }
+    if(p.y > canvas.height*0.8) p.alpha -= 0.012;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0,p.alpha);
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot*Math.PI/180);
+    if(p.type==='confetti'){
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    } else {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.ellipse(0,0,p.r,p.r*0.55,0,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  });
+  particles = particles.filter(p=>p.alpha>0 && p.y<canvas.height+40);
+  if(particles.length>0){
+    animId = requestAnimationFrame(animateParticles);
+  } else {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+}
+
+// ── UI helpers
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startSurvey(){
+  show('screen-survey');
+  document.getElementById('progress-bar').style.display='block';
+  renderPage();
+}
+
+function renderPage(){
+  const container = document.getElementById('q-container');
+  container.innerHTML='';
+  const qs = Qs.slice(page*PER, page*PER+PER);
+  qs.forEach(q=>{
+    const card = document.createElement('div');
+    card.className='q-card';
+    // reverse:false → 버튼 표시 7,6,5,4,3,2,1 / 점수=표시값 / 왼쪽=매우그렇다(7점)
+    // reverse:true  → 버튼 표시 1,2,3,4,5,6,7 / 점수=표시값 / 왼쪽=매우그렇다(1점)
+    const dispVals = q.r ? [1,2,3,4,5,6,7] : [7,6,5,4,3,2,1];
+    const btns = dispVals.map((dv,i)=>{
+      const sel = answers[q.id]===dv ? 'sel' : '';
+      return `<button class="s-btn ${sel}" onclick="pick(${q.id},${dv},this)">
+        <span class="n">${dv}</span>
+        <span class="l">${LABELS[i].replace('\n','<br>')}</span>
+      </button>`;
+    }).join('');
+    const leftLabel  = '매우 그렇다';
+    const rightLabel = '전혀 그렇지 않다';
+    card.innerHTML=`
+      <div class="q-no">Q${String(q.id).padStart(2,'0')}</div>
+      <div class="q-text">${q.t}</div>
+      <div class="scale-row">${btns}</div>
+      <div class="scale-ends"><span>${leftLabel}</span><span>${rightLabel}</span></div>`;
+    container.appendChild(card);
+  });
+  updateNav();
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function pick(qid,score,btn){
+  answers[qid]=score;
+  const card=btn.closest('.q-card');
+  card.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  updateNav();
+  updateProgress();
+}
+
+function pageAnswered(){
+  return Qs.slice(page*PER,page*PER+PER).every(q=>answers[q.id]!=null);
+}
+
+function updateNav(){
+  document.getElementById('btn-prev').style.display=page>0?'block':'none';
+  document.getElementById('btn-next').disabled=!pageAnswered();
+  document.getElementById('btn-next').textContent=page<totalPages-1?'다음 →':'결과 보기 ▶';
+}
+
+function updateProgress(){
+  const done=Object.keys(answers).length;
+  document.getElementById('pg-page').textContent=`${page+1} / ${totalPages} 페이지`;
+  document.getElementById('pg-count').textContent=`${done} / ${TOTAL} 답변`;
+  document.getElementById('progress-fill').style.width=`${(done/TOTAL)*100}%`;
+}
+
+function prevPage(){if(page>0){page--;renderPage();}}
+function nextPage(){
+  if(page<totalPages-1){page++;renderPage();}
+  else showResult();
+}
+
+function calcScore(){
+  let s=0;
+  Qs.forEach(q=>{
+    const v=answers[q.id];
+    if(v!=null) s+=v; // 점수는 pick 시 이미 반전 처리됨
+  });
+  return s;
+}
+
+function getResult(score){
+  const isIhyang = score>=THRESHOLD;
+  const pct=Math.round(score/MAX*100);
+  if(isIhyang) return {
+    emoji:'🌙',badge:'이향인 (異鄕人)',
+    type:'당신은 이향인입니다',ihyang:true,
+    desc:'세상 속에 살면서도 어딘가 낯선 이방인처럼 느끼는 사람입니다. 군중 속에서 홀로이고, 깊은 고독 속에서 가장 생생히 살아있습니다. 내면의 세계가 외부 세계만큼이나 광대하며, 혼자만의 시간이 가장 풍요로운 시간입니다.',
+    effect:'confetti'
+  };
+  if(pct>=55) return {
+    emoji:'🌿',badge:'성찰하는 내향인',
+    type:'내향적 성향이 강합니다',ihyang:false,
+    desc:'내향성이 두드러지지만 상황에 따라 유연하게 적응합니다. 깊은 관계와 자기만의 생각을 소중히 여기며 조용한 환경에서 최고의 능력을 발휘합니다.',
+    effect:'petals'
+  };
+  if(pct>=45) return {
+    emoji:'⚖️',badge:'양향인',
+    type:'내향과 외향의 경계에 있습니다',ihyang:false,
+    desc:'내향과 외향 사이에서 균형을 찾습니다. 상황과 기분에 따라 혼자이거나 함께이기를 원하는 유연한 성격으로, 두 세계를 모두 이해합니다.',
+    effect:'petals'
+  };
+  if(pct>=30) return {
+    emoji:'🌟',badge:'사교적 외향인',
+    type:'외향적 성향이 강합니다',ihyang:false,
+    desc:'사람들과 함께할 때 에너지가 넘칩니다. 새로운 만남을 즐기고 관계 속에서 활력을 얻으며, 활발한 환경에서 빛을 발합니다.',
+    effect:'petals'
+  };
+  return {
+    emoji:'🔥',badge:'열정적 외향인',
+    type:'당신은 강한 외향인입니다',ihyang:false,
+    desc:'사람들과의 교류가 삶의 원동력입니다. 군중 속에서 빛나며 새로운 관계와 경험을 끊임없이 추구하고, 에너지가 넘치는 환경에서 최고의 자신이 됩니다.',
+    effect:'petals'
+  };
+}
+
+function showResult(){
+  const score=calcScore();
+  const pct=Math.round(score/MAX*100);
+  const r=getResult(score);
+
+  document.getElementById('res-emoji').textContent=r.emoji;
+  document.getElementById('res-badge').textContent=r.badge;
+  const typeEl=document.getElementById('res-type');
+  typeEl.textContent=r.type;
+  typeEl.className='result-type'+(r.ihyang?' ihyang':'');
+  document.getElementById('res-score').textContent=`내향성 점수 ${score}점 / ${MAX}점 (${pct}%)`;
+  document.getElementById('res-desc').textContent=r.desc;
+  document.getElementById('gauge-pct').textContent=`${pct}%`;
+
+  document.getElementById('progress-bar').style.display='none';
+  show('screen-result');
+
+  setTimeout(()=>{
+    document.getElementById('gauge-fill').style.width=pct+'%';
+  },100);
+
+  // 이펙트
+  setTimeout(()=>{
+    if(r.effect==='confetti') launchConfetti();
+    else launchPetals();
+  },400);
+
+  const ihyangLine = r.ihyang
+    ? `✅ ${score}점 — 당신은 이향인입니다 (기준: ${THRESHOLD}점)`
+    : `❌ ${score}점 — 당신은 이향인이 아닙니다 (기준: ${THRESHOLD}점)`;
+
+  document.getElementById('share-text').textContent=
+`📖 《이향인》 내향성 자가 진단 결과
+
+${r.emoji} ${r.badge}
+"${r.type}"
+
+내향성 점수: ${score}점 / ${MAX}점 (${pct}%)
+${ihyangLine}
+
+${r.desc}
+
+— 나도 테스트해보기 → 함께읽기 〈이향인〉 페이지에서`;
+
+  // 부모(함께읽기 앱)로 점수 전달 — iframe(parent) 또는 새 탭(opener)
+  try{
+    const __payload={type:'ihyang-result',score:score,pct:pct,isIhyang:r.ihyang,badge:r.badge,resultType:r.type};
+    const __tgt=(window.parent&&window.parent!==window)?window.parent:window.opener;
+    if(__tgt) __tgt.postMessage(__payload,'*');
+  }catch(e){}
+}
+
+function copyResult(){
+  const text=document.getElementById('share-text').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById('btn-copy');
+    btn.textContent='✓ 복사됨!';
+    btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='결과 복사하기';btn.classList.remove('copied');},2000);
+  });
+}
+
+function restart(){
+  stopParticles();
+  answers={};page=0;
+  document.getElementById('progress-bar').style.display='none';
+  show('screen-intro');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

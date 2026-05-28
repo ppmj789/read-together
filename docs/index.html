@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>未知의 서재 — 우리만의 다음 페이지</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -156,7 +159,19 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .link-card__icon{width:42px;height:42px;border-radius:var(--radius-sm);background:var(--highlight);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .link-card__body{flex:1;min-width:0}
 .link-card__title{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.link-card__meta{font-size:12px;color:var(--ink-dim);margin-top:2px}
+.link-card__meta{font-size:12px;color:var(--ink-dim);margin-top:2px;overflow-wrap:anywhere;word-break:break-word}
+/* 이향인 테스트 모달 + 점수 카드 */
+.tmodal{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);display:none;flex-direction:column}
+.tmodal__bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--rule);font-weight:800;font-family:var(--display)}
+.tmodal__bar button{border:1px solid var(--rule);background:var(--paper);border-radius:var(--radius-pill);padding:6px 14px;cursor:pointer;font-weight:700;font-size:13px}
+.tmodal__frame{flex:1;width:100%;border:0;background:#121212}
+.ihyang-box{margin:6px 0 12px}
+.ihyang-result{border:1px solid var(--rule-soft);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:10px;background:var(--paper-warm)}
+.ihyang-result.is-ihyang{border-color:var(--accent);background:var(--accent-tint)}
+.ihyang-score{font-family:var(--display);font-weight:800;font-size:30px;line-height:1}
+.ihyang-score span{font-size:14px;color:var(--ink-dim);font-weight:600}
+.ihyang-verdict{font-weight:700;margin-top:6px}
+.ihyang-sub{font-size:12px;color:var(--ink-dim);margin-top:4px}
 .lk-go{color:var(--accent);font-weight:700}
 
 /* Profile */
@@ -1081,8 +1096,10 @@ var isStage=false;
 function setNick(){
   var el=document.getElementById('hdr-nick');
   if(!el) return;
+  /* 닉네임은 '책 안'(사전정보·답변)일 때만 노출. 책을 나오면 전화번호로 복귀. */
+  var inBook=(STATE.page==='book'||STATE.page==='discussion')&&STATE.bookId;
   var t='';
-  if(STATE.bookId&&STATE.phone4){
+  if(inBook&&STATE.phone4){
     /* 호스트는 fixedNick 을 직접 정했을 때만 그 닉네임 표시. 안 정했으면 마스트헤드는 '모임장' 유지 (auto-hash nick 노출 X) */
     if(STATE.isHost && !fixedNick(STATE.phone4,STATE.bookId)) t='모임장';
     else t=nickFor(STATE.phone4,STATE.bookId);
@@ -1093,6 +1110,7 @@ function setNick(){
   el.style.display=t?'block':'none';
 }
 function go(name,nopush){
+  STATE.page=name; setNick();
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
   var el=document.getElementById('page-'+name);
   if(el) el.classList.add('active');
@@ -1934,6 +1952,60 @@ function discTabsHtml(b,bs){
     tab('others','③ 다른 사람의 답변',lockOthers,'내 답변을 제출하면 열려요')+
   '</div>';
 }
+/* ───── 이향인 테스트 (점수 자동 캡처) ───── */
+function ihyangScoreQIndex(b){
+  var qs=(b&&b.questions)||[];
+  for(var i=0;i<qs.length;i++){ if(/이향인\s*점수|당신의\s*이향인/.test(qs[i]||'')) return i; }
+  return -1;
+}
+function ihyangBlockHtml(b,bs){
+  var has=(bs&&bs.ihyangScore!=null);
+  var v='';
+  if(has){
+    v='<div class="ihyang-result'+(bs.ihyangIs?' is-ihyang':'')+'">'+
+      '<div class="ihyang-score">'+esc(String(bs.ihyangScore))+'<span> / 280</span></div>'+
+      '<div class="ihyang-verdict">'+(bs.ihyangIs?'🌙 당신은 이향인입니다':'🙂 이향인은 아니에요')+' · 내향성 '+esc(String(bs.ihyangPct))+'%</div>'+
+      '<div class="ihyang-sub">기준 188점 '+(bs.ihyangIs?'이상':'미만')+' — 이 점수에 동의하나요? 아래에 생각을 적어주세요.</div>'+
+    '</div>';
+  }
+  return '<div class="ihyang-box">'+v+
+    '<button type="button" class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="openIhyangTest()">'+(has?'↺ 테스트 다시 하기':'▶ 이향인 테스트 하고 점수 받기')+'</button>'+
+  '</div>';
+}
+function openIhyangTest(){
+  var m=document.getElementById('ihyang-modal');
+  if(!m){
+    m=document.createElement('div');m.id='ihyang-modal';m.className='tmodal';
+    m.innerHTML='<div class="tmodal__bar"><span>이향인 테스트 · 40문항</span><button type="button" onclick="closeIhyangTest()">✕ 닫기</button></div>'+
+      '<iframe class="tmodal__frame" src="ihyang-test.html" title="이향인 테스트"></iframe>';
+    document.body.appendChild(m);
+  }
+  m.style.display='flex';
+}
+function closeIhyangTest(){var m=document.getElementById('ihyang-modal');if(m)m.style.display='none';}
+function onIhyangResult(d){
+  if(!d||d.type!=='ihyang-result')return;
+  var b=STATE.bookId?bookById(STATE.bookId):null; if(!b)return;
+  var bs=bookState(b.id);
+  bs.ihyangScore=d.score; bs.ihyangPct=d.pct; bs.ihyangIs=!!d.isIhyang;
+  var qi=ihyangScoreQIndex(b);
+  if(qi>=0){
+    bs.answers=bs.answers||[];
+    var line='[이향인 테스트] '+d.score+'/280 ('+d.pct+'%) — '+(d.isIhyang?'이향인':'이향인 아님');
+    var cur=(bs.answers[qi]||'');
+    if(cur.indexOf('[이향인 테스트]')<0) bs.answers[qi]=line+(cur.trim()?'\n\n'+cur:'\n\n');
+    else bs.answers[qi]=cur.replace(/\[이향인 테스트\][^\n]*/,line);
+  }
+  setBookState(b.id,bs);
+  if(ONLINE&&STATE.phone4){
+    try{ sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:nickFor(STATE.phone4,b.id),ihyang_score:d.score,ihyang_pct:d.pct},{onConflict:'book_id,phone4'}).then(function(){},function(){}); }catch(e){}
+  }
+  closeIhyangTest();
+  toast('점수 저장: '+d.score+'점 ('+(d.isIhyang?'이향인':'이향인 아님')+')');
+  if(STATE.page==='discussion') renderDiscussion();
+}
+window.addEventListener('message',function(ev){ try{ onIhyangResult(ev.data); }catch(e){} });
+
 function renderDiscussion(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
   /* ── 닉네임 픽커 (답변할 사람만): nick 없거나 NICKMODE 면 픽커. 마감 책에선 강제 진입 X (NICKMODE는 정상 진입로만 활성) ── */
@@ -1983,10 +2055,12 @@ function renderDiscussion(){
       } else {
         h+='<p class="body-2 mb-16">제출하면 <b style="color:var(--ink)">다른 사람의 답변</b> 탭이 열려요.</p>';
         b.questions.forEach(function(q,i){
+          var __sq=(i===ihyangScoreQIndex(b));
           h+='<div class="sheet">'+
             '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
             '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
-            '<textarea class="input" id="ans-'+i+'" rows="3" placeholder="내 생각을 적어주세요">'+esc(bs.answers[i]||'')+'</textarea>'+
+            (__sq?ihyangBlockHtml(b,bs):'')+
+            '<textarea class="input" id="ans-'+i+'" rows="3" placeholder="'+(__sq?'이 점수에 동의하나요? 어떻게 생각하세요?':'내 생각을 적어주세요')+'">'+esc(bs.answers[i]||'')+'</textarea>'+
           '</div>';
         });
         h+='<button class="btn btn-primary btn-pill" onclick="submitAnswers()">답변 제출하기</button>';
@@ -1999,7 +2073,8 @@ function renderDiscussion(){
         var isEmpty=!ansBody;
         h+='<div class="sheet">'+
           '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
-          '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>';
+          '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
+          (i===ihyangScoreQIndex(b)?ihyangBlockHtml(b,bs):'');
         if(isEmpty && !editing){
           /* 삭제됐거나 미작성 — 마감 무관 다시 작성 허용 (마감일 땐 안내만) */
           h+='<div class="locked-note" style="padding:18px;font-size:13px;border-style:dashed">🗑️ 이 질문의 답변은 삭제됐어요.'+
