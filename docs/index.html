@@ -1151,6 +1151,16 @@ function sessRead(){
   catch(e){return MEM['rt:sess']?JSON.parse(MEM['rt:sess']):null;}
 }
 function sessClear(){ try{localStorage.removeItem('rt:sess');}catch(e){} if(MEM)delete MEM['rt:sess']; }
+/* 로그아웃 등에서 이 기기의 앱 로컬 데이터(rt:*) + 인메모리 캐시를 전부 비움 */
+function clearAllLocal(){
+  try{
+    var rm=[];
+    for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k&&k.indexOf('rt:')===0) rm.push(k); }
+    rm.forEach(function(k){ try{localStorage.removeItem(k);}catch(e){} });
+  }catch(e){}
+  for(var mk in MEM){ if(MEM.hasOwnProperty(mk)&&mk.indexOf('rt:')===0) delete MEM[mk]; }
+  NETSTORE={}; CLUBS_CACHE=[]; MEET_CACHE=[];
+}
 function syncAuthUI(){
   var b=document.getElementById('logout-btn');
   var loggedIn=!!(STATE.phone4||STATE.isHost);
@@ -1158,10 +1168,10 @@ function syncAuthUI(){
 }
 function logout(){
   if(isStage) setStage(false);
-  sessClear();
-  STATE.phone4=null;STATE.bookId=null;STATE.clubId=null;STATE.meetingId=null;STATE.isHost=false;
+  clearAllLocal();
+  STATE.phone4=null;STATE.bookId=null;STATE.clubId=null;STATE.meetingId=null;STATE.isHost=false;STATE.page=null;
   setNick();syncHostUI();syncAuthUI();
-  go('login');toast('로그아웃됐어요');
+  go('login');toast('로그아웃 — 이 기기의 임시 정보를 모두 비웠어요');
 }
 async function sessRestore(){
   var s=sessRead(); if(!s||(!s.p4&&!s.host)) return false;
