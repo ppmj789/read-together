@@ -1186,14 +1186,17 @@ function back(){
 }
 function goHome(){
   if(isStage) toggleMode();
-  if(STATE.isHost) go(STATE.clubId?'meetings':'manage');
-  else go(STATE.phone4?'clubs':'login');
+  /* 로그인(회원 phone4) 이면 무조건 모임 목록 → 잔존 isHost 로 모임장 화면 튕김 방지.
+     phone4 없고 모임장 코드 로그인만 있으면 관리, 아니면 로그인. */
+  if(STATE.phone4) go('clubs');
+  else if(STATE.isHost) go('manage');
+  else go('login');
 }
 async function login(){
   var v=(document.getElementById('pin').value||'').trim();
   if(!/^[0-9]{4}$/.test(v)){toast('휴대폰 뒤 4자리 숫자를 입력해주세요');return;}
-  STATE.phone4=v;STATE.bookId=null;STATE.clubId=null;STATE.meetingId=null;
-  setNick();syncAuthUI();
+  STATE.phone4=v;STATE.bookId=null;STATE.clubId=null;STATE.meetingId=null;STATE.isHost=false;
+  setNick();syncHostUI();syncAuthUI();
   if(ONLINE){try{await RT.loadClubs();await RT.loadMeetings();}catch(e){rtErr(e);}}
   go('clubs');toast(v+' 으로 입장했어요');
 }
