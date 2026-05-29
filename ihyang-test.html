@@ -102,6 +102,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .btn-copy{background:transparent;border:2px solid var(--green);color:var(--green);padding:.6rem 2rem;border-radius:50px;font-family:var(--sans);font-size:.78rem;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .2s;}
 .btn-copy:hover{background:rgba(29,185,84,.1);}
 .btn-copy.copied{background:rgba(29,185,84,.15);color:var(--green-light);}
+.btn-record{display:block;width:100%;background:var(--green);color:#000;border:none;padding:1rem;border-radius:50px;font-family:var(--sans);font-size:.9rem;font-weight:700;letter-spacing:.04em;cursor:pointer;margin-bottom:1.2rem;transition:transform .18s,background .18s;}
+.btn-record:hover{background:var(--green-light);transform:scale(1.02);}
+.btn-record:disabled{background:var(--surface2);color:var(--text-dim);cursor:default;transform:none;}
 .btn-restart{background:transparent;border:2px solid var(--border);color:var(--text-sub);padding:.8rem;border-radius:50px;font-family:var(--sans);font-size:.78rem;font-weight:700;letter-spacing:.08em;cursor:pointer;transition:all .2s;width:100%;}
 .btn-restart:hover{border-color:var(--text-sub);color:var(--text);}
 
@@ -165,6 +168,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
       <p class="result-desc" id="res-desc"></p>
       <div class="result-divider"></div>
     </div>
+    <button class="btn-record" id="btn-record" onclick="recordToShelf()">📚 未知의 서재에 점수 기록하기</button>
     <div class="share-card">
       <p>결과를 친구에게 공유해보세요 🎵</p>
       <div class="share-text-box" id="share-text"></div>
@@ -500,12 +504,21 @@ ${r.desc}
 
 — 나도 테스트해보기 → 함께읽기 〈이향인〉 페이지에서`;
 
-  // 부모(함께읽기 앱)로 점수 전달 — iframe(parent) 또는 새 탭(opener)
+  // 점수는 보관만 — 전송은 사용자가 '기록하기' 버튼을 눌렀을 때만 (recordToShelf)
+  window.__ihyangResult={type:'ihyang-result',score:score,pct:pct,isIhyang:r.ihyang,badge:r.badge,resultType:r.type};
+  const __rb=document.getElementById('btn-record');
+  if(__rb){__rb.disabled=false;__rb.textContent='📚 未知의 서재에 점수 기록하기';}
+}
+
+// 사용자가 직접 누르는 '미지의 서재에 기록하기' — 이때만 앱으로 점수 전달
+function recordToShelf(){
+  const p=window.__ihyangResult; if(!p) return;
   try{
-    const __payload={type:'ihyang-result',score:score,pct:pct,isIhyang:r.ihyang,badge:r.badge,resultType:r.type};
-    const __tgt=(window.parent&&window.parent!==window)?window.parent:window.opener;
-    if(__tgt) __tgt.postMessage(__payload,'*');
+    const tgt=(window.parent&&window.parent!==window)?window.parent:window.opener;
+    if(tgt) tgt.postMessage(p,'*');
   }catch(e){}
+  const b=document.getElementById('btn-record');
+  if(b){b.textContent='✓ 미지의 서재에 기록했어요';b.disabled=true;}
 }
 
 function copyResult(){

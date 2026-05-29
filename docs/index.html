@@ -947,13 +947,22 @@ var RT={
     });
   },
   async loadBook(bookId){
-    var mb=await sb.from('member_book').select('phone4,nickname,submitted,ratings').eq('book_id',bookId);
+    var mb=await sb.from('member_book').select('phone4,nickname,submitted,ratings,ihyang_score,ihyang_pct').eq('book_id',bookId);
     var an=await sb.from('answer').select('phone4,q_index,body').eq('book_id',bookId);
     var cm=await sb.from('comment').select('id,q_index,target_phone4,author_phone4,author_nick,body').eq('book_id',bookId);
     var rx=await sb.from('reaction').select('q_index,target_phone4,author_phone4').eq('book_id',bookId);
     if(mb.error||an.error||cm.error||rx.error){rtErr(mb.error||an.error||cm.error||rx.error);return;}
     var bk=bookById(bookId);if(!bk)return;
     var me=STATE.phone4;
+    /* 내 이향인 점수(DB) → 로컬 bookState 에 반영. 점수 카드가 답변 텍스트가 아닌 DB 기준으로 고정 표시되도록. */
+    if(me){
+      var __mine=null,__md=mb.data||[];
+      for(var __i=0;__i<__md.length;__i++){ if(__md[__i].phone4===me){ __mine=__md[__i]; break; } }
+      var __bs=bookState(bookId);
+      if(__mine && __mine.ihyang_score!=null){
+        if(__bs.ihyangScore!==__mine.ihyang_score){ __bs.ihyangScore=__mine.ihyang_score; __bs.ihyangPct=__mine.ihyang_pct; __bs.ihyangIs=(__mine.ihyang_score>=188); setBookState(bookId,__bs); }
+      } else if(__bs.ihyangScore!=null){ /* DB 에 점수 없으면(초기화 등) 로컬도 비움 */ delete __bs.ihyangScore; delete __bs.ihyangPct; delete __bs.ihyangIs; setBookState(bookId,__bs); }
+    }
     var members=(mb.data||[]).slice().sort(function(a,b){return a.phone4<b.phone4?-1:1;});
     var ansMap={};(an.data||[]).forEach(function(a){(ansMap[a.phone4]=ansMap[a.phone4]||{})[a.q_index]=a.body;});
     var others=members.filter(function(x){return x.phone4!==me;});
@@ -1993,21 +2002,14 @@ function onIhyangResult(d){
   if(!d||d.type!=='ihyang-result')return;
   var b=STATE.bookId?bookById(STATE.bookId):null; if(!b)return;
   var bs=bookState(b.id);
+  /* 점수는 '박스(카드)' 자체로만 저장 — 답변 텍스트칸에는 쓰지 않음. */
   bs.ihyangScore=d.score; bs.ihyangPct=d.pct; bs.ihyangIs=!!d.isIhyang;
-  var qi=ihyangScoreQIndex(b);
-  if(qi>=0){
-    bs.answers=bs.answers||[];
-    var line='[이향인 테스트] '+d.score+'/280 ('+d.pct+'%) — '+(d.isIhyang?'이향인':'이향인 아님');
-    var cur=(bs.answers[qi]||'');
-    if(cur.indexOf('[이향인 테스트]')<0) bs.answers[qi]=line+(cur.trim()?'\n\n'+cur:'\n\n');
-    else bs.answers[qi]=cur.replace(/\[이향인 테스트\][^\n]*/,line);
-  }
   setBookState(b.id,bs);
   if(ONLINE&&STATE.phone4){
     try{ sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:nickFor(STATE.phone4,b.id),ihyang_score:d.score,ihyang_pct:d.pct},{onConflict:'book_id,phone4'}).then(function(){},function(){}); }catch(e){}
   }
   closeIhyangTest();
-  toast('점수 저장: '+d.score+'점 ('+(d.isIhyang?'이향인':'이향인 아님')+')');
+  toast('점수 기록: '+d.score+'점 ('+(d.isIhyang?'이향인':'이향인 아님')+')');
   if(STATE.page==='discussion') renderDiscussion();
 }
 window.addEventListener('message',function(ev){ try{ onIhyangResult(ev.data); }catch(e){} });
