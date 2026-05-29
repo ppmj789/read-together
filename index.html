@@ -969,8 +969,13 @@ var RT={
       var j=idxOf[c.target_phone4];if(j===undefined)return;
       var k='q'+c.q_index+'a'+j;(myCmt[k]=myCmt[k]||[]).push({id:c.id,t:c.body});
     });
+    /* 내 답변에 '남이' 남긴 댓글(받은 댓글함) + 내 답변에 달린 공감 수 (q_index 별) */
+    var myInbox={},myReact={};
+    (cm.data||[]).forEach(function(c){ if(c.target_phone4===me && c.author_phone4!==me){ (myInbox[c.q_index]=myInbox[c.q_index]||[]).push({by:c.author_nick||'익명',t:c.body}); } });
+    (rx.data||[]).forEach(function(x){ if(x.target_phone4===me) myReact[x.q_index]=(myReact[x.q_index]||0)+1; });
     var myScore=(myMb&&myMb.ihyang_score!=null)?myMb.ihyang_score:null;
     NETSTORE[bookId]={answers:myAns,submitted:myMb?!!myMb.submitted:false,ratings:(myMb&&myMb.ratings)||{},comments:myCmt,
+      inbox:myInbox,myReact:myReact,
       ihyangScore:myScore,ihyangPct:(myMb&&myMb.ihyang_pct!=null)?myMb.ihyang_pct:null,ihyangIs:(myScore!=null)?(myScore>=188):false};
   },
   async toggleReaction(bookId,qi,targetPhone4){
@@ -992,6 +997,16 @@ var RT={
     var rows=answers.map(function(t,qi){return {book_id:bookId,phone4:STATE.phone4,q_index:qi,body:t};});
     var e1=(await sb.from('answer').upsert(rows,{onConflict:'book_id,phone4,q_index'})).error;
     var e2=(await sb.from('member_book').upsert({book_id:bookId,phone4:STATE.phone4,nickname:nick,submitted:true},{onConflict:'book_id,phone4'})).error;
+    if(e1||e2){rtErr(e1||e2);return false;}
+    await RT.loadBook(bookId);return true;
+  },
+  async saveDraft(bookId,answers){
+    /* 임시저장 — 답변만 upsert, submitted 는 건드리지 않음(미제출 상태 유지). 빈 칸은 저장 안 함. */
+    var nick=nickFor(STATE.phone4,bookId);
+    var rows=[];
+    answers.forEach(function(t,qi){ if(t&&t.trim()) rows.push({book_id:bookId,phone4:STATE.phone4,q_index:qi,body:t}); });
+    var e1=rows.length?(await sb.from('answer').upsert(rows,{onConflict:'book_id,phone4,q_index'})).error:null;
+    var e2=(await sb.from('member_book').upsert({book_id:bookId,phone4:STATE.phone4,nickname:nick},{onConflict:'book_id,phone4'})).error;
     if(e1||e2){rtErr(e1||e2);return false;}
     await RT.loadBook(bookId);return true;
   },
@@ -1953,11 +1968,13 @@ function ihyangBlockHtml(b,bs){
       '<div class="ihyang-sub">기준 188점 '+(bs.ihyangIs?'이상':'미만')+' — 이 점수에 동의하나요? 아래에 생각을 적어주세요.</div>'+
     '</div>';
   }
-  return '<div class="ihyang-box">'+v+
+  var guide=(bs&&!bs.submitted)?'<p class="body-2" style="font-size:12px;color:var(--accent);margin-bottom:8px">⚠️ 테스트를 시작하기 전에, 작성 중인 답변이 사라지지 않도록 맨 아래 <b>[💾 임시저장]</b>을 먼저 눌러주세요.</p>':'';
+  return '<div class="ihyang-box">'+v+guide+
     '<button type="button" class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="openIhyangTest()">'+(has?'↺ 테스트 다시 하기':'▶ 이향인 테스트 하고 점수 받기')+'</button>'+
   '</div>';
 }
 function openIhyangTest(){
+  captureAnswersLocal(); /* 테스트 모달 후 재렌더로 미저장 답변이 날아가지 않게 로컬 보존 */
   var m=document.getElementById('ihyang-modal');
   if(!m){
     m=document.createElement('div');m.id='ihyang-modal';m.className='tmodal';
@@ -1968,6 +1985,31 @@ function openIhyangTest(){
   m.style.display='flex';
 }
 function closeIhyangTest(){var m=document.getElementById('ihyang-modal');if(m)m.style.display='none';}
+/* 현재 화면의 답변 textarea 값을 로컬 상태에 보존(미저장 유실 방지). */
+function captureAnswersLocal(){
+  var b=STATE.bookId?bookById(STATE.bookId):null; if(!b)return;
+  var bs=bookState(b.id); bs.answers=bs.answers||[];
+  b.questions.forEach(function(q,i){
+    var el=document.getElementById('ans-'+i)||document.getElementById('ea-'+i);
+    if(el) bs.answers[i]=(el.value||'').trim();
+  });
+  setBookState(b.id,bs);
+}
+/* 임시저장 — 제출(submitted) 없이 답변만 저장. 다 채우지 않아도 됨. */
+async function saveDraft(){
+  if(closedGuard())return;
+  var b=bookById(STATE.bookId); if(!b)return; var bs=bookState(b.id); bs.answers=bs.answers||[];
+  var vals=[];
+  b.questions.forEach(function(q,i){
+    var el=document.getElementById('ans-'+i)||document.getElementById('ea-'+i);
+    var t=el?(el.value||'').trim():(bs.answers[i]||'');
+    bs.answers[i]=t; vals[i]=t;
+  });
+  if(ONLINE){ if(!(await RT.saveDraft(b.id,vals))) return; }
+  else { setBookState(b.id,bs); }
+  toast('임시저장됐어요 — 제출 전까지 이어서 작성할 수 있어요');
+  renderDiscussion();
+}
 function onIhyangResult(d){
   if(!d||d.type!=='ihyang-result')return;
   var b=STATE.bookId?bookById(STATE.bookId):null; if(!b)return;
@@ -2041,7 +2083,8 @@ function renderDiscussion(){
             '<textarea class="input" id="ans-'+i+'" rows="3" placeholder="'+(__sq?'이 점수에 동의하나요? 어떻게 생각하세요?':'내 생각을 적어주세요')+'">'+esc(bs.answers[i]||'')+'</textarea>'+
           '</div>';
         });
-        h+='<button class="btn btn-primary btn-pill" onclick="submitAnswers()">답변 제출하기</button>';
+        h+='<div class="row"><button class="btn btn-ghost btn-pill" style="flex:1" onclick="saveDraft()">💾 임시저장</button>'+
+           '<button class="btn btn-primary btn-pill" style="flex:1" onclick="submitAnswers()">답변 제출하기</button></div>';
       }
     } else {
       h+='<p class="body-2 mb-16">'+(b.closed?'마감된 책이에요 — 내 기록을 다시 볼 수 있어요. 부끄러우면 우상단 <b style="color:var(--ink)">×</b> 로 삭제하세요.':'답변 제출 완료! 위 탭에서 <b style="color:var(--ink)">다른 사람의 답변</b>·<b style="color:var(--ink)">별점</b>을 확인하세요.')+'</p>';
@@ -2082,6 +2125,22 @@ function renderDiscussion(){
       var oas=(b.others[i]||[]);if(oas.length)hasOthers=true;
       h+='<div class="sheet"><div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
         '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>';
+      /* 내 답변 + 내 답변에 달린 댓글(누가 달았는지) — 읽기 전용 */
+      var myA=(bs.answers[i]||'').trim();
+      if(bs.submitted && myA){
+        var inbox=(bs.inbox&&bs.inbox[i])||[];
+        var myrc=(bs.myReact&&bs.myReact[i])||0;
+        h+='<div class="answer mine"><div class="answer__who"><span><b>내 답변 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>나 · 💛 '+myrc+'</span></div>'+
+          '<div class="answer__body">'+esc(myA)+'</div>';
+        if(inbox.length){
+          h+='<div class="comment-box"><div style="font-size:12px;color:var(--ink-dim);margin-bottom:6px">💬 내 답변에 달린 댓글 '+inbox.length+'개</div><div class="comment-list">';
+          inbox.forEach(function(c){ h+='<div class="comment"><b>'+esc(c.by)+'</b> '+esc(c.t)+'</div>'; });
+          h+='</div></div>';
+        } else {
+          h+='<div class="dim" style="font-size:12px;margin-top:6px">아직 내 답변에 달린 댓글이 없어요.</div>';
+        }
+        h+='</div>';
+      }
       if(!oas.length) h+='<div class="dim" style="font-size:13px">아직 다른 답변이 없어요.</div>';
       oas.forEach(function(o,j){
         var ck='q'+i+'a'+j, list=(bs.comments[ck]||[]);
