@@ -954,15 +954,6 @@ var RT={
     if(mb.error||an.error||cm.error||rx.error){rtErr(mb.error||an.error||cm.error||rx.error);return;}
     var bk=bookById(bookId);if(!bk)return;
     var me=STATE.phone4;
-    /* 내 이향인 점수(DB) → 로컬 bookState 에 반영. 점수 카드가 답변 텍스트가 아닌 DB 기준으로 고정 표시되도록. */
-    if(me){
-      var __mine=null,__md=mb.data||[];
-      for(var __i=0;__i<__md.length;__i++){ if(__md[__i].phone4===me){ __mine=__md[__i]; break; } }
-      var __bs=bookState(bookId);
-      if(__mine && __mine.ihyang_score!=null){
-        if(__bs.ihyangScore!==__mine.ihyang_score){ __bs.ihyangScore=__mine.ihyang_score; __bs.ihyangPct=__mine.ihyang_pct; __bs.ihyangIs=(__mine.ihyang_score>=188); setBookState(bookId,__bs); }
-      } else if(__bs.ihyangScore!=null){ /* DB 에 점수 없으면(초기화 등) 로컬도 비움 */ delete __bs.ihyangScore; delete __bs.ihyangPct; delete __bs.ihyangIs; setBookState(bookId,__bs); }
-    }
     var members=(mb.data||[]).slice().sort(function(a,b){return a.phone4<b.phone4?-1:1;});
     var ansMap={};(an.data||[]).forEach(function(a){(ansMap[a.phone4]=ansMap[a.phone4]||{})[a.q_index]=a.body;});
     var others=members.filter(function(x){return x.phone4!==me;});
@@ -1002,7 +993,9 @@ var RT={
       var j=idxOf[c.target_phone4];if(j===undefined)return;
       var k='q'+c.q_index+'a'+j;(myCmt[k]=myCmt[k]||[]).push({id:c.id,t:c.body});
     });
-    NETSTORE[bookId]={answers:myAns,submitted:myMb?!!myMb.submitted:false,ratings:(myMb&&myMb.ratings)||{},comments:myCmt};
+    var myScore=(myMb&&myMb.ihyang_score!=null)?myMb.ihyang_score:null;
+    NETSTORE[bookId]={answers:myAns,submitted:myMb?!!myMb.submitted:false,ratings:(myMb&&myMb.ratings)||{},comments:myCmt,
+      ihyangScore:myScore,ihyangPct:(myMb&&myMb.ihyang_pct!=null)?myMb.ihyang_pct:null,ihyangIs:(myScore!=null)?(myScore>=188):false};
   },
   async toggleReaction(bookId,qi,targetPhone4){
     if(!STATE.phone4){toast('휴대폰 4자리로 입장해야 공감할 수 있어요');return false;}
@@ -1992,7 +1985,7 @@ function openIhyangTest(){
   if(!m){
     m=document.createElement('div');m.id='ihyang-modal';m.className='tmodal';
     m.innerHTML='<div class="tmodal__bar"><span>이향인 테스트 · 40문항</span><button type="button" onclick="closeIhyangTest()">✕ 닫기</button></div>'+
-      '<iframe class="tmodal__frame" src="ihyang-test.html" title="이향인 테스트"></iframe>';
+      '<iframe class="tmodal__frame" src="ihyang-test.html?v=3" title="이향인 테스트"></iframe>';
     document.body.appendChild(m);
   }
   m.style.display='flex';
