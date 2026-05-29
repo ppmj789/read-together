@@ -2033,19 +2033,23 @@ async function saveDraft(){
   toast('임시저장됐어요 — 제출 전까지 이어서 작성할 수 있어요');
   renderDiscussion();
 }
-function onIhyangResult(d){
+async function onIhyangResult(d){
   if(!d||d.type!=='ihyang-result')return;
   var b=STATE.bookId?bookById(STATE.bookId):null; if(!b)return;
-  var bs=bookState(b.id);
   /* 점수는 '박스(카드)' 자체로만 저장 — 답변 텍스트칸에는 쓰지 않음. */
-  bs.ihyangScore=d.score; bs.ihyangPct=d.pct; bs.ihyangIs=!!d.isIhyang;
-  setBookState(b.id,bs);
   if(ONLINE&&STATE.phone4){
-    try{ sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:nickFor(STATE.phone4,b.id),ihyang_score:d.score,ihyang_pct:d.pct},{onConflict:'book_id,phone4'}).then(function(){},function(){}); }catch(e){}
+    var e=null;
+    try{ e=(await sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:nickFor(STATE.phone4,b.id),ihyang_score:d.score,ihyang_pct:d.pct},{onConflict:'book_id,phone4'})).error; }
+    catch(err){ e=err||true; }
+    if(e){ if(typeof rtErr==='function')rtErr(e); toast('점수 저장 실패 — 인터넷 확인 후 다시 [기록하기]를 눌러주세요'); return; }
+    /* 저장 확정 후 DB 기준으로 NETSTORE 갱신 (loadBook 레이스 방지) */
+    try{ await RT.loadBook(b.id); }catch(err){}
+  } else {
+    var bs=bookState(b.id); bs.ihyangScore=d.score; bs.ihyangPct=d.pct; bs.ihyangIs=!!d.isIhyang; setBookState(b.id,bs);
   }
-  closeIhyangTest();
-  toast('점수 기록: '+d.score+'점 ('+(d.isIhyang?'이향인':'이향인 아님')+')');
-  if(STATE.page==='discussion') renderDiscussion();
+  hideIhyangModal();
+  toast('✅ 점수 기록 완료: '+d.score+'점 ('+(d.isIhyang?'이향인':'이향인 아님')+')');
+  if(STATE.page==='discussion') renderDiscussion(); else if(STATE.page==='book') renderBook();
 }
 window.addEventListener('message',function(ev){ try{ onIhyangResult(ev.data); }catch(e){} });
 
