@@ -662,26 +662,7 @@ var SEASON={
        '이방인이 된 경험이 있나요? 그때 무엇을 느꼈나요?',
        '이 책을 읽고 바꾸고 싶은 생각이나 행동이 있나요?'
      ],
-     others:[
-       [
-         {n:'꿈꾸는 해파리',a:'처음 외국에 갔을 때, 아무것도 아닌 사람이 된 느낌이었어요. 그런데 그게 자유였다는 걸 나중에야 알았죠.'},
-         {n:'빛나는 알파카',a:'이방인이 아닌 사람이 있을까요? 우리는 모두 어딘가에서는 이방인이에요.'},
-         {n:'배고픈 판다',a:'저는 회사에서도 이방인이고 집에서도 이방인이에요. 냉장고 앞에서만 소속감을 느낍니다 ㅋㅋ'},
-         {n:'용감한 두부',a:'소속감을 버리니까 오히려 진짜 연결이 생기더라고요. 역설적이지만요.'}
-       ],
-       [
-         {n:'꿈꾸는 해파리',a:'전학을 자주 다녀서 어느 교실에서도 늘 새 사람이었어요. 관찰자가 되는 법을 일찍 배웠죠.'},
-         {n:'빛나는 알파카',a:'타지에서 명절을 혼자 보낸 적이 있어요. 외로움이 아니라 묘한 해방감이 들어 스스로 놀랐어요.'},
-         {n:'배고픈 판다',a:'이직 첫 주, 회의에서 다들 웃는 농담을 나만 못 알아들었을 때요.'},
-         {n:'용감한 두부',a:'군대에서요. 거기선 한동안 모두가 이방인이잖아요.'}
-       ],
-       [
-         {n:'꿈꾸는 해파리',a:'억지로 섞이려는 노력을 줄이려고요. 거리감을 결핍이 아니라 시야로 보기로.'},
-         {n:'빛나는 알파카',a:"내가 어디 '소속'인지로 나를 설명하던 습관을 바꾸고 싶어요."},
-         {n:'배고픈 판다',a:'남의 무리를 부러워하는 시간을 줄이고 내 리듬을 지키기.'},
-         {n:'용감한 두부',a:'혼자인 시간을 결핍이 아니라 회복으로 부르기로 했어요.'}
-       ]
-     ]},
+     others:[[],[],[]]},
     {id:'hailmary',month:'7월',status:'upcoming',title:'프로젝트 헤일메리',author:'앤디 위어',spine:'헤',
      angle:'연결 — 다른 존재와의 협력·이타심',
      tagline:'전혀 다른 존재와 손잡을 때, 인류의 마지막 임무가 시작된다',
@@ -2490,18 +2471,9 @@ function cmtCount(p,qi){
   if(STATE.phone4){var bs=bookState(STAGE.bookId),uk='q'+qi+'a'+p.idx;c+=((bs.comments&&bs.comments[uk])||[]).length;}
   return c;
 }
-var STAGE_RATINGS={
-  '꿈꾸는 해파리':{length:4,difficulty:5,fun:3,novelty:5,overall:4,empathy:9},
-  '빛나는 알파카':{length:3,difficulty:4,fun:2,novelty:5,overall:3,empathy:5},
-  '배고픈 판다':{length:2,difficulty:3,fun:5,novelty:3,overall:3,empathy:7},
-  '용감한 두부':{length:5,difficulty:4,fun:4,novelty:4,overall:4,empathy:6}
-};
-var STAGE_COMMENTS={
-  'q0|꿈꾸는 해파리':[{by:'배고픈 판다',t:'그 자유, 저도 뒤늦게 알았어요'}],
-  'q0|배고픈 판다':[{by:'용감한 두부',t:'냉장고 소속감 ㅋㅋ 너무 공감'}],
-  'q1|빛나는 알파카':[{by:'꿈꾸는 해파리',t:'그 해방감, 어떤 순간이었는지 더 듣고 싶어요'}],
-  'q2|용감한 두부':[{by:'빛나는 알파카',t:"'회복'이라는 단어가 마음에 남네요"}]
-};
+/* 발표모드 표본 — loadBook 이 DB 값으로 덮어씀(STAGE_RATINGS=SR; STAGE_COMMENTS=SC). 초기값은 빈 객체. */
+var STAGE_RATINGS={};
+var STAGE_COMMENTS={};
 function axisLabel(k){for(var i=0;i<RATING_AXES.length;i++){if(RATING_AXES[i].k===k)return RATING_AXES[i].label;}return k;}
 function starStr(v){var s='';for(var i=1;i<=5;i++)s+=(i<=v?'★':'<span class="off">★</span>');return s;}
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
