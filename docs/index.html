@@ -613,13 +613,8 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <div class="scene" id="scene-highlights">
   <div class="scene-highlights__layout">
     <h2 class="scene-highlights__title">오늘의 하이라이트</h2>
-    <div class="scene-highlights__grid">
-      <div class="highlight-card"><div class="highlight-card__emoji">&#128155;</div><div class="highlight-card__label">가장 많은 공감</div><div class="highlight-card__quote">"처음 외국에 갔을 때, 아무것도 아닌 사람이 된 느낌이었어요. 그런데 그게 자유였다는 걸 나중에야 알았죠."</div><div class="highlight-card__who">&mdash; 꿈꾸는 해파리</div></div>
-      <div class="highlight-card"><div class="highlight-card__emoji">&#10024;</div><div class="highlight-card__label">가장 새로운 시각</div><div class="highlight-card__quote">"이방인이 아닌 사람이 있을까요? 우리는 모두 어딘가에서는 이방인이에요."</div><div class="highlight-card__who">&mdash; 빛나는 알파카</div></div>
-      <div class="highlight-card"><div class="highlight-card__emoji">&#128516;</div><div class="highlight-card__label">가장 재밌었던 답변</div><div class="highlight-card__quote">"저는 회사에서도 이방인이고 집에서도 이방인이에요. 냉장고 앞에서만 소속감을 느낍니다."</div><div class="highlight-card__who">&mdash; 배고픈 판다</div></div>
-      <div class="highlight-card"><div class="highlight-card__emoji">&#128066;</div><div class="highlight-card__label">더 듣고 싶은 이야기</div><div class="highlight-card__quote">"소속감을 버리니까 오히려 진짜 연결이 생기더라고요. 역설적이지만요."</div><div class="highlight-card__who">&mdash; 용감한 두부</div></div>
-    </div>
-    <div class="scene-highlights__footer"><span class="tag tag-accent">총 답변 13개</span><span class="tag">반응 47개</span><span class="tag">참가자 5명</span></div>
+    <div class="scene-highlights__grid" id="stage-highlights-grid"></div>
+    <div class="scene-highlights__footer" id="stage-highlights-footer"></div>
   </div>
 </div>
 
@@ -1546,7 +1541,7 @@ async function startShare(bookId){
   STAGE.bookId=bookId;STAGE.order=[];STAGE.pickedName=null;
   if(ONLINE){try{await RT.loadBook(bookId);}catch(e){rtErr(e);}}
   setStage(true);
-  renderStageRoadmap();renderStageRating();renderStageLive();
+  renderStageRoadmap();renderStageRating();renderStageLive();renderStageHighlights();
   toast('발표를 시작합니다');
 }
 function exitStage(){setStage(false);}
@@ -1559,6 +1554,7 @@ function showStageScene(name){
   if(name==='roadmap') renderStageRoadmap();
   else if(name==='analysis') renderStageRating();
   else if(name==='live') renderStageLive();
+  else if(name==='highlights') renderStageHighlights();
 }
 
 /* ═══════════ RENDER: 시즌 포탈 ═══════════ */
@@ -2573,6 +2569,39 @@ function renderStageLive(){
   orderEl.innerHTML=ol;
   renderPickCard();
 }
+function renderStageHighlights(){
+  var grid=document.getElementById('stage-highlights-grid');
+  var foot=document.getElementById('stage-highlights-footer');
+  var b=bookById(STAGE.bookId);
+  var items=[],totalAns=0,totalRx=0;
+  if(b&&b.others){
+    b.questions.forEach(function(q,qi){
+      (b.others[qi]||[]).forEach(function(o,idx){
+        var a=(o.a||'').trim();if(!a)return;
+        totalAns++;
+        var rc=(b.reactions&&b.reactions['q'+qi+'a'+idx])?(b.reactions['q'+qi+'a'+idx].count||0):0;
+        totalRx+=rc;
+        var cc=(STAGE_COMMENTS['q'+qi+'|'+o.n]||[]).length;
+        items.push({n:o.n,a:a,rc:rc,cc:cc});
+      });
+    });
+  }
+  var nPart=stageParts().length+((STATE.phone4&&bookState(STAGE.bookId).submitted)?1:0);
+  if(foot)foot.innerHTML='<span class="tag tag-accent">총 답변 '+totalAns+'개</span><span class="tag">반응 '+totalRx+'개</span><span class="tag">참가자 '+nPart+'명</span>';
+  if(!grid)return;
+  if(!items.length){grid.innerHTML='<div class="sl-empty" style="grid-column:1/-1">아직 하이라이트가 없어요 — 답변과 공감(💛)이 쌓이면 여기에 표시됩니다.</div>';return;}
+  function card(emoji,label,it){return '<div class="highlight-card"><div class="highlight-card__emoji">'+emoji+'</div><div class="highlight-card__label">'+esc(label)+'</div><div class="highlight-card__quote">"'+esc(it.a)+'"</div><div class="highlight-card__who">&mdash; '+esc(it.n)+(it.rc?' · 공감 '+it.rc:'')+(it.cc?' · 댓글 '+it.cc:'')+'</div></div>';}
+  var byRx=items.slice().sort(function(x,y){return (y.rc-x.rc)||(y.cc-x.cc);});
+  var byCc=items.slice().sort(function(x,y){return (y.cc-x.cc)||(y.rc-x.rc);});
+  var used=[],cards=[];
+  function pick(arr,cond){for(var i=0;i<arr.length;i++){if(used.indexOf(arr[i])<0&&cond(arr[i]))return arr[i];}return null;}
+  var topRx=pick(byRx,function(it){return it.rc>0;});
+  if(topRx){used.push(topRx);cards.push(card('💛','가장 많은 공감',topRx));}
+  var topCc=pick(byCc,function(it){return it.cc>0;});
+  if(topCc){used.push(topCc);cards.push(card('💬','이야기가 이어진 답변',topCc));}
+  for(var i=0;i<byRx.length&&cards.length<4;i++){if(used.indexOf(byRx[i])<0){used.push(byRx[i]);cards.push(card('✨','오늘의 답변',byRx[i]));}}
+  grid.innerHTML=cards.join('');
+}
 function stageSetAxis(k){STAGE.axis=k;renderStageLive();}
 function stageSetQ(i){STAGE.q=i;STAGE.pickedName=null;renderStageLive();}
 function stageReshuffle(){STAGE.order=shuffle(stageParts().map(function(p){return p.name;}));STAGE.pickedName=null;renderStageLive();toast('발언 순서를 새로 섞었어요');}
@@ -2625,7 +2654,7 @@ function stagePick(opt){
     }
   },60);
 }
-function renderStageAll(){STAGE.bookId=currentBookId();STAGE.q=0;STAGE.order=[];STAGE.pickedName=null;renderStageRoadmap();renderStageRating();renderStageLive();}
+function renderStageAll(){STAGE.bookId=currentBookId();STAGE.q=0;STAGE.order=[];STAGE.pickedName=null;renderStageRoadmap();renderStageRating();renderStageLive();renderStageHighlights();}
 
 /* ── 브라우저 뒤로가기 = 앱 내 이전 화면 ── */
 async function onPop(ev){
