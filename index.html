@@ -923,7 +923,9 @@ var RT={
     });
   },
   async loadBook(bookId){
-    var mb=await sb.from('member_book').select('phone4,nickname,submitted,ratings,ihyang_score,ihyang_pct').eq('book_id',bookId);
+    var mb=await sb.from('member_book').select('phone4,nickname,submitted,ratings,meta').eq('book_id',bookId);
+    /* meta 컬럼 미적용(마이그레이션 전) 환경에서도 동작 — 컬럼 없으면 meta 빼고 재조회 */
+    if(mb.error&&/meta/.test((mb.error.message||'')+(mb.error.details||''))){ mb=await sb.from('member_book').select('phone4,nickname,submitted,ratings').eq('book_id',bookId); }
     var an=await sb.from('answer').select('phone4,q_index,body').eq('book_id',bookId);
     var cm=await sb.from('comment').select('id,q_index,target_phone4,author_phone4,author_nick,body').eq('book_id',bookId);
     var rx=await sb.from('reaction').select('q_index,target_phone4,author_phone4').eq('book_id',bookId);
@@ -951,7 +953,9 @@ var RT={
       bk.reactions['q'+qi+'a'+j]={count:rcCount[key]||0,mine:!!rcMine[key]};
     }); });
     var SR={},SC={};
-    members.forEach(function(o){var rr=o.ratings||{};SR[o.nickname]={length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0,empathy:empByNick[o.nickname]||0};});
+    /* 이향인 점수는 SR(STAGE_RATINGS)에만 실어 발표 모드에서만 공개. b.others 엔 넣지 않음
+     * → '③ 다른 사람의 답변'(댓글 화면)에는 절대 노출되지 않음. */
+    members.forEach(function(o){var rr=o.ratings||{};var im=((o.meta||{}).ihyang)||null;SR[o.nickname]={length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0,empathy:empByNick[o.nickname]||0,ihyangScore:im?im.score:null,ihyangPct:im?im.pct:null,ihyangIs:im?!!im.is:null};});
     /* allRatings — 답변 페이지의 [모두의 별점] 통계용. phone4 단위로 보관(닉네임 변경 안전).
      * 자기 자신 포함 모든 member_book row. 한 항목이라도 0보다 큰 사용자만 통계 대상. */
     bk.allRatings=members.map(function(o){var rr=o.ratings||{};return {phone4:o.phone4,nickname:o.nickname,length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0};});
@@ -973,10 +977,12 @@ var RT={
     var myInbox={},myReact={};
     (cm.data||[]).forEach(function(c){ if(c.target_phone4===me && c.author_phone4!==me){ (myInbox[c.q_index]=myInbox[c.q_index]||[]).push({by:c.author_nick||'익명',t:c.body}); } });
     (rx.data||[]).forEach(function(x){ if(x.target_phone4===me) myReact[x.q_index]=(myReact[x.q_index]||0)+1; });
-    var myScore=(myMb&&myMb.ihyang_score!=null)?myMb.ihyang_score:null;
+    var myMeta=(myMb&&myMb.meta)||{};
+    var myIy=myMeta.ihyang||null;
+    var myScore=myIy?myIy.score:null;
     NETSTORE[bookId]={answers:myAns,submitted:myMb?!!myMb.submitted:false,ratings:(myMb&&myMb.ratings)||{},comments:myCmt,
       inbox:myInbox,myReact:myReact,
-      ihyangScore:myScore,ihyangPct:(myMb&&myMb.ihyang_pct!=null)?myMb.ihyang_pct:null,ihyangIs:(myScore!=null)?(myScore>=188):false};
+      ihyangScore:myScore,ihyangPct:myIy?myIy.pct:null,ihyangIs:myIy?!!myIy.is:(myScore!=null?myScore>=188:false),ihyangMeta:myMeta};
   },
   async toggleReaction(bookId,qi,targetPhone4){
     if(!STATE.phone4){toast('휴대폰 4자리로 입장해야 공감할 수 있어요');return false;}
@@ -2039,13 +2045,21 @@ async function onIhyangResult(d){
   /* 점수는 '박스(카드)' 자체로만 저장 — 답변 텍스트칸에는 쓰지 않음. */
   if(ONLINE&&STATE.phone4){
     var e=null;
-    try{ e=(await sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:nickFor(STATE.phone4,b.id),ihyang_score:d.score,ihyang_pct:d.pct},{onConflict:'book_id,phone4'})).error; }
+    /* 기존 meta 를 보존하며 ihyang 키만 갱신(다른 책/테스트 데이터 유지). */
+    var prevMeta=(bookState(b.id)||{}).ihyangMeta||{};
+    var newMeta=Object.assign({},prevMeta,{ihyang:{score:d.score,pct:d.pct,is:!!d.isIhyang}});
+    try{ e=(await sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:nickFor(STATE.phone4,b.id),meta:newMeta},{onConflict:'book_id,phone4'})).error; }
     catch(err){ e=err||true; }
+    /* meta 컬럼 미적용 환경 → v14 전용 컬럼으로 best-effort 폴백 */
+    if(e&&/meta/.test((e.message||'')+(e.details||''))){
+      try{ e=(await sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:nickFor(STATE.phone4,b.id),ihyang_score:d.score,ihyang_pct:d.pct},{onConflict:'book_id,phone4'})).error; }
+      catch(err){ e=err||true; }
+    }
     if(e){ if(typeof rtErr==='function')rtErr(e); toast('점수 저장 실패 — 인터넷 확인 후 다시 [기록하기]를 눌러주세요'); return; }
     /* 저장 확정 후 DB 기준으로 NETSTORE 갱신 (loadBook 레이스 방지) */
     try{ await RT.loadBook(b.id); }catch(err){}
   } else {
-    var bs=bookState(b.id); bs.ihyangScore=d.score; bs.ihyangPct=d.pct; bs.ihyangIs=!!d.isIhyang; setBookState(b.id,bs);
+    var bs=bookState(b.id); bs.ihyangScore=d.score; bs.ihyangPct=d.pct; bs.ihyangIs=!!d.isIhyang; bs.ihyangMeta=Object.assign({},bs.ihyangMeta||{},{ihyang:{score:d.score,pct:d.pct,is:!!d.isIhyang}}); setBookState(b.id,bs);
   }
   hideIhyangModal();
   toast('✅ 점수 기록 완료: '+d.score+'점 ('+(d.isIhyang?'이향인':'이향인 아님')+')');
@@ -2707,7 +2721,10 @@ function renderPickCard(){
     '<div class="sl-pick-card__chips"><span class="sl-chip hot">'+esc(crit)+'</span>'+
     '<span class="sl-chip">댓글 '+cmtCount(p,qi)+'</span>'+
     '<span class="sl-chip">'+esc(axisLabel(STAGE.axis))+' '+p.r[STAGE.axis]+'★</span>'+
-    '<span class="sl-chip">공감 '+p.r.empathy+'</span></div>'+
+    '<span class="sl-chip">공감 '+p.r.empathy+'</span>'+
+    /* 이향인 점수는 발표 모드에서만 공개 */
+    ((p.r.ihyangScore!=null)?('<span class="sl-chip'+(p.r.ihyangIs?' hot':'')+'">'+(p.r.ihyangIs?'🌙 이향인 ':'내향성 ')+esc(String(p.r.ihyangScore))+'점·'+esc(String(p.r.ihyangPct))+'%</span>'):'')+
+    '</div>'+
     '<div class="sl-qa"><div class="scene-q__eye" style="margin:0 0 8px">Q'+(qi+1)+' · '+esc((b.questions||[])[qi]||'')+'</div>'+
     '<div class="sl-pick-card__ans">'+esc(p.answers[qi]||'(답변 없음)')+'</div>'+
     '<div class="sl-cmts"><div class="sl-cmts__hd">이 답변에 달린 댓글 · 모임 토론거리</div>'+
