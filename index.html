@@ -933,6 +933,14 @@ var RT={
     var bk=bookById(bookId);if(!bk)return;
     var me=STATE.phone4;
     var members=(mb.data||[]).slice().sort(function(a,b){return a.phone4<b.phone4?-1:1;});
+    /* 재로그인 닉네임 복구 — 로그아웃으로 로컬 rt:nick 이 비어도 서버에 저장된 내 닉네임을 다시 픽커 없이 쓰도록 hydrate.
+       이미 로컬에 있으면(=이번 세션에서 변경 중) 덮지 않는다. */
+    if(me){
+      var myRow=members.filter(function(x){return x.phone4===me;})[0];
+      if(myRow&&myRow.nickname&&!fixedNick(me,bookId)){
+        var nko=nkLoad();nko[me+'|'+bookId]=myRow.nickname;nkSave(nko);
+      }
+    }
     var ansMap={};(an.data||[]).forEach(function(a){(ansMap[a.phone4]=ansMap[a.phone4]||{})[a.q_index]=a.body;});
     var others=members.filter(function(x){return x.phone4!==me;});
     var idxOf={};others.forEach(function(o,j){idxOf[o.phone4]=j;});
