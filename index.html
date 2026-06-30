@@ -1165,9 +1165,10 @@ function go(name,nopush){
   window.scrollTo(0,0);
 }
 /* ── 세션 기억 (새로고침해도 있던 화면 복원) ── */
+var SESS_TTL=30*60*1000; /* 30분 무동작 시 로그인 자동 해제 */
 function sessSave(page){
   if(!STATE.phone4 && !STATE.isHost) return;
-  var s={p4:STATE.phone4,cid:STATE.clubId,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId,pg:page||''};
+  var s={p4:STATE.phone4,cid:STATE.clubId,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId,pg:page||'',ts:Date.now()};
   try{localStorage.setItem('rt:sess',JSON.stringify(s));}catch(e){MEM['rt:sess']=JSON.stringify(s);}
 }
 function sessRead(){
@@ -1190,15 +1191,32 @@ function syncAuthUI(){
   var loggedIn=!!(STATE.phone4||STATE.isHost);
   if(b) b.style.display=loggedIn?'inline-flex':'none';
 }
-function logout(){
+function logout(msg){
   if(isStage) setStage(false);
   clearAllLocal();
   STATE.phone4=null;STATE.bookId=null;STATE.clubId=null;STATE.meetingId=null;STATE.isHost=false;STATE.page=null;
   setNick();syncHostUI();syncAuthUI();
-  go('login');toast('로그아웃 — 이 기기의 임시 정보를 모두 비웠어요');
+  go('login');toast(msg||'로그아웃 — 이 기기의 임시 정보를 모두 비웠어요');
 }
+/* 세션 만료 여부 — 마지막 활동(ts)으로부터 SESS_TTL 초과 시 true */
+function sessExpired(s){ s=s||sessRead(); return !!(s&&s.ts&&(Date.now()-s.ts>SESS_TTL)); }
+/* 활동 감지 — 클릭·키·스크롤 시 만료 시각 갱신(30초 throttle). 로그인 상태에서만 동작. */
+var _lastTouch=0;
+function touchSession(){
+  if(!(STATE.phone4||STATE.isHost)) return;
+  var now=Date.now(); if(now-_lastTouch<30000) return; _lastTouch=now;
+  var s=sessRead(); if(!s) return; s.ts=now;
+  try{localStorage.setItem('rt:sess',JSON.stringify(s));}catch(e){MEM['rt:sess']=JSON.stringify(s);}
+}
+['click','keydown','scroll','touchstart','pointerdown'].forEach(function(ev){ document.addEventListener(ev,touchSession,{passive:true}); });
+/* 1분마다 무동작 만료 점검 — 탭을 열어둔 채 30분 방치해도 자동 로그아웃 */
+setInterval(function(){
+  if(!(STATE.phone4||STATE.isHost)) return;
+  if(sessExpired()) logout('30분 동안 활동이 없어 자동 로그아웃됐어요');
+},60*1000);
 async function sessRestore(){
   var s=sessRead(); if(!s||(!s.p4&&!s.host)) return false;
+  if(sessExpired(s)){ sessClear(); return false; }   /* 30분 경과 — 복원하지 않고 로그인 화면 */
   STATE.phone4=s.p4||null; STATE.clubId=s.cid||null; STATE.meetingId=s.mid||null; STATE.isHost=!!s.host; STATE.bookId=s.bid||null;
   if(ONLINE){ try{ await RT.loadClubs(); await RT.loadMeetings(); if(STATE.bookId) await RT.loadBook(STATE.bookId); }catch(e){ rtErr(e); } }
   setNick(); syncHostUI(); syncAuthUI();
