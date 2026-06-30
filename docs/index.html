@@ -817,6 +817,16 @@ function nickPickerHtml(b,opts){
     '</div>'+
     (opts.change?'<button class="btn btn-ghost btn-pill mt-12" onclick="cancelNickChange()">&larr; 변경 취소</button>':'');
 }
+/* 책 첫 진입 시 닉네임 자동 배정 — 픽커 강제 대신 결정론적 닉을 즉시 고정.
+   한번 정해지면 그대로 유지되고, 변경은 답변 페이지 [✏️ 변경] 버튼(startNickChange)으로만. */
+function ensureNick(){
+  if(!STATE.phone4||!STATE.bookId)return;
+  if(fixedNick(STATE.phone4,STATE.bookId))return;               /* 이미 정해졌으면 유지 */
+  var nm=nickFor(STATE.phone4,STATE.bookId);                    /* 책마다 고정인 해시 닉 */
+  var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=nm;nkSave(o); /* 로컬 즉시 고정(동기) */
+  /* 서버에도 비동기 반영 — 닉 충돌(드묾)은 조용히 무시하고 로컬 닉 유지(제출 시 재시도) */
+  if(ONLINE)sb.from('member_book').upsert({book_id:STATE.bookId,phone4:STATE.phone4,nickname:nm},{onConflict:'book_id,phone4'}).then(function(){},function(){});
+}
 function nickFor(phone4,bookId){
   var f=fixedNick(phone4,bookId); if(f) return f;
   var str=String(phone4)+'|'+bookId,h=0;
@@ -933,6 +943,14 @@ var RT={
     var bk=bookById(bookId);if(!bk)return;
     var me=STATE.phone4;
     var members=(mb.data||[]).slice().sort(function(a,b){return a.phone4<b.phone4?-1:1;});
+    /* 재로그인 닉네임 복구 — 로그아웃으로 로컬 rt:nick 이 비어도 서버에 저장된 내 닉네임을 다시 픽커 없이 쓰도록 hydrate.
+       이미 로컬에 있으면(=이번 세션에서 변경 중) 덮지 않는다. */
+    if(me){
+      var myRow=members.filter(function(x){return x.phone4===me;})[0];
+      if(myRow&&myRow.nickname&&!fixedNick(me,bookId)){
+        var nko=nkLoad();nko[me+'|'+bookId]=myRow.nickname;nkSave(nko);
+      }
+    }
     var ansMap={};(an.data||[]).forEach(function(a){(ansMap[a.phone4]=ansMap[a.phone4]||{})[a.q_index]=a.body;});
     var others=members.filter(function(x){return x.phone4!==me;});
     var idxOf={};others.forEach(function(o,j){idxOf[o.phone4]=j;});
@@ -1753,11 +1771,8 @@ async function delMeetingHost(){
 function renderBook(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
   var st=bookStatus(b),cur=(st==='open');
-  /* 닉네임 픽커는 참가자(=답변할 사람)에게만 필요. 모임장은 책 편집 진입 시 픽커 차단 — 답변 페이지 진입 시에만 닉네임 정함 */
-  if(STATE.phone4&&!STATE.isHost&&!fixedNick(STATE.phone4,STATE.bookId)){
-    document.getElementById('page-book').innerHTML=nickPickerHtml(b,{change:false});
-    return;
-  }
+  /* 닉네임은 책 첫 진입 시 자동 배정 후 유지 — 픽커 강제 X. 변경은 답변 페이지 [✏️ 변경] 버튼으로만. */
+  if(STATE.phone4&&!STATE.isHost)ensureNick();
   var h='<div class="section-hd"><div><div class="eyebrow">사전정보</div><h2 class="h-2 mt-4">모임 전에 워밍업!</h2></div></div>'+
    '<div class="cover" style="padding:24px 20px">'+
      '<div class="cover__top"><span>'+esc(b.title)+'</span><span>'+esc(b.month||'')+'</span></div>'+
@@ -2069,8 +2084,9 @@ window.addEventListener('message',function(ev){ try{ onIhyangResult(ev.data); }c
 
 function renderDiscussion(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
-  /* ── 닉네임 픽커 (답변할 사람만): nick 없거나 NICKMODE 면 픽커. 마감 책에선 강제 진입 X (NICKMODE는 정상 진입로만 활성) ── */
+  /* ── 닉네임: 참가자는 자동 배정(유지). 모임장 첫 답변 또는 [변경] 모드(NICKMODE)에서만 픽커 노출 ── */
   if(STATE.phone4){
+    if(!STATE.isHost)ensureNick();
     var hasNick=!!fixedNick(STATE.phone4,STATE.bookId);
     if(!hasNick || NICKMODE){
       document.getElementById('page-discussion').innerHTML=nickPickerHtml(b,{change:hasNick});
