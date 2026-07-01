@@ -152,8 +152,9 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .answer.mine{border-color:var(--accent);background:var(--accent-tint)}
 .answer__who{font-size:12px;color:var(--ink-dim);font-weight:500;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px}
 .answer__who b{font-weight:600;color:var(--ink-soft)}
-/* 우상단 × 삭제 버튼과 '제출됨' 라벨이 겹치지 않도록 who-row 오른쪽 여백 확보 */
-.answer.mine>.answer__who{padding-right:30px}
+/* 우상단 × 삭제 버튼(top8/right8/26px)과 '제출됨' 라벨이 겹치지 않도록
+   × 가 있는 카드(.has-x)의 who-row 오른쪽에 넉넉한 여백 확보 */
+.answer.has-x>.answer__who{padding-right:38px}
 .answer__body{font-size:15px;line-height:1.65;color:var(--ink);font-weight:500}
 
 /* Reaction */
@@ -2174,7 +2175,7 @@ function renderDiscussion(){
               (b.closed?'':'<br><button class="btn btn-ghost btn-sm btn-pill mt-12" style="width:auto" onclick="editAns('+i+')">다시 작성하기</button>')+
             '</div>';
         } else {
-          h+='<div class="answer mine" style="position:relative">'+
+          h+='<div class="answer mine'+(editing?'':' has-x')+'" style="position:relative">'+
             /* 우상단 × — 마감 여부와 무관하게 항상 노출. 클릭 시 confirm 후 삭제 (cascade) */
             (editing?'':'<button class="ans-x" title="이 답변과 딸린 댓글·공감 모두 삭제" onclick="delMyAnswer('+i+')">&times;</button>')+
             '<div class="answer__who"><span><b>나 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>'+(editing?'수정 중':'제출됨')+'</span></div>'+
