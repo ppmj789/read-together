@@ -150,8 +150,10 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 /* Answer */
 .answer{padding:16px;border:1px solid var(--rule-soft);border-radius:var(--radius-md);margin-bottom:10px;background:var(--paper)}
 .answer.mine{border-color:var(--accent);background:var(--accent-tint)}
-.answer__who{font-size:12px;color:var(--ink-dim);font-weight:500;margin-bottom:8px;display:flex;justify-content:space-between}
+.answer__who{font-size:12px;color:var(--ink-dim);font-weight:500;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px}
 .answer__who b{font-weight:600;color:var(--ink-soft)}
+/* 우상단 × 삭제 버튼과 '제출됨' 라벨이 겹치지 않도록 who-row 오른쪽 여백 확보 */
+.answer.mine>.answer__who{padding-right:30px}
 .answer__body{font-size:15px;line-height:1.65;color:var(--ink);font-weight:500}
 
 /* Reaction */
@@ -363,8 +365,20 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .stage-timer__controls .btn{width:auto;font-size:15px;padding:12px 24px;min-height:48px;font-weight:700;border-radius:var(--radius-pill)}
 .scene-live__speaker-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--rule-soft);width:100%}
 .scene-live__speaker-label{font-size:12px;font-weight:600;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.scene-live__speaker-name{font-family:var(--display);font-weight:900;font-size:clamp(24px,3vw,40px);line-height:1.1;color:var(--accent);margin-bottom:12px;transition:color .2s}
+.scene-live__speaker-name{font-family:var(--display);font-weight:900;font-size:clamp(44px,6.5vw,76px);line-height:1.05;color:var(--accent);margin-bottom:18px;transition:color .2s;letter-spacing:-.03em;min-height:1.05em}
 .scene-live__speaker-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+/* 진행탭 질문 선택 — 글자 키움 */
+.sl-qtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.sl-qtab{padding:9px 18px;border:1px solid var(--rule);background:var(--paper);border-radius:var(--radius-pill);font-size:16px;font-weight:700;cursor:pointer;color:var(--ink-soft);transition:all .2s}
+.sl-qtab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sl-qtext{font-size:17px;font-weight:700;line-height:1.5;color:var(--ink);margin:0 0 14px;word-break:keep-all}
+/* 발언 순서 — 이름 클릭 가능 */
+.sl-order li{cursor:pointer}
+.sl-order li:hover{border-color:var(--accent);background:var(--accent-tint)}
+/* AI 분석 별점 최고/최저 선정 → 진행탭 이동 */
+.sl-starpick{margin-top:14px;padding-top:14px;border-top:1px dashed var(--rule)}
+.sl-starpick__axes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px}
+.sl-starpick__acts{display:flex;gap:8px;flex-wrap:wrap}
 .scene-q__eye{font-size:13px;font-weight:600;color:var(--ink-dim);margin-bottom:14px;letter-spacing:.04em;text-transform:uppercase}
 
 .scene-analysis__layout{display:flex;flex-direction:column;gap:24px}
@@ -379,6 +393,10 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .kw{display:inline-block;padding:6px 14px;background:var(--accent-tint);color:var(--accent);border-radius:var(--radius-pill);font-weight:600;transition:transform .2s;cursor:default}
 .kw:hover{transform:scale(1.1)}
 .kw-sm{font-size:13px;opacity:.7}.kw-md{font-size:16px}.kw-lg{font-size:22px;font-weight:800;padding:8px 18px;background:var(--accent);color:#fff}
+.kw-has-tip{cursor:help;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.kw-tip{position:fixed;z-index:300;max-width:340px;display:none;background:var(--ink);color:var(--paper);padding:12px 14px;border-radius:10px;box-shadow:var(--shadow-lg);font-size:13px;line-height:1.55;pointer-events:none}
+.kw-tip__why{font-weight:700;margin-bottom:6px}
+.kw-tip__q{opacity:.85;font-style:italic}
 .analysis-bars{display:flex;flex-direction:column;gap:14px}
 .analysis-bar__label{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px}
 .analysis-bar__label span{font-weight:400;color:var(--ink-soft);font-size:13px}
@@ -563,7 +581,9 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
     <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요 &middot; 사람은 공감만, 분석은 AI</p></div>
     <div class="scene-analysis__grid">
       <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드</div><div class="analysis-keywords"><span class="kw kw-lg">경계</span><span class="kw kw-md">정체성</span><span class="kw kw-lg">이방인</span><span class="kw kw-sm">외로움</span><span class="kw kw-md">자유</span><span class="kw kw-sm">관찰자</span><span class="kw kw-md">소속감</span><span class="kw kw-sm">공감</span><span class="kw kw-lg">발견</span><span class="kw kw-sm">용기</span></div></div>
-      <div class="analysis-card"><div class="analysis-card__label">책 별점 분포 (익명 · 5점 만점)</div><div id="stage-rating-rows"></div></div>
+      <div class="analysis-card"><div class="analysis-card__label">책 별점 분포 (익명 · 5점 만점)</div><div id="stage-rating-rows"></div>
+        <div class="sl-starpick" id="analysis-star-pick"></div>
+      </div>
       <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 한줄 요약</div><div class="analysis-summary">"오늘 참가자들은 대부분 <b>경계인으로서의 외로움</b>에 공감하면서도, 그것이 오히려 <b>자기 발견의 계기</b>가 된다는 점에서 희망을 찾았습니다. 별점은 <b>참신함이 가장 높고 재미가 가장 낮게</b> 갈렸습니다 &mdash; 진행에서 가장 낮게/높게 준 분의 이유를 들어봅니다."</div></div>
     </div>
   </div>
@@ -572,36 +592,21 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 <div class="scene" id="scene-live">
   <div class="scene-live__layout">
     <div class="scene-live__left">
-      <div class="scene-timer__phase">답변 시간</div>
-      <div class="stage-timer" id="stage-timer-display">01:30</div>
-      <div class="stage-timer__label">남은 시간</div>
-      <div class="stage-timer__controls">
-        <button class="btn btn-primary" onclick="startTimer()">시작</button>
-        <button class="btn" onclick="stopTimer()">정지</button>
-        <button class="btn btn-ghost" onclick="resetTimer()">리셋</button>
+      <div class="scene-live__speaker-label" id="speaker-prompt">발언자를 뽑아보세요</div>
+      <div class="scene-live__speaker-name" id="stage-speaker-name">?</div>
+      <div class="sl-crit-row">
+        <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'random'})">🎲 무작위</button>
+        <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'empathy'})">💛 공감 최다</button>
+        <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'comments'})">💬 댓글 최다</button>
       </div>
-      <div class="sl-criteria">
-        <div class="scene-live__speaker-label" id="speaker-prompt">발언자 선정 기준을 고르세요</div>
-        <div class="scene-live__speaker-name" id="stage-speaker-name">?</div>
-        <div class="sl-crit-row">
-          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'random'})">무작위</button>
-          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'empathy'})">공감 최다</button>
-          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'comments'})">댓글 최다</button>
-        </div>
-        <div class="scene-live__speaker-label" style="margin:4px 0 0">별점 기준 — 항목 선택</div>
-        <div class="sl-crit-row" id="sl-axis-row"></div>
-        <div class="sl-crit-row">
-          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'rating',dir:'max'})">★ 최고로 준 사람</button>
-          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'rating',dir:'min'})">★ 최저로 준 사람</button>
-        </div>
-      </div>
+      <p class="body-2 dim" style="font-size:12.5px;margin-top:16px;line-height:1.6">별점을 <b>가장 높게/낮게 준 사람</b>은 이 질문과 무관하니,<br><b>[AI 분석]</b> 탭에서 항목을 골라 선정한 뒤 이곳으로 넘어와요.</p>
     </div>
     <div class="scene-live__right">
-      <div class="scene-live__speaker-label" style="margin:0 0 6px">질문 선택</div>
-      <div class="sl-crit-row" id="sl-qtabs" style="justify-content:flex-start;flex-wrap:wrap;margin-bottom:6px"></div>
-      <div class="scene-q__eye" id="sl-qtext" style="margin:0 0 12px"></div>
+      <div class="scene-live__speaker-label" style="margin:0 0 8px">질문 선택</div>
+      <div class="sl-qtabs" id="sl-qtabs"></div>
+      <div id="sl-qtext" class="sl-qtext"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <span class="scene-live__speaker-label" style="margin:0">발언 순서 (무작위)</span>
+        <span class="scene-live__speaker-label" style="margin:0">발언 순서 · <span style="color:var(--accent)">이름을 누르면 답변이 열려요</span></span>
         <button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="stageReshuffle()">순서 섞기</button>
       </div>
       <ol class="sl-order" id="sl-order"></ol>
@@ -827,8 +832,9 @@ function ensureNick(){
   /* 서버에도 비동기 반영 — 닉 충돌(드묾)은 조용히 무시하고 로컬 닉 유지(제출 시 재시도) */
   if(ONLINE)sb.from('member_book').upsert({book_id:STATE.bookId,phone4:STATE.phone4,nickname:nm},{onConflict:'book_id,phone4'}).then(function(){},function(){});
 }
+/* 닉네임 = 전화번호(+책) 결정론 해시. 표출 전용 — 저장값(옛 랜덤 닉)에 의존하지 않아
+   답변·댓글·공감 어디서나 같은 번호면 항상 같은 이름으로 보인다. 변경 불가. */
 function nickFor(phone4,bookId){
-  var f=fixedNick(phone4,bookId); if(f) return f;
   var str=String(phone4)+'|'+bookId,h=0;
   for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))>>>0;}
   return NICK_ADJ[h%NICK_ADJ.length]+' '+NICK_NOUN[Math.floor(h/NICK_ADJ.length)%NICK_NOUN.length];
@@ -955,15 +961,14 @@ var RT={
     var others=members.filter(function(x){return x.phone4!==me;});
     var idxOf={};others.forEach(function(o,j){idxOf[o.phone4]=j;});
     bk.others=bk.questions.map(function(_,qi){
-      return others.map(function(o){return {n:o.nickname,a:(ansMap[o.phone4]||{})[qi]||'',phone4:o.phone4};});
+      return others.map(function(o){return {n:nickFor(o.phone4,bookId),a:(ansMap[o.phone4]||{})[qi]||'',phone4:o.phone4};});
     });
-    var nickByPhone={};members.forEach(function(o){nickByPhone[o.phone4]=o.nickname;});
-    var rcCount={},rcMine={},empByNick={};
+    var rcCount={},rcMine={},empByPhone={};
     (rx.data||[]).forEach(function(x){
       var key='q'+x.q_index+'|'+x.target_phone4;
       rcCount[key]=(rcCount[key]||0)+1;
       if(x.author_phone4===me) rcMine[key]=true;
-      var tn=nickByPhone[x.target_phone4]; if(tn) empByNick[tn]=(empByNick[tn]||0)+1;
+      empByPhone[x.target_phone4]=(empByPhone[x.target_phone4]||0)+1;
     });
     bk.reactions={};
     bk.questions.forEach(function(_,qi){ others.forEach(function(o,j){
@@ -973,14 +978,13 @@ var RT={
     var SR={},SC={};
     /* 이향인 점수는 SR(STAGE_RATINGS)에만 실어 발표 모드에서만 공개. b.others 엔 넣지 않음
      * → '③ 다른 사람의 답변'(댓글 화면)에는 절대 노출되지 않음. */
-    members.forEach(function(o){var rr=o.ratings||{};var im=((o.meta||{}).ihyang)||null;SR[o.nickname]={length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0,empathy:empByNick[o.nickname]||0,ihyangScore:im?im.score:null,ihyangPct:im?im.pct:null,ihyangIs:im?!!im.is:null};});
+    members.forEach(function(o){var rr=o.ratings||{};var im=((o.meta||{}).ihyang)||null;var nn=nickFor(o.phone4,bookId);SR[nn]={length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0,empathy:empByPhone[o.phone4]||0,ihyangScore:im?im.score:null,ihyangPct:im?im.pct:null,ihyangIs:im?!!im.is:null};});
     /* allRatings — 답변 페이지의 [모두의 별점] 통계용. phone4 단위로 보관(닉네임 변경 안전).
      * 자기 자신 포함 모든 member_book row. 한 항목이라도 0보다 큰 사용자만 통계 대상. */
     bk.allRatings=members.map(function(o){var rr=o.ratings||{};return {phone4:o.phone4,nickname:o.nickname,length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0};});
     (cm.data||[]).forEach(function(c){
       if(c.author_phone4===me) return;
-      var tm=members.filter(function(x){return x.phone4===c.target_phone4;})[0];
-      var k='q'+c.q_index+'|'+((tm&&tm.nickname)||'');(SC[k]=SC[k]||[]).push({by:c.author_nick,t:c.body});
+      var k='q'+c.q_index+'|'+nickFor(c.target_phone4,bookId);(SC[k]=SC[k]||[]).push({by:nickFor(c.author_phone4,bookId),t:c.body});
     });
     STAGE_RATINGS=SR;STAGE_COMMENTS=SC;
     var myMb=(mb.data||[]).filter(function(x){return x.phone4===me;})[0];
@@ -993,7 +997,7 @@ var RT={
     });
     /* 내 답변에 '남이' 남긴 댓글(받은 댓글함) + 내 답변에 달린 공감 수 (q_index 별) */
     var myInbox={},myReact={};
-    (cm.data||[]).forEach(function(c){ if(c.target_phone4===me && c.author_phone4!==me){ (myInbox[c.q_index]=myInbox[c.q_index]||[]).push({by:c.author_nick||'익명',t:c.body}); } });
+    (cm.data||[]).forEach(function(c){ if(c.target_phone4===me && c.author_phone4!==me){ (myInbox[c.q_index]=myInbox[c.q_index]||[]).push({by:nickFor(c.author_phone4,bookId),t:c.body}); } });
     (rx.data||[]).forEach(function(x){ if(x.target_phone4===me) myReact[x.q_index]=(myReact[x.q_index]||0)+1; });
     var myMeta=(myMb&&myMb.meta)||{};
     var myIy=myMeta.ihyang||null;
@@ -2102,15 +2106,8 @@ window.addEventListener('message',function(ev){ try{ onIhyangResult(ev.data); }c
 
 function renderDiscussion(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
-  /* ── 닉네임: 참가자는 자동 배정(유지). 모임장 첫 답변 또는 [변경] 모드(NICKMODE)에서만 픽커 노출 ── */
-  if(STATE.phone4){
-    if(!STATE.isHost)ensureNick();
-    var hasNick=!!fixedNick(STATE.phone4,STATE.bookId);
-    if(!hasNick || NICKMODE){
-      document.getElementById('page-discussion').innerHTML=nickPickerHtml(b,{change:hasNick});
-      return;
-    }
-  }
+  /* ── 닉네임: 전화번호 기반 결정론 배정(표출 전용, 변경 불가). 픽커 없음 ── */
+  if(STATE.phone4 && !STATE.isHost)ensureNick();
   var h=bookHeadHtml(b);
   var st=bookStatus(b);
   if(st==='upcoming'){
@@ -2123,7 +2120,7 @@ function renderDiscussion(){
     var myNick=nickFor(STATE.phone4,b.id);
     h+='<div class="disc-nick-bar">'+
       '<span>이 책에서 내 이름: <b>'+esc(myNick)+'</b></span>'+
-      (b.closed?'<span class="dim" style="font-size:11px">마감 — 변경 불가</span>':'<a onclick="startNickChange()" class="disc-nick-bar__edit">✏️ 변경</a>')+
+      '<span class="dim" style="font-size:11px">번호로 자동 배정 · 고정</span>'+
       '</div>';
   }
   /* 잠긴 탭에 머물러 있으면 가능한 가장 앞 탭으로 강등 */
@@ -2155,7 +2152,7 @@ function renderDiscussion(){
             '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
             '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
             (__sq?ihyangBlockHtml(b,bs):'')+
-            '<textarea class="input" id="ans-'+i+'" rows="3" placeholder="'+(__sq?'이 점수에 동의하나요? 어떻게 생각하세요?':'내 생각을 적어주세요')+'">'+esc(bs.answers[i]||'')+'</textarea>'+
+            '<textarea class="input" id="ans-'+i+'" rows="3" enterkeyhint="enter" placeholder="'+(__sq?'이 점수에 동의하나요? 어떻게 생각하세요?':'내 생각을 적어주세요')+'">'+esc(bs.answers[i]||'')+'</textarea>'+
           '</div>';
         });
         h+='<div class="row"><button class="btn btn-ghost btn-pill" style="flex:1" onclick="saveDraft()">💾 임시저장</button>'+
@@ -2182,7 +2179,7 @@ function renderDiscussion(){
             (editing?'':'<button class="ans-x" title="이 답변과 딸린 댓글·공감 모두 삭제" onclick="delMyAnswer('+i+')">&times;</button>')+
             '<div class="answer__who"><span><b>나 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>'+(editing?'수정 중':'제출됨')+'</span></div>'+
             (editing
-              ? '<textarea class="input" id="ea-'+i+'" rows="3">'+esc(ansBody)+'</textarea>'+
+              ? '<textarea class="input" id="ea-'+i+'" rows="3" enterkeyhint="enter">'+esc(ansBody)+'</textarea>'+
                 '<div class="row mt-12"><button class="btn btn-primary btn-sm btn-pill" onclick="saveAns('+i+')">저장</button>'+
                 '<button class="btn btn-ghost btn-sm btn-pill" onclick="cancelAns()">취소</button></div>'
               : '<div class="answer__body">'+esc(ansBody)+'</div>'+
@@ -2595,7 +2592,7 @@ function resetTimer(){stopTimer();timerSec=90;updateTimer()}
 
 /* ═══════════ STAGE (발표·모임장 전용) ═══════════ */
 var scrambleInt=null;
-var STAGE={bookId:'ihyangin',q:0,axis:'fun',order:[],pickedName:null,critText:''};
+var STAGE={bookId:'ihyangin',q:0,axis:'fun',order:[],pickedName:null,critText:'',analysisAxis:'overall'};
 function cmtCount(p,qi){
   var c=(STAGE_COMMENTS['q'+qi+'|'+p.name]||[]).length;
   if(STATE.phone4){var bs=bookState(STAGE.bookId),uk='q'+qi+'a'+p.idx;c+=((bs.comments&&bs.comments[uk])||[]).length;}
@@ -2645,8 +2642,38 @@ function renderStageRoadmap(){
   h+='</div><div class="sr-meta"><b>'+submittedCount()+'</b>명 답변 제출 · 이번 책 「'+esc(bks[curIdx].title)+'」</div>';
   host.innerHTML=h;
 }
+/* AI 분석 탭 — 별점 항목별 최고/최저로 준 사람을 뽑아 진행탭으로 넘긴다.
+   (이 선정은 특정 질문과 무관하므로 진행탭이 아니라 분석탭에 둔다) */
+function renderAnalysisStarPick(){
+  var host=document.getElementById('analysis-star-pick');if(!host)return;
+  var ps=stageParts();
+  if(!ps.length){host.innerHTML='';return;}
+  var axh=RATING_AXES.map(function(a){return '<button class="sl-qtab'+(a.k===STAGE.analysisAxis?' active':'')+'" style="font-size:13px;padding:6px 13px" onclick="stageSetAnalysisAxis(\''+a.k+'\')">'+esc(a.label)+'</button>';}).join('');
+  var lbl=esc(axisLabel(STAGE.analysisAxis));
+  host.innerHTML='<div class="analysis-card__label" style="margin-bottom:2px">별점으로 발언자 뽑기 <span style="color:var(--ink-dim);font-weight:400">→ 진행탭으로 이동</span></div>'+
+    '<div class="sl-starpick__axes">'+axh+'</div>'+
+    '<div class="sl-starpick__acts">'+
+      '<button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePickStar(\'max\')">★ '+lbl+' 최고로 준 사람</button>'+
+      '<button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePickStar(\'min\')">★ '+lbl+' 최저로 준 사람</button>'+
+    '</div>';
+}
+function stageSetAnalysisAxis(k){STAGE.analysisAxis=k;renderAnalysisStarPick();}
+function stagePickStar(dir){
+  var ps=stageParts();if(!ps.length){toast('별점 표본이 없어요 (기본 데모 모임에서 시연)');return;}
+  var k=STAGE.analysisAxis;
+  var picked=(dir==='max')?ps.reduce(function(a,b){return b.r[k]>a.r[k]?b:a;}):ps.reduce(function(a,b){return b.r[k]<a.r[k]?b:a;});
+  var crit=axisLabel(k)+' 별점 '+(dir==='max'?'최고':'최저')+' · '+picked.r[k]+'★';
+  STAGE.pickedName=picked.name;STAGE.critText=crit;
+  showStageScene('live');
+  var nameEl=document.getElementById('stage-speaker-name'),promptEl=document.getElementById('speaker-prompt');
+  if(nameEl){nameEl.textContent=picked.name;nameEl.style.color='var(--accent)';}
+  if(promptEl)promptEl.textContent=crit;
+  renderStageLive();
+  toast('★ '+picked.name+' 선정 — '+crit);
+}
 function renderStageRating(){
   var host=document.getElementById('stage-rating-rows');if(!host)return;
+  renderAnalysisStarPick();
   var b=bookById(STAGE.bookId);
   var sub=document.querySelector('.scene-analysis__sub');
   var kwHost=document.querySelector('#scene-analysis .analysis-keywords');
@@ -2661,10 +2688,17 @@ function renderStageRating(){
     });
     host.innerHTML=h;
     if(kwHost){
-      if(rep.keywords&&rep.keywords.length) kwHost.innerHTML=rep.keywords.map(function(k){return '<span class="kw kw-'+esc(k.size||'md')+'">'+esc(k.w)+'</span>';}).join('');
+      if(rep.keywords&&rep.keywords.length){
+        kwHost.innerHTML=rep.keywords.map(function(k){
+          var q=(k.q||'').trim(),why=(k.why||'').trim();
+          var tip=(q||why)?(' data-q="'+esc(q)+'" data-why="'+esc(why)+'"'):'';
+          return '<span class="kw kw-'+esc(k.size||'md')+(tip?' kw-has-tip':'')+'"'+tip+'>'+esc(k.w)+'</span>';
+        }).join('');
+        wireKwTips(kwHost);
+      }
       else kwHost.innerHTML='<span class="dim">키워드가 없어요.</span>';
     }
-    if(smHost) smHost.textContent=rep.summary||'';
+    if(smHost){ smHost.style.whiteSpace='pre-line'; smHost.textContent=rep.summary||''; }
     if(sub) sub.innerHTML='발표자료 — '+esc(rep.source||'mock')+' · '+esc((rep.generated_at||'').slice(0,16).replace('T',' '))+(STATE.isHost?(' · <a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 다시 생성</a>'):'');
     return;
   }
@@ -2681,27 +2715,59 @@ function renderStageRating(){
   });
   host.innerHTML=h;
 }
+/* 키워드 오버레이 — 마우스를 올리면 그 키워드를 뽑은 이유 + 실제 답변 인용 표시 */
+function kwTipEl(){
+  var el=document.getElementById('kw-tip');
+  if(!el){el=document.createElement('div');el.id='kw-tip';el.className='kw-tip';document.body.appendChild(el);}
+  return el;
+}
+function wireKwTips(host){
+  if(host._kwWired)return; host._kwWired=true;
+  function place(e){var el=document.getElementById('kw-tip');if(!el||el.style.display!=='block')return;
+    var x=e.clientX+14,y=e.clientY+16,w=el.offsetWidth,h=el.offsetHeight;
+    if(x+w>window.innerWidth-8)x=window.innerWidth-w-8;
+    if(y+h>window.innerHeight-8)y=e.clientY-h-12;
+    el.style.left=x+'px';el.style.top=y+'px';
+  }
+  host.addEventListener('mouseover',function(e){var t=e.target.closest?e.target.closest('.kw-has-tip'):null;if(!t)return;
+    var q=t.getAttribute('data-q')||'',why=t.getAttribute('data-why')||'';if(!q&&!why)return;
+    var el=kwTipEl();el.innerHTML=(why?'<div class="kw-tip__why">'+esc(why)+'</div>':'')+(q?'<div class="kw-tip__q">“'+esc(q)+'”</div>':'');
+    el.style.display='block';place(e);
+  });
+  host.addEventListener('mousemove',place);
+  host.addEventListener('mouseout',function(e){var t=e.target.closest?e.target.closest('.kw-has-tip'):null;if(t){var el=document.getElementById('kw-tip');if(el)el.style.display='none';}});
+  host.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('.kw-has-tip'):null;if(!t)return;
+    var why=t.getAttribute('data-why')||'',q=t.getAttribute('data-q')||'';if(why||q)toast((why?why:'')+(why&&q?' — ':'')+(q?'“'+q+'”':''));
+  });
+}
 function renderStageLive(){
   var ps=stageParts();
   var orderEl=document.getElementById('sl-order');if(!orderEl)return;
-  var axEl=document.getElementById('sl-axis-row'),pc=document.getElementById('sl-pickcard');
+  var pc=document.getElementById('sl-pickcard');
   if(!ps.length){
-    if(axEl)axEl.innerHTML='';orderEl.innerHTML='';
+    orderEl.innerHTML='';
     if(pc)pc.innerHTML='<div class="sl-empty">서버 연동 전이라 회원 답변·별점·댓글 표본이 없습니다.<br>기본 데모 모임(인간 본성 탐구)에서 진행을 시연하세요.</div>';
     return;
   }
   var bk=bookById(STAGE.bookId)||{questions:[]};
   if(STAGE.q>=bk.questions.length)STAGE.q=0;
   var qt=document.getElementById('sl-qtabs');
-  if(qt){var qh='';bk.questions.forEach(function(q,i){qh+='<button class="sl-axis'+(i===STAGE.q?' active':'')+'" onclick="stageSetQ('+i+')">Q'+(i+1)+'</button>';});qt.innerHTML=qh;}
+  if(qt){var qh='';bk.questions.forEach(function(q,i){qh+='<button class="sl-qtab'+(i===STAGE.q?' active':'')+'" onclick="stageSetQ('+i+')">Q'+(i+1)+'</button>';});qt.innerHTML=qh;}
   var qx=document.getElementById('sl-qtext');
   if(qx)qx.textContent=bk.questions.length?('Q'+(STAGE.q+1)+'. '+bk.questions[STAGE.q]):'';
-  var axh='';RATING_AXES.forEach(function(a){axh+='<button class="sl-axis'+(a.k===STAGE.axis?' active':'')+'" onclick="stageSetAxis(\''+a.k+'\')">'+esc(a.label)+'</button>';});
-  axEl.innerHTML=axh;
   if(!STAGE.order.length)STAGE.order=shuffle(ps.map(function(p){return p.name;}));
-  var ol='';STAGE.order.forEach(function(nm,i){ol+='<li'+(nm===STAGE.pickedName?' class="is-picked"':'')+'><span class="sl-order__n">'+(i+1)+'</span><span>'+esc(nm)+'</span></li>';});
+  var ol='';STAGE.order.forEach(function(nm,i){ol+='<li'+(nm===STAGE.pickedName?' class="is-picked"':'')+' onclick="stagePickOrder('+i+')" title="답변 보기"><span class="sl-order__n">'+(i+1)+'</span><span>'+esc(nm)+'</span></li>';});
   orderEl.innerHTML=ol;
   renderPickCard();
+}
+/* 발언 순서에서 이름 클릭 → 그 사람 지목(스크램블 없이 바로 답변 카드) */
+function stagePickOrder(i){
+  var nm=STAGE.order[i];if(!nm)return;
+  STAGE.pickedName=nm;STAGE.critText='직접 선택';
+  var nameEl=document.getElementById('stage-speaker-name'),promptEl=document.getElementById('speaker-prompt');
+  if(nameEl){nameEl.textContent=nm;nameEl.style.color='var(--accent)';}
+  if(promptEl)promptEl.textContent='직접 선택';
+  renderStageLive();
 }
 function renderStageHighlights(){
   var grid=document.getElementById('stage-highlights-grid');
@@ -2725,15 +2791,20 @@ function renderStageHighlights(){
   if(!grid)return;
   if(!items.length){grid.innerHTML='<div class="sl-empty" style="grid-column:1/-1">아직 하이라이트가 없어요 — 답변과 공감(💛)이 쌓이면 여기에 표시됩니다.</div>';return;}
   function card(emoji,label,it){return '<div class="highlight-card"><div class="highlight-card__emoji">'+emoji+'</div><div class="highlight-card__label">'+esc(label)+'</div><div class="highlight-card__quote">"'+esc(it.a)+'"</div><div class="highlight-card__who">&mdash; '+esc(it.n)+(it.rc?' · 공감 '+it.rc:'')+(it.cc?' · 댓글 '+it.cc:'')+'</div></div>';}
+  /* 선정 기준 (명시) —
+   * ①💛 공감 최다  ②💬 댓글 최다  ③④ 나머지는 공감+댓글 합이 큰 순.
+   * 반응이 전혀 없으면 채우지 않는다(가짜 하이라이트 방지). */
   var byRx=items.slice().sort(function(x,y){return (y.rc-x.rc)||(y.cc-x.cc);});
   var byCc=items.slice().sort(function(x,y){return (y.cc-x.cc)||(y.rc-x.rc);});
+  var byBoth=items.slice().sort(function(x,y){return ((y.rc+y.cc)-(x.rc+x.cc))||(y.rc-x.rc);});
   var used=[],cards=[];
   function pick(arr,cond){for(var i=0;i<arr.length;i++){if(used.indexOf(arr[i])<0&&cond(arr[i]))return arr[i];}return null;}
   var topRx=pick(byRx,function(it){return it.rc>0;});
-  if(topRx){used.push(topRx);cards.push(card('💛','가장 많은 공감',topRx));}
+  if(topRx){used.push(topRx);cards.push(card('💛','공감 최다 · '+topRx.rc+'개',topRx));}
   var topCc=pick(byCc,function(it){return it.cc>0;});
-  if(topCc){used.push(topCc);cards.push(card('💬','이야기가 이어진 답변',topCc));}
-  for(var i=0;i<byRx.length&&cards.length<4;i++){if(used.indexOf(byRx[i])<0){used.push(byRx[i]);cards.push(card('✨','오늘의 답변',byRx[i]));}}
+  if(topCc){used.push(topCc);cards.push(card('💬','댓글 최다 · '+topCc.cc+'개',topCc));}
+  for(var i=0;i<byBoth.length&&cards.length<4;i++){var it=byBoth[i];if(used.indexOf(it)<0&&(it.rc+it.cc)>0){used.push(it);cards.push(card('✨','공감+댓글 '+(it.rc+it.cc)+'개',it));}}
+  if(foot)foot.innerHTML+='<span class="tag" style="background:none;border:none;color:var(--ink-dim);font-size:11px">기준: 💛공감 최다 · 💬댓글 최다 · ✨공감+댓글 합 순</span>';
   grid.innerHTML=cards.join('');
 }
 function stageSetAxis(k){STAGE.axis=k;renderStageLive();}
