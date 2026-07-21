@@ -778,8 +778,10 @@ function startNickChange(){
   PENDNICK=randomNick(); NICKMODE=true;
   _rerenderCurrent();
 }
-/* 어느 페이지에 있든 다시 렌더 — book/discussion 만 픽커 표시 */
+/* 어느 페이지에 있든 다시 렌더 — book/discussion 만 픽커 표시.
+   재렌더 전에 쓰던 답변을 로컬 보존(이름 변경 등으로 입력이 날아가지 않게). */
 function _rerenderCurrent(){
+  try{captureAnswersLocal();}catch(e){}
   var p=document.querySelector('.page.active'); if(!p)return;
   var n=p.id.replace('page-','');
   if(n==='book') renderBook();
@@ -952,14 +954,15 @@ function applySchedule(books){
 function rtErr(e){console.error('[Supabase]',e);toast('서버 오류: '+((e&&e.message)||'요청 실패'));}
 var RT={
   async loadClubs(){
-    /* v10: club.is_public 가 공개/비공개 의미. v7~v9 호환을 위해 is_open 도 함께 읽음. */
-    var r=await sb.from('club').select('id,name,code,password,intro,is_public,is_open,owner_phone4,owner_phone4s');
+    /* v10: club.is_public 가 공개/비공개 의미. v7~v9 호환을 위해 is_open 도 함께 읽음.
+       v16: password 는 서버 전용 — select 불가(컬럼 grant 회수). 인증은 verify_club RPC. */
+    var r=await sb.from('club').select('id,name,code,intro,is_public,is_open,owner_phone4,owner_phone4s');
     if(r.error){rtErr(r.error);return;}
     CLUBS_CACHE=(r.data||[]).map(function(c){
       var arr=Array.isArray(c.owner_phone4s)?c.owner_phone4s.slice():[];
       if(c.owner_phone4 && arr.indexOf(c.owner_phone4)<0) arr.unshift(c.owner_phone4);
       var pub=(c.is_public!=null)?(c.is_public!==false):(c.is_open!==false);
-      return {id:c.id,name:c.name,code:c.code,pw:c.password,intro:c.intro||'',isPublic:pub,ownerPhones:arr};
+      return {id:c.id,name:c.name,code:c.code,intro:c.intro||'',isPublic:pub,ownerPhones:arr};
     });
   },
   async createClub(name,intro,ownerPhone4,isPublic){
@@ -986,12 +989,15 @@ var RT={
     if(owners.indexOf(ownerPhone4)<0) owners.push(ownerPhone4);
     return await RT.setClubOwners(clubId,owners);
   },
-  async deleteClub(id){
-    var e=(await sb.from('club').delete().eq('id',id)).error;
-    if(e){rtErr(e);return false;} await RT.loadClubs(); await RT.loadMeetings(); return true;
+  async deleteClub(id,pw){
+    /* v16: 직접 delete 차단(RLS) — 비번 검증 RPC 로만 삭제 */
+    var r=await sb.rpc('delete_club',{p_club_id:id,p_pw:pw});
+    if(r.error){rtErr(r.error);return false;}
+    if(!r.data){toast('비밀번호가 맞지 않아 삭제하지 않았어요');return false;}
+    await RT.loadClubs(); await RT.loadMeetings(); return true;
   },
   async loadMeetings(){
-    var r=await sb.from('meeting').select('id,club_id,name,code,password,season_title,season_sub,is_open,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,opened_at,closed_at,report)');
+    var r=await sb.from('meeting').select('id,club_id,name,code,season_title,season_sub,is_open,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,opened_at,closed_at,report)');
     if(r.error){rtErr(r.error);return;}
     MEET_CACHE=(r.data||[]).map(function(m){
       var books=(m.book||[]).slice().sort(function(a,b){return (a.ord||0)-(b.ord||0);}).map(function(bk){
@@ -999,7 +1005,7 @@ var RT={
         return {id:bk.id,title:bk.title,author:bk.author||'(저자 미상)',spine:(bk.title||'?').charAt(0),yearmonth:bk.yearmonth||'',month:fmtYM(bk.yearmonth)||((bk.ord||0)+'권'),angle:'',tagline:bk.title,intro:bk.intro||'(책 소개 미입력)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:bk.author_bio||'',bio:(Array.isArray(bk.author_facts)?bk.author_facts:[]),links:(Array.isArray(bk.links)?bk.links:[]),questions:qs,others:qs.map(function(){return [];}),opened_at:bk.opened_at||null,closed_at:bk.closed_at||null,closed:!!bk.closed_at,report:bk.report||null};
       });
       applySchedule(books);
-      return {id:m.id,clubId:m.club_id||null,name:m.name,code:m.code,pw:m.password,kind:'custom',isOpen:(m.is_open!==false),
+      return {id:m.id,clubId:m.club_id||null,name:m.name,code:m.code,kind:'custom',isOpen:(m.is_open!==false),
         season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'코드 '+m.code,books:books}};
     });
   },
@@ -1155,13 +1161,17 @@ var RT={
     if(e1||e2||e3){rtErr(e1||e2||e3);return false;}
     await RT.loadBook(bookId); return true;
   },
-  async deleteBook(bookId){
-    var e=(await sb.from('book').delete().eq('id',bookId)).error;
-    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  async deleteBook(bookId,pw){
+    var r=await sb.rpc('delete_book',{p_book_id:bookId,p_pw:pw});
+    if(r.error){rtErr(r.error);return false;}
+    if(!r.data){toast('비밀번호가 맞지 않아 삭제하지 않았어요');return false;}
+    await RT.loadMeetings(); return true;
   },
-  async deleteMeeting(id){
-    var e=(await sb.from('meeting').delete().eq('id',id)).error;
-    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  async deleteMeeting(id,pw){
+    var r=await sb.rpc('delete_meeting',{p_meeting_id:id,p_pw:pw});
+    if(r.error){rtErr(r.error);return false;}
+    if(!r.data){toast('비밀번호가 맞지 않아 삭제하지 않았어요');return false;}
+    await RT.loadMeetings(); return true;
   },
   async addBook(meetingId,title,author){
     var m=meetingById(meetingId),ord=((m&&m.season&&m.season.books.length)||0)+1;
@@ -1272,6 +1282,16 @@ function logout(msg){
   setNick();syncHostUI();syncAuthUI();
   go('login');toast(msg||'로그아웃 — 이 기기의 임시 정보를 모두 비웠어요');
 }
+/* 자동 로그아웃(무동작 만료) — 수동 로그아웃과 달리 로컬 데이터를 지우지 않는다.
+   쓰던 답변은 captureAnswersLocal 로 보존하고 세션만 끊는다. */
+function autoLogout(msg){
+  if(isStage) setStage(false);
+  try{captureAnswersLocal();}catch(e){}
+  sessClear();
+  STATE.phone4=null;STATE.bookId=null;STATE.clubId=null;STATE.meetingId=null;STATE.isHost=false;STATE.page=null;
+  setNick();syncHostUI();syncAuthUI();
+  go('login');toast(msg||'오래 활동이 없어 자동 로그아웃됐어요 — 쓰던 내용은 이 기기에 남아 있어요');
+}
 /* 세션 만료 여부 — 마지막 활동(ts)으로부터 SESS_TTL 초과 시 true */
 function sessExpired(s){ s=s||sessRead(); return !!(s&&s.ts&&(Date.now()-s.ts>SESS_TTL)); }
 /* 활동 감지 — 클릭·키·스크롤 시 만료 시각 갱신(30초 throttle). 로그인 상태에서만 동작. */
@@ -1286,7 +1306,7 @@ function touchSession(){
 /* 1분마다 무동작 만료 점검 — 탭을 열어둔 채 30분 방치해도 자동 로그아웃 */
 setInterval(function(){
   if(!(STATE.phone4||STATE.isHost)) return;
-  if(sessExpired()) logout('30분 동안 활동이 없어 자동 로그아웃됐어요');
+  if(sessExpired()) autoLogout('30분 동안 활동이 없어 자동 로그아웃됐어요 — 쓰던 내용은 이 기기에 남아 있어요');
 },60*1000);
 async function sessRestore(){
   var s=sessRead(); if(!s||(!s.p4&&!s.host)) return false;
@@ -1582,11 +1602,17 @@ async function removeOwner(p4){
   renderOwners();toast('운영자 제거: ••••'+p4);
 }
 function enterMeeting(id){STATE.meetingId=id;STATE.bookId=null;setNick();go('season');toast('시즌에 입장했어요');}
+/* v16: 파괴 동작(모임·시즌·책 삭제)은 서버가 모임 비밀번호를 검증해야 통과.
+   실수·도용에 의한 통삭제 방지 — 비번을 잊었으면 Supabase 대시보드에서 확인. */
+function askClubPw(){
+  var pw=prompt('안전 확인 — 모임 백업 비밀번호(4자리)를 입력하세요');
+  return (pw==null)?null:String(pw).trim();
+}
 async function delClubHost(){
   if(!STATE.clubId)return;
   var c=activeClub();
   if(!confirm('모임 「'+(c&&c.name||'')+'」을 영구 삭제할까요?\n이 모임 안의 모든 시즌·책·답변·별점·댓글이 함께 삭제됩니다. 되돌릴 수 없어요.'))return;
-  if(ONLINE){if(!(await RT.deleteClub(STATE.clubId)))return;}
+  if(ONLINE){var pw=askClubPw();if(pw==null)return;if(!(await RT.deleteClub(STATE.clubId,pw)))return;}
   else {var cs=customClubs().filter(function(cl){return cl.id!==STATE.clubId;});saveCustomClubs(cs);var ms=customMeetings().filter(function(mm){return mm.clubId!==STATE.clubId;});saveCustomMeetings(ms);}
   sessClear();STATE.clubId=null;STATE.meetingId=null;STATE.bookId=null;STATE.isHost=false;
   setNick();syncHostUI();syncAuthUI();go(STATE.phone4?'clubs':'login');toast('모임을 삭제했어요');
@@ -1653,13 +1679,18 @@ function renderManage(){
      '<div class="field"><label>백업 비밀번호</label><input class="input" id="mg-pw" inputmode="numeric" placeholder="백업 비밀번호" onkeydown="if(event.key===\'Enter\')managerLogin()"></div>'+
    '</div>'+
    '<button class="btn btn-primary btn-pill" onclick="managerLogin()">인증하고 위임받기</button>'+
-   '<button class="btn btn-ghost btn-pill mt-12" onclick="go(STATE.phone4?\'clubs\':\'login\')">&larr; 돌아가기</button>'+
-   '<p class="login-hint">시드 모임(未知의 서재) 백업 — 코드 <b>UNTOLD</b> · 비번 <b>1234</b></p>';
+   '<button class="btn btn-ghost btn-pill mt-12" onclick="go(STATE.phone4?\'clubs\':\'login\')">&larr; 돌아가기</button>';
 }
 async function managerLogin(){
   var code=val('mg-code').toUpperCase(),pw=val('mg-pw'),c=null;
-  if(ONLINE){try{await RT.loadClubs();await RT.loadMeetings();}catch(e){rtErr(e);}}
-  allClubs().forEach(function(x){if(String(x.code).toUpperCase()===code&&String(x.pw)===pw)c=x;});
+  if(ONLINE){
+    /* v16: 비번은 클라이언트로 안 내려온다 — 서버 RPC 에서만 비교 */
+    var r=await sb.rpc('verify_club',{p_code:code,p_pw:pw});
+    if(r.error){rtErr(r.error);return;}
+    if(r.data){ try{await RT.loadClubs();await RT.loadMeetings();}catch(e){rtErr(e);} c=clubById(r.data); }
+  } else {
+    allClubs().forEach(function(x){if(String(x.code).toUpperCase()===code&&String(x.pw)===pw)c=x;});
+  }
   if(!c){toast('모임코드 또는 비밀번호가 맞지 않아요');return;}
   /* 백업 코드로 인증 성공 시, 현재 phone4 를 owner 로 claim 해서 다음부터 자동 인식되도록 */
   if(STATE.phone4&&!isClubOwner(c,STATE.phone4)){
@@ -1831,7 +1862,7 @@ async function hostAnswer(id){
 function _custMutate(fn){ var cs=customMeetings(),hit=false; cs.forEach(function(mm){ if(fn(mm))hit=true; }); if(hit)saveCustomMeetings(cs); return hit; }
 async function delBookHost(id,title){
   if(!confirm('「'+title+'」 책과 그 답변·댓글을 모두 삭제할까요?'))return;
-  if(ONLINE){ if(!(await RT.deleteBook(id)))return; }
+  if(ONLINE){ var pw=askClubPw(); if(pw==null)return; if(!(await RT.deleteBook(id,pw)))return; }
   else { _custMutate(function(mm){ if(!mm.season)return false; var n=mm.season.books.length; mm.season.books=mm.season.books.filter(function(x){return x.id!==id;}); return mm.season.books.length!==n; }); }
   renderSeason();toast('책을 삭제했어요');
 }
@@ -1852,7 +1883,7 @@ async function addBookHostSubmit(){
 }
 async function delMeetingHost(){
   if(!confirm('이 시즌 전체(책·답변·별점·댓글)를 영구 삭제할까요? 되돌릴 수 없습니다.'))return;
-  if(ONLINE){ if(!(await RT.deleteMeeting(STATE.meetingId)))return; }
+  if(ONLINE){ var pw=askClubPw(); if(pw==null)return; if(!(await RT.deleteMeeting(STATE.meetingId,pw)))return; }
   else { _custMutate(function(mm){ return mm.id===STATE.meetingId; }) || 0;
     var cs=customMeetings().filter(function(mm){return mm.id!==STATE.meetingId;}); saveCustomMeetings(cs); }
   sessClear();STATE.isHost=false;STATE.meetingId=ONLINE?null:'m1';STATE.bookId=null;
@@ -2056,7 +2087,7 @@ async function saveBookInfo(){
 
 /* ═══════════ RENDER: 답변 (탭: 내 답변 / 다른 답변 / 별점) ═══════════ */
 var DISC={view:'rating'};
-function setDiscView(v){DISC.view=v;renderDiscussion();window.scrollTo(0,0);}
+function setDiscView(v){captureAnswersLocal();DISC.view=v;renderDiscussion();window.scrollTo(0,0);}
 function discSeasonTitle(){var m=activeMeeting();return (m&&m.kind==='custom'&&m.season&&m.season.title)?m.season.title:SEASON.title;}
 function bookHeadHtml(b){
   return '<div class="book-head"><div class="book-head__spine">'+esc(b.spine)+'</div>'+
