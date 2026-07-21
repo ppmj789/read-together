@@ -234,8 +234,11 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .book-card__host{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-soft);flex-wrap:wrap}
 .book-card__host .btn{min-height:34px;font-size:12px}
 .book-card.upcoming .book-card__spine{background:var(--ink-soft)}
-/* 표지 이미지가 있는 책 — 첫 글자 대신 표지를 깔고, 글자는 감춘다(font-size:0) */
-.book-card__spine.has-cover{background-size:cover;background-position:center;background-repeat:no-repeat;font-size:0}
+/* 표지 이미지가 있는 책 — 첫 글자 대신 표지를 깔고, 글자는 감춘다(font-size:0)
+   카드가 align-items:stretch 라 내용 많은 카드(마감·발표자료 줄)는 책등 칸이
+   세로로 늘어나고, cover 가 그만큼 좌우를 잘라낸다. 표지 칸만 이미지와 같은
+   3:4 비율로 고정 + 세로중앙 배치해서 어떤 카드 높이에서도 전체가 보이게. */
+.book-card__spine.has-cover{background-size:cover;background-position:center;background-repeat:no-repeat;font-size:0;aspect-ratio:3/4;height:auto;min-height:0;align-self:center}
 .book-card.upcoming .book-card__spine.has-cover{opacity:.55}
 .book-card__body{flex:1;min-width:0;padding-right:62px}
 .book-card__month{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em}
