@@ -23,6 +23,10 @@
 ## 2. 첫 스키마 적용 (택1)
 
 - **간단(1회)**: SQL Editor → `supabase/migrations/20260519120000_init.sql` 내용 붙여넣고 Run
+  - ⚠️ **init 만 해당.** v5 이후 마이그레이션(특히 `v5_cleanup`)은 수동으로
+    다시 붙여넣지 말 것 — 운영 데이터가 삭제될 수 있다. 적용은 push 시
+    GitHub Actions(`supabase db push`)가 자동으로 한다. 새 마이그레이션은
+    가급적 로컬 `supabase db reset` 으로 전체 체인 리플레이 확인 후 push.
 - **또는** 아래 3번 자동화를 먼저 켜고 빈 커밋/재실행으로 적용
 
 > 둘 다 idempotent — 여러 번 돌려도 안전.

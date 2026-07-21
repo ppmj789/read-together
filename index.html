@@ -583,7 +583,6 @@ body.is-page-season .book-card__cover{width:96px}
 <div class="page" id="page-clubs"></div>
 
 <!-- PAGE: 모임 만들기 -->
-<div class="page" id="page-create-club"></div>
 
 <!-- PAGE: 모임 안 시즌 목록 (구 page-meetings) -->
 <div class="page" id="page-meetings"></div>
@@ -974,34 +973,28 @@ function applySchedule(books){
 function rtErr(e){console.error('[Supabase]',e);toast('서버 오류: '+((e&&e.message)||'요청 실패'));}
 var RT={
   async loadClubs(){
-    /* v10: club.is_public 가 공개/비공개 의미. v7~v9 호환을 위해 is_open 도 함께 읽음.
-       v16: password 는 서버 전용 — select 불가(컬럼 grant 회수). 인증은 verify_club RPC. */
-    var r=await sb.from('club').select('id,name,code,intro,is_public,is_open,owner_phone4,owner_phone4s');
+    /* v16: password 는 서버 전용(인증=verify_club RPC). v18: is_open·owner_phone4 컬럼 정리됨. */
+    var r=await sb.from('club').select('id,name,code,intro,is_public,owner_phone4s');
     if(r.error){rtErr(r.error);return;}
     CLUBS_CACHE=(r.data||[]).map(function(c){
       var arr=Array.isArray(c.owner_phone4s)?c.owner_phone4s.slice():[];
-      if(c.owner_phone4 && arr.indexOf(c.owner_phone4)<0) arr.unshift(c.owner_phone4);
-      var pub=(c.is_public!=null)?(c.is_public!==false):(c.is_open!==false);
-      return {id:c.id,name:c.name,code:c.code,intro:c.intro||'',isPublic:pub,ownerPhones:arr};
+      return {id:c.id,name:c.name,code:c.code,intro:c.intro||'',isPublic:(c.is_public!==false),ownerPhones:arr};
     });
   },
   async createClub(name,intro,ownerPhone4,isPublic){
     var code=rndCode(),pw=String(Math.floor(1000+Math.random()*9000));
     var owners=ownerPhone4?[ownerPhone4]:[];
-    var pub=(isPublic!==false);
-    /* is_open 도 동기 저장 — v10 적용 전 클라이언트와도 호환 */
-    var r=await sb.from('club').insert({name:name,code:code,password:pw,intro:intro||'',is_public:pub,is_open:pub,owner_phone4:ownerPhone4||null,owner_phone4s:owners}).select('id').single();
+    var r=await sb.from('club').insert({name:name,code:code,password:pw,intro:intro||'',is_public:(isPublic!==false),owner_phone4s:owners}).select('id').single();
     if(r.error){rtErr(r.error);return null;}
     await RT.loadClubs();
     return {id:r.data.id,code:code,pw:pw};
   },
   async setClubVisibility(clubId,isPublic){
-    var pub=(isPublic!==false);
-    var e=(await sb.from('club').update({is_public:pub,is_open:pub}).eq('id',clubId)).error;
+    var e=(await sb.from('club').update({is_public:(isPublic!==false)}).eq('id',clubId)).error;
     if(e){rtErr(e);return false;} await RT.loadClubs(); return true;
   },
   async setClubOwners(clubId,owners){
-    var e=(await sb.from('club').update({owner_phone4s:owners,owner_phone4:(owners[0]||null)}).eq('id',clubId)).error;
+    var e=(await sb.from('club').update({owner_phone4s:owners}).eq('id',clubId)).error;
     if(e){rtErr(e);return false;} await RT.loadClubs(); return true;
   },
   async claimClub(clubId,ownerPhone4){
@@ -1017,7 +1010,8 @@ var RT={
     await RT.loadClubs(); await RT.loadMeetings(); return true;
   },
   async loadMeetings(){
-    var r=await sb.from('meeting').select('id,club_id,name,code,season_title,season_sub,is_open,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,opened_at,closed_at,report)');
+    /* v18: meeting → season 테이블 리네임. 시즌 코드/비번 컬럼도 정리됨. */
+    var r=await sb.from('season').select('id,club_id,name,season_title,season_sub,is_open,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,opened_at,closed_at,report)');
     if(r.error){rtErr(r.error);return;}
     MEET_CACHE=(r.data||[]).map(function(m){
       var books=(m.book||[]).slice().sort(function(a,b){return (a.ord||0)-(b.ord||0);}).map(function(bk){
@@ -1025,8 +1019,8 @@ var RT={
         return {id:bk.id,title:bk.title,author:bk.author||'(저자 미상)',spine:(bk.title||'?').charAt(0),yearmonth:bk.yearmonth||'',month:fmtYM(bk.yearmonth)||((bk.ord||0)+'권'),angle:'',tagline:bk.title,intro:bk.intro||'(책 소개 미입력)',intro_note:'※ 모임장이 입력한 사전정보입니다.',authorBio:bk.author_bio||'',bio:(Array.isArray(bk.author_facts)?bk.author_facts:[]),links:(Array.isArray(bk.links)?bk.links:[]),questions:qs,others:qs.map(function(){return [];}),opened_at:bk.opened_at||null,closed_at:bk.closed_at||null,closed:!!bk.closed_at,report:bk.report||null};
       });
       applySchedule(books);
-      return {id:m.id,clubId:m.club_id||null,name:m.name,code:m.code,kind:'custom',isOpen:(m.is_open!==false),
-        season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'코드 '+m.code,books:books}};
+      return {id:m.id,clubId:m.club_id||null,name:m.name,kind:'custom',isOpen:(m.is_open!==false),
+        season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'',books:books}};
     });
   },
   async loadBook(bookId){
@@ -1034,7 +1028,7 @@ var RT={
     var rs=await Promise.all([
       sb.from('member_book').select('phone4,nickname,submitted,ratings,meta').eq('book_id',bookId),
       sb.from('answer').select('phone4,q_index,body').eq('book_id',bookId),
-      sb.from('comment').select('id,q_index,target_phone4,author_phone4,author_nick,body').eq('book_id',bookId),
+      sb.from('comment').select('id,q_index,target_phone4,author_phone4,body').eq('book_id',bookId),
       sb.from('reaction').select('q_index,target_phone4,author_phone4').eq('book_id',bookId),
       /* 모임원 발표자료 — v17. 마이그레이션 미적용 환경에선 조용히 빈 목록. */
       sb.from('material').select('id,phone4,title,url,created_at').eq('book_id',bookId).order('created_at')
@@ -1113,7 +1107,8 @@ var RT={
     if(ex.error){rtErr(ex.error);return false;}
     var e;
     if(ex.data&&ex.data.length) e=(await sb.from('reaction').delete().eq('id',ex.data[0].id)).error;
-    else e=(await sb.from('reaction').insert({book_id:bookId,q_index:qi,target_phone4:targetPhone4,author_phone4:STATE.phone4})).error;
+    /* upsert(ignoreDuplicates) — 더블탭 경쟁 시 unique 충돌이 사용자 에러로 새지 않게 */
+    else e=(await sb.from('reaction').upsert({book_id:bookId,q_index:qi,target_phone4:targetPhone4,author_phone4:STATE.phone4},{onConflict:'book_id,q_index,target_phone4,author_phone4',ignoreDuplicates:true})).error;
     if(e){rtErr(e);return false;}
     await RT.loadBook(bookId);return true;
   },
@@ -1146,23 +1141,23 @@ var RT={
     await RT.loadBook(bookId);return true;
   },
   async addComment(bookId,qi,targetPhone4,body){
-    var nick=STATE.phone4?displayNick(STATE.phone4,bookId):'모임장';
-    var e=(await sb.from('comment').insert({book_id:bookId,q_index:qi,target_phone4:targetPhone4,author_phone4:STATE.phone4||'host',author_nick:nick,body:body})).error;
+    /* v18: author_nick 컬럼 정리 — 표시는 항상 displayNick(phone4) 결정론 해시 */
+    var e=(await sb.from('comment').insert({book_id:bookId,q_index:qi,target_phone4:targetPhone4,author_phone4:STATE.phone4||'host',body:body})).error;
     if(e){rtErr(e);return false;}
     await RT.loadBook(bookId);return true;
   },
   async createMeeting(name,stitle,ssub,books,clubId){
-    var code=rndCode(),pw=String(Math.floor(1000+Math.random()*9000));
-    var mi=await sb.from('meeting').insert({club_id:clubId||null,name:name,code:code,password:pw,season_title:stitle,season_sub:ssub||'',is_open:true}).select('id').single();
+    /* v18: 시즌엔 코드/비번 없음 — 인증은 club 단위 */
+    var mi=await sb.from('season').insert({club_id:clubId||null,name:name,season_title:stitle,season_sub:ssub||'',is_open:true}).select('id').single();
     if(mi.error){rtErr(mi.error);return null;}
-    var rows=books.map(function(b,i){return {meeting_id:mi.data.id,ord:i+1,title:b.title,author:b.author||'(저자 미상)',intro:b.intro||'',author_bio:b.authorBio||'',yearmonth:b.yearmonth||'',questions:b.questions.filter(function(q){return q&&q.trim();}),author_facts:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){var u=extractUrl(s);return u?{i:'🔗',t:s.replace(u.replace(/^https?:\/\//,''),'').replace(/\s*[—·-]\s*$/,'').trim()||s,m:u}:{i:'🔗',t:s,m:''};})};});
+    var rows=books.map(function(b,i){return {season_id:mi.data.id,ord:i+1,title:b.title,author:b.author||'(저자 미상)',intro:b.intro||'',author_bio:b.authorBio||'',yearmonth:b.yearmonth||'',questions:b.questions.filter(function(q){return q&&q.trim();}),author_facts:(b.facts||[]).filter(function(s){return s&&s.trim();}).map(function(s){return {e:'📌',t:s,s:''};}),links:(b.links||[]).filter(function(s){return s&&s.trim();}).map(function(s){var u=extractUrl(s);return u?{i:'🔗',t:s.replace(u.replace(/^https?:\/\//,''),'').replace(/\s*[—·-]\s*$/,'').trim()||s,m:u}:{i:'🔗',t:s,m:''};})};});
     /* 책 0권으로도 시즌 발급 가능 — 책은 시즌 페이지에서 따로 추가 */
     if(rows.length){
       var be=(await sb.from('book').insert(rows)).error;
       if(be){rtErr(be);return null;}
     }
     await RT.loadMeetings();
-    return {code:code,pw:pw};
+    return true;
   },
   async saveQuestions(bookId,qs){
     var e=(await sb.from('book').update({questions:qs}).eq('id',bookId)).error;
@@ -1203,14 +1198,14 @@ var RT={
     await RT.loadMeetings(); return true;
   },
   async deleteMeeting(id,pw){
-    var r=await sb.rpc('delete_meeting',{p_meeting_id:id,p_pw:pw});
+    var r=await sb.rpc('delete_season',{p_season_id:id,p_pw:pw});
     if(r.error){rtErr(r.error);return false;}
     if(!r.data){toast('비밀번호가 맞지 않아 삭제하지 않았어요');return false;}
     await RT.loadMeetings(); return true;
   },
   async addBook(meetingId,title,author){
     var m=meetingById(meetingId),ord=((m&&m.season&&m.season.books.length)||0)+1;
-    var e=(await sb.from('book').insert({meeting_id:meetingId,ord:ord,title:title,author:author||'',intro:'',author_bio:'',yearmonth:'',questions:[''],author_facts:[],links:[]})).error;
+    var e=(await sb.from('book').insert({season_id:meetingId,ord:ord,title:title,author:author||'',intro:'',author_bio:'',yearmonth:'',questions:[''],author_facts:[],links:[]})).error;
     if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
   },
   async closeBook(bookId,on){
@@ -1260,7 +1255,6 @@ function go(name,nopush){
   document.body.className=document.body.className.replace(/\s*is-page-\S+/g,'').trim();
   document.body.classList.add('is-page-'+name);
   if(name==='clubs') renderClubs();
-  if(name==='create-club') renderCreateClub();
   if(name==='meetings') renderMeetings();
   if(name==='create') renderCreate();
   if(name==='manage') renderManage();
@@ -1352,7 +1346,7 @@ async function sessRestore(){
   STATE.phone4=s.p4||null; STATE.clubId=s.cid||null; STATE.meetingId=s.mid||null; STATE.isHost=!!s.host; STATE.bookId=s.bid||null;
   if(ONLINE){ loading(true); try{ await RT.loadClubs(); await RT.loadMeetings(); if(STATE.bookId) await RT.loadBook(STATE.bookId); }catch(e){ rtErr(e); } loading(false); }
   setNick(); syncHostUI(); syncAuthUI();
-  var ok=['clubs','create-club','meetings','owners','season','book','discussion','history','results','create','manage'];
+  var ok=['clubs','meetings','owners','season','book','discussion','history','results','create','manage'];
   var pg=(ok.indexOf(s.pg)>=0)?s.pg:(STATE.isHost?(STATE.clubId?'meetings':'manage'):'clubs');
   go(pg); return true;
 }
@@ -1364,7 +1358,7 @@ function back(){
   else if(id==='season') go('meetings');
   else if(id==='meetings') go('login'); /* 단일 모임 — 시즌 목록이 최상위 */
   else if(id==='owners') go('meetings');
-  else if(id==='create'||id==='manage'||id==='create-club') go(STATE.phone4?'clubs':'login');
+  else if(id==='create'||id==='manage') go(STATE.phone4?'clubs':'login');
   else if(id==='clubs') go('login');
   else go('login');
 }
@@ -1402,155 +1396,17 @@ function renderClubs(){
   if(dc){ enterClub(dc.id,true); return; }
   document.getElementById('page-clubs').innerHTML='<p class="body-2 dim" style="padding:40px 0;text-align:center">아직 모임이 없어요.</p>';
 }
-function _renderClubsLegacy(){
-  if(!STATE.phone4&&!STATE.isHost){go('login');return;}
-  var clubs=allClubs();
-  var me=STATE.phone4;
-  var mine=clubs.filter(function(c){return isClubOwner(c,me);});
-  var others=clubs.filter(function(c){return !isClubOwner(c,me)&&(c.isPublic!==false);}).slice();
-  function card(c,opts){
-    opts=opts||{};
-    var open=(c.isPublic!==false);
-    var nSeasons=clubMeetings(c.id).length;
-    var cls=opts.host?'current':(open?'current':'upcoming');
-    /* 내가 운영하는 모임이고 비공개일 때만 카드 안에 초청 코드 표시 — 회원에게 공유하기 위함 */
-    var showInvite=(opts.host&&!open&&c.code);
-    return '<div class="book-card '+cls+'" style="opacity:1" onclick="enterClub(\''+c.id+'\')">'+
-      '<div class="book-card__spine">'+esc((c.name||'?').charAt(0))+'</div>'+
-      '<div class="book-card__body"><div class="book-card__month">'+(opts.host?'<span style="color:var(--accent)">👑 내가 운영</span>':(open?'모임':'🔒 비공개 모임'))+'</div>'+
-      '<div class="book-card__title">'+esc(c.name)+'</div>'+
-      '<div class="book-card__author">'+nSeasons+'개 시즌'+(c.intro?' · '+esc(c.intro):'')+'</div>'+
-      (showInvite?'<div class="invite-chip" onclick="event.stopPropagation();copyInvite(\''+esc(c.code)+'\')" title="클릭해 복사"><span class="invite-chip__lbl">🎟️ 초청 코드</span><b class="invite-chip__code">'+esc(c.code)+'</b><span class="invite-chip__hint">탭해 복사</span></div>':'')+
-      '</div>'+
-      (open?'<span class="book-card__go">입장 &rarr;</span>'
-           :(opts.host?'':'<span class="book-card__badge soon">비공개</span>'))+
-    '</div>';
-  }
-  var h='<div class="section-hd"><div><div class="eyebrow">'+esc(STATE.phone4||'')+'</div><h2 class="h-1 mt-4">어느 모임에<br>들어갈까요?</h2></div></div>';
-  if(mine.length){
-    h+='<p class="body-2 mb-12"><b style="color:var(--accent)">👑 내가 운영하는 모임</b></p><div class="season-books">';
-    mine.forEach(function(c){h+=card(c,{host:true});});
-    h+='</div><hr class="rule">';
-  }
-  h+='<p class="body-2 mb-12"><b style="color:var(--ink)">공개 모임</b></p><div class="season-books">';
-  if(!others.length) h+='<p class="body-2 dim center" style="padding:20px 0">아직 공개된 모임이 없어요.</p>';
-  others.forEach(function(c){h+=card(c);});
-  h+='</div>';
-  /* 비공개 모임 초청 코드 입장 */
-  h+='<hr class="rule">'+
-     '<p class="body-2 mb-12"><b style="color:var(--ink)">🔒 비공개 모임</b></p>'+
-     '<div class="sheet"><div class="eyebrow mb-8">🎟️ 초청 코드로 찾기</div>'+
-       '<div style="display:flex;gap:8px;align-items:center"><input class="input" id="invite-code" style="flex:3;text-transform:uppercase" placeholder="모임 코드 (예: ABCDE)" onkeydown="if(event.key===\'Enter\')joinByInvite()">'+
-       '<button class="btn btn-primary btn-sm btn-pill" style="flex:1;min-width:0;width:auto" onclick="joinByInvite()">찾기</button></div>'+
-       '<p class="body-2 dim mt-8" style="font-size:12px">코드를 입력하면 모임 정보를 보여드릴게요. 확인 후 [참여하기]를 누르면 입장됩니다.</p>'+
-     '</div>';
-  /* 참여하기 미리보기 카드 — joinByInvite 성공 시 노출 */
-  if(INVITE_PREVIEW){
-    var p=INVITE_PREVIEW;
-    h+='<div id="invite-preview" class="sheet sheet--warm mt-16" style="border:2px solid var(--accent)">'+
-         '<div class="eyebrow mb-8" style="color:var(--accent)">✅ 모임을 찾았어요</div>'+
-         '<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">'+
-           '<div class="book-card__spine" style="width:64px;min-height:84px;font-size:32px">'+esc((p.name||'?').charAt(0))+'</div>'+
-           '<div style="flex:1;min-width:0"><div class="book-card__title" style="font-size:18px;margin-bottom:4px">'+esc(p.name)+'</div>'+
-           '<div class="body-2 dim" style="font-size:13px">'+p.nSeasons+'개 시즌'+(p.intro?' · '+esc(p.intro):'')+'</div></div>'+
-         '</div>'+
-         '<p class="body-2 mb-12" style="font-size:13px">초청 코드 <b style="font-family:var(--display);color:var(--accent);letter-spacing:.1em">'+esc(p.code)+'</b> 로 이 모임에 참여하시겠어요?</p>'+
-         '<div class="row"><button class="btn btn-primary btn-pill" onclick="confirmJoinInvite()">참여하기 →</button>'+
-         '<button class="btn btn-ghost btn-pill" onclick="cancelJoinInvite()">취소</button></div>'+
-       '</div>';
-  }
-  h+='<div class="sheet sheet--warm mt-16" style="text-align:center;cursor:pointer" onclick="go(\'create-club\')">'+
-       '<div class="eyebrow">+ 새 모임 만들기</div>'+
-       '<p class="body-2 mt-8">읽고 싶은 책을 모아 새 모임을 운영해보세요. 발급 후 이 4자리로 모임장 권한이 자동 부여됩니다.</p>'+
-     '</div>';
-  document.getElementById('page-clubs').innerHTML=h;
-}
-function copyInvite(code){
-  if(!code)return;
-  var s=String(code);
-  try{
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(s).then(function(){toast('초청 코드 복사됨: '+s);},function(){_fallbackCopyInvite(s);});
-      return;
-    }
-  }catch(e){}
-  _fallbackCopyInvite(s);
-}
-function _fallbackCopyInvite(s){
-  try{var ta=document.createElement('textarea');ta.value=s;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('초청 코드 복사됨: '+s);}
-  catch(e){toast('초청 코드: '+s+' (복사는 실패 — 직접 적어주세요)');}
-}
-var INVITE_PREVIEW=null; /* {id,name,intro,nSeasons,code} — 참여하기 확인 단계 데이터 */
-async function joinByInvite(){
-  var el=document.getElementById('invite-code'),v=el?el.value.trim().toUpperCase():'';
-  if(!v){toast('초청 코드를 입력해 주세요');return;}
-  if(ONLINE){try{await RT.loadClubs();}catch(e){}}
-  var hit=null;allClubs().forEach(function(c){if(String(c.code||'').toUpperCase()===v)hit=c;});
-  if(!hit){toast('일치하는 모임을 찾을 수 없어요');return;}
-  if(isClubOwner(hit,STATE.phone4)){enterClub(hit.id);return;} /* 이미 운영자면 바로 입장 */
-  INVITE_PREVIEW={id:hit.id,name:hit.name,intro:hit.intro||'',nSeasons:clubMeetings(hit.id).length,code:hit.code||''};
-  renderClubs();
-  /* 미리보기 카드로 자동 스크롤 */
-  setTimeout(function(){var p=document.getElementById('invite-preview');if(p)p.scrollIntoView({behavior:'smooth',block:'center'});},50);
-}
-function cancelJoinInvite(){INVITE_PREVIEW=null;renderClubs();}
-function confirmJoinInvite(){
-  if(!INVITE_PREVIEW)return;
-  var id=INVITE_PREVIEW.id;INVITE_PREVIEW=null;
-  enterClub(id);
-}
+/* (2026-07-21 v18) 모임 선택 카드·초청 코드 입장 UI 삭제 — 단일 모임 체제 확정으로 미사용 */
 async function enterClub(id,quiet){
   STATE.clubId=id;STATE.meetingId=null;STATE.bookId=null;
   var c=clubById(id);
   STATE.isHost=isClubOwner(c,STATE.phone4);
   setNick();syncHostUI();
+  /* v18: (모임, 4자리) → member 행 축적 — 사람 엔티티의 시작. 실패해도 흐름엔 무영향. */
+  if(ONLINE&&STATE.phone4){ try{ sb.from('member').upsert({club_id:id,phone4:STATE.phone4},{onConflict:'club_id,phone4',ignoreDuplicates:true}).then(function(){}); }catch(e){} }
   if(ONLINE){loading(true);try{await RT.loadMeetings();}catch(e){rtErr(e);}loading(false);}
   go('meetings');
   if(!quiet)toast(STATE.isHost?'모임장 권한으로 입장':'모임에 입장했어요');
-}
-
-/* ═══════════ RENDER: 모임 만들기 (club 발급) ═══════════ */
-var CBUILD={name:'',intro:'',isPublic:true};
-function renderCreateClub(){
-  document.getElementById('page-create-club').innerHTML=
-    '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto;margin-bottom:12px" onclick="go(\'clubs\')">&larr; 모임 목록</button>'+
-    '<div class="section-hd"><div><div class="eyebrow">새 모임 만들기</div><h2 class="h-1 mt-4">모임<br>만들기.</h2></div></div>'+
-    '<div class="sheet sheet--warm mb-16" style="background:var(--accent-tint);border-color:var(--accent)">'+
-      '<div class="eyebrow mb-8">📚 헷갈릴 때</div>'+
-      '<p class="body-2" style="font-size:13px;line-height:1.6"><b>모임</b> = 사람들의 묶음 (예: 사내 독서모임)<br><b>시즌</b> = 모임 안의 한 주제 (예: 인간 본성 탐구) — 3~6권<br><b>책</b> = 시즌 안의 한 권 (예: 이향인)</p>'+
-      '<p class="body-2 dim mt-8" style="font-size:12px">지금은 ❶ <b style="color:var(--accent)">모임</b> 을 먼저 만들어요. 그 다음 시즌·책을 채우면 됩니다.</p>'+
-    '</div>'+
-    '<p class="body-2 mb-16">모임을 만들면 이 휴대폰 4자리(<b style="color:var(--ink)">'+esc(STATE.phone4||'')+'</b>)가 자동으로 모임장으로 등록됩니다. 다른 운영자는 모임 설정에서 추가할 수 있어요.</p>'+
-    '<div class="sheet">'+
-      '<div class="field"><label>모임 이름</label><input class="input" id="cc-name" value="'+esc(CBUILD.name)+'" placeholder="예: 사내 독서모임"></div>'+
-      '<div class="field"><label>한 줄 소개 (선택)</label><input class="input" id="cc-intro" value="'+esc(CBUILD.intro)+'" placeholder="예: 매월 1권 · 점심 토론"></div>'+
-      '<div class="field"><label>공개 범위</label>'+
-        '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;padding:8px 0"><input type="radio" name="cc-vis" id="cc-pub-yes" value="public"'+(CBUILD.isPublic!==false?' checked':'')+'> <b style="color:var(--ink)">공개</b> · 모임 목록에 누구나 보임</label>'+
-        '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;padding:8px 0"><input type="radio" name="cc-vis" id="cc-pub-no" value="private"'+(CBUILD.isPublic===false?' checked':'')+'> <b style="color:var(--ink)">비공개</b> · 초청 코드를 받은 사람만 입장</label>'+
-      '</div>'+
-    '</div>'+
-    '<button class="btn btn-primary btn-pill" onclick="issueClub()">모임 발급하기 (코드·비번)</button>'+
-    '<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'clubs\')">&larr; 모임 목록</button>'+
-    '<div id="cc-result"></div>';
-}
-async function issueClub(){
-  if(!STATE.phone4){toast('먼저 휴대폰 4자리로 로그인해 주세요');return;}
-  var name=val('cc-name');if(!name){toast('모임 이름을 입력해주세요');return;}
-  var intro=val('cc-intro');
-  var pubYes=document.getElementById('cc-pub-yes'),isPublic=pubYes?pubYes.checked:true;
-  var code,pw,cid;
-  if(ONLINE){
-    var r=await RT.createClub(name,intro,STATE.phone4,isPublic);
-    if(!r)return;
-    code=r.code;pw=r.pw;cid=r.id;
-  } else {
-    code=rndCode();pw=String(Math.floor(1000+Math.random()*9000));cid='cc'+Date.now();
-    var cs=customClubs();cs.push({id:cid,name:name,intro:intro,code:code,pw:pw,isPublic:!!isPublic,ownerPhones:[STATE.phone4]});saveCustomClubs(cs);
-  }
-  CBUILD={name:'',intro:'',isPublic:true};
-  toast(isPublic?'공개 모임을 만들었어요':'비공개 모임을 만들었어요 (초청 코드: '+code+')');
-  /* 발급 즉시 그 모임으로 입장 — 헷갈림 방지 */
-  enterClub(cid);
 }
 
 /* ═══════════ RENDER: 시즌 리스트 (선택된 모임 안) ═══════════ */
