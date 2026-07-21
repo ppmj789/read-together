@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>未知의 서재 — 우리만의 다음 페이지</title>
+<meta name="description" content="未知의 서재 — 한 주제를 여러 권으로 이어 읽는 독서모임. 휴대폰 뒤 4자리로 입장해 별점·답변·댓글을 나눕니다.">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
 <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png?v=2">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
@@ -21,7 +22,7 @@
 /* ═══ DESIGN TOKENS ═══ */
 :root{
   --bg:#F5F1E8;--paper:#FDFAF3;--paper-warm:#F8F3E6;
-  --ink:#1A1612;--ink-soft:#6B5E50;--ink-dim:rgba(26,22,18,.45);
+  --ink:#1A1612;--ink-soft:#6B5E50;--ink-dim:rgba(26,22,18,.58); /* .45→.58 — 크림 배경 대비 4.5:1(WCAG AA) 확보 */
   --rule:#D4CFC4;--rule-soft:rgba(26,22,18,.10);
   --accent:#3B5998;--accent-soft:#4A6DB5;--accent-tint:rgba(59,89,152,.08);--accent-ink:#fff;
   --highlight:#EDE8DA;--success:#2D8659;--success-tint:rgba(45,134,89,.10);--star:#E8B23A;
@@ -31,6 +32,9 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px}
+/* 키보드 포커스 — 마우스 클릭엔 안 뜨고 Tab 이동에만 보이는 링 */
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 body{font-family:'Pretendard Variable','Pretendard',sans-serif;font-size:15px;line-height:1.6;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
 ::selection{background:var(--accent);color:#fff}
 
@@ -62,6 +66,16 @@ body{font-family:'Pretendard Variable','Pretendard',sans-serif;font-size:15px;li
 .subbar a:hover{background:var(--accent-tint);color:var(--accent)}
 .subbar__crumb{flex:1;text-align:right;color:var(--ink-dim);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .subbar__crumb b{color:var(--ink);font-weight:700}
+
+/* ═══ BOTTOM NAV — 하단 주 내비게이션 (로그인 후 상시, 2026-07-21 UX) ═══ */
+.bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:58;display:none;background:var(--paper);border-top:1px solid var(--rule);padding:5px max(8px,env(safe-area-inset-left)) calc(5px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-right));box-shadow:0 -2px 12px rgba(0,0,0,.05)}
+.bottomnav.visible{display:block}
+.bottomnav__row{display:flex;width:100%;max-width:680px;margin:0 auto}
+.bottomnav button{flex:1;background:none;border:none;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 5px;color:var(--ink-dim);font-size:11px;font-weight:600;border-radius:12px;transition:color .15s,background .15s}
+.bottomnav button .ic{font-size:20px;line-height:1;filter:grayscale(1);opacity:.55;transition:filter .15s,opacity .15s}
+.bottomnav button.active{color:var(--accent);background:var(--accent-tint)}
+.bottomnav button.active .ic{filter:none;opacity:1}
+body.has-bottomnav .main{padding-bottom:150px}
 
 /* ═══ LAYOUT ═══ */
 .main{padding:74px 20px 100px;max-width:520px;margin:0 auto}
@@ -198,6 +212,14 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 
 /* Toast */
 .toast-area{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:center}
+/* ═══ 인앱 다이얼로그 (confirm/prompt 대체 — 네이티브 다이얼로그는 PWA·iOS 에서 불안정) ═══ */
+.dlg-overlay{position:fixed;inset:0;background:rgba(26,22,18,.45);z-index:190;display:flex;align-items:center;justify-content:center;padding:24px}
+.dlg{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:24px 20px 20px;max-width:340px;width:100%;box-shadow:var(--shadow-lg);animation:pageIn .18s ease}
+.dlg__msg{font-size:14.5px;line-height:1.65;color:var(--ink);margin-bottom:16px;word-break:keep-all}
+.dlg__input{margin-bottom:14px}
+.dlg__row{display:flex;gap:8px}
+.dlg__row .btn{flex:1}
+.btn.dlg--danger{background:#C33D2E;border-color:#C33D2E;color:#fff}
 .alert{padding:10px 20px;background:var(--success);color:#fff;font-size:14px;font-weight:500;pointer-events:auto;border-radius:var(--radius-pill);display:flex;align-items:center;gap:8px;animation:toastIn .3s ease;box-shadow:var(--shadow-lg)}
 @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
@@ -329,8 +351,9 @@ body.is-page-season .book-card__cover{width:96px}
 .rating-row:last-child{border-bottom:none}
 .rating-row__label{font-size:14px;font-weight:600;color:var(--ink)}
 .rating-row__label span{display:block;font-size:12px;color:var(--ink-dim);font-weight:400;margin-top:1px}
-.stars{display:flex;gap:3px}
-.star{font-size:24px;line-height:1;color:var(--rule);cursor:pointer;background:none;border:none;padding:8px 6px;margin:-4px 0;transition:transform .12s,color .15s}
+.stars{display:flex;gap:4px}
+/* 별 = 핵심 입력 — 터치 타깃 세로 44px 확보 (24px 글리프 + 상하 10px) */
+.star{font-size:24px;line-height:1;color:var(--rule);cursor:pointer;background:none;border:none;padding:10px 7px;margin:-6px 0;transition:transform .12s,color .15s}
 .star:hover{transform:scale(1.18)}
 .star.on{color:var(--star)}
 .rating-row--total{border-top:2px solid var(--rule);border-bottom:none;margin-top:4px;padding-top:14px}
@@ -543,9 +566,18 @@ body.is-page-season .book-card__cover{width:96px}
 
 <!-- ═══ SUBBAR (개인 모드 경량 네비) ═══ -->
 <nav class="subbar" id="subbar">
-  <a onclick="back()">&larr; 뒤로</a>
-  <a onclick="go('meetings')">📚 서재</a>
+  <a onclick="back()" id="subbar-back">&larr; 뒤로</a>
   <span class="subbar__crumb" id="subbar-crumb"></span>
+</nav>
+
+<!-- ═══ BOTTOM NAV (하단 주 내비게이션 — 로그인 후 상시 노출) ═══ -->
+<nav class="bottomnav" id="bottomnav" aria-label="주 메뉴">
+  <div class="bottomnav__row">
+    <button data-nav="shelf" onclick="navGo('shelf')"><span class="ic">📚</span>서재</button>
+    <button data-nav="season" onclick="navGo('season')"><span class="ic">🗂️</span>시즌</button>
+    <button data-nav="book" onclick="navGo('book')"><span class="ic">📖</span>이번 책</button>
+    <button data-nav="history" onclick="navGo('history')"><span class="ic">🕘</span>내 기록</button>
+  </div>
 </nav>
 
 <!-- ═══ STAGE NAV (발표 모드 전용) ═══ -->
@@ -571,11 +603,12 @@ body.is-page-season .book-card__cover{width:96px}
   <div class="login-wrap">
     <div class="field" style="text-align:left">
       <label>휴대폰 번호 뒤 4자리</label>
-      <input class="input pin-input" id="pin" inputmode="numeric" maxlength="4" placeholder="0000"
+      <input class="input pin-input" id="pin" type="tel" autocomplete="off" inputmode="numeric" maxlength="4" placeholder="0000"
              oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')login()">
     </div>
     <button class="btn btn-primary btn-arrow btn-pill" onclick="login()">들어가기 <span class="arr">&rarr;</span></button>
     <p class="login-hint">번호 뒤 4자리만으로 입장합니다.<br>들어가면 바로 未知의 서재 책장이 열려요.</p>
+    <p class="login-hint" style="font-size:12px;opacity:.85">🔒 꼭 <b>본인 번호</b>로 입장해 주세요 — 4자리가 곧 내 기록의 열쇠예요.<br>30분 동안 활동이 없으면 자동 로그아웃돼요.</p>
   </div>
 </div>
 
@@ -770,6 +803,32 @@ function saveStore(s){
 function blankBook(){return {answers:['','',''],submitted:false,ratings:{},comments:{}};}
 function bookState(id){var s=loadStore();return s[id]||blankBook();}
 function setBookState(id,bs){var s=loadStore();s[id]=bs;saveStore(s);}
+/* ── 미제출 답변 로컬 백업 (ONLINE 전용, 2026-07-21) ──
+ * ONLINE 모드의 NETSTORE 는 메모리 미러라, 자동 로그아웃·새로고침 뒤 loadBook 이
+ * 서버 값으로 덮으면 쓰던 답변이 날아갔다 — "이 기기에 남아 있어요" 약속이 거짓이 되던 버그.
+ * 입력을 잡을 때마다 localStorage 에 백업하고, loadBook 후 서버 답이 빈 칸에만 되살린다. */
+function draftKey(){return 'rt:draft:'+STATE.phone4;}
+function draftLoadAll(){try{return JSON.parse(localStorage.getItem(draftKey()))||{};}catch(e){return MEM[draftKey()]?JSON.parse(MEM[draftKey()]):{};}}
+function _draftWrite(all){var v=JSON.stringify(all);try{localStorage.setItem(draftKey(),v);}catch(e){MEM[draftKey()]=v;}}
+function draftSave(bookId,answers){
+  if(!ONLINE||!STATE.phone4)return;
+  var all=draftLoadAll();
+  var any=(answers||[]).some(function(a){return a&&a.trim();});
+  if(any) all[bookId]=answers.slice(); else delete all[bookId];
+  _draftWrite(all);
+}
+function draftClear(bookId){
+  if(!STATE.phone4)return;
+  var all=draftLoadAll(); if(!(bookId in all))return;
+  delete all[bookId]; _draftWrite(all);
+}
+function applyLocalDrafts(bookId){
+  if(!ONLINE||!STATE.phone4)return;
+  var ns=NETSTORE[bookId]; if(!ns)return;
+  if(ns.submitted){ draftClear(bookId); return; }        /* 이미 제출됨 — 백업은 낡은 것 */
+  var d=draftLoadAll()[bookId]; if(!d)return;
+  ns.answers=(ns.answers||[]).map(function(a,i){ return (a&&a.trim())?a:((d[i]&&d[i].trim())?d[i]:a); });
+}
 
 function nkLoad(){try{return JSON.parse(localStorage.getItem('rt:nick'))||{};}catch(e){return MEM['rt:nick']?JSON.parse(MEM['rt:nick']):{};}}
 function nkSave(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:nick',v);}catch(e){MEM['rt:nick']=v;}}
@@ -970,7 +1029,7 @@ function applySchedule(books){
 }
 
 /* ═══════════ RT — Supabase 데이터 계층 (ONLINE 일 때만 호출) ═══════════ */
-function rtErr(e){console.error('[Supabase]',e);toast('서버 오류: '+((e&&e.message)||'요청 실패'));}
+function rtErr(e){console.error('[Supabase]',e);toast('서버 오류: '+((e&&e.message)||'요청 실패'),4500);} /* 오류는 읽을 시간을 길게 */
 var RT={
   async loadClubs(){
     /* v16: password 는 서버 전용(인증=verify_club RPC). v18: is_open·owner_phone4 컬럼 정리됨. */
@@ -1100,6 +1159,7 @@ var RT={
     NETSTORE[bookId]={answers:myAns,submitted:myMb?!!myMb.submitted:false,ratings:(myMb&&myMb.ratings)||{},comments:myCmt,
       inbox:myInbox,myReact:myReact,
       ihyangScore:myScore,ihyangPct:myIy?myIy.pct:null,ihyangIs:myIy?!!myIy.is:(myScore!=null?myScore>=188:false),ihyangMeta:myMeta};
+    applyLocalDrafts(bookId); /* 서버가 빈 칸이면 이 기기의 미제출 백업을 되살린다 */
   },
   async toggleReaction(bookId,qi,targetPhone4){
     if(!STATE.phone4){toast('휴대폰 4자리로 입장해야 공감할 수 있어요');return false;}
@@ -1122,6 +1182,7 @@ var RT={
     var e1=(await sb.from('answer').upsert(rows,{onConflict:'book_id,phone4,q_index'})).error;
     var e2=(await sb.from('member_book').upsert({book_id:bookId,phone4:STATE.phone4,nickname:nick,submitted:true},{onConflict:'book_id,phone4'})).error;
     if(e1||e2){rtErr(e1||e2);return false;}
+    draftClear(bookId); /* 서버에 실렸으니 로컬 백업 폐기 */
     await RT.loadBook(bookId);return true;
   },
   async saveDraft(bookId,answers){
@@ -1132,6 +1193,7 @@ var RT={
     var e1=rows.length?(await sb.from('answer').upsert(rows,{onConflict:'book_id,phone4,q_index'})).error:null;
     var e2=(await sb.from('member_book').upsert({book_id:bookId,phone4:STATE.phone4,nickname:nick},{onConflict:'book_id,phone4'})).error;
     if(e1||e2){rtErr(e1||e2);return false;}
+    draftClear(bookId); /* 서버에 실렸으니 로컬 백업 폐기 */
     await RT.loadBook(bookId);return true;
   },
   async saveRatings(bookId,ratings){
@@ -1244,7 +1306,9 @@ function setNick(){
   el.textContent=t;
   el.style.display=t?'block':'none';
 }
+var NAVSEQ=0; /* 렌더 도중 다른 go() 가 끼어들면(가드 리다이렉트·clubs 자동 포워딩) 바깥 호출의 후처리를 중단하기 위한 토큰 */
 function go(name,nopush){
+  var nav=++NAVSEQ;
   /* 페이지를 옮기면 닉네임 변경 모드는 자동 종료 — 확정 안 한 이름은 버리고 원래 이름 유지 */
   PENDNICK=null; NICKMODE=false;
   STATE.page=name; setNick();
@@ -1264,10 +1328,18 @@ function go(name,nopush){
   if(name==='discussion') renderDiscussion();
   if(name==='history') renderHistory();
   if(name==='results') renderResults();
+  /* 렌더 중 중첩 go() 가 화면을 대체했으면(예: clubs → meetings 자동 포워딩, 가드 리다이렉트)
+     subbar·세션·히스토리 후처리는 그쪽 호출이 책임진다 — 여기서 이어가면 세션 페이지가
+     유령 페이지로 덮이고 히스토리 맨 위에 중간 엔트리가 쌓인다 (2026-07-21 버그 수정) */
+  if(NAVSEQ!==nav) return;
   var inner=(name==='meetings'||name==='owners'||name==='season'||name==='book'||name==='discussion'||name==='history'||name==='results');
   var sb=document.getElementById('subbar');
   sb.classList.toggle('visible',inner);
   document.body.classList.toggle('has-subbar',inner);
+  /* 서재(meetings)는 최상위 — 뒤로 갈 곳이 없으니 ← 뒤로 링크를 감춘다 */
+  var bb=document.getElementById('subbar-back');
+  if(bb) bb.style.display=(name==='meetings')?'none':'';
+  syncBottomNav();
   if(inner){
     var bk=STATE.bookId?bookById(STATE.bookId):null;
     var label={meetings:'서재',owners:'모임 설정',season:'시즌',book:'사전정보',discussion:'답변',history:'내 기록',results:'발표 결과'}[name];
@@ -1275,7 +1347,15 @@ function go(name,nopush){
     document.getElementById('subbar-crumb').innerHTML=cn+(bk&&name!=='history'&&name!=='season'&&name!=='meetings'&&name!=='owners'?' · <b>'+esc(bk.title)+'</b>':'')+' · '+label;
   }
   sessSave(name);
-  if(!nopush){ try{ history.pushState({rt:1,pg:name,p4:STATE.phone4,cid:STATE.clubId,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId},''); }catch(e){} }
+  if(!nopush){
+    var hst={rt:1,pg:name,p4:STATE.phone4,cid:STATE.clubId,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId};
+    try{
+      var hs=history.state;
+      /* 같은 페이지 연속 이동은 엔트리를 새로 쌓지 않고 갱신 — 뒤로가기가 같은 화면에서 헛돌지 않게 */
+      if(hs&&hs.rt&&!hs.ihyang&&hs.pg===name) history.replaceState(hst,'');
+      else history.pushState(hst,'');
+    }catch(e){}
+  }
   window.scrollTo(0,0);
 }
 /* ── 세션 기억 (새로고침해도 있던 화면 복원) ── */
@@ -1353,14 +1433,17 @@ async function sessRestore(){
 function back(){
   var cur=document.querySelector('.page.active');
   var id=cur?cur.id.replace('page-',''):'login';
+  var authed=!!(STATE.phone4||STATE.isHost);
   if(id==='book'||id==='history') go('season');
+  else if(id==='results'&&RESULTS_FROM==='season'){ RESULTS_FROM='book'; go('season'); } /* 시즌에서 직진입한 결과 페이지 — 온 곳으로 돌려보냄 */
   else if(id==='discussion'||id==='results') go('book');
   else if(id==='season') go('meetings');
-  else if(id==='meetings') go('login'); /* 단일 모임 — 시즌 목록이 최상위 */
+  else if(id==='meetings'){ if(!authed) go('login'); } /* 서재가 최상위 — 로그인 상태에선 더 뒤가 없다 (로그인 화면으로 빠지던 버그 수정 2026-07-21) */
   else if(id==='owners') go('meetings');
   else if(id==='create'||id==='manage') go(STATE.phone4?'clubs':'login');
-  else if(id==='clubs') go('login');
-  else go('login');
+  else if(id==='clubs'){ if(!authed) go('login'); }
+  else if(!authed) go('login');
+  else goHome();
 }
 function goHome(){
   if(isStage) toggleMode();
@@ -1368,6 +1451,39 @@ function goHome(){
   if(STATE.phone4) go(STATE.clubId?'meetings':'clubs');
   else if(STATE.isHost) go(STATE.clubId?'meetings':'manage');
   else go('login');
+}
+
+/* ═══════════ 하단 주 내비게이션 (2026-07-21 UX) ═══════════
+ * 뒤로가기 체인에만 의존하던 화면 이동을 4개 목적지 직행으로 보완:
+ * 서재(책장) · 시즌 · 이번 책 · 내 기록. 로그인 후에만 노출, 발표모드에선 숨김. */
+function _ensureMeeting(){
+  if(STATE.meetingId) return true;
+  var ms=clubMeetings(STATE.clubId);
+  if(ms.length){ STATE.meetingId=ms[0].id; return true; }
+  return false;
+}
+async function navGo(t){
+  if(!(STATE.phone4||STATE.isHost)){ go('login'); return; }
+  if(isStage) setStage(false);
+  if(t==='shelf'){ go('meetings'); return; }
+  if(!STATE.clubId){ goHome(); return; }
+  if(!_ensureMeeting()){ go('meetings'); toast('아직 시즌이 없어요 — 책장에서 기다려 주세요'); return; }
+  if(t==='season'){ go('season'); return; }
+  if(t==='book'){
+    var id=currentBookId();
+    if(!id){ go('season'); toast('아직 등록된 책이 없어요'); return; }
+    await openBook(id); return;
+  }
+  if(t==='history'){ await openHistory(); return; }
+}
+function syncBottomNav(){
+  var nav=document.getElementById('bottomnav'); if(!nav) return;
+  var on=!!(STATE.phone4||STATE.isHost)&&!isStage&&!!STATE.page&&STATE.page!=='login';
+  nav.classList.toggle('visible',on);
+  document.body.classList.toggle('has-bottomnav',on);
+  var map={meetings:'shelf',owners:'shelf',create:'shelf',manage:'shelf',clubs:'shelf',season:'season',book:'book',discussion:'book',results:'book',history:'history'};
+  var act=map[STATE.page]||'';
+  nav.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active',b.dataset.nav===act); });
 }
 async function login(){
   var v=(document.getElementById('pin').value||'').trim();
@@ -1506,7 +1622,7 @@ async function addOwner(){
 async function removeOwner(p4){
   var c=activeClub();var owners=clubOwners(c).slice();
   if(owners.length<=1){toast('운영자가 한 명뿐이라 제거할 수 없어요');return;}
-  if(!confirm('운영자 ••••'+p4+' 를 제거할까요?'))return;
+  if(!(await uiConfirm('운영자 ••••'+p4+' 를 제거할까요?',{danger:true,okLabel:'제거'})))return;
   owners=owners.filter(function(x){return x!==p4;});
   if(ONLINE){if(!(await RT.setClubOwners(STATE.clubId,owners)))return;}
   else { var cs=customClubs();cs.forEach(function(x){if(x.id===STATE.clubId)x.ownerPhones=owners;});saveCustomClubs(cs); }
@@ -1516,15 +1632,15 @@ async function removeOwner(p4){
 function enterMeeting(id){STATE.meetingId=id;STATE.bookId=null;setNick();go('season');toast('시즌에 입장했어요');}
 /* v16: 파괴 동작(모임·시즌·책 삭제)은 서버가 모임 비밀번호를 검증해야 통과.
    실수·도용에 의한 통삭제 방지 — 비번을 잊었으면 Supabase 대시보드에서 확인. */
-function askClubPw(){
-  var pw=prompt('안전 확인 — 모임 백업 비밀번호(4자리)를 입력하세요');
+async function askClubPw(){
+  var pw=await uiPrompt('안전 확인 — 모임 백업 비밀번호(4자리)를 입력하세요',{numeric:true,placeholder:'0000',okLabel:'확인'});
   return (pw==null)?null:String(pw).trim();
 }
 async function delClubHost(){
   if(!STATE.clubId)return;
   var c=activeClub();
-  if(!confirm('모임 「'+(c&&c.name||'')+'」을 영구 삭제할까요?\n이 모임 안의 모든 시즌·책·답변·별점·댓글이 함께 삭제됩니다. 되돌릴 수 없어요.'))return;
-  if(ONLINE){var pw=askClubPw();if(pw==null)return;if(!(await RT.deleteClub(STATE.clubId,pw)))return;}
+  if(!(await uiConfirm('모임 「'+(c&&c.name||'')+'」을 영구 삭제할까요?\n이 모임 안의 모든 시즌·책·답변·별점·댓글이 함께 삭제됩니다. 되돌릴 수 없어요.',{danger:true,okLabel:'영구 삭제'})))return;
+  if(ONLINE){var pw=await askClubPw();if(pw==null)return;if(!(await RT.deleteClub(STATE.clubId,pw)))return;}
   else {var cs=customClubs().filter(function(cl){return cl.id!==STATE.clubId;});saveCustomClubs(cs);var ms=customMeetings().filter(function(mm){return mm.clubId!==STATE.clubId;});saveCustomMeetings(ms);}
   sessClear();STATE.clubId=null;STATE.meetingId=null;STATE.bookId=null;STATE.isHost=false;
   setNick();syncHostUI();syncAuthUI();go(STATE.phone4?'clubs':'login');toast('모임을 삭제했어요');
@@ -1554,9 +1670,13 @@ function renderCreate(){
     '<button class="btn btn-ghost btn-pill mt-12" onclick="exitBuilder()">&larr; 시즌 목록으로</button>';
   document.getElementById('page-create').innerHTML=h;
 }
-function exitBuilder(){
+async function exitBuilder(){
+  /* 입력칸 → BUILD 동기화를 먼저 — 예전엔 BUILD 가 늘 비어 있어 확인창이 절대 안 뜨고
+     적던 제목이 그대로 날아갔다 (2026-07-21 버그 수정) */
+  var el=document.getElementById('cb-stitle');if(el)BUILD.stitle=el.value.trim();
+  var el2=document.getElementById('cb-ssub');if(el2)BUILD.ssub=el2.value.trim();
   var hasData=BUILD.stitle||BUILD.ssub;
-  if(hasData && !confirm('만들던 시즌 정보가 사라져요. 정말 나가시겠어요?'))return;
+  if(hasData && !(await uiConfirm('만들던 시즌 정보가 사라져요. 정말 나가시겠어요?',{okLabel:'나가기'})))return;
   BUILD={name:'',stitle:'',ssub:''};
   go(STATE.clubId?'meetings':'clubs');
 }
@@ -1621,6 +1741,7 @@ function setStage(on){
   document.getElementById('subbar').classList.toggle('visible',!on&&document.body.classList.contains('has-subbar'));
   var b=document.getElementById('mode-toggle-btn');
   if(b){b.textContent='발표 종료';b.style.display=on?'inline-flex':'none';}
+  syncBottomNav(); /* 발표모드에선 하단 내비 숨김, 종료 시 복귀 */
 }
 async function startShare(bookId){
   var b=bookById(bookId);
@@ -1764,7 +1885,9 @@ function renderSeason(){
      : '<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>');
   document.getElementById('page-season').innerHTML=h;
 }
-async function openBook(id){STATE.bookId=id;DISC.view='rating';BINFO.buf=null;QEDIT.buf=null;MADD.open=false;setNick();if(ONLINE){loading(true);try{await RT.loadBook(id);}catch(e){rtErr(e);}loading(false);}go('book');}
+async function openBook(id){STATE.bookId=id;DISC.view='rating';BINFO.buf=null;QEDIT.buf=null;MADD.open=false;RESULTS_FROM='book';setNick();if(ONLINE){loading(true);try{await RT.loadBook(id);}catch(e){rtErr(e);}loading(false);}go('book');}
+/* 발표 결과 진입 출처 — 시즌 목록에서 직진입했으면 ← 뒤로가 (안 가본 사전정보 대신) 시즌으로 돌아가게 */
+var RESULTS_FROM='book';
 /* 참가자 — 시즌 목록에서 바로 진입 (마감 책 전용 지름길) */
 async function memberGoDisc(id){
   if(!STATE.phone4){toast('휴대폰 4자리로 먼저 입장해 주세요');return;}
@@ -1773,7 +1896,7 @@ async function memberGoDisc(id){
   go('discussion');
 }
 async function memberGoResults(id){
-  STATE.bookId=id;MADD.open=false;setNick();
+  STATE.bookId=id;MADD.open=false;setNick();RESULTS_FROM='season';
   if(ONLINE){loading(true);try{await RT.loadBook(id);}catch(e){rtErr(e);}loading(false);}
   go('results');
 }
@@ -1781,8 +1904,8 @@ async function memberGoResults(id){
    진입로는 사전정보 페이지 하단 1곳(go('discussion'))으로 축소. */
 function _custMutate(fn){ var cs=customMeetings(),hit=false; cs.forEach(function(mm){ if(fn(mm))hit=true; }); if(hit)saveCustomMeetings(cs); return hit; }
 async function delBookHost(id,title){
-  if(!confirm('「'+title+'」 책과 그 답변·댓글을 모두 삭제할까요?'))return;
-  if(ONLINE){ var pw=askClubPw(); if(pw==null)return; if(!(await RT.deleteBook(id,pw)))return; }
+  if(!(await uiConfirm('「'+title+'」 책과 그 답변·댓글을 모두 삭제할까요?',{danger:true,okLabel:'삭제'})))return;
+  if(ONLINE){ var pw=await askClubPw(); if(pw==null)return; if(!(await RT.deleteBook(id,pw)))return; }
   else { _custMutate(function(mm){ if(!mm.season)return false; var n=mm.season.books.length; mm.season.books=mm.season.books.filter(function(x){return x.id!==id;}); return mm.season.books.length!==n; }); }
   renderSeason();toast('책을 삭제했어요');
 }
@@ -1802,8 +1925,8 @@ async function addBookHostSubmit(){
   renderSeason();toast('「'+t+'」 추가됨 · 카드에서 질문·사전정보를 채우세요');
 }
 async function delMeetingHost(){
-  if(!confirm('이 시즌 전체(책·답변·별점·댓글)를 영구 삭제할까요? 되돌릴 수 없습니다.'))return;
-  if(ONLINE){ var pw=askClubPw(); if(pw==null)return; if(!(await RT.deleteMeeting(STATE.meetingId,pw)))return; }
+  if(!(await uiConfirm('이 시즌 전체(책·답변·별점·댓글)를 영구 삭제할까요? 되돌릴 수 없습니다.',{danger:true,okLabel:'영구 삭제'})))return;
+  if(ONLINE){ var pw=await askClubPw(); if(pw==null)return; if(!(await RT.deleteMeeting(STATE.meetingId,pw)))return; }
   else { _custMutate(function(mm){ return mm.id===STATE.meetingId; }) || 0;
     var cs=customMeetings().filter(function(mm){return mm.id!==STATE.meetingId;}); saveCustomMeetings(cs); }
   /* 모임장 신분 유지한 채 서재(시즌 목록)로 — 로그인까지 튕기던 버그 수정 (2026-07-21) */
@@ -2012,14 +2135,17 @@ function materialsHtml(b){
   return h+'</div>';
 }
 async function submitMaterial(bookId){
-  var t=val('mat-title'),u=val('mat-url');
-  if(!t){toast('자료 이름을 입력해 주세요');return;}
-  if(!u||!/^https?:\/\//i.test(u)){toast('링크는 https:// 로 시작하는 URL 이어야 해요');return;}
-  if(!(await RT.addMaterial(bookId,t,u)))return;
-  MADD.open=false;_rerenderCurrent();toast('자료를 공유했어요 · 모임원 모두가 볼 수 있어요');
+  if(_busy('material'))return; /* 더블탭 → 자료 2개 등록 방지 */
+  try{
+    var t=val('mat-title'),u=val('mat-url');
+    if(!t){toast('자료 이름을 입력해 주세요');return;}
+    if(!u||!/^https?:\/\//i.test(u)){toast('링크는 https:// 로 시작하는 URL 이어야 해요',3200);return;}
+    if(!(await RT.addMaterial(bookId,t,u)))return;
+    MADD.open=false;_rerenderCurrent();toast('자료를 공유했어요 · 모임원 모두가 볼 수 있어요');
+  } finally { _done('material'); }
 }
 async function delMaterial(id){
-  if(!confirm('이 자료 링크를 삭제할까요?'))return;
+  if(!(await uiConfirm('이 자료 링크를 삭제할까요?',{danger:true,okLabel:'삭제'})))return;
   if(!(await RT.deleteMaterial(STATE.bookId,id)))return;
   _rerenderCurrent();toast('자료를 삭제했어요');
 }
@@ -2140,7 +2266,8 @@ function discTabsHtml(b,bs){
   var lockOthers=!bs.submitted;
   function tab(k,label,locked,tip){
     var on=(DISC.view===k);
-    return '<button class="disc-tab'+(on?' active':'')+(locked?' lock':'')+'" '+(locked?('disabled title="'+esc(tip||'')+'"'):('onclick="setDiscView(\''+k+'\')"'))+'>'+esc(label)+(locked?' 🔒':'')+'</button>';
+    /* 잠긴 탭도 눌리게 두고 이유를 토스트로 — disabled+title 은 모바일에서 아무 피드백이 없었다 (2026-07-21) */
+    return '<button class="disc-tab'+(on?' active':'')+(locked?' lock':'')+'" '+(locked?('aria-disabled="true" onclick="toast(\''+esc(tip||'')+'\',3200)"'):('onclick="setDiscView(\''+k+'\')"'))+'>'+esc(label)+(locked?' 🔒':'')+'</button>';
   }
   return '<div class="disc-tabs">'+
     tab('rating','① 별점',false,'')+
@@ -2200,21 +2327,25 @@ function captureAnswersLocal(){
     if(el) bs.answers[i]=(el.value||'').trim();
   });
   setBookState(b.id,bs);
+  draftSave(b.id,bs.answers); /* ONLINE 이면 localStorage 에도 백업 — 자동 로그아웃·새로고침 대비 */
 }
 /* 임시저장 — 제출(submitted) 없이 답변만 저장. 다 채우지 않아도 됨. */
 async function saveDraft(){
   if(closedGuard())return;
-  var b=bookById(STATE.bookId); if(!b)return; var bs=bookState(b.id); bs.answers=bs.answers||[];
-  var vals=[];
-  b.questions.forEach(function(q,i){
-    var el=document.getElementById('ans-'+i)||document.getElementById('ea-'+i);
-    var t=el?(el.value||'').trim():(bs.answers[i]||'');
-    bs.answers[i]=t; vals[i]=t;
-  });
-  if(ONLINE){ if(!(await RT.saveDraft(b.id,vals))) return; }
-  else { setBookState(b.id,bs); }
-  toast('임시저장됐어요 — 제출 전까지 이어서 작성할 수 있어요');
-  renderDiscussion();
+  if(_busy('draft'))return;
+  try{
+    var b=bookById(STATE.bookId); if(!b)return; var bs=bookState(b.id); bs.answers=bs.answers||[];
+    var vals=[];
+    b.questions.forEach(function(q,i){
+      var el=document.getElementById('ans-'+i)||document.getElementById('ea-'+i);
+      var t=el?(el.value||'').trim():(bs.answers[i]||'');
+      bs.answers[i]=t; vals[i]=t;
+    });
+    if(ONLINE){ if(!(await RT.saveDraft(b.id,vals))) return; }
+    else { setBookState(b.id,bs); }
+    toast('임시저장됐어요 — 제출 전까지 이어서 작성할 수 있어요');
+    renderDiscussion();
+  } finally { _done('draft'); }
 }
 async function onIhyangResult(d){
   if(!d||d.type!=='ihyang-result')return;
@@ -2443,24 +2574,27 @@ function ratingHtml(b,bs){
 }
 async function submitAnswers(){
   if(closedGuard())return;
-  var b=bookById(STATE.bookId),bs=bookState(b.id);
-  if(!ratedAll(bs)){
-    var miss=RATING_AXES.length-ratedAny(bs);
-    if(!confirm('아직 별점 '+miss+'개 항목이 비어 있어요.\n그래도 답변을 제출할까요?\n(취소하면 별점 탭으로 돌아갑니다)')){
-      DISC.view='rating';renderDiscussion();return;
+  if(_busy('submit'))return;
+  try{
+    var b=bookById(STATE.bookId),bs=bookState(b.id);
+    if(!ratedAll(bs)){
+      var miss=RATING_AXES.length-ratedAny(bs);
+      if(!(await uiConfirm('아직 별점 '+miss+'개 항목이 비어 있어요.\n그래도 답변을 제출할까요?',{okLabel:'그래도 제출',cancelLabel:'별점 매기러'}))){
+        DISC.view='rating';renderDiscussion();return;
+      }
     }
-  }
-  var filled=0,vals=[];
-  b.questions.forEach(function(q,i){
-    var t=(document.getElementById('ans-'+i).value||'').trim();
-    bs.answers[i]=t;vals[i]=t;if(t)filled++;
-  });
-  if(filled<b.questions.length){setBookState(b.id,bs);toast('모든 질문에 답한 뒤 제출해주세요 ('+filled+'/'+b.questions.length+')');return;}
-  if(ONLINE){ if(!(await RT.submit(b.id,vals))) return; }
-  else { bs.submitted=true;setBookState(b.id,bs); }
-  DISC.view='others';
-  toast('답변 제출 완료! 다른 사람 답변·별점 탭이 열렸어요');
-  renderDiscussion();
+    var filled=0,vals=[];
+    b.questions.forEach(function(q,i){
+      var t=(document.getElementById('ans-'+i).value||'').trim();
+      bs.answers[i]=t;vals[i]=t;if(t)filled++;
+    });
+    if(filled<b.questions.length){setBookState(b.id,bs);toast('모든 질문에 답한 뒤 제출해주세요 ('+filled+'/'+b.questions.length+')',3200);return;}
+    if(ONLINE){ if(!(await RT.submit(b.id,vals))) return; }
+    else { bs.submitted=true;setBookState(b.id,bs); }
+    DISC.view='others';
+    toast('답변 제출 완료! 다른 사람 답변·별점 탭이 열렸어요');
+    renderDiscussion();
+  } finally { _done('submit'); }
 }
 function editAns(i){ EDITANS.qi=i; renderDiscussion(); }
 function cancelAns(){ EDITANS.qi=-1; renderDiscussion(); }
@@ -2468,7 +2602,9 @@ async function delMyAnswer(i){
   /* 내 답변 삭제 — 마감 여부와 무관하게 항상 호출 가능.
      서버에서 그 답변에 달린 댓글·공감까지 함께 삭제 (cascade by hand). */
   var b=bookById(STATE.bookId);if(!b)return;
-  if(!confirm('Q'+(i+1)+' 답변과 거기 달린 댓글·공감을 모두 삭제할까요? 되돌릴 수 없어요.'))return;
+  if(_busy('delans'))return;
+  try{
+  if(!(await uiConfirm('Q'+(i+1)+' 답변과 거기 달린 댓글·공감을 모두 삭제할까요? 되돌릴 수 없어요.',{danger:true,okLabel:'삭제'})))return;
   if(ONLINE){
     if(!(await RT.deleteMyAnswer(b.id,i)))return;
   } else {
@@ -2486,6 +2622,7 @@ async function delMyAnswer(i){
   EDITANS.qi=-1;
   toast('Q'+(i+1)+' 답변과 딸린 댓글·공감을 삭제했어요');
   renderDiscussion();
+  } finally { _done('delans'); }
 }
 async function saveAns(i){
   if(closedGuard())return;
@@ -2515,24 +2652,27 @@ async function setRating(k,n){
 }
 async function addComment(i,j){
   if(closedGuard())return;
-  var inp=document.getElementById('cm-'+i+'-'+j),t=(inp.value||'').trim();
-  if(!t){toast('댓글을 입력해주세요');return;}
-  var b=bookById(STATE.bookId),bs=bookState(b.id),ck='q'+i+'a'+j;
-  if(ONLINE){
-    var tgt=((b.others[i]||[])[j]||{}).phone4;
-    if(!tgt){toast('대상 답변을 찾을 수 없어요');return;}
-    if(!(await RT.addComment(b.id,i,tgt,t))) return;
-  } else {
-    if(!bs.comments[ck])bs.comments[ck]=[];
-    bs.comments[ck].push(t);setBookState(b.id,bs);
-  }
-  inp.value=''; /* 등록된 칸은 비움 — 재렌더 후 입력 복원 로직이 옛 값을 되살리지 않게 */
-  toast('댓글을 남겼어요 — 모임 때 함께 이야기해요');
-  renderDiscussion();
+  if(_busy('comment'))return; /* 서버 왕복 중 더블탭 → 댓글 2개 등록 방지 */
+  try{
+    var inp=document.getElementById('cm-'+i+'-'+j),t=(inp.value||'').trim();
+    if(!t){toast('댓글을 입력해주세요');return;}
+    var b=bookById(STATE.bookId),bs=bookState(b.id),ck='q'+i+'a'+j;
+    if(ONLINE){
+      var tgt=((b.others[i]||[])[j]||{}).phone4;
+      if(!tgt){toast('대상 답변을 찾을 수 없어요');return;}
+      if(!(await RT.addComment(b.id,i,tgt,t))) return;
+    } else {
+      if(!bs.comments[ck])bs.comments[ck]=[];
+      bs.comments[ck].push(t);setBookState(b.id,bs);
+    }
+    inp.value=''; /* 등록된 칸은 비움 — 재렌더 후 입력 복원 로직이 옛 값을 되살리지 않게 */
+    toast('댓글을 남겼어요 — 모임 때 함께 이야기해요');
+    renderDiscussion();
+  } finally { _done('comment'); }
 }
 async function delComment(i,j,ci){
   if(closedGuard())return;
-  if(!confirm('이 댓글을 삭제할까요?'))return;
+  if(!(await uiConfirm('이 댓글을 삭제할까요?',{danger:true,okLabel:'삭제'})))return;
   var b=bookById(STATE.bookId),bs=bookState(b.id),ck='q'+i+'a'+j,list=(bs.comments&&bs.comments[ck])||[];
   var c=list[ci];if(c===undefined)return;
   if(ONLINE){
@@ -2546,6 +2686,8 @@ async function delComment(i,j,ci){
 }
 async function toggleReact(i,j){
   if(closedGuard())return;
+  if(_busy('react'))return;
+  try{
   var b=bookById(STATE.bookId);
   var tgt=((b.others[i]||[])[j]||{}).phone4;
   if(ONLINE){
@@ -2561,6 +2703,7 @@ async function toggleReact(i,j){
     renderDiscussion();
     toast(r.mine?'공감했어요 💛':'공감 취소');
   }
+  } finally { _done('react'); }
 }
 
 /* ═══════════ RENDER: 내 기록 ═══════════ */
@@ -2690,17 +2833,17 @@ async function hostOpenBook(id,title){
   var b=bookById(id);
   var qs=((b&&b.questions)||[]).filter(function(q){return q&&q.trim();});
   if(!qs.length){
-    toast('이 책을 열려면 질문이 1개 이상 필요해요 — 책 카드의 ✏️ 편집에서 질문을 추가해 주세요');
+    toast('이 책을 열려면 질문이 1개 이상 필요해요 — 책 카드의 ✏️ 편집에서 질문을 추가해 주세요',3600);
     return;
   }
-  if(!confirm('「'+title+'」 책을 열까요? (질문 '+qs.length+'개)\n열면 참가자가 답변·별점·댓글을 남길 수 있어요.'))return;
+  if(!(await uiConfirm('「'+title+'」 책을 열까요? (질문 '+qs.length+'개)\n열면 참가자가 답변·별점·댓글을 남길 수 있어요.',{okLabel:'열기'})))return;
   if(ONLINE){if(!(await RT.openBook(id,true)))return;}
   else {_setBookOpenedLocal(id,true);}
   renderSeason();toast('🟢 책을 열었어요 · 참가자 답변을 받습니다');
 }
 async function hostCloseBook(id,title,on){
   var msg=on?('「'+title+'」 책을 닫을까요?\n닫으면 답변·별점·댓글이 모두 잠기고, 발표자료를 생성할 수 있어요. (다시 열 수 있어요)'):('「'+title+'」 책을 다시 열까요?\n참가자가 다시 답변·별점·댓글을 남길 수 있어요.');
-  if(!confirm(msg))return;
+  if(!(await uiConfirm(msg,{okLabel:on?'닫기':'다시 열기'})))return;
   if(ONLINE){
     if(on){if(!(await RT.closeBook(id,true)))return;}
     else { /* 다시 열기: closed_at=null + opened_at 유지(없으면 now) */
@@ -2717,18 +2860,63 @@ async function hostCloseBook(id,title,on){
 async function hostGenerateReport(id,title){
   var b=bookById(id);if(!b)return;
   var regen=!!(b.report);
-  if(!confirm((regen?'발표자료를 다시 생성할까요?':'발표자료를 생성할까요?')+'\n외부 AI 미연결 — 지금은 mock(통계 기반) 보고서가 만들어집니다.'))return;
+  if(!(await uiConfirm((regen?'발표자료를 다시 생성할까요?':'발표자료를 생성할까요?')+'\n외부 AI 미연결 — 지금은 mock(통계 기반) 보고서가 만들어집니다.',{okLabel:regen?'재생성':'생성'})))return;
   if(ONLINE){try{await RT.loadBook(id);}catch(e){}}
   var rep=generateReportMock(bookById(id)||b);
   if(ONLINE){if(!(await RT.saveReport(id,rep)))return;}
   else {_setBookReportLocal(id,rep);}
   renderSeason();toast(regen?'발표자료를 다시 생성했어요 (mock)':'발표자료를 생성했어요 (mock)');
 }
-function toast(msg){
+function toast(msg,ms){
+  /* ms: 표시 시간(기본 2.2초). 행동 지시·오류처럼 읽는 데 시간이 걸리는 메시지는 길게 준다. */
   var el=document.createElement('div');el.className='alert';el.textContent=msg;
   document.getElementById('toast-area').appendChild(el);
-  setTimeout(function(){el.style.transition='opacity .2s';el.style.opacity='0';setTimeout(function(){el.remove()},200)},2200);
+  setTimeout(function(){el.style.transition='opacity .2s';el.style.opacity='0';setTimeout(function(){el.remove()},200)},ms||2200);
 }
+
+/* ═══════════ 인앱 다이얼로그 — confirm()/prompt() 대체 ═══════════
+ * 네이티브 다이얼로그는 디자인과 어긋나고, iOS 홈화면(PWA standalone)에선
+ * prompt 가 차단되는 환경이 있어 모임장이 삭제를 못 하는 문제가 있었다 (2026-07-21). */
+var UIDLG={resolve:null};
+function _dlgClose(val){
+  var m=document.getElementById('rt-dialog'); if(m)m.remove();
+  var r=UIDLG.resolve; UIDLG.resolve=null; if(r)r(val);
+}
+function _dlgOpen(opts){
+  return new Promise(function(res){
+    _dlgClose(opts.input?null:false); /* 겹쳐 열리면 이전 것은 취소 처리 */
+    UIDLG.resolve=res;
+    var m=document.createElement('div'); m.id='rt-dialog'; m.className='dlg-overlay';
+    m.innerHTML='<div class="dlg" role="'+(opts.input?'dialog':'alertdialog')+'" aria-modal="true">'+
+      '<div class="dlg__msg">'+esc(opts.msg).replace(/\n/g,'<br>')+'</div>'+
+      (opts.input?'<input class="input dlg__input" id="dlg-input"'+(opts.numeric?' inputmode="numeric"':'')+' placeholder="'+esc(opts.placeholder||'')+'">':'')+
+      '<div class="dlg__row">'+
+        '<button class="btn btn-ghost btn-pill" id="dlg-cancel">'+esc(opts.cancelLabel||'취소')+'</button>'+
+        '<button class="btn btn-primary btn-pill'+(opts.danger?' dlg--danger':'')+'" id="dlg-ok">'+esc(opts.okLabel||'확인')+'</button>'+
+      '</div></div>';
+    document.body.appendChild(m);
+    var ok=document.getElementById('dlg-ok'),cancel=document.getElementById('dlg-cancel'),inp=document.getElementById('dlg-input');
+    var doOk=function(){ _dlgClose(opts.input?((inp&&inp.value)||'').trim():true); };
+    var doCancel=function(){ _dlgClose(opts.input?null:false); };
+    ok.onclick=doOk; cancel.onclick=doCancel;
+    m.addEventListener('click',function(e){ if(e.target===m) doCancel(); });
+    m.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){e.preventDefault();doCancel();}
+      else if(e.key==='Enter'){e.preventDefault();doOk();}
+    });
+    (inp||ok).focus();
+  });
+}
+/* 사용: if(!(await uiConfirm('지울까요?',{danger:true,okLabel:'삭제'})))return; */
+function uiConfirm(msg,opts){opts=opts||{};opts.msg=msg;opts.input=false;return _dlgOpen(opts);}
+function uiPrompt(msg,opts){opts=opts||{};opts.msg=msg;opts.input=true;return _dlgOpen(opts);}
+
+/* ═══════════ 더블탭 가드 — 서버 왕복 중 재진입 차단 ═══════════
+ * 댓글·자료는 insert 라 더블탭이면 그대로 2개 등록되던 문제 (2026-07-21).
+ * 잠금 동안 상단 로딩줄을 켜서 "처리 중" 피드백을 겸한다. */
+var BUSY={};
+function _busy(k){ if(BUSY[k])return true; BUSY[k]=1; loading(true); return false; }
+function _done(k){ delete BUSY[k]; for(var x in BUSY){ if(BUSY.hasOwnProperty(x))return; } loading(false); }
 
 /* ═══════════ STAGE (발표·모임장 전용) ═══════════
    (2026-07-21) 타이머 코드 삭제 — UI 진입점이 없는 죽은 기능이었음 (7차 개편 잔재) */
@@ -3012,7 +3200,28 @@ async function onPop(ev){
   if(IHYANG_OPEN || (ev.state && ev.state.ihyang)){ hideIhyangModal(); return; }
   var s=ev.state;
   if(isStage) setStage(false);
+  /* 히스토리 엔트리와 실제 세션(rt:sess)의 로그인 상태가 어긋나면 세션이 진실이다 (2026-07-21):
+     ① 바닥의 로그인 엔트리로 팝 — 세션이 살아있는데 로그아웃처럼 보이면 안 됨 → 홈으로 정규화
+     ② 로그아웃 후 과거 로그인 엔트리로 팝 — 뒤로가기로 세션이 부활하면 안 됨 → 로그인으로 고정 */
+  var sess=sessRead();
+  var sessOk=!!(sess&&(sess.p4||sess.host)&&!sessExpired(sess));
   if(s&&s.rt){
+    var entryAuthed=!!(s.p4||s.host);
+    if(sessOk&&(!entryAuthed||(s.p4&&sess.p4&&s.p4!==sess.p4))){
+      STATE.phone4=sess.p4||null;STATE.clubId=sess.cid||null;STATE.meetingId=sess.mid||null;STATE.isHost=!!sess.host;STATE.bookId=sess.bid||null;
+      setNick();syncHostUI();syncAuthUI();
+      var home=STATE.phone4?(STATE.clubId?'meetings':'clubs'):(STATE.clubId?'meetings':'manage');
+      go(home,true);
+      try{ history.replaceState({rt:1,pg:STATE.page,p4:STATE.phone4,cid:STATE.clubId,mid:STATE.meetingId,host:STATE.isHost,bid:STATE.bookId},''); }catch(e){}
+      return;
+    }
+    if(entryAuthed&&!sessOk){
+      STATE.phone4=null;STATE.clubId=null;STATE.meetingId=null;STATE.isHost=false;STATE.bookId=null;
+      setNick();syncHostUI();syncAuthUI();
+      go('login',true);
+      try{ history.replaceState({rt:1,pg:'login',p4:null,cid:null,mid:null,host:false,bid:null},''); }catch(e){}
+      return;
+    }
     STATE.phone4=s.p4||null;STATE.clubId=s.cid||null;STATE.meetingId=s.mid||null;STATE.isHost=!!s.host;STATE.bookId=s.bid||null;
     setNick();syncHostUI();syncAuthUI();
     if(ONLINE){
@@ -3029,11 +3238,36 @@ async function onPop(ev){
 }
 window.addEventListener('popstate',onPop);
 
+/* ═══════════ 접근성 — 키보드 조작 보강 (2026-07-21) ═══════════
+ * onclick 만 달린 div/span/a(무href) 는 Tab 으로 못 가고 Enter 도 안 먹었다.
+ * 렌더 때마다 tabindex/role 을 채우고, Enter/Space 를 클릭으로 변환한다. */
+function enhanceA11y(){
+  document.querySelectorAll('[onclick]').forEach(function(el){
+    var t=el.tagName;
+    if(t==='BUTTON'||t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;
+    if(t==='A'&&el.hasAttribute('href'))return;
+    if(!el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
+    if(!el.hasAttribute('role')) el.setAttribute('role','button');
+  });
+}
+/* childList 만 관찰 — 우리가 붙이는 attribute 변경으로는 재발화하지 않아 무한루프 없음 */
+new MutationObserver(function(){enhanceA11y();}).observe(document.body,{childList:true,subtree:true});
+enhanceA11y();
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  var el=e.target;
+  if(!el||!el.hasAttribute||!el.hasAttribute('onclick'))return;
+  var t=el.tagName;
+  if(t==='BUTTON'||t==='INPUT'||t==='TEXTAREA'||t==='SELECT'||(t==='A'&&el.hasAttribute('href')))return;
+  e.preventDefault(); el.click();
+});
+
 /* ═══════════ INIT ═══════════ */
 applyQEdits();
 setNick();
 syncHostUI();
 syncAuthUI();
+syncBottomNav();
 /* Supabase CDN 로드 실패 등으로 오프라인 폴백이면 — 조용히 데모로 빠지지 말고 상시 경고 (2026-07-21) */
 if(!ONLINE){
   var ob=document.createElement('div');

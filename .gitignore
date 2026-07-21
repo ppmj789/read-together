@@ -4,6 +4,9 @@ __pycache__/
 .venv/
 venv/
 
+# Node (웹 동작 테스트 — tests/web)
+node_modules/
+
 # Editor
 .vscode/
 .idea/

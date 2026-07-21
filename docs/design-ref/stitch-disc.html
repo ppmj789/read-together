@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>未知의 서재 - 별을 헤는 항해자</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime&amp;family=Syne:wght@800&amp;family=Bricolage+Grotesque:wght@700&amp;family=Be+Vietnam+Pro:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+
+        body {
+            background-color: #FBF7EE;
+            background-image: radial-gradient(#d1d1d1 1px, transparent 1px);
+            background-size: 20px 20px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .font-handwritten {
+            font-family: 'Nanum+Pen+Script', 'Syne', cursive;
+        }
+
+        .jelly-depth {
+            box-shadow: 
+                inset -4px -4px 8px rgba(0,0,0,0.1),
+                inset 4px 4px 8px rgba(255,255,255,0.8),
+                0 4px 12px rgba(174, 203, 235, 0.4);
+        }
+
+        .puffy-sticker {
+            filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.1));
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .puffy-sticker:active {
+            transform: scale(0.92);
+        }
+
+        .lined-paper {
+            background-image: repeating-linear-gradient(transparent, transparent 31px, #e5e7eb 31px, #e5e7eb 32px);
+            line-height: 32px;
+        }
+
+        .masking-tape {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(245, 215, 122, 0.7),
+                rgba(245, 215, 122, 0.7) 10px,
+                rgba(245, 215, 122, 0.5) 10px,
+                rgba(245, 215, 122, 0.5) 20px
+            );
+            mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L100 0 L98 20 L2 20 Z" fill="black"/></svg>');
+        }
+
+        .glossy-highlight {
+            position: relative;
+        }
+
+        .glossy-highlight::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            width: 30%;
+            height: 20%;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        .film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#ffb690",
+                        "tertiary-fixed-dim": "#e1c469",
+                        "inverse-on-surface": "#f5f0eb",
+                        "surface-tint": "#45617d",
+                        "primary-fixed": "#cee5ff",
+                        "surface": "#fef8f3",
+                        "secondary-container": "#fe8944",
+                        "tertiary-container": "#e3c66b",
+                        "tertiary-fixed": "#ffe082",
+                        "surface-container-low": "#f8f3ee",
+                        "on-secondary-fixed-variant": "#783200",
+                        "outline-variant": "#c3c7ce",
+                        "secondary-fixed": "#ffdbca",
+                        "on-error": "#ffffff",
+                        "on-background": "#1d1b19",
+                        "on-secondary-fixed": "#341100",
+                        "surface-container": "#f3ede8",
+                        "inverse-surface": "#32302d",
+                        "primary": "#45617d",
+                        "on-primary-fixed-variant": "#2c4964",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#001d33",
+                        "surface-bright": "#fef8f3",
+                        "on-tertiary-fixed-variant": "#564500",
+                        "on-surface-variant": "#43474d",
+                        "on-tertiary-container": "#655100",
+                        "error": "#ba1a1a",
+                        "on-secondary-container": "#692b00",
+                        "on-primary": "#ffffff",
+                        "outline": "#73777e",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#ede7e2",
+                        "on-surface": "#1d1b19",
+                        "background": "#fef8f3",
+                        "surface-variant": "#e7e1dd",
+                        "inverse-primary": "#acc9e9",
+                        "surface-dim": "#ded9d4",
+                        "on-tertiary-fixed": "#231b00",
+                        "primary-container": "#aecbeb",
+                        "tertiary": "#725c06",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#e7e1dd",
+                        "secondary": "#9d4300",
+                        "on-primary-container": "#3a5671",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#acc9e9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-loose": "24px",
+                        "gutter-grid": "12px",
+                        "stack-compact": "8px",
+                        "margin-page": "20px"
+                    },
+                    "fontFamily": {
+                        "label-typewriter": ["Courier Prime"],
+                        "display-lg": ["Syne"],
+                        "headline-md": ["Bricolage Grotesque"],
+                        "body-main": ["Be Vietnam Pro"],
+                        "handwritten-note": ["Nanum Pen Script", "cursive"]
+                    },
+                    "fontSize": {
+                        "label-typewriter": ["13px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "400"}],
+                        "display-lg": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                        "body-main": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "handwritten-note": ["20px", {"lineHeight": "1.2", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface min-h-screen pb-32">
+<div class="film-grain"></div>
+<!-- Top AppBar -->
+<header class="w-full top-0 sticky z-50 bg-surface/80 backdrop-blur-sm flex justify-between items-center px-margin-page py-stack-compact overflow-hidden">
+<div class="rotate-[-2deg] transition-transform hover:rotate-0">
+<img alt="未知의 서재 Sticker Logo" class="h-16 w-auto drop-shadow-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-ANWGXet776wjUYMfmNHErtxyKI75C3Lj-odhqfrOAF8ooHIKWgkEfUNfpZzdTbg3SUB-wSkCZ-0JK4TtOX5V8GjTaY_-JCNWHEmBLLToNQdj0Ago2FFD8PVQxAGtVVFi1CFFe8J4mRlj_u_xBUtALcdTzbikdGEXcsuXLaDF2ibi6uHd7CY_Y8Mf6elJTUXUUYYxhHZYnNDAHRi_v_54JREyuNFuyWAM9U4HTFDsai5mBrg9T5-Rsj1MBVEq-HPahzNGCfUnQuM"/>
+</div>
+<div class="text-right">
+<span class="font-handwritten-note text-handwritten-note text-primary block">별을 헤는 항해자 ☾</span>
+<span class="font-label-typewriter text-[10px] text-on-surface-variant uppercase tracking-widest">User ID: Star_Voyager</span>
+</div>
+</header>
+<main class="px-margin-page py-stack-loose space-y-8">
+<!-- Tabs Section -->
+<nav class="flex gap-2 items-center justify-between overflow-x-auto pb-2 scrollbar-hide">
+<button class="flex-1 py-3 px-4 rounded-xl bg-primary-container/80 backdrop-blur-md text-on-primary-container jelly-depth glossy-highlight font-bold flex flex-col items-center justify-center transition-all scale-105">
+<span class="font-label-typewriter text-[11px] opacity-70">Tab 01</span>
+<span class="text-body-main font-bold">① 별점</span>
+</button>
+<button class="flex-1 py-3 px-4 rounded-xl bg-surface-container-high text-on-surface-variant flex flex-col items-center justify-center border border-white/50">
+<span class="font-label-typewriter text-[11px] opacity-50">Tab 02</span>
+<span class="text-body-main">② 내 답변</span>
+</button>
+<button class="flex-1 py-3 px-4 rounded-xl bg-surface-container-high text-on-surface-variant/40 flex flex-col items-center justify-center opacity-60 cursor-not-allowed border border-dashed border-outline-variant">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">lock</span>
+<span class="text-body-main">③ 다른 생각</span>
+</div>
+<span class="font-label-typewriter text-[10px]">LOCKED</span>
+</button>
+</nav>
+<!-- Content Card 1: Star Rating -->
+<section class="relative bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-surface-variant overflow-hidden">
+<div class="absolute -top-1 left-1/2 -translate-x-1/2 w-32 h-8 masking-tape z-10 rotate-1"></div>
+<div class="pt-4 space-y-6">
+<h2 class="font-headline-md text-headline-md text-center text-primary mb-6">이향인, 어땠나요?</h2>
+<div class="space-y-4 font-body-main">
+<!-- 재미 -->
+<div class="flex items-center justify-between px-2">
+<span class="font-label-typewriter bg-[#F5D77A]/40 px-2 rounded">재미 (FUN)</span>
+<div class="flex gap-1">
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-outline-variant/30 puffy-sticker">star</span>
+</div>
+</div>
+<!-- 난이도 -->
+<div class="flex items-center justify-between px-2">
+<span class="font-label-typewriter bg-[#F5D77A]/40 px-2 rounded">난이도 (LVL)</span>
+<div class="flex gap-1">
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<!-- 총점 -->
+<div class="flex items-center justify-between px-2 pt-2 border-t border-dashed border-outline-variant">
+<span class="font-bold text-primary">총점 (TOTAL)</span>
+<div class="flex gap-1">
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1; font-size: 28px;">star</span>
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1; font-size: 28px;">star</span>
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1; font-size: 28px;">star</span>
+<span class="material-symbols-outlined text-[#F2B33D] puffy-sticker" style="font-variation-settings: 'FILL' 1; font-size: 28px;">star</span>
+<span class="material-symbols-outlined text-outline-variant/30 puffy-sticker" style="font-size: 28px;">star</span>
+</div>
+</div>
+</div>
+<div class="text-center pt-4">
+<span class="font-handwritten-note text-handwritten-note text-secondary rotate-[-1deg] inline-block">별 누르면 바로 저장돼요 ✓</span>
+</div>
+</div>
+<!-- Polaroid Decorative Corner -->
+<div class="absolute -bottom-4 -right-4 w-12 h-12 bg-[#AECBEB]/20 rounded-full blur-xl"></div>
+</section>
+<!-- Content Card 2: Question Answer -->
+<section class="relative bg-surface-container-lowest rounded-xl shadow-[0_4px_15px_-3px_rgba(0,0,0,0.07)] border border-surface-variant p-6 lined-paper">
+<!-- Label -->
+<div class="mb-4">
+<span class="font-label-typewriter bg-secondary/10 text-secondary px-3 py-1 rounded-sm text-[12px] border-l-4 border-secondary">
+                    Q1 — 가장 마음에 남은 문장은?
+                </span>
+</div>
+<!-- Answer -->
+<div class="py-2">
+<p class="font-handwritten-note text-[22px] text-on-surface leading-relaxed pr-8">
+                    "어디에도 속하지 않는 것이 아니라,<br/> 
+                    모든 곳에 조금씩 속해 있는 거였다…"
+                </p>
+</div>
+<!-- Sticker -->
+<div class="absolute -bottom-2 -right-2 w-24 h-24 rotate-[12deg] flex items-center justify-center">
+<div class="w-20 h-20 bg-[#F5D77A] rounded-full flex flex-col items-center justify-center shadow-lg border-2 border-white jelly-depth p-2 text-center glossy-highlight">
+<span class="font-handwritten-note text-on-surface text-[16px] font-bold leading-none">제출<br/>완료!</span>
+<span class="material-symbols-outlined text-[14px] mt-1 text-on-surface">check_circle</span>
+</div>
+</div>
+</section>
+<!-- Fixed Action Button -->
+<div class="pt-8">
+<button class="w-full py-5 rounded-2xl bg-[#AECBEB] text-primary-fixed-dim font-display-lg text-[18px] jelly-depth glossy-highlight flex items-center justify-center gap-3 active:scale-95 transition-transform">
+<span class="filter brightness-0 contrast-100">💛</span>
+<span class="text-on-primary-container font-bold">다른 사람 생각 보러 가기</span>
+</button>
+</div>
+</main>
+<!-- Bottom Navigation Shell (Predictive from JSON logic) -->
+<nav class="fixed bottom-0 left-0 w-full bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md flex justify-around items-center px-4 pb-6 pt-2 shadow-lg z-50 rounded-t-xl">
+<div class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-typewriter text-[11px]">홈</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-primary-container/60 text-on-primary-container rounded-xl p-2 shadow-[inset_-2px_-2px_4px_rgba(255,255,255,0.4),2px_2px_4px_rgba(0,0,0,0.1)] active:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="font-label-typewriter text-[11px]">기록</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label-typewriter text-[11px]">클럽</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-typewriter text-[11px]">마이</span>
+</div>
+</nav>
+<script>
+        // Micro-interactions for stars
+        document.querySelectorAll('.puffy-sticker').forEach(star => {
+            star.addEventListener('click', function() {
+                this.classList.toggle('text-[#F2B33D]');
+                this.style.fontVariationSettings = this.style.fontVariationSettings === "'FILL' 1" ? "'FILL' 0" : "'FILL' 1";
+                
+                // Haptic feedback simulation
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(10);
+                }
+            });
+        });
+
+        // Floating elements animation logic
+        window.addEventListener('scroll', () => {
+            const scroll = window.scrollY;
+            document.querySelectorAll('.masking-tape').forEach(tape => {
+                tape.style.transform = `translateX(-50%) rotate(${1 + (scroll * 0.01)}deg)`;
+            });
+        });
+    </script>
+</body></html>

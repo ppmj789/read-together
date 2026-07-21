@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>未知의 서재 - Unknown Study</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700;800&amp;family=Courier+Prime&amp;family=Source+Sans+3:wght@400;600&amp;family=Bricolage+Grotesque:wght@400;700&amp;family=Nanum+Myeongjo&amp;family=Gowun+Dodum&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        :root {
+            --dot-color: #d1cfc7;
+            --dot-bg: #fdf9f0;
+        }
+        body {
+            background-color: var(--dot-bg);
+            background-image: radial-gradient(var(--dot-color) 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+            font-family: 'Source Sans 3', sans-serif;
+            overflow-x: hidden;
+        }
+        .polaroid-shadow {
+            box-shadow: 2px 2px 8px rgba(43, 41, 38, 0.12);
+        }
+        .jelly-glow {
+            background: linear-gradient(135deg, #aecbeb 0%, #45617d 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .jelly-glow::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 15%;
+            width: 70%;
+            height: 30%;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 9999px;
+            filter: blur(2px);
+        }
+        .masking-tape {
+            background: rgba(174, 203, 235, 0.6);
+            backdrop-filter: blur(1px);
+            clip-path: polygon(2% 0%, 98% 2%, 100% 50%, 98% 98%, 2% 100%, 0% 50%);
+        }
+        .film-stamp {
+            font-family: 'Courier Prime', monospace;
+            color: #9d4300;
+        }
+        .handwriting {
+            font-family: 'Gowun Dodum', sans-serif;
+        }
+        .sticker-reflection {
+            border-top: 2px solid rgba(255, 255, 255, 0.8);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "surface-container": "#f1eee5",
+                        "on-tertiary-container": "#8c3b00",
+                        "on-secondary-fixed-variant": "#564500",
+                        "on-primary-fixed": "#001d33",
+                        "outline-variant": "#c3c7ce",
+                        "on-background": "#1c1c17",
+                        "secondary-container": "#fcdd80",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f4f0e7",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#e6e2d9",
+                        "primary-fixed-dim": "#acc9e9",
+                        "tertiary-fixed": "#ffdbca",
+                        "primary-fixed": "#cee5ff",
+                        "tertiary-fixed-dim": "#ffb690",
+                        "primary-container": "#aecbeb",
+                        "primary": "#45617d",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f7f3ea",
+                        "surface-container-high": "#ece8df",
+                        "on-tertiary-fixed": "#341100",
+                        "on-primary-fixed-variant": "#2c4964",
+                        "surface-tint": "#45617d",
+                        "secondary": "#725c06",
+                        "outline": "#73777e",
+                        "secondary-fixed": "#ffe082",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#e1c469",
+                        "surface": "#fdf9f0",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#43474d",
+                        "surface-container-highest": "#e6e2d9",
+                        "tertiary": "#9d4300",
+                        "on-secondary-container": "#76600c",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fdf9f0",
+                        "tertiary-container": "#ffb894",
+                        "inverse-primary": "#acc9e9",
+                        "on-secondary-fixed": "#231b00",
+                        "on-primary-container": "#3a5671",
+                        "background": "#fdf9f0",
+                        "on-tertiary-fixed-variant": "#783200",
+                        "on-surface": "#1c1c17",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#dddad1",
+                        "inverse-surface": "#31312b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "unit": "4px",
+                        "stack-overlap": "-12px",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Be Vietnam Pro"],
+                        "label-mono": ["Courier Prime"],
+                        "body-lg": ["\"Source Sans 3\""],
+                        "body-md": ["\"Source Sans 3\""],
+                        "headline-lg-mobile": ["Be Vietnam Pro"],
+                        "display-script": ["Bricolage Grotesque"],
+                        "headline-md": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-mono": ["14px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["26px", {"lineHeight": "32px", "fontWeight": "800"}],
+                        "display-script": ["20px", {"lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-surface">
+<!-- Top Navigation Header Shell -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile pt-4 bg-transparent">
+<div class="flex items-center">
+<button class="material-symbols-outlined text-primary hover:scale-105 transition-transform">menu</button>
+</div>
+<!-- The Brand Anchor Logo -->
+<div class="inline-block bg-surface-container-lowest border-2 border-on-surface px-4 py-1 -rotate-2 shadow-sm font-headline-md text-on-surface">
+            未知의 서재
+        </div>
+<div class="flex items-center">
+<button class="material-symbols-outlined text-primary hover:scale-105 transition-transform">settings</button>
+</div>
+</header>
+<main class="pt-24 pb-32 px-margin-mobile max-w-md mx-auto">
+<!-- Season Header Section -->
+<section class="mb-10 relative">
+<div class="masking-tape absolute -top-4 -left-2 w-20 h-6 -rotate-12 z-0 opacity-40"></div>
+<p class="font-label-mono text-label-mono text-primary mb-1 uppercase tracking-widest">season 01 — human nature</p>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2 font-black">인간 본성 탐구</h1>
+<p class="handwriting text-body-lg text-primary/80">나 → 연결 → 관계의 그늘 ✍️</p>
+</section>
+<!-- Scrapbook Bento Content Area -->
+<div class="relative flex flex-col gap-12">
+<!-- Large Polaroid 1 -->
+<div class="relative self-center z-10 -rotate-2 hover:rotate-0 transition-all duration-500">
+<!-- Masking Tape Anchor -->
+<div class="masking-tape absolute -top-5 left-1/2 -translate-x-1/2 w-24 h-8 rotate-3 z-20 shadow-sm opacity-80"></div>
+<div class="bg-white p-4 pb-14 polaroid-shadow border border-outline-variant/30 w-72">
+<div class="aspect-[3/4] bg-surface-container overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover" data-alt="A sophisticated book cover design for '이향인' by Lami Kaminsky, featuring abstract, ethereal textures in soft milk cream and primary blue tones. The visual style is nostalgic yet modern, mimicking a high-end literary magazine cover with subtle film grain and minimalist typography. The overall mood is introspective and quiet, fitting for a curated book club experience in a light-mode scrapbook aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlpSL0Nt5SdciTtnEFYHq9m-OkwF6C5fd5F_dDYqmjJ9QPWwmCpA2VB3Utx71EHZkMpKrlT9hHPGAL8onrb0zC6tHJAsz6UxN9FSk1wBJPsRRUnkplelkJL3JWJTHNTOgAM_LX3_Mt1_XajuYao5uJNE-n9xNC3-zXdQvPlibZDBKxCD0dbvBBEbJwgTQHMQdqAC9em-9-3B894S2CD6ixkOrkzJSdP_1rZrNQfYLdB-8Fxopricr7-p12fSUjTJcQdyAwP1ItUxo"/>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<h3 class="font-headline-md text-headline-md leading-tight text-on-surface">이향인</h3>
+<p class="font-body-md text-on-surface-variant">Lami Kaminsky</p>
+</div>
+<span class="film-stamp text-xs font-bold whitespace-nowrap">'26 06 21</span>
+</div>
+</div>
+<!-- Butter Yellow Sticker Badge -->
+<div class="absolute -top-4 -right-4 bg-secondary-fixed w-20 h-20 rounded-full flex items-center justify-center rotate-12 shadow-md sticker-reflection border-2 border-white/50">
+<span class="font-headline-md text-[14px] text-on-secondary-fixed text-center leading-tight">이번 달<br/>책!</span>
+</div>
+</div>
+<!-- Medium Polaroid 2 -->
+<div class="relative self-start -ml-2 -mt-4 rotate-3 hover:rotate-1 transition-all duration-500 z-20">
+<div class="bg-white p-3 pb-10 polaroid-shadow border border-outline-variant/30 w-56">
+<div class="aspect-[3/4] bg-surface-container-high overflow-hidden mb-3">
+<img class="w-full h-full object-cover" data-alt="A vibrant book cover for 'Project Hail Mary' by Andy Weir, with a futuristic yet retro-analog aesthetic. The design features a stylized cosmic theme with bold circles and orange film-like accents against a deep blue background. The style is consistent with a Y2K scrapbook feel, using rich colors like butter yellow and film orange to create a warm, intellectual, and adventurous atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHC3tPhfb1TYzvj9uWgrk8NR97BzoStdQik3QhwlSv36uELzkl57xUWfgc7KmoOOe0KxtPwohbpne39bPBbEAbXKvGHTHHPGD7TDPiWp5i8C0iunh2vfklqa2Vpe06OAH5ClWr4CyKiH8ovzx6-TdndgojPxSBIknA7t1PZ2mKM8WQlsjglXslDfJC9fUWI5pKtkm7E1FvxfETDeXZlWB9XR4yLl5k-hIyCVYIc5Fj7Wt7MmzhhoF7L-1J5LGbVaTQRZdwcIxmzU4"/>
+</div>
+<h3 class="font-body-lg font-bold text-on-surface">프로젝트 헤일메리</h3>
+<p class="font-label-mono text-xs text-on-surface-variant">Andy Weir</p>
+</div>
+<!-- Baby Blue Sticker Badge -->
+<div class="absolute -bottom-4 -right-4 bg-primary-container w-16 h-16 rounded-full flex items-center justify-center -rotate-6 shadow-md sticker-reflection border-2 border-white/40">
+<span class="font-label-mono text-[12px] text-on-primary-container font-bold">7월 soon</span>
+</div>
+</div>
+<!-- Placeholder Polaroid 3 -->
+<div class="relative self-end -mr-2 -mt-10 -rotate-6 hover:rotate-0 transition-all duration-500 z-10 opacity-80">
+<div class="bg-white p-3 pb-8 polaroid-shadow border border-dashed border-outline-variant w-44">
+<div class="aspect-[3/4] bg-surface-container-lowest flex items-center justify-center mb-3">
+<span class="text-headline-lg font-display-script text-outline-variant">?</span>
+</div>
+<p class="font-label-mono text-center text-on-surface-variant">8월의 책</p>
+</div>
+</div>
+</div>
+<!-- Call to Action Area -->
+<section class="mt-16 flex flex-col items-center gap-6">
+<button class="jelly-glow w-full py-4 rounded-full text-on-primary font-headline-md shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">stars</span>
+<span>별점·답변 남기러 가기</span>
+</button>
+<a class="flex items-center gap-1 text-primary font-body-md hover:underline decoration-primary/40 underline-offset-4 transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">auto_stories</span>
+<span>내 기록 보기</span>
+</a>
+</section>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-surface/80 backdrop-blur-md rounded-t-xl shadow-lg border-t border-outline-variant">
+<button class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 shadow-[inset_-2px_-2px_4px_rgba(255,255,255,0.3)] active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span class="font-label-mono text-label-mono">서재</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:bg-secondary-container transition-all">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-label-mono text-label-mono">기록</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:bg-secondary-container transition-all">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-mono text-label-mono">스티커</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:bg-secondary-container transition-all">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-mono text-label-mono">내 정보</span>
+</button>
+</nav>
+<!-- Micro-interaction Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.addEventListener('touchstart', () => {
+                    btn.classList.add('scale-95');
+                });
+                btn.addEventListener('touchend', () => {
+                    btn.classList.remove('scale-95');
+                });
+            });
+
+            // Random subtle rotation for decorative elements on load
+            const tapes = document.querySelectorAll('.masking-tape');
+            tapes.forEach(tape => {
+                const randomRot = (Math.random() * 6 - 3).toFixed(1);
+                tape.style.transform = `rotate(${randomRot}deg)`;
+            });
+        });
+    </script>
+</body></html>

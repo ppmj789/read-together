@@ -1,0 +1,12 @@
+{
+  "name": "read-together-web-tests",
+  "private": true,
+  "description": "index.html 동작(행위) 단위테스트 — jsdom 으로 실제 앱 코드를 구동",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "jsdom": "^29.1.1"
+  }
+}
