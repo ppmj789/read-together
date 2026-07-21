@@ -234,6 +234,24 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .book-card__host{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-soft);flex-wrap:wrap}
 .book-card__host .btn{min-height:34px;font-size:12px}
 .book-card.upcoming .book-card__spine{background:var(--ink-soft)}
+/* ── 책장 (시즌 고르기 = 서재 컨셉) ──
+   시즌 하나 = 책장에 꽂힌 하드커버 한 권. 책등을 눌러 입장한다. */
+.shelf{margin-bottom:2px}
+.shelf__books{display:flex;align-items:flex-end;gap:13px;padding:22px 20px 0;min-height:216px;background:linear-gradient(180deg,var(--paper-warm) 0%,rgba(0,0,0,.035) 96%,rgba(0,0,0,.09) 100%);border-radius:10px 10px 0 0}
+.shelf__board{height:15px;background:linear-gradient(180deg,#C9A276 0%,#A87C50 55%,#8A6240 100%);border-radius:2px 2px 5px 5px;box-shadow:0 7px 14px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.4);margin-bottom:18px}
+.spine-book{position:relative;width:76px;height:var(--sp-h,200px);background:var(--sp-bg,var(--accent));border-radius:3px 8px 8px 3px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:16px 0 12px;cursor:pointer;box-shadow:3px 2px 8px rgba(0,0,0,.22),inset 5px 0 7px rgba(255,255,255,.16),inset -4px 0 6px rgba(0,0,0,.22);transition:transform .18s ease,box-shadow .18s ease;flex-shrink:0}
+.spine-book:hover{transform:translateY(-10px);box-shadow:3px 10px 18px rgba(0,0,0,.28),inset 5px 0 7px rgba(255,255,255,.16),inset -4px 0 6px rgba(0,0,0,.22)}
+.spine-book::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.3);border-radius:2px}
+.spine-book::after{content:"";position:absolute;left:0;right:0;top:9px;height:1px;background:rgba(255,255,255,.25)}
+.spine-book__title{writing-mode:vertical-rl;font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.12em;color:#fff;max-height:140px;overflow:hidden;line-height:1.15;word-break:keep-all}
+.spine-book__meta{font-size:10px;font-weight:700;color:rgba(255,255,255,.9);background:rgba(0,0,0,.2);padding:2px 8px;border-radius:10px;letter-spacing:.04em}
+.spine-book--add{background:transparent;border:2px dashed var(--rule);box-shadow:none}
+.spine-book--add::before,.spine-book--add::after{display:none}
+.spine-book--add .spine-book__title{color:var(--ink-dim);font-weight:700;font-size:14px}
+.spine-book--add .spine-book__meta{color:var(--ink-dim);background:var(--paper);border:1px solid var(--rule)}
+.spine-book--add:hover{border-color:var(--accent);transform:translateY(-6px)}
+.spine-book--add:hover .spine-book__title{color:var(--accent)}
+.shelf-empty{padding:60px 0 34px;text-align:center;color:var(--ink-dim);font-size:14px}
 /* 표지 이미지가 있는 책 — 첫 글자 대신 <img> 로 표지를 보여준다.
    img 는 원본 비율 그대로(height:auto)라 어떤 표지 비율이든 안 잘린다.
    카드 높이와 무관하게 세로 중앙(align-self:center). */
@@ -525,8 +543,7 @@ body.is-page-season .book-card__cover{width:96px}
 <!-- ═══ SUBBAR (개인 모드 경량 네비) ═══ -->
 <nav class="subbar" id="subbar">
   <a onclick="back()">&larr; 뒤로</a>
-  <a onclick="go('clubs')">🏠 모임</a>
-  <a onclick="go('meetings')">📚 시즌</a>
+  <a onclick="go('meetings')">📚 서재</a>
   <span class="subbar__crumb" id="subbar-crumb"></span>
 </nav>
 
@@ -557,7 +574,7 @@ body.is-page-season .book-card__cover{width:96px}
              oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')login()">
     </div>
     <button class="btn btn-primary btn-arrow btn-pill" onclick="login()">들어가기 <span class="arr">&rarr;</span></button>
-    <p class="login-hint">번호 뒤 4자리만으로 입장합니다.<br>로그인 후 내가 운영하는 모임과 공개 모임 목록을 볼 수 있어요.</p>
+    <p class="login-hint">번호 뒤 4자리만으로 입장합니다.<br>들어가면 바로 未知의 서재 책장이 열려요.</p>
   </div>
 </div>
 
@@ -1254,7 +1271,7 @@ function go(name,nopush){
   document.body.classList.toggle('has-subbar',inner);
   if(inner){
     var bk=STATE.bookId?bookById(STATE.bookId):null;
-    var label={meetings:'시즌 목록',owners:'모임 설정',season:'시즌',book:'사전정보',discussion:'답변',history:'내 기록',results:'발표 결과'}[name];
+    var label={meetings:'서재',owners:'모임 설정',season:'시즌',book:'사전정보',discussion:'답변',history:'내 기록',results:'발표 결과'}[name];
     var cn=esc(activeClubName());
     document.getElementById('subbar-crumb').innerHTML=cn+(bk&&name!=='history'&&name!=='season'&&name!=='meetings'&&name!=='owners'?' · <b>'+esc(bk.title)+'</b>':'')+' · '+label;
   }
@@ -1530,36 +1547,40 @@ async function issueClub(){
 }
 
 /* ═══════════ RENDER: 시즌 리스트 (선택된 모임 안) ═══════════ */
+/* 시즌 고르기 = 서재 책장. 시즌 하나가 책등 한 권으로 꽂혀 있다 (2026-07-21 컨셉 확정). */
+var SHELF_COLORS=['var(--accent)','#7C4A3A','#50604A','#8F7440','#5A4A6B','#3A6B6B'];
 function renderMeetings(){
   if(!STATE.phone4&&!STATE.isHost){go('login');return;}
   if(!STATE.clubId){go(STATE.phone4?'clubs':'manage');return;}
   var club=activeClub();
   var all=clubMeetings(STATE.clubId).slice();
   var h=''+
-   '<div class="section-hd"><div><div class="eyebrow">'+esc(club.name)+(club.intro?' · '+esc(club.intro):'')+'</div><h2 class="h-1 mt-4">시즌<br>고르기.</h2></div></div>'+
-   '<p class="body-2 mb-16">'+(STATE.phone4?'휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4)+'</b> · ':'')+'이 모임의 시즌입니다. 시즌을 골라 책·답변·발표를 함께 진행하세요.</p>'+
-   (all.length?'':'<p class="body-2 dim center" style="padding:20px 0">아직 이 모임에 시즌이 없어요. '+(STATE.isHost?'아래 [+ 시즌 만들기]로 추가하세요.':'모임장이 시즌을 추가할 때까지 잠시 기다려 주세요.')+'</p>')+
-   '<div class="season-books">';
-  all.forEach(function(m){
+   '<div class="section-hd"><div><div class="eyebrow">'+esc(club.name)+(club.intro?' · '+esc(club.intro):'')+'</div><h2 class="h-1 mt-4">서재에서<br>시즌 꺼내기.</h2></div></div>'+
+   '<p class="body-2 mb-16">'+(STATE.phone4?'휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4)+'</b> · ':'')+'책등을 눌러 시즌에 입장하세요.</p>';
+  /* 책등 목록 — 시즌들 + (모임장) 새 시즌 슬롯 */
+  var spines=all.map(function(m,i){
     var sn=m.kind==='custom'?m.season:SEASON;
-    var sub=(sn.sub?esc(sn.sub)+' · ':'')+sn.books.length+'권 시즌';
-    h+='<div class="book-card current" style="opacity:1" onclick="enterMeeting(\''+m.id+'\')">'+
-      '<div class="book-card__spine">'+esc(sn.title.charAt(0))+'</div>'+
-      '<div class="book-card__body"><div class="book-card__month">시즌</div>'+
-      '<div class="book-card__title">'+esc(sn.title)+'</div>'+
-      '<div class="book-card__author">'+sub+'</div></div>'+
-      '<span class="book-card__go">입장 &rarr;</span>'+
+    var hgt=188+((i*17)%26);
+    return '<div class="spine-book" style="--sp-bg:'+SHELF_COLORS[i%SHELF_COLORS.length]+';--sp-h:'+hgt+'px" onclick="enterMeeting(\''+m.id+'\')" role="button" aria-label="시즌 '+esc(sn.title)+' 입장">'+
+      '<span class="spine-book__title">'+esc(sn.title)+'</span>'+
+      '<span class="spine-book__meta">'+sn.books.length+'권</span>'+
     '</div>';
   });
-  h+='</div>';
-  if(STATE.isHost){
-    h+='<button class="btn btn-ghost btn-pill mt-16" onclick="go(\'create\')">+ 시즌 만들기</button>'+
-       '<div class="host-links" style="margin-top:24px;font-size:13px">'+
-         '<a onclick="go(\'owners\')">⚙️ 모임 설정</a><span>·</span>'+
-         '<a onclick="go(\'clubs\')">&larr; 모임 목록</a>'+
-       '</div>';
+  if(STATE.isHost)
+    spines.push('<div class="spine-book spine-book--add" style="--sp-h:188px" onclick="go(\'create\')" role="button" aria-label="새 시즌 만들기">'+
+      '<span class="spine-book__title">새 시즌 꽂기</span><span class="spine-book__meta">+</span></div>');
+  if(!spines.length){
+    h+='<div class="shelf"><div class="shelf__books"><div class="shelf-empty" style="flex:1">아직 책장이 비어 있어요.<br>모임장이 시즌을 꽂을 때까지 잠시 기다려 주세요.</div></div><div class="shelf__board"></div></div>';
   } else {
-    h+='<button class="btn btn-ghost btn-pill mt-24" onclick="go(\'clubs\')">&larr; 다른 모임</button>';
+    /* 한 칸에 4권씩 — 넘치면 아래 칸 */
+    for(var s=0;s<spines.length;s+=4){
+      h+='<div class="shelf"><div class="shelf__books">'+spines.slice(s,s+4).join('')+'</div><div class="shelf__board"></div></div>';
+    }
+  }
+  if(STATE.isHost){
+    h+='<div class="host-links" style="margin-top:16px;font-size:13px">'+
+         '<a onclick="go(\'owners\')">⚙️ 모임 설정</a>'+
+       '</div>';
   }
   document.getElementById('page-meetings').innerHTML=h;
 }
@@ -1839,7 +1860,7 @@ function renderSeason(){
      '<div class="book-card '+(cur?'current':'upcoming')+(closed?' is-closed':'')+'"'+(STATE.isHost?'':' onclick="openBook(\''+b.id+'\')"')+'>'+
        spineHtml(b)+
        '<div class="book-card__body">'+
-         '<div class="book-card__month">'+(b.month?'<span class="dim" style="font-weight:500;color:var(--ink-dim)">'+esc(b.month)+'</span> · ':'')+(closed?'<span style="color:#D44">🔒 닫힘</span>':'<span style="color:var(--success)">🟢 열림</span>')+(hasReport?' · <span style="color:var(--accent)">📊 발표자료</span>':'')+'</div>'+
+         '<div class="book-card__month">'+(b.month?'<span class="dim" style="font-weight:500;color:var(--ink-dim)">'+esc(b.month)+'</span> · ':'')+(closed?'<span style="color:#D44">🔒 닫힘</span>':(isOpen?'<span style="color:var(--success)">🟢 열림</span>':'<span style="color:var(--ink-dim)">⏳ 예정</span>'))+(hasReport?' · <span style="color:var(--accent)">📊 발표자료</span>':'')+'</div>'+
          '<div class="book-card__title">'+esc(b.title)+'</div>'+
          '<div class="book-card__author">'+esc(b.author)+'</div>'+
          '<div class="book-card__angle">'+esc(b.angle||'')+'</div>'+
