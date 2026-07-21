@@ -234,12 +234,12 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .book-card__host{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-soft);flex-wrap:wrap}
 .book-card__host .btn{min-height:34px;font-size:12px}
 .book-card.upcoming .book-card__spine{background:var(--ink-soft)}
-/* 표지 이미지가 있는 책 — 첫 글자 대신 표지를 깔고, 글자는 감춘다(font-size:0)
-   카드가 align-items:stretch 라 내용 많은 카드(마감·발표자료 줄)는 책등 칸이
-   세로로 늘어나고, cover 가 그만큼 좌우를 잘라낸다. 표지 칸만 이미지와 같은
-   3:4 비율로 고정 + 세로중앙 배치해서 어떤 카드 높이에서도 전체가 보이게. */
-.book-card__spine.has-cover{background-size:cover;background-position:center;background-repeat:no-repeat;font-size:0;aspect-ratio:3/4;height:auto;min-height:0;align-self:center}
-.book-card.upcoming .book-card__spine.has-cover{opacity:.55}
+/* 표지 이미지가 있는 책 — 첫 글자 대신 <img> 로 표지를 보여준다.
+   img 는 원본 비율 그대로(height:auto)라 어떤 표지 비율이든 안 잘린다.
+   카드 높이와 무관하게 세로 중앙(align-self:center). */
+.book-card__cover{width:88px;height:auto;flex-shrink:0;border-radius:var(--radius-sm);align-self:center;display:block;box-shadow:var(--shadow-md)}
+body.is-page-season .book-card__cover{width:96px}
+.book-card.upcoming .book-card__cover{opacity:.55}
 .book-card__body{flex:1;min-width:0;padding-right:62px}
 .book-card__month{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em}
 .book-card.upcoming .book-card__month{color:var(--ink-dim)}
@@ -890,8 +890,9 @@ function nickFor(phone4,bookId){
 }
 /* ── 책 표지 ──
    표지 파일이 있는 책은 목록에서 첫 글자('프') 대신 표지가 보인다.
-   새 책 표지를 추가하려면: assets/covers/ 에 이미지를 넣고(루트·docs 양쪽),
-   아래에 '책 제목': '경로' 한 줄만 더하면 된다. 없는 책은 지금처럼 첫 글자. */
+   새 책 표지를 추가하려면: assets/covers/ 에 원본 비율 그대로의 이미지를
+   넣고(루트·docs 양쪽), 아래에 '책 제목': '경로' 한 줄만 더하면 된다.
+   이미지는 미리 자르지 말 것 — 화면에서 원본 비율 그대로 보여준다. */
 var BOOK_COVERS={
   '프로젝트 헤일메리':'assets/covers/hailmary.jpg',
   '이향인':'assets/covers/ihyangin.jpg'
@@ -900,7 +901,7 @@ function coverFor(title){ return BOOK_COVERS[String(title||'').replace(/\s+/g,' 
 /* 책 카드 왼쪽 책등 — 표지가 있으면 이미지로, 없으면 기존처럼 제목 첫 글자로 */
 function spineHtml(b){
   var cov=coverFor(b.title);
-  if(cov) return '<div class="book-card__spine has-cover" style="background-image:url(\''+cov+'\')" role="img" aria-label="'+esc(b.title)+' 표지"></div>';
+  if(cov) return '<img class="book-card__cover" src="'+cov+'" alt="'+esc(b.title)+' 표지">';
   return '<div class="book-card__spine">'+esc(b.spine)+'</div>';
 }
 function customMeetings(){try{return JSON.parse(localStorage.getItem('rt:meetings'))||[];}catch(e){return MEM['rt:meetings']?JSON.parse(MEM['rt:meetings']):[];}}
