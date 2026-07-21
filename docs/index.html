@@ -590,6 +590,7 @@ body.is-page-season .book-card__cover{width:96px}
 
 <!-- PAGE: 내 기록 -->
 <div class="page" id="page-history"></div>
+<div class="page" id="page-results"></div>
 
 </div><!-- /main -->
 
@@ -786,6 +787,7 @@ function _rerenderCurrent(){
   var n=p.id.replace('page-','');
   if(n==='book') renderBook();
   else if(n==='discussion') renderDiscussion();
+  else if(n==='results') renderResults();
 }
 function rollNick(){PENDNICK=randomNick();_rerenderCurrent();}
 async function _persistNick(nick){
@@ -1017,7 +1019,10 @@ var RT={
     var cm=await sb.from('comment').select('id,q_index,target_phone4,author_phone4,author_nick,body').eq('book_id',bookId);
     var rx=await sb.from('reaction').select('q_index,target_phone4,author_phone4').eq('book_id',bookId);
     if(mb.error||an.error||cm.error||rx.error){rtErr(mb.error||an.error||cm.error||rx.error);return;}
+    /* 모임원 발표자료 — v17 material 테이블. 마이그레이션 미적용 환경에선 조용히 빈 목록. */
+    var mt=await sb.from('material').select('id,phone4,title,url,created_at').eq('book_id',bookId).order('created_at');
     var bk=bookById(bookId);if(!bk)return;
+    bk.materials=mt.error?[]:(mt.data||[]);
     var me=STATE.phone4;
     var members=(mb.data||[]).slice().sort(function(a,b){return a.phone4<b.phone4?-1:1;});
     /* 이 책의 '지금 이름' 표를 다시 만든다 — 남이 이름을 바꿨으면 여기서 반영된다. */
@@ -1151,6 +1156,14 @@ var RT={
     var e=(await sb.from('comment').delete().eq('id',id)).error;
     if(e){rtErr(e);return false;} await RT.loadBook(bookId); return true;
   },
+  async addMaterial(bookId,title,url){
+    var e=(await sb.from('material').insert({book_id:bookId,phone4:STATE.phone4||'host',title:title,url:url})).error;
+    if(e){rtErr(e);return false;} await RT.loadBook(bookId); return true;
+  },
+  async deleteMaterial(bookId,id){
+    var e=(await sb.from('material').delete().eq('id',id)).error;
+    if(e){rtErr(e);return false;} await RT.loadBook(bookId); return true;
+  },
   async deleteMyAnswer(bookId,qIndex){
     /* 내 답변 + 그에 달린 댓글·공감을 한 번에 삭제 (cascade by hand).
        마감 여부와 무관하게 항상 호출 가능 — closedGuard 우회. */
@@ -1234,13 +1247,14 @@ function go(name,nopush){
   if(name==='book') renderBook();
   if(name==='discussion') renderDiscussion();
   if(name==='history') renderHistory();
-  var inner=(name==='meetings'||name==='owners'||name==='season'||name==='book'||name==='discussion'||name==='history');
+  if(name==='results') renderResults();
+  var inner=(name==='meetings'||name==='owners'||name==='season'||name==='book'||name==='discussion'||name==='history'||name==='results');
   var sb=document.getElementById('subbar');
   sb.classList.toggle('visible',inner);
   document.body.classList.toggle('has-subbar',inner);
   if(inner){
     var bk=STATE.bookId?bookById(STATE.bookId):null;
-    var label={meetings:'시즌 목록',owners:'모임 설정',season:'시즌',book:'사전정보',discussion:'답변',history:'내 기록'}[name];
+    var label={meetings:'시즌 목록',owners:'모임 설정',season:'시즌',book:'사전정보',discussion:'답변',history:'내 기록',results:'발표 결과'}[name];
     var cn=esc(activeClubName());
     document.getElementById('subbar-crumb').innerHTML=cn+(bk&&name!=='history'&&name!=='season'&&name!=='meetings'&&name!=='owners'?' · <b>'+esc(bk.title)+'</b>':'')+' · '+label;
   }
@@ -1314,7 +1328,7 @@ async function sessRestore(){
   STATE.phone4=s.p4||null; STATE.clubId=s.cid||null; STATE.meetingId=s.mid||null; STATE.isHost=!!s.host; STATE.bookId=s.bid||null;
   if(ONLINE){ try{ await RT.loadClubs(); await RT.loadMeetings(); if(STATE.bookId) await RT.loadBook(STATE.bookId); }catch(e){ rtErr(e); } }
   setNick(); syncHostUI(); syncAuthUI();
-  var ok=['clubs','create-club','meetings','owners','season','book','discussion','history','create','manage'];
+  var ok=['clubs','create-club','meetings','owners','season','book','discussion','history','results','create','manage'];
   var pg=(ok.indexOf(s.pg)>=0)?s.pg:(STATE.isHost?(STATE.clubId?'meetings':'manage'):'clubs');
   go(pg); return true;
 }
@@ -1322,7 +1336,7 @@ function back(){
   var cur=document.querySelector('.page.active');
   var id=cur?cur.id.replace('page-',''):'login';
   if(id==='book'||id==='history') go('season');
-  else if(id==='discussion') go('book');
+  else if(id==='discussion'||id==='results') go('book');
   else if(id==='season') go('meetings');
   else if(id==='meetings') go(STATE.phone4?'clubs':'login');
   else if(id==='owners') go('meetings');
@@ -1849,7 +1863,7 @@ function renderSeason(){
      : '<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>');
   document.getElementById('page-season').innerHTML=h;
 }
-async function openBook(id){STATE.bookId=id;DISC.view='rating';BINFO.buf=null;QEDIT.buf=null;setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
+async function openBook(id){STATE.bookId=id;DISC.view='rating';BINFO.buf=null;QEDIT.buf=null;MADD.open=false;setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
 /* 모임장 직접 답변 진입 — 시즌 페이지 책 카드의 [📝 답변하기] / [📖 내 기록] 버튼이 호출.
  * 4자리가 없으면 (= 백업코드로만 인증한 모임장) 답변 불가 — 토스트 안내. */
 async function hostAnswer(id){
@@ -2002,10 +2016,14 @@ function renderBook(){
       }
       h+='</div>';
     }
+    /* ─ 모임원 발표자료 ─ */
+    var stHost=bookStatus(b);
+    if(stHost!=='upcoming') h+=materialsHtml(b);
     /* ─ 발표 / 책 삭제 ─ */
     h+='<hr class="rule">';
     if(b.report)
-      h+='<button class="btn btn-primary btn-arrow btn-pill" onclick="startShare(\''+b.id+'\')">▶ 발표 시작 <span class="arr">&rarr;</span></button>';
+      h+='<button class="btn btn-primary btn-arrow btn-pill" onclick="startShare(\''+b.id+'\')">▶ 발표 시작 <span class="arr">&rarr;</span></button>'+
+        '<button class="btn btn-ghost btn-pill mt-8" onclick="go(\'results\')">📊 발표 결과 페이지 보기 &rarr;</button>';
     else
       h+='<div class="locked-note" style="font-size:13px">📊 발표자료 없음 — 시즌 페이지에서 책을 닫고(마감) → 발표자료 생성 후 발표를 시작할 수 있어요.</div>';
     h+='<div class="center mt-24"><button class="danger-link" onclick="delBookHost(\''+b.id+'\',\''+esc(b.title)+'\')">이 책 삭제</button></div>';
@@ -2014,7 +2032,8 @@ function renderBook(){
     /* 별점·답변 진입 버튼을 책 소개 위쪽에 — 스크롤 부담 줄이기 위함 */
     if(b.closed)
       h+='<div class="locked-note mt-12" style="border-color:#D44;color:#D44;margin-bottom:16px"><b>🔒 마감된 책</b>이에요 (읽기 전용).<br>새 답변·별점·공감은 받지 않지만, 내가 작성한 기록은 그대로 다시 볼 수 있어요.</div>'+
-        '<button class="btn btn-primary btn-arrow btn-pill" style="margin-bottom:20px" onclick="go(\'discussion\')">📖 내 기록 보기 <span class="arr">&rarr;</span></button>';
+        (b.report?'<button class="btn btn-primary btn-arrow btn-pill" style="margin-bottom:8px" onclick="go(\'results\')">📊 발표 결과 보기 <span class="arr">&rarr;</span></button>':'')+
+        '<button class="btn '+(b.report?'btn-ghost':'btn-primary btn-arrow')+' btn-pill" style="margin-bottom:20px" onclick="go(\'discussion\')">📖 내 기록 보기 '+(b.report?'&rarr;':'<span class="arr">&rarr;</span>')+'</button>';
     else if(cur)
       h+='<button class="btn btn-primary btn-arrow btn-pill" style="margin-bottom:20px" onclick="go(\'discussion\')">⭐ 별점·답변 매기러 가기 <span class="arr">&rarr;</span></button>';
     h+='<div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">책 소개</div><h3 class="h-3 mt-4">'+esc(b.tagline)+'</h3></div></div>'+
@@ -2036,6 +2055,8 @@ function renderBook(){
       });
       h+='</div>';
     }
+    /* 모임원 발표자료 — 예정 책엔 아직 이르니 열림/마감 책에만 */
+    if(cur||b.closed) h+=materialsHtml(b);
     /* 마감/열림 진입 버튼은 책 소개 위쪽에서 이미 노출. 여기선 예정 책에 한해 안내만 */
     if(!b.closed && !cur)
       h+='<div class="locked-note mt-12">이 책은 <b>'+esc(b.month)+'</b>에 모임이 열려요.<br>지금은 미리 워밍업만 할 수 있어요.</div>';
@@ -2049,6 +2070,113 @@ function renderBook(){
       h+='<button class="btn btn-ghost btn-pill mt-24" onclick="go(\'discussion\')">📖 내 기록 보기 &rarr;</button>';
   }
   document.getElementById('page-book').innerHTML=h;
+}
+/* ═══════════ 모임원 발표자료 (material, v17) ═══════════
+ * 각자 발표에 쓴 자료(슬라이드·노션·영상 링크)를 책 단위로 공유.
+ * 링크만 1단계 — 파일 업로드는 실수요 확인 후. 온라인 모드 전용. */
+var MADD={open:false};
+function matNick(x,bookId){ return x.phone4==='host'?'모임장':displayNick(x.phone4,bookId); }
+function materialsHtml(b){
+  var ms=b.materials||[];
+  var h='<div class="sheet"><div class="sheet__hd"><div><div class="eyebrow">모임원 발표자료</div><h3 class="h-3 mt-4">함께 나눈 자료들</h3></div></div>';
+  if(!ONLINE){ return h+'<p class="body-2 dim">온라인 모드에서만 쓸 수 있어요.</p></div>'; }
+  if(!ms.length) h+='<p class="body-2 dim" style="margin-bottom:12px">아직 올라온 자료가 없어요. 발표에 쓴 슬라이드·노션·영상 링크를 공유해보세요.</p>';
+  ms.forEach(function(x){
+    var u=extractUrl(x.url,x.title);
+    var mine=(STATE.phone4&&x.phone4===STATE.phone4)||STATE.isHost;
+    var attr=u?(' onclick="openLink(\''+u.replace(/\\/g,'\\\\').replace(/\x27/g,"\\'")+'\')" style="cursor:pointer"'):' style="cursor:default"';
+    h+='<div class="link-card" style="position:relative">'+
+      (mine?'<button class="bi-del" style="position:absolute;top:10px;right:10px" title="자료 삭제" onclick="event.stopPropagation();delMaterial(\''+x.id+'\')">&times;</button>':'')+
+      '<div class="link-card__icon">📎</div>'+
+      '<div class="link-card__body"'+attr+'><div class="link-card__title">'+esc(x.title)+'</div>'+
+      '<div class="link-card__meta">'+esc(matNick(x,b.id))+(u?'<span class="lk-go"> · 열기 ↗</span>':'')+'</div></div></div>';
+  });
+  var canAdd=!!(STATE.phone4||STATE.isHost);
+  if(canAdd){
+    if(MADD.open){
+      h+='<div class="bi-item mt-12"><div class="bi-item__hd"><span>내 자료 올리기</span><button class="bi-del" onclick="MADD.open=false;_rerenderCurrent()">&times;</button></div>'+
+        '<input class="input" id="mat-title" placeholder="자료 이름 (예: 이향인 발표 슬라이드)">'+
+        '<input class="input" id="mat-url" inputmode="url" placeholder="링크 URL (https://...)">'+
+        '<button class="btn btn-primary btn-sm btn-pill mt-8" style="width:auto" onclick="submitMaterial(\''+b.id+'\')">등록</button></div>';
+    } else {
+      h+='<button class="btn btn-ghost btn-sm btn-pill mt-8" style="width:auto" onclick="MADD.open=true;_rerenderCurrent()">+ 내 자료 올리기</button>';
+    }
+  }
+  return h+'</div>';
+}
+async function submitMaterial(bookId){
+  var t=val('mat-title'),u=val('mat-url');
+  if(!t){toast('자료 이름을 입력해 주세요');return;}
+  if(!u||!/^https?:\/\//i.test(u)){toast('링크는 https:// 로 시작하는 URL 이어야 해요');return;}
+  if(!(await RT.addMaterial(bookId,t,u)))return;
+  MADD.open=false;_rerenderCurrent();toast('자료를 공유했어요 · 모임원 모두가 볼 수 있어요');
+}
+async function delMaterial(id){
+  if(!confirm('이 자료 링크를 삭제할까요?'))return;
+  if(!(await RT.deleteMaterial(STATE.bookId,id)))return;
+  _rerenderCurrent();toast('자료를 삭제했어요');
+}
+/* ═══════════ RENDER: 발표 결과 (참가자용 읽기 전용) ═══════════
+ * 마감 + 발표자료(report)가 있는 책의 결과를 발표 모드 없이 본다.
+ * 키워드·요약·별점·하이라이트는 report jsonb, 자료는 material. */
+function renderResults(){
+  var b=bookById(STATE.bookId);
+  if(!b){go('season');return;}
+  if(!b.report){toast('아직 발표자료가 없어요');go('book');return;}
+  var rep=b.report;
+  var h='<div class="section-hd"><div><div class="eyebrow">발표 결과 · '+esc(b.month||'')+'</div><h2 class="h-2 mt-4">'+esc(b.title)+'</h2></div></div>';
+  /* 통계 태그 */
+  var st=rep.stats||{};
+  h+='<div class="row mb-16" style="flex-wrap:wrap;gap:6px">'+
+    '<span class="tag tag-accent">답변 '+(st.answers||0)+'개</span>'+
+    '<span class="tag">댓글 '+(st.comments||0)+'개</span>'+
+    '<span class="tag">참가자 '+(st.participants||0)+'명</span></div>';
+  /* 키워드 */
+  h+='<div class="analysis-card mb-16"><div class="analysis-card__label">자주 등장한 키워드</div><div class="analysis-keywords" id="res-kws">';
+  if(rep.keywords&&rep.keywords.length){
+    rep.keywords.forEach(function(k){
+      var q=(k.q||'').trim(),why=(k.why||'').trim();
+      var tip=(q||why)?(' data-q="'+esc(q)+'" data-why="'+esc(why)+'"'):'';
+      h+='<span class="kw kw-'+esc(k.size||'md')+(tip?' kw-has-tip':'')+'"'+tip+'>'+esc(k.w)+'</span>';
+    });
+  } else h+='<span class="dim">키워드가 없어요.</span>';
+  h+='</div><p class="body-2 dim" style="font-size:11px;text-align:center">키워드를 누르면 뽑은 이유와 답변 인용이 보여요</p></div>';
+  /* AI 요약 */
+  if(rep.summary) h+='<div class="analysis-card mb-16"><div class="analysis-card__label">AI 한줄 요약</div><div class="analysis-summary" style="white-space:pre-line">'+esc(rep.summary)+'</div></div>';
+  /* 별점 평균 */
+  h+='<div class="analysis-card mb-16"><div class="analysis-card__label">모두의 별점</div>';
+  RATING_AXES.forEach(function(ax){
+    var rr=(rep.ratings||{})[ax.k]||{avg:0,n:0};
+    h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'</div>'+
+      '<div><span class="rt-stars">'+starStr(Math.round(rr.avg||0))+'</span><span class="rt-stars__num">'+(rr.avg||0).toFixed(1)+' · '+(rr.n||0)+'명</span></div></div>';
+  });
+  h+='</div>';
+  /* 하이라이트 (report 에 있을 때만 — 문자열 배열) */
+  if(rep.highlights&&rep.highlights.length){
+    h+='<div class="analysis-card mb-16"><div class="analysis-card__label">하이라이트</div>';
+    rep.highlights.forEach(function(t){ h+='<div class="body-2" style="padding:10px 0;border-bottom:1px solid var(--rule-soft);line-height:1.6">✨ '+esc(String(t))+'</div>'; });
+    h+='</div>';
+  }
+  /* 점수 분포 (이향인 테스트 등 책 특화 — 있을 때만) */
+  var sd=rep.score_distribution;
+  if(sd&&sd.scores&&sd.scores.length){
+    h+='<div class="analysis-card mb-16"><div class="analysis-card__label">점수 분포'+(sd.threshold?' · 기준 '+esc(String(sd.threshold))+'점':'')+'</div>';
+    sd.scores.forEach(function(s){
+      h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+(s.is_ihyang?'🌙':'🙂')+' '+esc(String(s.score))+'점 · '+esc(String(s.pct))+'%</div>'+
+        '<div class="body-2 dim" style="font-size:12px">'+esc(s.note||'')+'</div></div>';
+    });
+    h+='</div>';
+  }
+  /* 모임원 자료 */
+  h+=materialsHtml(b);
+  h+='<div class="row mt-16">'+
+    '<button class="btn btn-ghost btn-pill" onclick="go(\'book\')">&larr; 사전정보로</button>'+
+    (STATE.phone4?'<button class="btn btn-ghost btn-pill" onclick="go(\'discussion\')">📖 내 기록 보기</button>':'')+
+    '</div>';
+  h+='<p class="body-2 dim mt-12" style="font-size:11px;text-align:center">발표자료 — '+esc(rep.source||'mock')+' · '+esc((rep.generated_at||'').slice(0,16).replace('T',' '))+'</p>';
+  document.getElementById('page-results').innerHTML=h;
+  var kwHost=document.getElementById('res-kws');
+  if(kwHost)wireKwTips(kwHost);
 }
 /* 책 정보 편집 모드 진입 — buf 가 null 이면 읽기 전용, 채워지면 편집 폼 노출 */
 function editBookInfo(){
@@ -2238,7 +2366,7 @@ function renderDiscussion(){
   if(b.closed){
     h+='<div class="locked-note" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b> · 읽기 전용<br>'+
       '내가 남긴 답변·별점·공감은 그대로 볼 수 있어요. 새 입력은 받지 않지만, <b>내 답변은 × 로 언제든 삭제</b>할 수 있어요.'+
-      (b.report?'<br><span style="color:var(--success)">📊 발표자료가 생성되어 있어요 — 발표 모드의 [AI 분석] 탭에서 볼 수 있습니다.</span>':'')+
+      (b.report?'<br><span style="color:var(--success)">📊 발표 결과가 나왔어요 — <a onclick="go(\'results\')" style="color:var(--success);font-weight:700;text-decoration:underline;cursor:pointer">결과 보러 가기 &rarr;</a></span>':'')+
     '</div>';
   }
   h+=discTabsHtml(b,bs);
