@@ -701,8 +701,10 @@ var RATING_AXES=[
   {k:'novelty',label:'참신함',hint:'관점이 새로웠나요?'},
   {k:'overall',label:'총점',hint:'한마디로 이 책은?'}
 ];
-var NICK_ADJ=['춤추는','배고픈','빛나는','꿈꾸는','용감한','졸린','조용한','웃는','달리는','노래하는','생각하는','반짝이는','느긋한','엉뚱한','수줍은','도도한','명랑한','까칠한','포근한','새침한','우아한','게으른','부지런한','호기심많은','시크한','폭신한','통통한','날렵한','깜찍한','사색하는','책읽는','산책하는','커피마시는','별헤는','길잃은','떠도는','고독한','자유로운','발랄한','나른한','용맹한','심심한','무던한','따뜻한'];
-var NICK_NOUN=['고양이','판다','알파카','해파리','두부','수달','부엉이','고래','다람쥐','펭귄','여우','거북','너구리','고슴도치','라쿤','물범','카피바라','햄스터','오리','백조','사슴','토끼','곰','늑대','표범','치타','돌고래','문어','달팽이','나무늘보','미어캣','코알라','호랑이','참새','까치','올빼미','청설모','두더지','북극곰','도토리','단팥빵','마카롱','구름','별똥별','등대','책갈피','연필','안경'];
+/* 우주 컨셉 별명 (프로젝트 헤일메리 시즌) — '~한 ~' 꼴로 조합.
+   두 배열 길이는 서로소(43·49)로 둔다 — nickFor 해시가 한쪽으로 쏠리지 않게. */
+var NICK_ADJ=['별을 헤는','궤도를 도는','중력을 거스르는','광년을 건너는','성운을 떠도는','빛보다 빠른','무중력에 뜬','고요히 표류하는','귀환을 앞둔','신호를 보내는','잠들지 않는','홀로 항해하는','별먼지로 빚은','타오르는','얼어붙은','공전하는','자전하는','반짝이는','끝없이 팽창하는','블랙홀을 비껴간','산소를 아끼는','좌표를 잃은','교신 중인','착륙을 준비하는','발사를 기다리는','대기권을 넘은','은하를 가로지르는','시간이 느리게 가는','아득히 먼','이름 없는','최초로 도착한','되돌아오지 않는','유영하는','침묵하는','노래하는','꿈꾸는','오래 잠들었다 깨어난','빛을 모으는','어둠을 지나는','새벽을 여는','궤도를 이탈한','중력에 붙잡힌','먼 우주에서 온'];
+var NICK_NOUN=['항해자','우주비행사','탐사선','인공위성','혜성','유성','소행성','성운','은하','블랙홀','초신성','백색왜성','중성자별','북극성','오리온','안드로메다','토성','목성','해왕성','명왕성','달','태양','우주선','캡슐','로켓','우주정거장','관제탑','망원경','좌표','궤도','광년','개척자','오로라','일식','월식','우주복','산소통','신호','교신','등대','나침반','표류자','승무원','선장','기록자','생존자','목격자','여행자','관측자'];
 
 /* ═══════════ STATE & STORE ═══════════ */
 var STATE={phone4:null,bookId:null,clubId:null,meetingId:null,isHost:false};
@@ -768,6 +770,7 @@ async function _persistNick(nick){
     var e=(await sb.from('member_book').upsert({book_id:STATE.bookId,phone4:STATE.phone4,nickname:nick},{onConflict:'book_id,phone4'})).error;
     if(e){toast('닉네임 저장 실패 — 이미 같은 이름을 쓰는 분이 있어요');return false;}
   }
+  nickMapSet(STATE.bookId,STATE.phone4,nick);   /* 화면 즉시 반영 — 내 예전 댓글까지 새 이름으로 */
   return true;
 }
 async function confirmNick(){
@@ -817,7 +820,7 @@ function nickPickerHtml(b,opts){
     '<button class="btn btn-primary btn-pill" onclick="confirmNick()">'+(opts.change?'이 이름으로 변경':'랜덤 이름 확정')+'</button></div>'+
     '<div class="sheet">'+
       '<div class="field"><label>원하는 이름이 있다면 직접 입력</label>'+
-      '<input class="input" id="nk-custom" maxlength="20" placeholder="예: 책읽는 미지" onkeydown="if(event.key===\'Enter\')confirmCustomNick()"></div>'+
+      '<input class="input" id="nk-custom" maxlength="20" placeholder="예: 별을 헤는 항해자" onkeydown="if(event.key===\'Enter\')confirmCustomNick()"></div>'+
       '<button class="btn btn-primary btn-pill" onclick="confirmCustomNick()">이 이름으로 '+(opts.change?'변경':'확정')+'</button>'+
       '<p class="body-2 dim mt-8" style="font-size:12px">최대 20자. <b>마감 전까지는 언제든 다시 변경</b>할 수 있어요. (책마다 따로)</p>'+
     '</div>'+
@@ -830,11 +833,28 @@ function ensureNick(){
   if(fixedNick(STATE.phone4,STATE.bookId))return;               /* 이미 정해졌으면 유지 */
   var nm=nickFor(STATE.phone4,STATE.bookId);                    /* 책마다 고정인 해시 닉 */
   var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=nm;nkSave(o); /* 로컬 즉시 고정(동기) */
+  nickMapSet(STATE.bookId,STATE.phone4,nm);
   /* 서버에도 비동기 반영 — 닉 충돌(드묾)은 조용히 무시하고 로컬 닉 유지(제출 시 재시도) */
   if(ONLINE)sb.from('member_book').upsert({book_id:STATE.bookId,phone4:STATE.phone4,nickname:nm},{onConflict:'book_id,phone4'}).then(function(){},function(){});
 }
-/* 닉네임 = 전화번호(+책) 결정론 해시. 표출 전용 — 저장값(옛 랜덤 닉)에 의존하지 않아
-   답변·댓글·공감 어디서나 같은 번호면 항상 같은 이름으로 보인다. 변경 불가. */
+/* NICKMAP: bookId → {phone4: nickname}. loadBook 이 member_book 에서 채운다.
+   member_book 은 (book_id, phone4) 유니크라 한 책에서 한 사람은 행이 딱 하나 —
+   1인 1닉네임(1:1)이 DB 구조로 보장된다. 이 맵이 '지금 이름'의 단일 기준. */
+var NICKMAP={};
+function nickMapSet(bookId,phone4,nick){ if(!bookId||!phone4)return; (NICKMAP[bookId]=NICKMAP[bookId]||{})[phone4]=nick; }
+/* 화면에 이름을 낼 때는 언제나 이 함수만 쓴다(nickFor 직접 호출 금지).
+   우선순위: ① 내가 이 기기에서 방금 바꾼 이름 ② 서버에 저장된 현재 이름 ③ 해시 기본값.
+   과거 댓글에 박제된 author_nick 을 쓰지 않으므로, 이름을 바꾸면 예전 댓글까지 새 이름으로 따라온다. */
+function displayNick(phone4,bookId){
+  if(!phone4||!bookId) return nickFor(phone4,bookId);
+  var mine=(phone4===STATE.phone4)?fixedNick(phone4,bookId):null;
+  if(mine) return mine;
+  var m=NICKMAP[bookId];
+  if(m&&m[phone4]) return m[phone4];
+  return nickFor(phone4,bookId);
+}
+/* 닉네임 기본값 = 전화번호(+책) 결정론 해시. 아직 한 번도 안 바꾼 사람의 자동 배정 이름.
+   표시는 displayNick 을 거친다 — 직접 부르지 말 것. */
 function nickFor(phone4,bookId){
   var str=String(phone4)+'|'+bookId,h=0;
   for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))>>>0;}
@@ -950,6 +970,9 @@ var RT={
     var bk=bookById(bookId);if(!bk)return;
     var me=STATE.phone4;
     var members=(mb.data||[]).slice().sort(function(a,b){return a.phone4<b.phone4?-1:1;});
+    /* 이 책의 '지금 이름' 표를 다시 만든다 — 남이 이름을 바꿨으면 여기서 반영된다. */
+    NICKMAP[bookId]={};
+    members.forEach(function(o){ if(o.nickname) nickMapSet(bookId,o.phone4,o.nickname); });
     /* 재로그인 닉네임 복구 — 로그아웃으로 로컬 rt:nick 이 비어도 서버에 저장된 내 닉네임을 다시 픽커 없이 쓰도록 hydrate.
        이미 로컬에 있으면(=이번 세션에서 변경 중) 덮지 않는다. */
     if(me){
@@ -962,7 +985,7 @@ var RT={
     var others=members.filter(function(x){return x.phone4!==me;});
     var idxOf={};others.forEach(function(o,j){idxOf[o.phone4]=j;});
     bk.others=bk.questions.map(function(_,qi){
-      return others.map(function(o){return {n:nickFor(o.phone4,bookId),a:(ansMap[o.phone4]||{})[qi]||'',phone4:o.phone4};});
+      return others.map(function(o){return {n:displayNick(o.phone4,bookId),a:(ansMap[o.phone4]||{})[qi]||'',phone4:o.phone4};});
     });
     var rcCount={},rcMine={},empByPhone={};
     (rx.data||[]).forEach(function(x){
@@ -979,13 +1002,13 @@ var RT={
     var SR={},SC={};
     /* 이향인 점수는 SR(STAGE_RATINGS)에만 실어 발표 모드에서만 공개. b.others 엔 넣지 않음
      * → '③ 다른 사람의 답변'(댓글 화면)에는 절대 노출되지 않음. */
-    members.forEach(function(o){var rr=o.ratings||{};var im=((o.meta||{}).ihyang)||null;var nn=nickFor(o.phone4,bookId);SR[nn]={length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0,empathy:empByPhone[o.phone4]||0,ihyangScore:im?im.score:null,ihyangPct:im?im.pct:null,ihyangIs:im?!!im.is:null};});
+    members.forEach(function(o){var rr=o.ratings||{};var im=((o.meta||{}).ihyang)||null;var nn=displayNick(o.phone4,bookId);SR[nn]={length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0,empathy:empByPhone[o.phone4]||0,ihyangScore:im?im.score:null,ihyangPct:im?im.pct:null,ihyangIs:im?!!im.is:null};});
     /* allRatings — 답변 페이지의 [모두의 별점] 통계용. phone4 단위로 보관(닉네임 변경 안전).
      * 자기 자신 포함 모든 member_book row. 한 항목이라도 0보다 큰 사용자만 통계 대상. */
     bk.allRatings=members.map(function(o){var rr=o.ratings||{};return {phone4:o.phone4,nickname:o.nickname,length:rr.length||0,difficulty:rr.difficulty||0,fun:rr.fun||0,novelty:rr.novelty||0,overall:rr.overall||0};});
     (cm.data||[]).forEach(function(c){
       if(c.author_phone4===me) return;
-      var k='q'+c.q_index+'|'+nickFor(c.target_phone4,bookId);(SC[k]=SC[k]||[]).push({by:nickFor(c.author_phone4,bookId),t:c.body});
+      var k='q'+c.q_index+'|'+displayNick(c.target_phone4,bookId);(SC[k]=SC[k]||[]).push({by:displayNick(c.author_phone4,bookId),t:c.body});
     });
     STAGE_RATINGS=SR;STAGE_COMMENTS=SC;
     var myMb=(mb.data||[]).filter(function(x){return x.phone4===me;})[0];
@@ -998,7 +1021,7 @@ var RT={
     });
     /* 내 답변에 '남이' 남긴 댓글(받은 댓글함) + 내 답변에 달린 공감 수 (q_index 별) */
     var myInbox={},myReact={};
-    (cm.data||[]).forEach(function(c){ if(c.target_phone4===me && c.author_phone4!==me){ (myInbox[c.q_index]=myInbox[c.q_index]||[]).push({by:nickFor(c.author_phone4,bookId),t:c.body}); } });
+    (cm.data||[]).forEach(function(c){ if(c.target_phone4===me && c.author_phone4!==me){ (myInbox[c.q_index]=myInbox[c.q_index]||[]).push({by:displayNick(c.author_phone4,bookId),t:c.body}); } });
     (rx.data||[]).forEach(function(x){ if(x.target_phone4===me) myReact[x.q_index]=(myReact[x.q_index]||0)+1; });
     var myMeta=(myMb&&myMb.meta)||{};
     var myIy=myMeta.ihyang||null;
@@ -1022,7 +1045,7 @@ var RT={
     for(var i=0;i<bks.length;i++){ await RT.loadBook(bks[i].id); }
   },
   async submit(bookId,answers){
-    var nick=nickFor(STATE.phone4,bookId);
+    var nick=displayNick(STATE.phone4,bookId);
     var rows=answers.map(function(t,qi){return {book_id:bookId,phone4:STATE.phone4,q_index:qi,body:t};});
     var e1=(await sb.from('answer').upsert(rows,{onConflict:'book_id,phone4,q_index'})).error;
     var e2=(await sb.from('member_book').upsert({book_id:bookId,phone4:STATE.phone4,nickname:nick,submitted:true},{onConflict:'book_id,phone4'})).error;
@@ -1031,7 +1054,7 @@ var RT={
   },
   async saveDraft(bookId,answers){
     /* 임시저장 — 답변만 upsert, submitted 는 건드리지 않음(미제출 상태 유지). 빈 칸은 저장 안 함. */
-    var nick=nickFor(STATE.phone4,bookId);
+    var nick=displayNick(STATE.phone4,bookId);
     var rows=[];
     answers.forEach(function(t,qi){ if(t&&t.trim()) rows.push({book_id:bookId,phone4:STATE.phone4,q_index:qi,body:t}); });
     var e1=rows.length?(await sb.from('answer').upsert(rows,{onConflict:'book_id,phone4,q_index'})).error:null;
@@ -1040,13 +1063,13 @@ var RT={
     await RT.loadBook(bookId);return true;
   },
   async saveRatings(bookId,ratings){
-    var nick=nickFor(STATE.phone4,bookId);
+    var nick=displayNick(STATE.phone4,bookId);
     var e=(await sb.from('member_book').upsert({book_id:bookId,phone4:STATE.phone4,nickname:nick,ratings:ratings},{onConflict:'book_id,phone4'})).error;
     if(e){rtErr(e);return false;}
     await RT.loadBook(bookId);return true;
   },
   async addComment(bookId,qi,targetPhone4,body){
-    var nick=STATE.phone4?nickFor(STATE.phone4,bookId):'모임장';
+    var nick=STATE.phone4?displayNick(STATE.phone4,bookId):'모임장';
     var e=(await sb.from('comment').insert({book_id:bookId,q_index:qi,target_phone4:targetPhone4,author_phone4:STATE.phone4||'host',author_nick:nick,body:body})).error;
     if(e){rtErr(e);return false;}
     await RT.loadBook(bookId);return true;
@@ -1130,7 +1153,7 @@ function setNick(){
   if(inBook&&STATE.phone4){
     /* 호스트는 fixedNick 을 직접 정했을 때만 그 닉네임 표시. 안 정했으면 마스트헤드는 '모임장' 유지 (auto-hash nick 노출 X) */
     if(STATE.isHost && !fixedNick(STATE.phone4,STATE.bookId)) t='모임장';
-    else t=nickFor(STATE.phone4,STATE.bookId);
+    else t=displayNick(STATE.phone4,STATE.bookId);
   }
   else if(STATE.phone4) t='•••• '+STATE.phone4;
   else if(STATE.isHost) t='모임장';
@@ -1138,6 +1161,8 @@ function setNick(){
   el.style.display=t?'block':'none';
 }
 function go(name,nopush){
+  /* 페이지를 옮기면 닉네임 변경 모드는 자동 종료 — 확정 안 한 이름은 버리고 원래 이름 유지 */
+  PENDNICK=null; NICKMODE=false;
   STATE.page=name; setNick();
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
   var el=document.getElementById('page-'+name);
@@ -2086,11 +2111,11 @@ async function onIhyangResult(d){
     /* 기존 meta 를 보존하며 ihyang 키만 갱신(다른 책/테스트 데이터 유지). */
     var prevMeta=(bookState(b.id)||{}).ihyangMeta||{};
     var newMeta=Object.assign({},prevMeta,{ihyang:{score:d.score,pct:d.pct,is:!!d.isIhyang}});
-    try{ e=(await sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:nickFor(STATE.phone4,b.id),meta:newMeta},{onConflict:'book_id,phone4'})).error; }
+    try{ e=(await sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:displayNick(STATE.phone4,b.id),meta:newMeta},{onConflict:'book_id,phone4'})).error; }
     catch(err){ e=err||true; }
     /* meta 컬럼 미적용 환경 → v14 전용 컬럼으로 best-effort 폴백 */
     if(e&&/meta/.test((e.message||'')+(e.details||''))){
-      try{ e=(await sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:nickFor(STATE.phone4,b.id),ihyang_score:d.score,ihyang_pct:d.pct},{onConflict:'book_id,phone4'})).error; }
+      try{ e=(await sb.from('member_book').upsert({book_id:b.id,phone4:STATE.phone4,nickname:displayNick(STATE.phone4,b.id),ihyang_score:d.score,ihyang_pct:d.pct},{onConflict:'book_id,phone4'})).error; }
       catch(err){ e=err||true; }
     }
     if(e){ if(typeof rtErr==='function')rtErr(e); toast('점수 저장 실패 — 인터넷 확인 후 다시 [기록하기]를 눌러주세요'); return; }
@@ -2107,7 +2132,7 @@ window.addEventListener('message',function(ev){ try{ onIhyangResult(ev.data); }c
 
 function renderDiscussion(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
-  /* ── 닉네임: 전화번호 기반 결정론 배정(표출 전용, 변경 불가). 픽커 없음 ── */
+  /* ── 닉네임: 책 첫 진입 시 자동 배정. 변경은 아래 [✏️ 이름 바꾸기] 버튼으로만 ── */
   if(STATE.phone4 && !STATE.isHost)ensureNick();
   var h=bookHeadHtml(b);
   var st=bookStatus(b);
@@ -2116,12 +2141,18 @@ function renderDiscussion(){
     document.getElementById('page-discussion').innerHTML=h;return;
   }
   var bs=bookState(b.id);
-  /* 내 닉네임 표시 + (마감 전이면) 변경 링크 */
+  /* 변경 모드면 픽커만 띄운다 — 확정/취소해야 원래 화면으로 돌아온다. */
+  if(NICKMODE && STATE.phone4 && !b.closed){
+    document.getElementById('page-discussion').innerHTML=h+nickPickerHtml(b,{change:true});return;
+  }
+  /* 내 닉네임 표시 + (마감 전이면) 변경 버튼 */
   if(STATE.phone4){
-    var myNick=nickFor(STATE.phone4,b.id);
+    var myNick=displayNick(STATE.phone4,b.id);
     h+='<div class="disc-nick-bar">'+
       '<span>이 책에서 내 이름: <b>'+esc(myNick)+'</b></span>'+
-      '<span class="dim" style="font-size:11px">번호로 자동 배정 · 고정</span>'+
+      (b.closed
+        ? '<span class="dim" style="font-size:11px">마감 · 변경 불가</span>'
+        : '<button class="btn btn-ghost btn-pill" style="padding:4px 12px;font-size:12px" onclick="startNickChange()">✏️ 이름 바꾸기</button>')+
       '</div>';
   }
   /* 잠긴 탭에 머물러 있으면 가능한 가장 앞 탭으로 강등 */
@@ -2178,7 +2209,7 @@ function renderDiscussion(){
           h+='<div class="answer mine'+(editing?'':' has-x')+'" style="position:relative">'+
             /* 우상단 × — 마감 여부와 무관하게 항상 노출. 클릭 시 confirm 후 삭제 (cascade) */
             (editing?'':'<button class="ans-x" title="이 답변과 딸린 댓글·공감 모두 삭제" onclick="delMyAnswer('+i+')">&times;</button>')+
-            '<div class="answer__who"><span><b>나 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>'+(editing?'수정 중':'제출됨')+'</span></div>'+
+            '<div class="answer__who"><span><b>나 ('+esc(displayNick(STATE.phone4,b.id))+')</b></span><span>'+(editing?'수정 중':'제출됨')+'</span></div>'+
             (editing
               ? '<textarea class="input" id="ea-'+i+'" rows="3" enterkeyhint="enter">'+esc(ansBody)+'</textarea>'+
                 '<div class="row mt-12"><button class="btn btn-primary btn-sm btn-pill" onclick="saveAns('+i+')">저장</button>'+
@@ -2203,7 +2234,7 @@ function renderDiscussion(){
       if(bs.submitted && myA){
         var inbox=(bs.inbox&&bs.inbox[i])||[];
         var myrc=(bs.myReact&&bs.myReact[i])||0;
-        h+='<div class="answer mine"><div class="answer__who"><span><b>내 답변 ('+esc(nickFor(STATE.phone4,b.id))+')</b></span><span>나 · 💛 '+myrc+'</span></div>'+
+        h+='<div class="answer mine"><div class="answer__who"><span><b>내 답변 ('+esc(displayNick(STATE.phone4,b.id))+')</b></span><span>나 · 💛 '+myrc+'</span></div>'+
           '<div class="answer__body">'+esc(myA)+'</div>';
         if(inbox.length){
           h+='<div class="comment-box"><div style="font-size:12px;color:var(--ink-dim);margin-bottom:6px">💬 내 답변에 달린 댓글 '+inbox.length+'개</div><div class="comment-list">';
@@ -2439,7 +2470,7 @@ function renderHistory(){
       var ans=(bs.answers||[]).filter(function(x){return x&&x.trim();}).length;
       var rated=0;RATING_AXES.forEach(function(ax){if(bs.ratings&&bs.ratings[ax.k])rated++;});
       var cmt=0;for(var k in (bs.comments||{})) cmt+=bs.comments[k].length;
-      sub='답변 '+ans+' · 별점 '+rated+'/'+RATING_AXES.length+' · 댓글 '+cmt+'개 · 닉네임 '+nickFor(STATE.phone4,b.id);
+      sub='답변 '+ans+' · 별점 '+rated+'/'+RATING_AXES.length+' · 댓글 '+cmt+'개 · 닉네임 '+displayNick(STATE.phone4,b.id);
     }else{
       var st2=bookStatus(b);
       sub=(b.month?b.month+' · ':'')+(st2==='upcoming'?'예정':(st2==='open'?'아직 답변 전':'닫힘'));
