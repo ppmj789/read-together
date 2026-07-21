@@ -234,6 +234,9 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .book-card__host{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-soft);flex-wrap:wrap}
 .book-card__host .btn{min-height:34px;font-size:12px}
 .book-card.upcoming .book-card__spine{background:var(--ink-soft)}
+/* 표지 이미지가 있는 책 — 첫 글자 대신 표지를 깔고, 글자는 감춘다(font-size:0) */
+.book-card__spine.has-cover{background-size:cover;background-position:center;background-repeat:no-repeat;font-size:0}
+.book-card.upcoming .book-card__spine.has-cover{opacity:.55}
 .book-card__body{flex:1;min-width:0;padding-right:62px}
 .book-card__month{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em}
 .book-card.upcoming .book-card__month{color:var(--ink-dim)}
@@ -881,6 +884,20 @@ function nickFor(phone4,bookId){
   var str=String(phone4)+'|'+bookId,h=0;
   for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))>>>0;}
   return NICK_ADJ[h%NICK_ADJ.length]+' '+NICK_NOUN[Math.floor(h/NICK_ADJ.length)%NICK_NOUN.length];
+}
+/* ── 책 표지 ──
+   표지 파일이 있는 책은 목록에서 첫 글자('프') 대신 표지가 보인다.
+   새 책 표지를 추가하려면: assets/covers/ 에 이미지를 넣고(루트·docs 양쪽),
+   아래에 '책 제목': '경로' 한 줄만 더하면 된다. 없는 책은 지금처럼 첫 글자. */
+var BOOK_COVERS={
+  '프로젝트 헤일메리':'assets/covers/hailmary.jpg'
+};
+function coverFor(title){ return BOOK_COVERS[String(title||'').replace(/\s+/g,' ').trim()]||null; }
+/* 책 카드 왼쪽 책등 — 표지가 있으면 이미지로, 없으면 기존처럼 제목 첫 글자로 */
+function spineHtml(b){
+  var cov=coverFor(b.title);
+  if(cov) return '<div class="book-card__spine has-cover" style="background-image:url(\''+cov+'\')" role="img" aria-label="'+esc(b.title)+' 표지"></div>';
+  return '<div class="book-card__spine">'+esc(b.spine)+'</div>';
 }
 function customMeetings(){try{return JSON.parse(localStorage.getItem('rt:meetings'))||[];}catch(e){return MEM['rt:meetings']?JSON.parse(MEM['rt:meetings']):[];}}
 function saveCustomMeetings(a){var v=JSON.stringify(a);try{localStorage.setItem('rt:meetings',v);}catch(e){MEM['rt:meetings']=v;}}
@@ -1756,7 +1773,7 @@ function renderSeason(){
     var bl=bookStatusEmoji(st)+' '+bookStatusLabel(st);
     h+=
      '<div class="book-card '+(cur?'current':'upcoming')+(closed?' is-closed':'')+'"'+(STATE.isHost?'':' onclick="openBook(\''+b.id+'\')"')+'>'+
-       '<div class="book-card__spine">'+esc(b.spine)+'</div>'+
+       spineHtml(b)+
        '<div class="book-card__body">'+
          '<div class="book-card__month">'+(b.month?'<span class="dim" style="font-weight:500;color:var(--ink-dim)">'+esc(b.month)+'</span> · ':'')+(closed?'<span style="color:#D44">🔒 닫힘</span>':'<span style="color:var(--success)">🟢 열림</span>')+(hasReport?' · <span style="color:var(--accent)">📊 발표자료</span>':'')+'</div>'+
          '<div class="book-card__title">'+esc(b.title)+'</div>'+
