@@ -43,7 +43,7 @@ body{font-family:'Pretendard Variable','Pretendard',sans-serif;font-size:15px;li
 .masthead__center b{display:block;font-family:var(--display);font-weight:800;font-size:18px;color:var(--ink);letter-spacing:-.02em;line-height:1.15}
 
 /* ═══ STAGE NAV (발표 모드 전용) ═══ */
-.toc{position:fixed;top:54px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--rule);z-index:59;display:none;justify-content:center;padding:8px 16px;gap:0}
+.toc{position:fixed;top:54px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--rule);z-index:59;display:none;justify-content:flex-start;padding:8px 16px;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .toc.visible{display:flex}
 .toc__group{display:flex;justify-content:center;gap:6px}
 .toc a{display:flex;align-items:center;gap:6px;padding:9px 20px;text-decoration:none;color:var(--ink-soft);font-family:var(--display);font-weight:600;font-size:15px;border-radius:var(--radius-pill);transition:all .2s;white-space:nowrap;cursor:pointer}
@@ -51,6 +51,11 @@ body{font-family:'Pretendard Variable','Pretendard',sans-serif;font-size:15px;li
 .toc a.active{background:var(--accent);color:#fff}
 
 /* ═══ SUBBAR (개인 모드 경량 네비 — 홈/뒤로) ═══ */
+/* 네트워크 대기 표시 — 화면 최상단 3px 진행줄 (loading(true/false)) */
+.loadbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:400;display:none;overflow:hidden;pointer-events:none}
+.loadbar.on{display:block}
+.loadbar::before{content:"";position:absolute;left:-40%;width:40%;height:100%;background:var(--accent);border-radius:2px;animation:loadslide .9s linear infinite}
+@keyframes loadslide{to{left:100%}}
 .subbar{position:fixed;top:54px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--rule);z-index:59;display:none;align-items:center;gap:8px;padding:9px 16px;font-size:13px}
 .subbar.visible{display:flex}
 .subbar a{display:inline-flex;align-items:center;gap:5px;color:var(--ink-soft);font-weight:600;text-decoration:none;cursor:pointer;padding:6px 12px;border-radius:var(--radius-pill);transition:all .2s}
@@ -325,7 +330,7 @@ body.is-page-season .book-card__cover{width:96px}
 .rating-row__label{font-size:14px;font-weight:600;color:var(--ink)}
 .rating-row__label span{display:block;font-size:12px;color:var(--ink-dim);font-weight:400;margin-top:1px}
 .stars{display:flex;gap:3px}
-.star{font-size:24px;line-height:1;color:var(--rule);cursor:pointer;background:none;border:none;padding:2px;transition:transform .12s,color .15s}
+.star{font-size:24px;line-height:1;color:var(--rule);cursor:pointer;background:none;border:none;padding:8px 6px;margin:-4px 0;transition:transform .12s,color .15s}
 .star:hover{transform:scale(1.18)}
 .star.on{color:var(--star)}
 .rating-row--total{border-top:2px solid var(--rule);border-bottom:none;margin-top:4px;padding-top:14px}
@@ -384,10 +389,6 @@ body.is-page-season .book-card__cover{width:96px}
 .scene-live__left{flex:0 0 40%;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper);padding:28px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;box-shadow:var(--shadow-sm)}
 .scene-live__right{flex:1;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper-warm);padding:24px;display:flex;flex-direction:column;box-shadow:var(--shadow-sm)}
 .scene-timer__phase{font-size:14px;font-weight:600;color:var(--ink-dim);margin-bottom:12px}
-.stage-timer{font-family:var(--display);font-weight:900;font-size:clamp(80px,12vw,160px);line-height:1;letter-spacing:-.06em;color:var(--ink);font-variant-numeric:tabular-nums;transition:color .2s}
-.stage-timer__label{font-size:14px;font-weight:600;color:var(--ink-dim);margin-top:8px;padding:6px 16px;background:var(--highlight);border-radius:var(--radius-pill);display:inline-block}
-.stage-timer__controls{display:flex;gap:10px;margin-top:20px}
-.stage-timer__controls .btn{width:auto;font-size:15px;padding:12px 24px;min-height:48px;font-weight:700;border-radius:var(--radius-pill)}
 .scene-live__speaker-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--rule-soft);width:100%}
 .scene-live__speaker-label{font-size:12px;font-weight:600;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 .scene-live__speaker-name{font-family:var(--display);font-weight:900;font-size:clamp(44px,6.5vw,76px);line-height:1.05;color:var(--accent);margin-bottom:18px;transition:color .2s;letter-spacing:-.03em;min-height:1.05em}
@@ -503,7 +504,6 @@ body.is-page-season .book-card__cover{width:96px}
   .scene-analysis__grid{grid-template-columns:1fr}
   .analysis-card--wide{grid-column:1}
   .scene-highlights__grid{grid-template-columns:1fr}
-  .stage-timer{font-size:80px !important}
   .sr-flow{flex-direction:column}
   .sr-arrow{transform:rotate(90deg);padding:6px 0}
 }
@@ -529,6 +529,7 @@ body.is-page-season .book-card__cover{width:96px}
 <body>
 
 <!-- ═══ MASTHEAD ═══ -->
+<div class="loadbar" id="loadbar"></div>
 <header class="masthead">
   <div class="masthead__row">
     <span class="masthead__title" onclick="goHome()"><span class="mh-accent">未知</span>의 서재</span>
@@ -622,11 +623,11 @@ body.is-page-season .book-card__cover{width:96px}
   <div class="scene-analysis__layout">
     <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요 &middot; 사람은 공감만, 분석은 AI</p></div>
     <div class="scene-analysis__grid">
-      <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드</div><div class="analysis-keywords"><span class="kw kw-lg">경계</span><span class="kw kw-md">정체성</span><span class="kw kw-lg">이방인</span><span class="kw kw-sm">외로움</span><span class="kw kw-md">자유</span><span class="kw kw-sm">관찰자</span><span class="kw kw-md">소속감</span><span class="kw kw-sm">공감</span><span class="kw kw-lg">발견</span><span class="kw kw-sm">용기</span></div></div>
+      <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드</div><div class="analysis-keywords"><span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span></div></div>
       <div class="analysis-card"><div class="analysis-card__label">책 별점 분포 (익명 · 5점 만점)</div><div id="stage-rating-rows"></div>
         <div class="sl-starpick" id="analysis-star-pick"></div>
       </div>
-      <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 한줄 요약</div><div class="analysis-summary">"오늘 참가자들은 대부분 <b>경계인으로서의 외로움</b>에 공감하면서도, 그것이 오히려 <b>자기 발견의 계기</b>가 된다는 점에서 희망을 찾았습니다. 별점은 <b>참신함이 가장 높고 재미가 가장 낮게</b> 갈렸습니다 &mdash; 진행에서 가장 낮게/높게 준 분의 이유를 들어봅니다."</div></div>
+      <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 한줄 요약</div><div class="analysis-summary">발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.</div></div>
     </div>
   </div>
 </div>
@@ -947,7 +948,7 @@ function bookById(id){
   var cs=customMeetings();for(var j=0;j<cs.length;j++){var bb=(cs[j].season&&cs[j].season.books)||[];for(var k=0;k<bb.length;k++){if(bb[k].id===id)return bb[k];}}
   return null;
 }
-function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 /* 링크 카드: t/m 안에서 URL/도메인을 추출. 없으면 null. */
 function extractUrl(){
   for(var i=0;i<arguments.length;i++){
@@ -1029,15 +1030,19 @@ var RT={
     });
   },
   async loadBook(bookId){
-    var mb=await sb.from('member_book').select('phone4,nickname,submitted,ratings,meta').eq('book_id',bookId);
+    /* 5개 쿼리 병렬 — 직렬이던 시절 폰에서 진입이 눈에 띄게 느렸음 (2026-07-21) */
+    var rs=await Promise.all([
+      sb.from('member_book').select('phone4,nickname,submitted,ratings,meta').eq('book_id',bookId),
+      sb.from('answer').select('phone4,q_index,body').eq('book_id',bookId),
+      sb.from('comment').select('id,q_index,target_phone4,author_phone4,author_nick,body').eq('book_id',bookId),
+      sb.from('reaction').select('q_index,target_phone4,author_phone4').eq('book_id',bookId),
+      /* 모임원 발표자료 — v17. 마이그레이션 미적용 환경에선 조용히 빈 목록. */
+      sb.from('material').select('id,phone4,title,url,created_at').eq('book_id',bookId).order('created_at')
+    ]);
+    var mb=rs[0],an=rs[1],cm=rs[2],rx=rs[3],mt=rs[4];
     /* meta 컬럼 미적용(마이그레이션 전) 환경에서도 동작 — 컬럼 없으면 meta 빼고 재조회 */
     if(mb.error&&/meta/.test((mb.error.message||'')+(mb.error.details||''))){ mb=await sb.from('member_book').select('phone4,nickname,submitted,ratings').eq('book_id',bookId); }
-    var an=await sb.from('answer').select('phone4,q_index,body').eq('book_id',bookId);
-    var cm=await sb.from('comment').select('id,q_index,target_phone4,author_phone4,author_nick,body').eq('book_id',bookId);
-    var rx=await sb.from('reaction').select('q_index,target_phone4,author_phone4').eq('book_id',bookId);
     if(mb.error||an.error||cm.error||rx.error){rtErr(mb.error||an.error||cm.error||rx.error);return;}
-    /* 모임원 발표자료 — v17 material 테이블. 마이그레이션 미적용 환경에선 조용히 빈 목록. */
-    var mt=await sb.from('material').select('id,phone4,title,url,created_at').eq('book_id',bookId).order('created_at');
     var bk=bookById(bookId);if(!bk)return;
     bk.materials=mt.error?[]:(mt.data||[]);
     var me=STATE.phone4;
@@ -1301,6 +1306,8 @@ function clearAllLocal(){
   for(var mk in MEM){ if(MEM.hasOwnProperty(mk)&&mk.indexOf('rt:')===0) delete MEM[mk]; }
   NETSTORE={}; CLUBS_CACHE=[]; MEET_CACHE=[];
 }
+/* 네트워크 대기 중 상단 진행줄 — 서버 왕복이 있는 화면 전환에서 켠다 */
+function loading(on){var el=document.getElementById('loadbar');if(el)el.classList.toggle('on',!!on);}
 function syncAuthUI(){
   var b=document.getElementById('logout-btn');
   var loggedIn=!!(STATE.phone4||STATE.isHost);
@@ -1343,7 +1350,7 @@ async function sessRestore(){
   var s=sessRead(); if(!s||(!s.p4&&!s.host)) return false;
   if(sessExpired(s)){ sessClear(); return false; }   /* 30분 경과 — 복원하지 않고 로그인 화면 */
   STATE.phone4=s.p4||null; STATE.clubId=s.cid||null; STATE.meetingId=s.mid||null; STATE.isHost=!!s.host; STATE.bookId=s.bid||null;
-  if(ONLINE){ try{ await RT.loadClubs(); await RT.loadMeetings(); if(STATE.bookId) await RT.loadBook(STATE.bookId); }catch(e){ rtErr(e); } }
+  if(ONLINE){ loading(true); try{ await RT.loadClubs(); await RT.loadMeetings(); if(STATE.bookId) await RT.loadBook(STATE.bookId); }catch(e){ rtErr(e); } loading(false); }
   setNick(); syncHostUI(); syncAuthUI();
   var ok=['clubs','create-club','meetings','owners','season','book','discussion','history','results','create','manage'];
   var pg=(ok.indexOf(s.pg)>=0)?s.pg:(STATE.isHost?(STATE.clubId?'meetings':'manage'):'clubs');
@@ -1373,7 +1380,7 @@ async function login(){
   if(!/^[0-9]{4}$/.test(v)){toast('휴대폰 뒤 4자리 숫자를 입력해주세요');return;}
   STATE.phone4=v;STATE.bookId=null;STATE.clubId=null;STATE.meetingId=null;STATE.isHost=false;
   setNick();syncHostUI();syncAuthUI();
-  if(ONLINE){try{await RT.loadClubs();await RT.loadMeetings();}catch(e){rtErr(e);}}
+  if(ONLINE){loading(true);try{await RT.loadClubs();await RT.loadMeetings();}catch(e){rtErr(e);}loading(false);}
   go('clubs');toast(v+' 으로 입장했어요');
 }
 function val(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
@@ -1497,7 +1504,7 @@ async function enterClub(id,quiet){
   var c=clubById(id);
   STATE.isHost=isClubOwner(c,STATE.phone4);
   setNick();syncHostUI();
-  if(ONLINE){try{await RT.loadMeetings();}catch(e){rtErr(e);}}
+  if(ONLINE){loading(true);try{await RT.loadMeetings();}catch(e){rtErr(e);}loading(false);}
   go('meetings');
   if(!quiet)toast(STATE.isHost?'모임장 권한으로 입장':'모임에 입장했어요');
 }
@@ -1593,7 +1600,7 @@ function renderOwners(){
     /* 공개 범위 */
     '<div class="sheet"><div class="eyebrow mb-12">🔓 공개 범위</div>'+
       '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;padding:8px 0"><input type="radio" name="ow-vis" id="ow-pub-yes" value="public"'+(club.isPublic!==false?' checked':'')+' onchange="setClubVisHost(true)"> <b style="color:var(--ink)">공개</b> · 모임 목록에 누구나 보임</label>'+
-      '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;padding:8px 0"><input type="radio" name="ow-vis" id="ow-pub-no" value="private"'+isPriv+(isPriv?' checked':'')+' onchange="setClubVisHost(false)"> <b style="color:var(--ink)">비공개</b> · 초청 코드를 받은 사람만 입장</label>'+
+      '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;padding:8px 0"><input type="radio" name="ow-vis" id="ow-pub-no" value="private"'+(isPriv?' checked':'')+' onchange="setClubVisHost(false)"> <b style="color:var(--ink)">비공개</b> · 초청 코드를 받은 사람만 입장</label>'+
       (isPriv?'<div class="code-box mt-12" style="margin-top:12px">'+
          '<div class="eyebrow mb-8">🎟️ 초청 코드</div>'+
          '<div class="code-box__row">코드 <b>'+esc(club.code||'-')+'</b></div>'+
@@ -1849,7 +1856,7 @@ function renderSeason(){
      '<div class="season-hd__sub">'+esc(sub)+'</div>'+
      (meta?'<div class="season-hd__meta">'+esc(meta)+'</div>':'')+
    '</div>'+
-   (STATE.isHost?'<div class="host-banner">&#128081; 모임장 모드 — 책 카드에서 <b>공유 시작하기</b> · <b>질문 편집</b> (기존 시즌 책도 편집 가능)</div>':'')+
+   (STATE.isHost?'<div class="host-banner">&#128081; 모임장 모드 — 카드에서 <b>열기/닫기 · 발표자료 · 발표 시작</b>, 카드를 누르면 <b>편집 페이지</b>로 (내 답변은 편집 페이지 하단)</div>':'')+
    '<div class="season-books">';
   books.forEach(function(b,i){
     var st=bookStatus(b),hasReport=!!b.report;
@@ -1857,7 +1864,7 @@ function renderSeason(){
     var cur=isOpen; /* 회원이 답변·별점·댓글 입력 가능한 상태 */
     var bl=bookStatusEmoji(st)+' '+bookStatusLabel(st);
     h+=
-     '<div class="book-card '+(cur?'current':'upcoming')+(closed?' is-closed':'')+'"'+(STATE.isHost?'':' onclick="openBook(\''+b.id+'\')"')+'>'+
+     '<div class="book-card '+(cur?'current':'upcoming')+(closed?' is-closed':'')+'" onclick="openBook(\''+b.id+'\')">'+
        spineHtml(b)+
        '<div class="book-card__body">'+
          '<div class="book-card__month">'+(b.month?'<span class="dim" style="font-weight:500;color:var(--ink-dim)">'+esc(b.month)+'</span> · ':'')+(closed?'<span style="color:#D44">🔒 닫힘</span>':(isOpen?'<span style="color:var(--success)">🟢 열림</span>':'<span style="color:var(--ink-dim)">⏳ 예정</span>'))+(hasReport?' · <span style="color:var(--accent)">📊 발표자료</span>':'')+'</div>'+
@@ -1870,19 +1877,17 @@ function renderSeason(){
            '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();memberGoDisc(\''+b.id+'\')">📖 내 답변 보기</button>'+
          '</div>'):'')+
          (STATE.isHost?('<div class="book-card__host">'+
-           /* 상태 토글: 예정→열기 / 열림→닫기 / 닫힘→다시 열기 */
-           (isUpcoming?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto;background:var(--success);border-color:var(--success)" onclick="hostOpenBook(\''+b.id+'\',\''+esc(b.title)+'\')">🟢 열기</button>':'')+
-           (isOpen?'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="hostCloseBook(\''+b.id+'\',\''+esc(b.title)+'\',true)">🔒 닫기 (마감)</button>':'')+
-           (closed?'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="hostCloseBook(\''+b.id+'\',\''+esc(b.title)+'\',false)">🔓 다시 열기</button>':'')+
-           /* 모임장도 답변·별점 가능 — 열린 책 / 마감 책에서 직접 진입로 */
-           (isOpen?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="hostAnswer(\''+b.id+'\')">📝 답변하기</button>':'')+
-           (closed?'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="hostAnswer(\''+b.id+'\')">📖 내 기록</button>':'')+
+           /* 운영 동선만 — 모임장 답변 진입은 사전정보 페이지 하단 1곳으로 축소 (2026-07-21).
+              카드 본문 클릭 = 편집 페이지라 버튼마다 stopPropagation. */
+           (isUpcoming?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto;background:var(--success);border-color:var(--success)" onclick="event.stopPropagation();hostOpenBook(\''+b.id+'\',\''+esc(b.title)+'\')">🟢 열기</button>':'')+
+           (isOpen?'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();hostCloseBook(\''+b.id+'\',\''+esc(b.title)+'\',true)">🔒 닫기 (마감)</button>':'')+
+           (closed?'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();hostCloseBook(\''+b.id+'\',\''+esc(b.title)+'\',false)">🔓 다시 열기</button>':'')+
            /* 발표자료 — 닫힘 상태에서만 생성 가능 */
-           (closed?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto;background:var(--accent);border-color:var(--accent)" onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')">'+(hasReport?'📊 발표자료 재생성':'📊 발표자료 생성')+'</button>':'')+
+           (closed?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto;background:var(--accent);border-color:var(--accent)" onclick="event.stopPropagation();hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')">'+(hasReport?'📊 발표자료 재생성':'📊 발표자료 생성')+'</button>':'')+
            /* 발표 시작 — 보고서 있을 때만 */
-           (hasReport?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="startShare(\''+b.id+'\')">&#9654; 발표 시작</button>':'')+
-           /* 편집(사전정보·질문·삭제 통합) */
-           '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="openBook(\''+b.id+'\')">✏️ 편집</button>'+
+           (hasReport?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();startShare(\''+b.id+'\')">&#9654; 발표 시작</button>':'')+
+           /* 편집(사전정보·질문·삭제 통합) — 카드 클릭과 동일, 명시적 진입로로 유지 */
+           '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();openBook(\''+b.id+'\')">✏️ 편집</button>'+
          '</div>'):'')+
        '</div>'+
        '<span class="book-card__badge '+(closed?'soon':(cur?'now':'soon'))+'">'+(closed?'마감':bl)+'</span>'+
@@ -1903,28 +1908,21 @@ function renderSeason(){
      : '<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>');
   document.getElementById('page-season').innerHTML=h;
 }
-async function openBook(id){STATE.bookId=id;DISC.view='rating';BINFO.buf=null;QEDIT.buf=null;MADD.open=false;setNick();if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}go('book');}
+async function openBook(id){STATE.bookId=id;DISC.view='rating';BINFO.buf=null;QEDIT.buf=null;MADD.open=false;setNick();if(ONLINE){loading(true);try{await RT.loadBook(id);}catch(e){rtErr(e);}loading(false);}go('book');}
 /* 참가자 — 시즌 목록에서 바로 진입 (마감 책 전용 지름길) */
 async function memberGoDisc(id){
   if(!STATE.phone4){toast('휴대폰 4자리로 먼저 입장해 주세요');return;}
   STATE.bookId=id;DISC.view='mine';MADD.open=false;setNick();
-  if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}
+  if(ONLINE){loading(true);try{await RT.loadBook(id);}catch(e){rtErr(e);}loading(false);}
   go('discussion');
 }
 async function memberGoResults(id){
   STATE.bookId=id;MADD.open=false;setNick();
-  if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}
+  if(ONLINE){loading(true);try{await RT.loadBook(id);}catch(e){rtErr(e);}loading(false);}
   go('results');
 }
-/* 모임장 직접 답변 진입 — 시즌 페이지 책 카드의 [📝 답변하기] / [📖 내 기록] 버튼이 호출.
- * 4자리가 없으면 (= 백업코드로만 인증한 모임장) 답변 불가 — 토스트 안내. */
-async function hostAnswer(id){
-  if(!STATE.phone4){toast('답변하려면 휴대폰 4자리로 먼저 로그인이 필요해요 (← 로그아웃 후 4자리로 입장)');return;}
-  STATE.bookId=id;DISC.view='rating';
-  setNick();
-  if(ONLINE){try{await RT.loadBook(id);}catch(e){rtErr(e);}}
-  go('discussion');
-}
+/* (2026-07-21) hostAnswer 삭제 — 시즌 카드의 모임장 답변 버튼을 걷어내면서
+   진입로는 사전정보 페이지 하단 1곳(go('discussion'))으로 축소. */
 function _custMutate(fn){ var cs=customMeetings(),hit=false; cs.forEach(function(mm){ if(fn(mm))hit=true; }); if(hit)saveCustomMeetings(cs); return hit; }
 async function delBookHost(id,title){
   if(!confirm('「'+title+'」 책과 그 답변·댓글을 모두 삭제할까요?'))return;
@@ -1952,8 +1950,9 @@ async function delMeetingHost(){
   if(ONLINE){ var pw=askClubPw(); if(pw==null)return; if(!(await RT.deleteMeeting(STATE.meetingId,pw)))return; }
   else { _custMutate(function(mm){ return mm.id===STATE.meetingId; }) || 0;
     var cs=customMeetings().filter(function(mm){return mm.id!==STATE.meetingId;}); saveCustomMeetings(cs); }
-  sessClear();STATE.isHost=false;STATE.meetingId=ONLINE?null:'m1';STATE.bookId=null;
-  setNick();syncHostUI();syncAuthUI();go('login');toast('모임을 삭제했어요');
+  /* 모임장 신분 유지한 채 서재(시즌 목록)로 — 로그인까지 튕기던 버그 수정 (2026-07-21) */
+  STATE.meetingId=ONLINE?null:'m1';STATE.bookId=null;
+  go('meetings');toast('시즌을 삭제했어요');
 }
 
 /* ═══════════ RENDER: 사전정보 ═══════════ */
@@ -1971,13 +1970,6 @@ function renderBook(){
   if(STATE.isHost){
     /* ───── 모임장 모드 — 책 정보 / 질문 두 섹션 독립 CRUD (박진형 정책) ─────
      * 두 폼은 한 화면에 모두 노출. 각자 [💾 저장] 1번씩. 마감 여부 무관 항상 편집 가능. */
-    /* 답변 진입 (참가자 시점) */
-    if(STATE.phone4){
-      if(cur)
-        h+='<button class="btn btn-primary btn-arrow btn-pill mt-12" onclick="go(\'discussion\')">📝 모임장도 답변·별점 매기러 가기 <span class="arr">&rarr;</span></button>';
-      else if(b.closed)
-        h+='<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'discussion\')">📖 마감된 책 — 내 기록 보기 &rarr;</button>';
-    }
     /* ─ ① 책 정보 sheet ─ buf 있으면 편집 폼, 없으면 읽기 전용 카드 + [편집] 버튼 */
     var sec='style="margin:20px 0 8px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--accent-tint);font-family:var(--display);font-weight:800;font-size:15px;color:var(--ink);border-radius:0 6px 6px 0"';
     h+='<hr class="rule">';
@@ -2071,6 +2063,13 @@ function renderBook(){
     /* ─ 모임원 발표자료 ─ */
     var stHost=bookStatus(b);
     if(stHost!=='upcoming') h+=materialsHtml(b);
+    /* ─ 모임장 개인 참여 (유일 진입로 — 시즌 카드에선 제거, 2026-07-21) ─ */
+    if(STATE.phone4){
+      if(cur)
+        h+='<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'discussion\')">📝 모임장도 답변·별점 남기기 &rarr;</button>';
+      else if(b.closed)
+        h+='<button class="btn btn-ghost btn-pill mt-12" onclick="go(\'discussion\')">📖 내 기록 보기 &rarr;</button>';
+    }
     /* ─ 발표 / 책 삭제 ─ */
     h+='<hr class="rule">';
     if(b.report)
@@ -2391,6 +2390,9 @@ window.addEventListener('message',function(ev){ try{ onIhyangResult(ev.data); }c
 
 function renderDiscussion(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
+  /* 쓰다 만 댓글 입력 보존 — 공감·댓글 등록 등 재렌더에 다른 칸 입력이 안 날아가게 */
+  var cmKeep={};
+  document.querySelectorAll('#page-discussion input[id^="cm-"]').forEach(function(el){ if(el.value) cmKeep[el.id]=el.value; });
   /* ── 닉네임: 책 첫 진입 시 자동 배정. 변경은 아래 [✏️ 이름 바꾸기] 버튼으로만 ── */
   if(STATE.phone4 && !STATE.isHost)ensureNick();
   var h=bookHeadHtml(b);
@@ -2506,6 +2508,7 @@ function renderDiscussion(){
       }
       if(!oas.length) h+='<div class="dim" style="font-size:13px">아직 다른 답변이 없어요.</div>';
       oas.forEach(function(o,j){
+        if(!(o.a||'').trim())return; /* 별점만 남긴 사람의 빈 답변 껍데기 카드 숨김 */
         var ck='q'+i+'a'+j, list=(bs.comments[ck]||[]);
         var rc=(b.reactions&&b.reactions[ck])||(bs.reactions&&bs.reactions[ck])||{count:0,mine:false};
         h+='<div class="answer"><div class="answer__who"><span><b>'+esc(o.n)+'</b> · 익명</span></div>'+
@@ -2536,6 +2539,7 @@ function renderDiscussion(){
     h+=allRatingsHtml(b);
   }
   document.getElementById('page-discussion').innerHTML=h;
+  Object.keys(cmKeep).forEach(function(k){ var el=document.getElementById(k); if(el&&!el.value) el.value=cmKeep[k]; });
 }
 function allRatingsHtml(b){
   /* 모두의 별점 분포: 내가 별점을 1개 이상 저장한 후에만 노출.
@@ -2666,6 +2670,7 @@ async function addComment(i,j){
     if(!bs.comments[ck])bs.comments[ck]=[];
     bs.comments[ck].push(t);setBookState(b.id,bs);
   }
+  inp.value=''; /* 등록된 칸은 비움 — 재렌더 후 입력 복원 로직이 옛 값을 되살리지 않게 */
   toast('댓글을 남겼어요 — 모임 때 함께 이야기해요');
   renderDiscussion();
 }
@@ -2703,7 +2708,7 @@ async function toggleReact(i,j){
 }
 
 /* ═══════════ RENDER: 내 기록 ═══════════ */
-async function openHistory(){ if(ONLINE){try{await RT.loadHistory();}catch(e){rtErr(e);}} go('history'); }
+async function openHistory(){ if(ONLINE){loading(true);try{await RT.loadHistory();}catch(e){rtErr(e);}loading(false);} go('history'); }
 function renderHistory(){
   var s=loadStore();
   var am=activeMeeting(),sn=(am&&am.kind==='custom')?am.season:SEASON,bks=meetingBooks();
@@ -2869,19 +2874,8 @@ function toast(msg){
   setTimeout(function(){el.style.transition='opacity .2s';el.style.opacity='0';setTimeout(function(){el.remove()},200)},2200);
 }
 
-/* ═══════════ STAGE: TIMER ═══════════ */
-var timerSec=90,timerInt=null;
-function updateTimer(){
-  var mm=String(Math.floor(timerSec/60)).padStart(2,'0');
-  var ss=String(timerSec%60).padStart(2,'0');
-  var el=document.getElementById('stage-timer-display');
-  if(el){el.textContent=mm+':'+ss;el.classList.toggle('danger',timerSec<10)}
-}
-function startTimer(){if(!timerInt)timerInt=setInterval(function(){if(timerSec>0){timerSec--;updateTimer()}else{clearInterval(timerInt);timerInt=null;toast('시간 종료!')}},1000)}
-function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null}}
-function resetTimer(){stopTimer();timerSec=90;updateTimer()}
-
-/* ═══════════ STAGE (발표·모임장 전용) ═══════════ */
+/* ═══════════ STAGE (발표·모임장 전용) ═══════════
+   (2026-07-21) 타이머 코드 삭제 — UI 진입점이 없는 죽은 기능이었음 (7차 개편 잔재) */
 var scrambleInt=null;
 var STAGE={bookId:'ihyangin',q:0,axis:'fun',order:[],pickedName:null,critText:'',analysisAxis:'overall'};
 function cmtCount(p,qi){
@@ -2993,7 +2987,9 @@ function renderStageRating(){
     if(sub) sub.innerHTML='발표자료 — '+esc(rep.source||'mock')+' · '+esc((rep.generated_at||'').slice(0,16).replace('T',' '))+(STATE.isHost?(' · <a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 다시 생성</a>'):'');
     return;
   }
-  /* 보고서가 없으면: 모임장에게 생성 안내, 아니면 라이브 표본 평균 */
+  /* 보고서가 없으면: 데모 하드코딩(이향인 키워드·요약)이 그대로 노출되지 않게 비운다 (2026-07-21) */
+  if(kwHost) kwHost.innerHTML='<span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span>';
+  if(smHost){ smHost.style.whiteSpace='normal'; smHost.textContent='발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.'; }
   if(sub) sub.innerHTML='AI가 참가자들의 답변을 분석했어요 &middot; 사람은 공감만, 분석은 AI'+(STATE.isHost&&b?(' · '+(b.closed?'<a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 발표자료 생성</a>':'<span class="dim">발표자료는 책을 마감한 뒤 생성할 수 있어요</span>')):'');
   var ps=stageParts(),h='';
   if(!ps.length){host.innerHTML='<div class="sl-empty">회원 별점 표본이 없어요. 서버 연동 후 표시됩니다(기본 데모 모임에서 시연 가능).</div>';return;}
@@ -3098,7 +3094,6 @@ function renderStageHighlights(){
   if(foot)foot.innerHTML+='<span class="tag" style="background:none;border:none;color:var(--ink-dim);font-size:11px">기준: 💛공감 최다 · 💬댓글 최다 · ✨공감+댓글 합 순</span>';
   grid.innerHTML=cards.join('');
 }
-function stageSetAxis(k){STAGE.axis=k;renderStageLive();}
 function stageSetQ(i){STAGE.q=i;STAGE.pickedName=null;renderStageLive();}
 function stageReshuffle(){STAGE.order=shuffle(stageParts().map(function(p){return p.name;}));STAGE.pickedName=null;renderStageLive();toast('발언 순서를 새로 섞었어요');}
 function renderPickCard(){
@@ -3183,6 +3178,14 @@ applyQEdits();
 setNick();
 syncHostUI();
 syncAuthUI();
+/* Supabase CDN 로드 실패 등으로 오프라인 폴백이면 — 조용히 데모로 빠지지 말고 상시 경고 (2026-07-21) */
+if(!ONLINE){
+  var ob=document.createElement('div');
+  ob.id='offline-note';
+  ob.style.cssText='position:sticky;top:0;z-index:80;background:#B3261E;color:#fff;font-size:12px;font-weight:700;text-align:center;padding:7px 12px;letter-spacing:.02em';
+  ob.textContent='⚠️ 오프라인 체험 모드 — 지금 쓰는 내용은 서버에 저장되지 않아요. 새로고침으로 다시 연결해 보세요.';
+  document.body.insertBefore(ob,document.body.firstChild);
+}
 try{ history.replaceState({rt:1,pg:'login',p4:null,cid:null,mid:null,host:false,bid:null},''); }catch(e){}
 (async function(){ try{ await sessRestore(); }catch(e){ console.error(e); } })();
 </script>
