@@ -327,6 +327,30 @@ body.is-page-season .book-card__cover{width:96px}
 .qrow__del{flex:0 0 auto;width:38px;height:38px;border-radius:var(--radius-pill);border:1px solid var(--rule);background:var(--paper);color:var(--ink-dim);cursor:pointer;font-size:15px;line-height:1}
 .qrow__del:hover{border-color:#D44;color:#D44}
 .react-on{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+/* ═══ 다음 책 투표 (v19) ═══ */
+.cand-sec{margin-top:28px;padding-top:24px;border-top:1px solid var(--rule-soft)}
+.cand-sec__title{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;margin-top:4px}
+.cand-sec__sub{font-size:13px;color:var(--ink-dim);margin:6px 0 16px;line-height:1.55}
+.cand-empty{background:var(--paper-warm);border:1px dashed var(--rule);border-radius:var(--radius-md);padding:20px;text-align:center;font-size:13px;color:var(--ink-dim);line-height:1.6}
+.cand-list{display:flex;flex-direction:column;gap:10px}
+.cand{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-md);padding:14px 16px;transition:border-color .2s,background .2s}
+.cand--mine{border-color:var(--accent);background:var(--accent-tint)}
+.cand__main{flex:1;min-width:0}
+.cand__crown{margin-right:4px}
+.cand__title{font-weight:700;font-size:15px;color:var(--ink);line-height:1.3}
+.cand__author{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+.cand__by{font-size:11px;color:var(--ink-dim);margin-top:4px}
+.cand__side{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.cand__vote{display:inline-flex;align-items:center;gap:5px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-pill);padding:7px 13px;font-size:14px;font-family:inherit;color:var(--ink-soft);cursor:pointer;transition:all .2s}
+.cand__vote:hover{border-color:var(--accent);color:var(--accent);transform:scale(1.05)}
+.cand__vote.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.cand__vote b{font-weight:800}
+.cand__x{background:none;border:none;color:var(--ink-dim);font-size:20px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:8px}
+.cand__x:hover{color:#D44;background:var(--paper-warm)}
+.cand__promote{background:none;border:1px solid var(--rule);border-radius:var(--radius-pill);font-size:11px;font-weight:700;color:var(--ink-soft);cursor:pointer;padding:6px 10px;font-family:inherit;white-space:nowrap}
+.cand__promote:hover{border-color:var(--success);color:var(--success)}
+.cand-form{background:var(--paper-warm);border-radius:var(--radius-md);padding:16px;margin-top:14px}
+.cand-add{margin-top:14px}
 .cmt-x{float:right;background:none;border:none;color:var(--ink-dim);font-size:15px;line-height:1;cursor:pointer;padding:0 0 0 8px}
 .cmt-x:hover{color:#D44}
 .danger-link{background:none;border:none;color:#D44;font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
@@ -1085,8 +1109,22 @@ var RT={
       });
       applySchedule(books);
       return {id:m.id,clubId:m.club_id||null,name:m.name,kind:'custom',isOpen:(m.is_open!==false),
-        season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'',books:books}};
+        season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'',books:books,candidates:[]}};
     });
+    await RT._loadCandidates();
+  },
+  async _loadCandidates(){
+    /* 다음 책 투표 후보(v19) — material 과 동일하게 별도 쿼리·graceful fallback.
+       마이그레이션 미적용 환경에선 조용히 빈 목록(시즌 로딩 자체는 깨지지 않게). */
+    var r=await sb.from('next_book_candidate').select('id,season_id,title,author,by_phone4,next_book_vote(voter_phone4)');
+    if(r.error) return;
+    var bySeason={};
+    (r.data||[]).forEach(function(c){
+      (bySeason[c.season_id]=bySeason[c.season_id]||[]).push({
+        id:c.id,title:c.title,author:c.author||'',byPhone:c.by_phone4||'',
+        voters:(c.next_book_vote||[]).map(function(v){return v.voter_phone4;})});
+    });
+    MEET_CACHE.forEach(function(m){ if(m.season) m.season.candidates=(bySeason[m.id]||[]); });
   },
   async loadBook(bookId){
     /* 5개 쿼리 병렬 — 직렬이던 시절 폰에서 진입이 눈에 띄게 느렸음 (2026-07-21) */
@@ -1290,6 +1328,26 @@ var RT={
   },
   async saveReport(bookId,report){
     var e=(await sb.from('book').update({report:report}).eq('id',bookId)).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  },
+  /* ── 다음 책 투표(v19) ── */
+  async addCandidate(seasonId,title,author){
+    var e=(await sb.from('next_book_candidate').insert({season_id:seasonId,title:title,author:author||'',by_phone4:STATE.phone4||'host'})).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  },
+  async removeCandidate(id){
+    /* 후보 삭제 → 표(next_book_vote)는 FK on delete cascade 로 함께 삭제 */
+    var e=(await sb.from('next_book_candidate').delete().eq('id',id)).error;
+    if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
+  },
+  async toggleVote(candidateId){
+    if(!STATE.phone4){toast('휴대폰 4자리로 입장해야 투표할 수 있어요');return false;}
+    var ex=await sb.from('next_book_vote').select('candidate_id').eq('candidate_id',candidateId).eq('voter_phone4',STATE.phone4).limit(1);
+    if(ex.error){rtErr(ex.error);return false;}
+    var e;
+    if(ex.data&&ex.data.length) e=(await sb.from('next_book_vote').delete().eq('candidate_id',candidateId).eq('voter_phone4',STATE.phone4)).error;
+    /* upsert(ignoreDuplicates) — 더블탭 경쟁 시 unique 충돌이 사용자 에러로 새지 않게(reaction 과 동일) */
+    else e=(await sb.from('next_book_vote').upsert({candidate_id:candidateId,voter_phone4:STATE.phone4},{onConflict:'candidate_id,voter_phone4',ignoreDuplicates:true})).error;
     if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
   }
 };
@@ -1878,6 +1936,7 @@ function renderSeason(){
     if(i<books.length-1) h+='<div class="season-rail"></div>';
   });
   h+='</div>'+
+   candidateSectionHtml(m.id)+
    (STATE.isHost
      ? (SADD.adding
         ? '<div class="sheet sheet--warm mt-16"><div class="eyebrow mb-8">새 책 추가</div>'+
@@ -1929,6 +1988,104 @@ async function addBookHostSubmit(){
   }
   SADD={adding:false};
   renderSeason();toast('「'+t+'」 추가됨 · 카드에서 질문·사전정보를 채우세요');
+}
+
+/* ═══════════ 다음 책 투표 (v19) ═══════════
+ * 후보(next_book_candidate) + 복수추천 표(next_book_vote). reaction 과 같은 토글 패턴.
+ * ONLINE: RT.* + MEET_CACHE 미러. OFFLINE: localStorage 'rt:cands'(시즌ID→후보[]) 단일 저장.
+ * 후보 객체 공통 형태: {id,title,author,byPhone,voters:[phone4...]} */
+var CANDADD={open:false};
+var CAND_LIMIT=3; /* 회원 1인 추천 상한(모임장 제외) */
+function candStore(){try{return JSON.parse(localStorage.getItem('rt:cands'))||{};}catch(e){return MEM['rt:cands']?JSON.parse(MEM['rt:cands']):{};}}
+function saveCandStore(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:cands',v);}catch(e){MEM['rt:cands']=v;}}
+function seasonCandidates(seasonId){
+  if(ONLINE){var m=meetingById(seasonId);return (m&&m.season&&m.season.candidates)||[];}
+  return candStore()[seasonId]||[];
+}
+function myCandCount(seasonId){var me=STATE.phone4;if(!me)return 0;
+  return seasonCandidates(seasonId).filter(function(c){return c.byPhone===me;}).length;}
+async function proposeCandidate(){
+  var t=val('cand-title');if(!t){toast('책 제목을 입력해 주세요');return;}
+  var au=val('cand-author');
+  if(!STATE.phone4&&!STATE.isHost){toast('휴대폰 4자리로 입장해 주세요');return;}
+  if(!STATE.isHost && myCandCount(STATE.meetingId)>=CAND_LIMIT){toast('한 사람당 '+CAND_LIMIT+'권까지 추천할 수 있어요');return;}
+  if(ONLINE){ if(!(await RT.addCandidate(STATE.meetingId,t,au)))return; }
+  else {
+    var s=candStore(),arr=s[STATE.meetingId]||[];
+    arr.push({id:'c'+Date.now(),title:t,author:au||'',byPhone:STATE.phone4||'host',voters:[]});
+    s[STATE.meetingId]=arr;saveCandStore(s);
+  }
+  CANDADD.open=false;renderSeason();toast('후보로 추천했어요');
+}
+async function voteCandidate(cid){
+  if(!STATE.phone4){toast('휴대폰 4자리로 입장해야 투표할 수 있어요');return;}
+  if(ONLINE){ if(!(await RT.toggleVote(cid)))return; }
+  else {
+    var me=STATE.phone4,s=candStore(),arr=s[STATE.meetingId]||[];
+    arr.forEach(function(c){ if(c.id===cid){ var k=c.voters.indexOf(me); if(k>=0)c.voters.splice(k,1); else c.voters.push(me); } });
+    s[STATE.meetingId]=arr;saveCandStore(s);
+  }
+  renderSeason();
+}
+async function delCandidate(cid,title){
+  if(!(await uiConfirm('후보 「'+title+'」을(를) 삭제할까요? 이 후보에 모인 표도 함께 사라져요.',{danger:true,okLabel:'삭제'})))return;
+  if(ONLINE){ if(!(await RT.removeCandidate(cid)))return; }
+  else { var s=candStore();s[STATE.meetingId]=(s[STATE.meetingId]||[]).filter(function(c){return c.id!==cid;});saveCandStore(s); }
+  renderSeason();toast('후보를 삭제했어요');
+}
+async function promoteCandidate(cid,title,author){
+  if(!(await uiConfirm('「'+title+'」을(를) 예정 책으로 등록할까요?\n등록 후 시즌 목록에서 [🟢 열기]로 시작할 수 있어요.',{okLabel:'책으로 등록'})))return;
+  if(ONLINE){ if(!(await RT.addBook(STATE.meetingId,title,author||'')))return; if(!(await RT.removeCandidate(cid)))return; }
+  else {
+    var m=activeMeeting(); if(!m||m.kind!=='custom'){toast('기본 모임엔 책을 등록할 수 없어요(온라인 전용)');return;}
+    _custMutate(function(mm){ if(mm.id!==STATE.meetingId||!mm.season)return false;
+      mm.season.books.push({id:STATE.meetingId+'-b'+Date.now(),title:title,author:author||'(저자 미상)',spine:title.charAt(0),yearmonth:'',month:'',angle:'',tagline:title,intro:'(책 소개 미입력)',intro_note:'',authorBio:'',bio:[],links:[],questions:[''],others:[[]],closed:false,closed_at:null,report:null});
+      applySchedule(mm.season.books); return true; });
+    var s=candStore();s[STATE.meetingId]=(s[STATE.meetingId]||[]).filter(function(c){return c.id!==cid;});saveCandStore(s);
+  }
+  renderSeason();toast('「'+title+'」을(를) 예정 책으로 등록했어요');
+}
+function candidateSectionHtml(seasonId){
+  var cands=seasonCandidates(seasonId).slice().sort(function(a,b){return b.voters.length-a.voters.length;});
+  var me=STATE.phone4,maxV=cands.reduce(function(mx,c){return Math.max(mx,c.voters.length);},0);
+  var h='<div class="cand-sec"><div class="eyebrow">다음 책 투표</div>'+
+    '<h3 class="cand-sec__title">🗳️ 다음엔 어떤 책?</h3>'+
+    '<p class="cand-sec__sub">읽고 싶은 책을 <b>여러 권</b> 골라도 돼요. 마음이 바뀌면 다시 눌러 취소할 수 있어요.</p>';
+  if(!cands.length){
+    h+='<div class="cand-empty">아직 추천된 책이 없어요.<br>맨 먼저 읽고 싶은 책을 추천해 보세요.</div>';
+  } else {
+    h+='<div class="cand-list">';
+    cands.forEach(function(c){
+      var cnt=c.voters.length, mine=(me&&c.voters.indexOf(me)>=0), lead=(cnt>0&&cnt===maxV);
+      var by=(c.byPhone==='host'?'모임장':'No.'+esc(c.byPhone||'----'));
+      var canDel=(STATE.isHost||(me&&c.byPhone===me));
+      h+='<div class="cand'+(mine?' cand--mine':'')+'">'+
+          '<div class="cand__main">'+
+            '<div class="cand__title">'+(lead?'<span class="cand__crown" title="최다 득표">👑</span>':'')+esc(c.title)+'</div>'+
+            (c.author?'<div class="cand__author">'+esc(c.author)+'</div>':'')+
+            '<div class="cand__by">'+by+'님 추천</div>'+
+          '</div>'+
+          '<div class="cand__side">'+
+            '<button class="cand__vote'+(mine?' on':'')+'" onclick="voteCandidate(\''+c.id+'\')">'+(mine?'💛':'🤍')+' <b>'+cnt+'</b></button>'+
+            (STATE.isHost?'<button class="cand__promote" title="예정 책으로 등록" onclick="promoteCandidate(\''+c.id+'\',\''+esc(c.title)+'\',\''+esc(c.author||'')+'\')">책으로</button>':'')+
+            (canDel?'<button class="cand__x" title="후보 삭제" onclick="delCandidate(\''+c.id+'\',\''+esc(c.title)+'\')">&times;</button>':'')+
+          '</div>'+
+        '</div>';
+    });
+    h+='</div>';
+  }
+  var canAdd=(STATE.phone4||STATE.isHost);
+  if(CANDADD.open){
+    h+='<div class="cand-form"><div class="field"><input class="input" id="cand-title" placeholder="추천할 책 제목" onkeydown="if(event.key===\'Enter\'){event.preventDefault();var a=document.getElementById(\'cand-author\');if(a)a.focus();}"></div>'+
+       '<div class="field"><input class="input" id="cand-author" placeholder="저자 (선택)"></div>'+
+       '<div class="row"><button class="btn btn-primary btn-sm btn-pill" onclick="proposeCandidate()">추천 등록</button>'+
+       '<button class="btn btn-ghost btn-sm btn-pill" onclick="CANDADD.open=false;renderSeason()">취소</button></div></div>';
+  } else if(canAdd){
+    h+='<button class="btn btn-ghost btn-pill cand-add" onclick="CANDADD.open=true;renderSeason()">+ 책 추천하기</button>';
+  } else {
+    h+='<div class="cand-empty" style="margin-top:12px">휴대폰 4자리로 입장하면 추천·투표할 수 있어요.</div>';
+  }
+  return h+'</div>';
 }
 async function delMeetingHost(){
   if(!(await uiConfirm('이 시즌 전체(책·답변·별점·댓글)를 영구 삭제할까요? 되돌릴 수 없습니다.',{danger:true,okLabel:'영구 삭제'})))return;
