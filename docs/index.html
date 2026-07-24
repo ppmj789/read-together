@@ -72,9 +72,10 @@ body{font-family:'Pretendard Variable','Pretendard',sans-serif;font-size:15px;li
 .bottomnav.visible{display:block}
 .bottomnav__row{display:flex;width:100%;max-width:680px;margin:0 auto}
 .bottomnav button{flex:1;background:none;border:none;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 5px;color:var(--ink-dim);font-size:11px;font-weight:600;border-radius:12px;transition:color .15s,background .15s}
-.bottomnav button .ic{font-size:20px;line-height:1;filter:grayscale(1);opacity:.55;transition:filter .15s,opacity .15s}
+.bottomnav button .ic{display:block;line-height:0;opacity:.6;transition:opacity .15s}
+.bottomnav button .ic svg{width:21px;height:21px}
 .bottomnav button.active{color:var(--accent);background:var(--accent-tint)}
-.bottomnav button.active .ic{filter:none;opacity:1}
+.bottomnav button.active .ic{opacity:1}
 body.has-bottomnav .main{padding-bottom:150px}
 
 /* ═══ LAYOUT ═══ */
@@ -174,7 +175,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 /* 우상단 × 삭제 버튼(top8/right8/26px)과 '제출됨' 라벨이 겹치지 않도록
    × 가 있는 카드(.has-x)의 who-row 오른쪽에 넉넉한 여백 확보 */
 .answer.has-x>.answer__who{padding-right:38px}
-.answer__body{font-size:15px;line-height:1.65;color:var(--ink);font-weight:500}
+.answer__body{font-size:15px;line-height:1.65;color:var(--ink);font-weight:500;white-space:pre-line}
 
 /* Reaction */
 .reaction-row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
@@ -203,9 +204,14 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .lk-go{color:var(--accent);font-weight:700}
 
 /* Profile */
-.profile-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:24px 20px;text-align:center;margin-bottom:16px;box-shadow:var(--shadow-sm)}
-.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:28px;margin-bottom:12px}
-.profile-name{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.03em}
+.profile-card{position:relative;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:26px 20px 20px;text-align:center;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.profile-card::before{content:'';position:absolute;inset:7px;border:1px solid var(--rule-soft);border-radius:12px;pointer-events:none}
+.profile-avatar{width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px}
+.profile-avatar svg{width:28px;height:28px}
+.idcard__brand{display:flex;align-items:center;justify-content:center;gap:12px;font-size:11px;font-weight:700;letter-spacing:.2em;color:var(--ink-dim)}
+.idcard__brand::before,.idcard__brand::after{content:'';width:24px;height:1px;background:var(--rule)}
+.profile-name{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.08em;margin-top:8px;line-height:1.1}
+.profile-name .no-pre{font-size:15px;font-weight:700;color:var(--ink-dim);letter-spacing:.04em;margin-right:2px}
 .profile-stat{display:flex;justify-content:center;gap:24px;margin-top:16px;padding-top:16px;border-top:1px solid var(--rule-soft)}
 .profile-stat__num{font-family:var(--display);font-weight:800;font-size:22px;color:var(--accent)}
 .profile-stat__label{font-size:12px;color:var(--ink-dim);margin-top:2px}
@@ -573,10 +579,10 @@ body.is-page-season .book-card__cover{width:96px}
 <!-- ═══ BOTTOM NAV (하단 주 내비게이션 — 로그인 후 상시 노출) ═══ -->
 <nav class="bottomnav" id="bottomnav" aria-label="주 메뉴">
   <div class="bottomnav__row">
-    <button data-nav="shelf" onclick="navGo('shelf')"><span class="ic">📚</span>서재</button>
-    <button data-nav="season" onclick="navGo('season')"><span class="ic">🗂️</span>시즌</button>
-    <button data-nav="book" onclick="navGo('book')"><span class="ic">📖</span>이번 책</button>
-    <button data-nav="history" onclick="navGo('history')"><span class="ic">🕘</span>내 기록</button>
+    <button data-nav="shelf" onclick="navGo('shelf')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 4h3.2v16H4.5z"/><path d="M10.2 4h3.2v16h-3.2z"/><path d="m16.1 5 3.1-.8 3.3 15.2-3.1.8z"/></svg></span>서재</button>
+    <button data-nav="season" onclick="navGo('season')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16h14v3.5H5z"/><path d="M6.5 11.5h11V15h-11z"/><path d="M5.8 7h12.4v3.5H5.8z"/></svg></span>시즌</button>
+    <button data-nav="book" onclick="navGo('book')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4H8a4 4 0 0 1 4 4v12.5a3 3 0 0 0-3-3H2.5z"/><path d="M21.5 4H16a4 4 0 0 0-4 4v12.5a3 3 0 0 1 3-3h6.5z"/></svg></span>이번 책</button>
+    <button data-nav="history" onclick="navGo('history')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>내 기록</button>
   </div>
 </nav>
 
@@ -1301,7 +1307,7 @@ function setNick(){
     if(STATE.isHost && !fixedNick(STATE.phone4,STATE.bookId)) t='모임장';
     else t=displayNick(STATE.phone4,STATE.bookId);
   }
-  else if(STATE.phone4) t='•••• '+STATE.phone4;
+  else if(STATE.phone4) t='No. '+STATE.phone4;
   else if(STATE.isHost) t='모임장';
   el.textContent=t;
   el.style.display=t?'block':'none';
@@ -1535,7 +1541,7 @@ function renderMeetings(){
   var all=clubMeetings(STATE.clubId).slice();
   var h=''+
    '<div class="section-hd"><div><div class="eyebrow">'+esc(club.name)+(club.intro?' · '+esc(club.intro):'')+'</div><h2 class="h-1 mt-4">서재에서<br>시즌 꺼내기.</h2></div></div>'+
-   '<p class="body-2 mb-16">'+(STATE.phone4?'휴대폰 뒤 <b style="color:var(--ink)">'+esc(STATE.phone4)+'</b> · ':'')+'책등을 눌러 시즌에 입장하세요.</p>';
+   '<p class="body-2 mb-16">'+(STATE.phone4?'열람증 <b style="color:var(--ink)">No. '+esc(STATE.phone4)+'</b> · ':'')+'책등을 눌러 시즌에 입장하세요.</p>';
   /* 책등 목록 — 시즌들 + (모임장) 새 시즌 슬롯 */
   var spines=all.map(function(m,i){
     var sn=m.kind==='custom'?m.season:SEASON;
@@ -1585,7 +1591,7 @@ function renderOwners(){
       '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">';
   owners.forEach(function(p){
     var canRm=(owners.length>1);
-    h+='<span class="tag '+(p===STATE.phone4?'tag-accent':'')+'" style="font-family:var(--display);font-size:14px;padding:8px 14px">•••• '+esc(p)+(p===STATE.phone4?' (나)':'')+(canRm?(' <a onclick="removeOwner(\''+esc(p)+'\')" style="margin-left:8px;color:inherit;cursor:pointer;font-weight:700">×</a>'):'')+'</span>';
+    h+='<span class="tag '+(p===STATE.phone4?'tag-accent':'')+'" style="font-family:var(--display);font-size:14px;padding:8px 14px">No. '+esc(p)+(p===STATE.phone4?' (나)':'')+(canRm?(' <a onclick="removeOwner(\''+esc(p)+'\')" style="margin-left:8px;color:inherit;cursor:pointer;font-weight:700">×</a>'):'')+'</span>';
   });
   if(!owners.length) h+='<span class="dim">아직 등록된 운영자가 없어요.</span>';
   h+='</div>'+
@@ -1617,17 +1623,17 @@ async function addOwner(){
   owners.push(v);
   if(ONLINE){if(!(await RT.setClubOwners(STATE.clubId,owners)))return;}
   else { var cs=customClubs();cs.forEach(function(x){if(x.id===STATE.clubId)x.ownerPhones=owners;});saveCustomClubs(cs); }
-  renderOwners();toast('운영자 추가: ••••'+v);
+  renderOwners();toast('운영자 추가: No.'+v);
 }
 async function removeOwner(p4){
   var c=activeClub();var owners=clubOwners(c).slice();
   if(owners.length<=1){toast('운영자가 한 명뿐이라 제거할 수 없어요');return;}
-  if(!(await uiConfirm('운영자 ••••'+p4+' 를 제거할까요?',{danger:true,okLabel:'제거'})))return;
+  if(!(await uiConfirm('운영자 No.'+p4+' 를 제거할까요?',{danger:true,okLabel:'제거'})))return;
   owners=owners.filter(function(x){return x!==p4;});
   if(ONLINE){if(!(await RT.setClubOwners(STATE.clubId,owners)))return;}
   else { var cs=customClubs();cs.forEach(function(x){if(x.id===STATE.clubId)x.ownerPhones=owners;});saveCustomClubs(cs); }
   if(p4===STATE.phone4){STATE.isHost=false;syncHostUI();go('clubs');toast('내 운영자 권한을 내려놓았어요');return;}
-  renderOwners();toast('운영자 제거: ••••'+p4);
+  renderOwners();toast('운영자 제거: No.'+p4);
 }
 function enterMeeting(id){STATE.meetingId=id;STATE.bookId=null;setNick();go('season');toast('시즌에 입장했어요');}
 /* v16: 파괴 동작(모임·시즌·책 삭제)은 서버가 모임 비밀번호를 검증해야 통과.
@@ -2716,8 +2722,9 @@ function renderHistory(){
   var h=''+
    '<div class="section-hd"><div><div class="eyebrow">내 기록</div><h2 class="h-1 mt-4">내가 읽은<br>책들.</h2></div></div>'+
    '<div class="profile-card">'+
-     '<div class="profile-avatar">📖</div>'+
-     '<div class="profile-name">•••• '+esc(STATE.phone4||'----')+'</div>'+
+     '<div class="profile-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4H8a4 4 0 0 1 4 4v12.5a3 3 0 0 0-3-3H2.5z"/><path d="M21.5 4H16a4 4 0 0 0-4 4v12.5a3 3 0 0 1 3-3h6.5z"/></svg></div>'+
+     '<div class="idcard__brand">未知의 서재 열람증</div>'+
+     '<div class="profile-name"><span class="no-pre">No.</span>'+esc(STATE.phone4||'----')+'</div>'+
      '<div style="font-size:13px;color:var(--ink-dim);margin-top:4px">휴대폰 뒤 4자리 기준 기록 · 책마다 닉네임은 새로</div>'+
      '<div class="profile-stat">'+
        '<div><div class="profile-stat__num">'+nbk+'</div><div class="profile-stat__label">읽은 책</div></div>'+
