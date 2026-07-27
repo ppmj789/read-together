@@ -14,7 +14,7 @@ test('시즌 화면: 시드 시즌 3권 카드 렌더 + 이향인만 열림', as
   await a.loginAs('1234');
   a.w.enterMeeting('m1');
   assert.equal(a.page(), 'season');
-  const cards = a.d.querySelectorAll('#page-season .book-card');
+  const cards = a.d.querySelectorAll('#page-season .book-card:not(.vote-entry)');
   assert.equal(cards.length, 3);
   assert.equal(a.w.bookStatus(a.w.bookById('ihyangin')), 'open');
   assert.equal(a.w.bookStatus(a.w.bookById('hailmary')), 'upcoming');

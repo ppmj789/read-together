@@ -12,12 +12,14 @@ async function hostLogin(a, p4 = '9999') {
 }
 
 /* 시즌 페이지에서 '+ 책 추천하기' 폼을 열고 한 권 추천 */
-async function propose(a, title, author = '') {
+async function propose(a, title, author = '', reason = '') {
   a.w.CANDADD.open = true;
   a.w.renderSeason();
   a.d.getElementById('cand-title').value = title;
   const au = a.d.getElementById('cand-author');
   if (au) au.value = author;
+  const rz = a.d.getElementById('cand-reason');
+  if (rz) rz.value = reason;
   await a.w.proposeCandidate();
 }
 
@@ -31,6 +33,26 @@ test('회원 추천: 후보가 투표 목록에 뜬다', async (t) => {
   assert.equal(cands[0].title, '클루지');
   assert.equal(cands[0].byPhone, '1234');
   assert.match(a.d.getElementById('page-season').textContent, /클루지/);
+});
+
+test('추천 이유: 후보에 저장되고 카드에 표시된다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지', '개리 마커스', '뇌의 설계 결함 이야기가 흥미로워요');
+  const c = a.w.seasonCandidates('m1')[0];
+  assert.equal(c.reason, '뇌의 설계 결함 이야기가 흥미로워요');
+  assert.match(a.d.getElementById('page-season').textContent, /뇌의 설계 결함 이야기가 흥미로워요/);
+});
+
+test('책장 진입 카드: 다음 책 투표 섹션이 렌더된다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  const html = a.d.getElementById('page-season').innerHTML;
+  assert.match(html, /vote-entry/);
+  assert.match(html, /scrollToVote/);
+  assert.match(html, /cand-sec/);
 });
 
 test('복수 추천(approval): 여러 후보에 투표하고 다시 눌러 취소', async (t) => {
