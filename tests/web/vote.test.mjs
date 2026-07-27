@@ -1,7 +1,7 @@
 /* 다음 책 투표(v19) 동작 테스트 — 오프라인(localStorage) 경로로 실제 코드 구동 */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { app } from './harness.mjs';
+import { app, tick } from './harness.mjs';
 
 async function hostLogin(a, p4 = '9999') {
   await a.loginAs(p4);
@@ -11,10 +11,10 @@ async function hostLogin(a, p4 = '9999') {
   await a.w.managerLogin();
 }
 
-/* 시즌 페이지에서 '+ 책 추천하기' 폼을 열고 한 권 추천 */
+/* 별도 투표 페이지(page-vote)에서 '+ 책 추천하기' 폼을 열고 한 권 추천 */
 async function propose(a, title, author = '', reason = '') {
   a.w.CANDADD.open = true;
-  a.w.renderSeason();
+  a.w.renderVote();
   a.d.getElementById('cand-title').value = title;
   const au = a.d.getElementById('cand-author');
   if (au) au.value = author;
@@ -32,7 +32,7 @@ test('회원 추천: 후보가 투표 목록에 뜬다', async (t) => {
   assert.equal(cands.length, 1);
   assert.equal(cands[0].title, '클루지');
   assert.equal(cands[0].byPhone, '1234');
-  assert.match(a.d.getElementById('page-season').textContent, /클루지/);
+  assert.match(a.d.getElementById('page-vote').textContent, /클루지/);
 });
 
 test('추천 이유: 후보에 저장되고 카드에 표시된다', async (t) => {
@@ -42,17 +42,24 @@ test('추천 이유: 후보에 저장되고 카드에 표시된다', async (t) =
   await propose(a, '클루지', '개리 마커스', '뇌의 설계 결함 이야기가 흥미로워요');
   const c = a.w.seasonCandidates('m1')[0];
   assert.equal(c.reason, '뇌의 설계 결함 이야기가 흥미로워요');
-  assert.match(a.d.getElementById('page-season').textContent, /뇌의 설계 결함 이야기가 흥미로워요/);
+  assert.match(a.d.getElementById('page-vote').textContent, /뇌의 설계 결함 이야기가 흥미로워요/);
 });
 
-test('책장 진입 카드: 다음 책 투표 섹션이 렌더된다', async (t) => {
+test('책장 진입 카드 → 별도 투표 페이지로 이동 (같은 페이지 아님)', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   a.w.enterMeeting('m1');
-  const html = a.d.getElementById('page-season').innerHTML;
-  assert.match(html, /vote-entry/);
-  assert.match(html, /scrollToVote/);
-  assert.match(html, /cand-sec/);
+  // 시즌 페이지엔 진입 카드만 있고 투표 UI는 없다
+  const seasonHtml = a.d.getElementById('page-season').innerHTML;
+  assert.match(seasonHtml, /vote-entry/);
+  assert.doesNotMatch(seasonHtml, /cand-sec/);
+  // 카드 클릭 → vote 페이지로 이동 + 투표 UI 렌더
+  const card = a.d.querySelector('#page-season .vote-entry');
+  assert.ok(card, '진입 카드가 있어야 함');
+  card.click();
+  await tick();
+  assert.equal(a.page(), 'vote');
+  assert.match(a.d.getElementById('page-vote').innerHTML, /cand-sec/);
 });
 
 test('복수 추천(approval): 여러 후보에 투표하고 다시 눌러 취소', async (t) => {
