@@ -42,6 +42,9 @@ def main():
     for k in rep.get('keywords', []):
         if 'w' not in k or 'size' not in k:
             print('keyword 항목에 w/size 필요: ' + json.dumps(k, ensure_ascii=False), file=sys.stderr); sys.exit(2)
+    rx = rep.get('reactions')  # 선택 필드(v22) — 있으면 형태만 검사
+    if rx is not None and not isinstance(rx.get('by_kind'), dict):
+        print('reactions.by_kind 는 {종류키: 개수} 여야 함', file=sys.stderr); sys.exit(2)
     url, key = creds()
     payload = json.dumps({'report': rep}, ensure_ascii=False).encode('utf-8')
     req = urllib.request.Request(url + '/rest/v1/book?id=eq.' + bid, data=payload, method='PATCH')
@@ -57,6 +60,10 @@ def main():
         rr.get('source'), len(rr.get('keywords', [])),
         sum(1 for k in rr.get('keywords', []) if k.get('q')),
         rr.get('summary', '').count(chr(10)) + 1))
+    rr_rx = rr.get('reactions') or {}
+    if rr_rx.get('by_kind'):
+        print('  반응 %d개 — %s' % (rr_rx.get('total', 0),
+              ' · '.join('%s %d' % (k, n) for k, n in rr_rx['by_kind'].items())))
 
 if __name__ == '__main__':
     main()

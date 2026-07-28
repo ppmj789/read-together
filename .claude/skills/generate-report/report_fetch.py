@@ -11,7 +11,7 @@ report_put.py 로 book.report 에 저장한다.
     python3 report_fetch.py <book_uuid>        # id 직접
 환경변수 SB_URL / SB_KEY 로 자격증명을 덮어쓸 수 있다(기본값은 index.html 에서 파싱).
 """
-import sys, re, json, os, urllib.request
+import sys, re, json, os, urllib.request, urllib.error
 
 def find_repo_root():
     d = os.path.abspath(os.path.dirname(__file__))
@@ -46,6 +46,10 @@ def rest(url, key, path, count=False):
     return data, total
 
 AXES = ['length', 'difficulty', 'fun', 'novelty', 'overall']
+# 반응 종류 (index.html 의 REACTIONS 와 같은 순서·키)
+KIND_ORDER = ['underline', 'empathy', 'insight', 'differ', 'more']
+KIND_LABEL = {'underline': '🔖 밑줄', 'empathy': '🙌 완전 동의', 'insight': '👀 생각 못 했네요',
+              'differ': '🌀 전 다르게', 'more': '👂 더 듣고 싶어요'}
 
 def main():
     if len(sys.argv) < 2:
@@ -71,7 +75,11 @@ def main():
     members, _ = rest(url, key, 'member_book?book_id=eq.%s&select=phone4,nickname,submitted,ratings,meta' % bid)
     answers, nA = rest(url, key, 'answer?book_id=eq.%s&select=phone4,q_index,body' % bid, count=True)
     comments, nC = rest(url, key, 'comment?book_id=eq.%s&select=q_index,target_phone4,author_phone4,body' % bid, count=True)
-    reactions, nR = rest(url, key, 'reaction?book_id=eq.%s&select=q_index,target_phone4' % bid, count=True)
+    # kind(v22) — 컬럼 미적용 환경에선 종류 없이 조회하고 전부 empathy 로 본다
+    try:
+        reactions, nR = rest(url, key, 'reaction?book_id=eq.%s&select=q_index,target_phone4,kind' % bid, count=True)
+    except urllib.error.HTTPError:
+        reactions, nR = rest(url, key, 'reaction?book_id=eq.%s&select=q_index,target_phone4' % bid, count=True)
 
     # 별점 평균
     ratings = {}
@@ -93,6 +101,26 @@ def main():
     for a in answers:
         by_q.setdefault(a['q_index'], []).append(a.get('body') or '')
 
+    # 반응 종류별 집계 (v22) — 종류별 합계 + 그 종류를 가장 많이 받은 답변 인용(익명)
+    body_of = {}
+    for a in answers:
+        body_of[(a['q_index'], a['phone4'])] = a.get('body') or ''
+    by_kind, per_answer = {}, {}
+    for r in reactions:
+        kd = r.get('kind') or 'empathy'
+        by_kind[kd] = by_kind.get(kd, 0) + 1
+        akey = (r['q_index'], r['target_phone4'])
+        per_answer[(kd, akey)] = per_answer.get((kd, akey), 0) + 1
+    top = []
+    for kd in KIND_ORDER + [k for k in by_kind if k not in KIND_ORDER]:
+        cands = [(n, ak) for (k, ak), n in per_answer.items() if k == kd]
+        if not cands:
+            continue
+        n, ak = max(cands, key=lambda x: x[0])
+        top.append({'kind': kd, 'count': n, 'q_index': ak[0], 'quote': body_of.get(ak, '')})
+    reactions_out = ({'total': nR if nR is not None else len(reactions),
+                      'by_kind': by_kind, 'top': top} if by_kind else None)
+
     out = {
         'book': {'id': bid, 'title': book['title'], 'author': book.get('author'),
                  'yearmonth': book.get('yearmonth'), 'questions': book.get('questions') or []},
@@ -101,6 +129,8 @@ def main():
                   'reactions': nR if nR is not None else len(reactions),
                   'participants': len(members)},
         'ratings': ratings,
+        'reactions': reactions_out,
+        'reaction_labels': KIND_LABEL,
         'score_distribution': ({'threshold': 188, 'max': 280,
                                 'passed': sum(1 for d in dist if d['is_ihyang']),
                                 'scores': dist} if dist else None),

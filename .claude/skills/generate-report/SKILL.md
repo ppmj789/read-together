@@ -29,8 +29,9 @@ description: |
 python3 report_fetch.py "이향인"      # 제목 부분일치 (또는 book UUID)
 ```
 
-출력 JSON: `book`(질문 포함) · `stats`(답변/댓글/공감/참가자 수) ·
-`ratings`(5축 평균·표본수, 결정론) · `score_distribution`(이향인 점수, 있을 때만) ·
+출력 JSON: `book`(질문 포함) · `stats`(답변/댓글/반응/참가자 수) ·
+`ratings`(5축 평균·표본수, 결정론) · `reactions`(반응 종류별 집계, 결정론) ·
+`reaction_labels`(종류 키→라벨) · `score_distribution`(이향인 점수, 있을 때만) ·
 `answers_by_question`(질문별 답변 본문) · `comments`(댓글 본문).
 
 ### 2) report 저작 — **키워드 중심**
@@ -50,7 +51,15 @@ python3 report_fetch.py "이향인"      # 제목 부분일치 (또는 book UUID
   풀어 쓴다.** "· 지배 키워드 — A · B · C" 식이 아니라 "많은 분이 ~라고
   읽었고, 자주 나온 표현은 A, B 였습니다" 처럼. 문단 사이는 `\n` 1개.
   (프론트가 `\n` 기준 문단으로 렌더)
-- **ratings / stats** — 1)의 결정론 값을 그대로 복사.
+- **ratings / stats / reactions** — 1)의 결정론 값을 **그대로 복사**(재계산·추정 금지).
+  `reactions` = `{total, by_kind:{종류키:개수}, top:[{kind,count,q_index,quote}]}`.
+  종류는 5가지 — `underline`(🔖 밑줄) · `empathy`(🙌 완전 동의) ·
+  `insight`(👀 생각 못 했네요) · `differ`(🌀 전 다르게) · `more`(👂 더 듣고 싶어요).
+  프론트가 종류별 막대 + `top` 인용을 [AI 분석] 탭과 발표 결과 페이지에 렌더한다.
+  **`summary` 에도 반응 분포를 한 문단 녹일 것** — 특히 `differ`(전 다르게)가 몰린
+  답변은 모임 당일 토론 불씨라 짚어 주고, `more`(더 듣고 싶어요)가 붙은 답변은
+  진행 제안에 넣는다. `kind` 컬럼 적용 전 데이터는 전부 `empathy` 로 잡히므로
+  그 경우 종류 분석은 생략한다.
 - **highlights** (선택, 배열) — **형식 고정 (2026-07-21 사용자 피드백):
   각 항목 = `"질문 첫 줄\n→ 의견"` 2단 구성.** 첫 줄은 질문(예: `Q1. 우리
   사이트의 이향인은?`), 둘째 줄부터 `→ ` 로 시작하는 AI 의견/정리를 완성

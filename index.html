@@ -502,6 +502,15 @@ body.is-page-season .book-card__cover{width:96px}
 .analysis-bar__track{height:10px;background:var(--highlight);border-radius:var(--radius-pill);overflow:hidden}
 .analysis-bar__fill{height:100%;background:var(--accent);border-radius:var(--radius-pill)}
 .analysis-bar__pct{font-size:13px;font-weight:700;color:var(--accent);margin-top:4px}
+/* 발표자료 반응 분포 (v22) — 종류별 막대. 프로젝터에서 한눈에 읽히도록 굵고 단순하게 */
+.rx-row{display:flex;align-items:center;gap:10px;margin:8px 0}
+.rx-row__l{width:118px;flex-shrink:0;font-size:13.5px;color:var(--ink-soft);white-space:nowrap}
+.rx-row__bar{flex:1;height:11px;background:var(--highlight);border-radius:var(--radius-pill);overflow:hidden;min-width:40px}
+.rx-row__fill{height:100%;background:var(--accent);border-radius:var(--radius-pill)}
+.rx-row__n{width:30px;text-align:right;font-family:var(--display);font-weight:800;font-size:15px;color:var(--ink)}
+.rx-top{margin-top:12px;padding-top:12px;border-top:1px solid var(--rule-soft)}
+.rx-top__it{font-size:13px;color:var(--ink-soft);line-height:1.6;margin-top:6px}
+.rx-top__it b{color:var(--ink)}
 .analysis-summary{font-size:18px;line-height:1.7;color:var(--ink);font-weight:500;padding:16px 20px;background:var(--paper-warm);border-radius:var(--radius-md);border-left:4px solid var(--accent)}
 .analysis-summary b{color:var(--accent);font-weight:700}
 
@@ -712,6 +721,7 @@ body.is-page-season .book-card__cover{width:96px}
       <div class="analysis-card"><div class="analysis-card__label">책 별점 분포 (익명 · 5점 만점)</div><div id="stage-rating-rows"></div>
         <div class="sl-starpick" id="analysis-star-pick"></div>
       </div>
+      <div class="analysis-card" id="analysis-rx-card" style="display:none"><div class="analysis-card__label">반응 분포 (익명)</div><div id="analysis-rx"></div></div>
       <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 한줄 요약</div><div class="analysis-summary">발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.</div></div>
     </div>
   </div>
@@ -2457,7 +2467,8 @@ function renderResults(){
   var h='<div class="section-hd"><div><div class="eyebrow">발표 결과 · '+esc(b.month||'')+'</div><h2 class="h-2 mt-4">'+esc(b.title)+'</h2></div></div>';
   /* 통계 — 버튼·탭으로 오해되지 않게 평문 한 줄 */
   var st=rep.stats||{};
-  h+='<p class="body-2 dim mb-16" style="font-size:13px">이번 모임 기록 — 답변 '+(st.answers||0)+'개 · 댓글 '+(st.comments||0)+'개 · 참가자 '+(st.participants||0)+'명</p>';
+  h+='<p class="body-2 dim mb-16" style="font-size:13px">이번 모임 기록 — 답변 '+(st.answers||0)+'개 · 댓글 '+(st.comments||0)+'개'+
+     (st.reactions?(' · 반응 '+st.reactions+'개'):'')+' · 참가자 '+(st.participants||0)+'명</p>';
   /* 키워드 */
   h+='<div class="analysis-card mb-16"><div class="analysis-card__label">자주 등장한 키워드</div><div class="analysis-keywords" id="res-kws">';
   if(rep.keywords&&rep.keywords.length){
@@ -2474,6 +2485,9 @@ function renderResults(){
     h+='<div class="analysis-card mb-16"><div class="analysis-card__label">AI 요약</div><div style="font-size:15px;line-height:1.75;color:var(--ink)">'+
       paras.map(function(p){return '<p style="margin:0 0 12px">'+esc(p)+'</p>';}).join('')+'</div></div>';
   }
+  /* 반응 분포 (v22) — 종류별 반응이 기록된 발표자료에만 표시 */
+  var rxh=reactionStatsHtml(rep.reactions);
+  if(rxh) h+='<div class="analysis-card mb-16"><div class="analysis-card__label">반응 분포 (익명)</div>'+rxh+'</div>';
   /* 별점 평균 */
   h+='<div class="analysis-card mb-16"><div class="analysis-card__label">모두의 별점</div>';
   RATING_AXES.forEach(function(ax){
@@ -2997,6 +3011,29 @@ var REACTIONS=[
   {k:'differ',   e:'🌀',l:'전 다르게',t:'저는 다르게 읽었어요'},
   {k:'more',     e:'👂',l:'더 듣고 싶어요',t:'모임 당일 더 듣고 싶어요'}
 ];
+/* 발표자료(report.reactions)의 종류별 반응을 막대 + 종류별 최다 인용으로 렌더.
+   report_fetch.py 가 채우는 {total, by_kind:{kind:n}, top:[{kind,count,quote}]} 를 읽는다.
+   데이터가 없으면 빈 문자열 → 호출부가 카드 자체를 숨긴다. */
+function reactionStatsHtml(rx){
+  var bk=(rx&&rx.by_kind)||{};
+  var kinds=REACTIONS.filter(function(k){return bk[k.k];});
+  if(!kinds.length) return '';
+  var max=kinds.reduce(function(m,k){return Math.max(m,bk[k.k]);},0)||1;
+  var h=kinds.map(function(k){
+    return '<div class="rx-row"><div class="rx-row__l">'+k.e+' '+esc(k.l)+'</div>'+
+      '<div class="rx-row__bar"><div class="rx-row__fill" style="width:'+Math.round(bk[k.k]/max*100)+'%"></div></div>'+
+      '<div class="rx-row__n">'+bk[k.k]+'</div></div>';
+  }).join('');
+  var top=(rx.top||[]).filter(function(t){return t&&t.quote;});
+  if(top.length){
+    h+='<div class="rx-top">'+top.map(function(t){
+      var k=REACTIONS.filter(function(x){return x.k===t.kind;})[0]||{e:'·',l:t.kind};
+      return '<div class="rx-top__it">'+k.e+' <b>'+esc(k.l)+'</b> 최다'+(t.count?(' ('+t.count+')'):'')+
+        ' — “'+esc(String(t.quote).slice(0,90))+(String(t.quote).length>90?'…':'')+'”</div>';
+    }).join('')+'</div>';
+  }
+  return h;
+}
 /* 반응 묶음 정규화 — 레거시 {count,mine}(단일 공감)도 5종 구조로 읽어들인다 */
 function normReact(r){
   if(r&&r.counts) return {counts:r.counts,mine:r.mine||{},total:r.total||0};
@@ -3149,12 +3186,27 @@ function generateReportMock(b){
   var nAns=answers.length;
   var nCmt=0;Object.keys(STAGE_COMMENTS||{}).forEach(function(k){nCmt+=(STAGE_COMMENTS[k]||[]).length;});
   var nPart=Object.keys(STAGE_RATINGS||{}).length+(STATE.phone4?1:0);
-  /* 5) summary — 외부 AI 자리. 지금은 통계 한 줄. */
+  /* 5) 반응 종류별 집계 (v22) — 종류별 합계 + 그 종류를 가장 많이 받은 답변 인용 */
+  var bsRx=(bookState(b.id).reactions)||{};
+  var rxBy={},rxTop={},rxTotal=0;
+  (b.questions||[]).forEach(function(_,qi){ (((b.others||[])[qi])||[]).forEach(function(o,j){
+    var rc=normReact((b.reactions&&b.reactions['q'+qi+'a'+j])||bsRx['q'+qi+'a'+j]);
+    REACTIONS.forEach(function(k){
+      var n=rc.counts[k.k]||0; if(!n)return;
+      rxBy[k.k]=(rxBy[k.k]||0)+n; rxTotal+=n;
+      if(!rxTop[k.k]||n>rxTop[k.k].count) rxTop[k.k]={kind:k.k,count:n,q_index:qi,quote:String(o.a||'')};
+    });
+  }); });
+  var reactions=rxTotal?{total:rxTotal,by_kind:rxBy,
+    top:REACTIONS.map(function(k){return rxTop[k.k];}).filter(function(x){return x;})}:null;
+  /* 6) summary — 외부 AI 자리. 지금은 통계 한 줄. */
   var topRated=RATING_AXES.slice().sort(function(a,b){return (ratings[b.k].avg||0)-(ratings[a.k].avg||0);})[0];
-  var summary='「'+(b.title||'')+'」 모임 마감 — 답변 '+nAns+'개·댓글 '+nCmt+'개·참가자 '+nPart+'명. '+
+  var rxLine=reactions?(' 반응은 '+REACTIONS.filter(function(k){return rxBy[k.k];}).map(function(k){return k.l+' '+rxBy[k.k];}).join('·')+' 로 모였어요.'):'';
+  var summary='「'+(b.title||'')+'」 모임 마감 — 답변 '+nAns+'개·댓글 '+nCmt+'개·참가자 '+nPart+'명.'+rxLine+' '+
     '평균 별점은 '+(topRated?topRated.label+' '+(ratings[topRated.k].avg||0)+'★':'-')+'가 가장 높았어요. '+
     '※ 외부 AI 미연결 — 통계 기반 자동 요약입니다.';
-  return {source:'mock',generated_at:new Date().toISOString(),keywords:keywords,ratings:ratings,summary:summary,stats:{answers:nAns,comments:nCmt,participants:nPart}};
+  return {source:'mock',generated_at:new Date().toISOString(),keywords:keywords,ratings:ratings,summary:summary,
+    reactions:reactions,stats:{answers:nAns,comments:nCmt,reactions:rxTotal,participants:nPart}};
 }
 
 async function hostOpenBook(id,title){
@@ -3357,10 +3409,14 @@ function renderStageRating(){
       else kwHost.innerHTML='<span class="dim">키워드가 없어요.</span>';
     }
     if(smHost){ smHost.style.whiteSpace='pre-line'; smHost.textContent=rep.summary||''; }
+    /* 반응 분포 — 발표자료에 있을 때만 카드 노출 */
+    var rxHost=document.getElementById('analysis-rx'),rxCard=document.getElementById('analysis-rx-card');
+    if(rxHost&&rxCard){ var rxh=reactionStatsHtml(rep.reactions); rxHost.innerHTML=rxh; rxCard.style.display=rxh?'':'none'; }
     if(sub) sub.innerHTML='발표자료 — '+esc(rep.source||'mock')+' · '+esc((rep.generated_at||'').slice(0,16).replace('T',' '))+(STATE.isHost?(' · <a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 다시 생성</a>'):'');
     return;
   }
   /* 보고서가 없으면: 데모 하드코딩(이향인 키워드·요약)이 그대로 노출되지 않게 비운다 (2026-07-21) */
+  var rxCard0=document.getElementById('analysis-rx-card'); if(rxCard0) rxCard0.style.display='none';
   if(kwHost) kwHost.innerHTML='<span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span>';
   if(smHost){ smHost.style.whiteSpace='normal'; smHost.textContent='발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.'; }
   if(sub) sub.innerHTML='AI가 참가자들의 답변을 분석했어요 &middot; 사람은 반응만, 분석은 AI'+(STATE.isHost&&b?(' · '+(b.closed?'<a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 발표자료 생성</a>':'<span class="dim">발표자료는 책을 마감한 뒤 생성할 수 있어요</span>')):'');
