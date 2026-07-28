@@ -12,7 +12,7 @@ async function hostLogin(a, p4 = '9999') {
 }
 
 /* 별도 투표 페이지(page-vote)에서 '+ 책 추천하기' 폼을 열고 한 권 추천 */
-async function propose(a, title, author = '', reason = '') {
+async function propose(a, title, author = '', reason = '', alias = '') {
   a.w.CANDADD.open = true;
   a.w.renderVote();
   a.d.getElementById('cand-title').value = title;
@@ -20,6 +20,8 @@ async function propose(a, title, author = '', reason = '') {
   if (au) au.value = author;
   const rz = a.d.getElementById('cand-reason');
   if (rz) rz.value = reason;
+  const al = a.d.getElementById('cand-alias');
+  if (al) al.value = alias;
   await a.w.proposeCandidate();
 }
 
@@ -43,6 +45,76 @@ test('추천 이유: 후보에 저장되고 카드에 표시된다', async (t) =
   const c = a.w.seasonCandidates('m1')[0];
   assert.equal(c.reason, '뇌의 설계 결함 이야기가 흥미로워요');
   assert.match(a.d.getElementById('page-vote').textContent, /뇌의 설계 결함 이야기가 흥미로워요/);
+});
+
+test('추천인 별명: 직접 적으면 그 이름으로 표시된다', async (t) => {
+  const a = app(t);
+  await a.loginAs('7220');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지', '개리 마커스', '', '책덕후사서');
+  const c = a.w.seasonCandidates('m1')[0];
+  assert.equal(c.alias, '책덕후사서');
+  const txt = a.d.getElementById('page-vote').textContent;
+  assert.match(txt, /책덕후사서님 추천/);
+  assert.doesNotMatch(txt, /No\.\s*7220/);
+});
+
+test('추천인 별명 미입력: 번호 대신 시즌 우주 닉네임이 뜬다', async (t) => {
+  const a = app(t);
+  await a.loginAs('7220');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지', '개리 마커스');
+  const txt = a.d.getElementById('page-vote').textContent;
+  assert.doesNotMatch(txt, /No\.\s*7220/);
+  const auto = a.w.candNick('7220', 'm1');
+  assert.ok(auto && auto !== '모임장', '자동 닉네임이 배정돼야 함');
+  assert.match(txt, new RegExp(auto + '님 추천'));
+  // 결정론 — 같은 사람·같은 시즌이면 항상 같은 이름, 책 닉네임과는 다른 축
+  assert.equal(a.w.candNick('7220', 'm1'), auto);
+  assert.notEqual(a.w.nickFor('7220', 'm1-b1'), auto);
+});
+
+test('투표 닉네임은 서재 테마 — 헤일메리 우주 테마 사전을 안 쓴다', async (t) => {
+  const a = app(t);
+  await a.loginAs('7220');
+  a.w.enterMeeting('m1');
+  const seen = new Set();
+  for (const p4 of ['7220', '1234', '0001', '5555', '8080', '3141', '4242', '1111']) {
+    const nm = a.w.candNick(p4, 'm1'); // 형용사·명사에 공백이 있어 split 대신 접두·접미로 판정
+    assert.ok(a.w.VOTE_ADJ.some((adj) => nm.startsWith(adj + ' ')), `서재 형용사여야: ${nm}`);
+    assert.ok(a.w.VOTE_NOUN.some((n) => nm.endsWith(' ' + n)), `서재 명사여야: ${nm}`);
+    assert.ok(!a.w.NICK_ADJ.some((adj) => nm.startsWith(adj + ' ')), `우주 형용사면 안 됨: ${nm}`);
+    seen.add(nm);
+  }
+  assert.ok(seen.size >= 6, '사람마다 충분히 갈려야 함');
+});
+
+test('후보 카드: 책등 + 제목 블록으로 렌더되고 최다 득표엔 왕관', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지', '개리 마커스');
+  await propose(a, '이기적 유전자');
+  const card = a.d.querySelector('#page-vote .cand');
+  assert.ok(card, '후보 카드가 있어야 함');
+  assert.equal(card.querySelector('.cand__spine').textContent.trim().charAt(0), '클');
+  assert.equal(card.querySelector('.cand__title').textContent, '클루지');
+  // 아직 아무도 투표 안 함 → 왕관 없음
+  assert.equal(a.d.querySelectorAll('#page-vote .cand__crown').length, 0);
+  await a.w.voteCandidate(a.w.seasonCandidates('m1').find((c) => c.title === '클루지').id);
+  const lead = a.d.querySelector('#page-vote .cand--lead');
+  assert.match(lead.querySelector('.cand__title').textContent, /클루지/);
+  assert.equal(a.d.querySelectorAll('#page-vote .cand__crown').length, 1);
+});
+
+test('추천인 별명: 20자 초과는 잘리고 공백은 한 칸으로 정규화된다', async (t) => {
+  const a = app(t);
+  await a.loginAs('7220');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지', '', '', '  아주   긴별명입니다일이삼사오육칠팔구십백천만억  ');
+  const c = a.w.seasonCandidates('m1')[0];
+  assert.equal(c.alias.length, 20);
+  assert.equal(c.alias, '아주 긴별명입니다일이삼사오육칠팔구십백천만억'.slice(0, 20));
 });
 
 test('책장 진입 카드 → 별도 투표 페이지로 이동 (같은 페이지 아님)', async (t) => {

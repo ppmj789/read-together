@@ -332,24 +332,32 @@ body.is-page-season .book-card__cover{width:96px}
 .cand-sec__title{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;margin-top:4px}
 .cand-sec__sub{font-size:13px;color:var(--ink-dim);margin:6px 0 16px;line-height:1.55}
 .cand-empty{background:var(--paper-warm);border:1px dashed var(--rule);border-radius:var(--radius-md);padding:20px;text-align:center;font-size:13px;color:var(--ink-dim);line-height:1.6}
-.cand-list{display:flex;flex-direction:column;gap:10px}
-.cand{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-md);padding:14px 16px;transition:border-color .2s,background .2s}
+.cand-list{display:flex;flex-direction:column;gap:12px}
+/* 후보 카드 = 작은 책 (2026-07-28) — 제목이 먼저 읽히도록 왼쪽 책등 + display 폰트 제목.
+   이전엔 15px 본문 굵기 제목이 저자·이유·추천인과 한 덩어리로 뭉쳐 스캔이 안 됐다. */
+.cand{position:relative;display:flex;align-items:flex-start;gap:14px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-md);padding:14px;transition:border-color .2s,background .2s,box-shadow .2s}
 .cand--mine{border-color:var(--accent);background:var(--accent-tint)}
+.cand--lead{box-shadow:var(--shadow-md)}
+.cand__spine{position:relative;width:54px;min-height:74px;flex-shrink:0;border-radius:var(--radius-sm);background:var(--ink-soft);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:28px;line-height:1;box-shadow:var(--shadow-sm)}
+.cand--lead .cand__spine{background:var(--accent)}
+.cand__crown{position:absolute;top:-11px;left:-9px;font-size:19px;line-height:1;transform:rotate(-18deg);filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))}
 .cand__main{flex:1;min-width:0}
-.cand__crown{margin-right:4px}
-.cand__title{font-weight:700;font-size:15px;color:var(--ink);line-height:1.3}
-.cand__author{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
-.cand__by{font-size:11px;color:var(--ink-dim);margin-top:4px}
-.cand__side{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.cand__vote{display:inline-flex;align-items:center;gap:5px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-pill);padding:7px 13px;font-size:14px;font-family:inherit;color:var(--ink-soft);cursor:pointer;transition:all .2s}
-.cand__vote:hover{border-color:var(--accent);color:var(--accent);transform:scale(1.05)}
+.cand__title{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.02em;color:var(--ink);line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
+.cand__author{font-size:13px;color:var(--ink-soft);margin-top:3px}
+.cand__reason{font-size:13px;color:var(--ink-soft);line-height:1.5;margin-top:9px;padding-left:9px;border-left:2px solid var(--rule)}
+.cand__by{font-size:11px;color:var(--ink-dim);margin-top:10px}
+.cand__bynick{display:inline-block;background:var(--highlight);border-radius:var(--radius-pill);padding:3px 9px;margin-right:3px;font-weight:700;color:var(--ink-soft)}
+.cand--mine .cand__bynick{background:var(--paper);color:var(--accent)}
+.cand__side{display:flex;flex-direction:column;align-items:stretch;gap:7px;flex-shrink:0}
+.cand__vote{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:58px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-md);padding:8px 10px;font-family:inherit;color:var(--ink-soft);cursor:pointer;transition:all .2s;line-height:1}
+.cand__vote:hover{border-color:var(--accent);color:var(--accent)}
 .cand__vote.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.cand__vote b{font-weight:800}
-.cand__x{background:none;border:none;color:var(--ink-dim);font-size:20px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:8px}
+.cand__vote .em{font-size:17px;line-height:1}
+.cand__vote b{font-family:var(--display);font-size:17px;font-weight:800}
+.cand__x{background:none;border:none;color:var(--ink-dim);font-size:18px;line-height:1;cursor:pointer;padding:4px 6px;border-radius:8px;font-family:inherit}
 .cand__x:hover{color:#D44;background:var(--paper-warm)}
-.cand__promote{background:none;border:1px solid var(--rule);border-radius:var(--radius-pill);font-size:11px;font-weight:700;color:var(--ink-soft);cursor:pointer;padding:6px 10px;font-family:inherit;white-space:nowrap}
+.cand__promote{background:none;border:1px solid var(--rule);border-radius:var(--radius-pill);font-size:11px;font-weight:700;color:var(--ink-soft);cursor:pointer;padding:6px 8px;font-family:inherit;white-space:nowrap}
 .cand__promote:hover{border-color:var(--success);color:var(--success)}
-.cand__reason{font-size:13px;color:var(--ink-soft);margin-top:5px;line-height:1.5;font-style:italic}
 .cand-form{background:var(--paper-warm);border-radius:var(--radius-md);padding:16px;margin-top:14px}
 .cand-add{margin-top:14px}
 /* 책장 '다음 책 정하기' 진입 카드 */
@@ -1124,16 +1132,21 @@ var RT={
   async _loadCandidates(){
     /* 다음 책 투표 후보(v19) — material 과 동일하게 별도 쿼리·graceful fallback.
        마이그레이션 미적용 환경에선 조용히 빈 목록(시즌 로딩 자체는 깨지지 않게). */
-    var r=await sb.from('next_book_candidate').select('id,season_id,title,author,reason,by_phone4,next_book_vote(voter_phone4)');
+    var cols='id,season_id,title,author,reason,alias,by_phone4,next_book_vote(voter_phone4)';
+    var r=await sb.from('next_book_candidate').select(cols);
+    /* alias(v21) 미적용 환경 폴백 — 컬럼 없으면 alias 빼고 재조회 (reason 은 살린다) */
+    if(r.error&&/alias/.test((r.error.message||'')+(r.error.details||''))){
+      cols=cols.replace('alias,',''); r=await sb.from('next_book_candidate').select(cols);
+    }
     /* reason(v20) 미적용 환경 폴백 — 컬럼 없으면 reason 빼고 재조회 */
     if(r.error&&/reason/.test((r.error.message||'')+(r.error.details||''))){
-      r=await sb.from('next_book_candidate').select('id,season_id,title,author,by_phone4,next_book_vote(voter_phone4)');
+      cols=cols.replace('reason,',''); r=await sb.from('next_book_candidate').select(cols);
     }
     if(r.error) return;
     var bySeason={};
     (r.data||[]).forEach(function(c){
       (bySeason[c.season_id]=bySeason[c.season_id]||[]).push({
-        id:c.id,title:c.title,author:c.author||'',reason:c.reason||'',byPhone:c.by_phone4||'',
+        id:c.id,title:c.title,author:c.author||'',reason:c.reason||'',alias:c.alias||'',byPhone:c.by_phone4||'',
         voters:(c.next_book_vote||[]).map(function(v){return v.voter_phone4;})});
     });
     MEET_CACHE.forEach(function(m){ if(m.season) m.season.candidates=(bySeason[m.id]||[]); });
@@ -1343,9 +1356,11 @@ var RT={
     if(e){rtErr(e);return false;} await RT.loadMeetings(); return true;
   },
   /* ── 다음 책 투표(v19) ── */
-  async addCandidate(seasonId,title,author,reason){
-    var row={season_id:seasonId,title:title,author:author||'',reason:reason||'',by_phone4:STATE.phone4||'host'};
+  async addCandidate(seasonId,title,author,reason,alias){
+    var row={season_id:seasonId,title:title,author:author||'',reason:reason||'',alias:alias||'',by_phone4:STATE.phone4||'host'};
     var r=await sb.from('next_book_candidate').insert(row);
+    /* alias(v21) 미적용 환경 폴백 — 컬럼 없으면 alias 빼고 재시도 */
+    if(r.error&&/alias/.test((r.error.message||'')+(r.error.details||''))){ delete row.alias; r=await sb.from('next_book_candidate').insert(row); }
     /* reason(v20) 미적용 환경 폴백 — 컬럼 없으면 reason 빼고 재시도 */
     if(r.error&&/reason/.test((r.error.message||'')+(r.error.details||''))){ delete row.reason; r=await sb.from('next_book_candidate').insert(row); }
     if(r.error){rtErr(r.error);return false;} await RT.loadMeetings(); return true;
@@ -2030,15 +2045,32 @@ function seasonCandidates(seasonId){
 }
 function myCandCount(seasonId){var me=STATE.phone4;if(!me)return 0;
   return seasonCandidates(seasonId).filter(function(c){return c.byPhone===me;}).length;}
+/* 투표 화면 전용 닉네임 사전 — 우주 테마(NICK_ADJ/NICK_NOUN)는 '프로젝트 헤일메리'
+   전용이라 책이 바뀌면 안 맞는다. 투표는 시즌·모임 단위라 책과 무관한 '서재·독서'
+   테마를 따로 둔다. 40 × 48 ≈ 1,900 조합. */
+var VOTE_ADJ=['밑줄 긋는','책장을 접는','서문부터 읽는','끝까지 읽는','목차만 훑는','새벽에 읽는','자정에 읽는','서서 읽는','엎드려 읽는','한 문장을 오래 보는','두 번 읽는','소리 내어 읽는','빌려만 놓는','쌓아두는','밤새 읽는','필사하는','여백에 적는','접힌 쪽을 펴는','책등을 쓰다듬는','표지부터 보는','마지막 장을 아끼는','서점을 서성이는','도서관에 사는','절판본을 찾는','초판을 모으는','띠지를 버리는','띠지까지 모으는','책갈피를 잃어버리는','영수증을 끼워 둔','읽다 잠드는','출근길에 읽는','빗소리와 읽는','커피를 쏟은','손때 묻은','조용히 권하는','기꺼이 빌려주는','반납일을 넘긴','장바구니만 채우는','완독을 벼르는','아무 데나 펴는'];
+/* 명사는 전부 '사람'으로 — 형용사가 읽는·모으는 같은 사람 동작이라 사물 명사를 섞으면
+   '목차만 훑는 각주' 처럼 주어가 어긋난다. 사물은 역할 이름으로 바꿔 붙였다. */
+var VOTE_NOUN=['독서가','사서','책벌레','장서가','필사가','탐독가','다독가','정독가','서평가','애서가','책방지기','서점원','문장 수집가','밑줄 수집가','야간 사서','서가 정리원','낭독자','완독자','초판 사냥꾼','절판본 추적자','띠지 수집가','책갈피 장인','메모광','오탈자 발견자','교정자','편집자','번역가','서지학자','도서관 유령','책탑 등반가','독서등 지킴이','창가 자리 주인','안락의자 주인','열람실 단골','헌책방 탐험가','북엔드 수집가','문진 애호가','돋보기 탐정','여백 낙서가','각주 애독자','목차 정독자','후기 애독자','판권면 확인자','속표지 감상가','대출증 주인','반납 담당','원고 지킴이','마지막 장 애호가'];
+/* 추천자 표시 이름 — 직접 적은 별명이 1순위, 없으면 시즌 기준 결정론 서재 닉네임.
+   시드에 'vote|' 를 섞어 책 닉네임과 축을 분리 — 투표는 시즌 단위라 책이 바뀌어도
+   이름이 흔들리지 않아야 하고, 답변 페이지의 익명성도 건드리지 않는다. */
+function candNick(phone4,seasonId){
+  if(!phone4||phone4==='host') return '모임장';
+  var str='vote|'+phone4+'|'+seasonId,h=0;
+  for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))>>>0;}
+  return VOTE_ADJ[h%VOTE_ADJ.length]+' '+VOTE_NOUN[Math.floor(h/VOTE_ADJ.length)%VOTE_NOUN.length];
+}
+function candBy(c,seasonId){ return (c.alias||'').trim()||candNick(c.byPhone,seasonId); }
 async function proposeCandidate(){
   var t=val('cand-title');if(!t){toast('책 제목을 입력해 주세요');return;}
-  var au=val('cand-author'),rz=val('cand-reason');
+  var au=val('cand-author'),rz=val('cand-reason'),al=val('cand-alias').replace(/\s+/g,' ').slice(0,20);
   if(!STATE.phone4&&!STATE.isHost){toast('휴대폰 4자리로 입장해 주세요');return;}
   if(!STATE.isHost && myCandCount(STATE.meetingId)>=CAND_LIMIT){toast('한 사람당 '+CAND_LIMIT+'권까지 추천할 수 있어요');return;}
-  if(ONLINE){ if(!(await RT.addCandidate(STATE.meetingId,t,au,rz)))return; }
+  if(ONLINE){ if(!(await RT.addCandidate(STATE.meetingId,t,au,rz,al)))return; }
   else {
     var s=candStore(),arr=s[STATE.meetingId]||[];
-    arr.push({id:'c'+Date.now(),title:t,author:au||'',reason:rz||'',byPhone:STATE.phone4||'host',voters:[]});
+    arr.push({id:'c'+Date.now(),title:t,author:au||'',reason:rz||'',alias:al,byPhone:STATE.phone4||'host',voters:[]});
     s[STATE.meetingId]=arr;saveCandStore(s);
   }
   CANDADD.open=false;renderVote();toast('후보로 추천했어요');
@@ -2090,17 +2122,20 @@ function candidateSectionHtml(seasonId){
     h+='<div class="cand-list">';
     cands.forEach(function(c){
       var cnt=c.voters.length, mine=(me&&c.voters.indexOf(me)>=0), lead=(cnt>0&&cnt===maxV);
-      var by=(c.byPhone==='host'?'모임장':'No.'+esc(c.byPhone||'----'));
+      var by=esc(candBy(c,seasonId));
       var canDel=(STATE.isHost||(me&&c.byPhone===me));
-      h+='<div class="cand'+(mine?' cand--mine':'')+'">'+
+      var spine=String(c.title||'').trim().charAt(0)||'책';
+      h+='<div class="cand'+(mine?' cand--mine':'')+(lead?' cand--lead':'')+'">'+
+          '<div class="cand__spine" aria-hidden="true">'+esc(spine)+
+            (lead?'<span class="cand__crown" title="최다 득표">👑</span>':'')+'</div>'+
           '<div class="cand__main">'+
-            '<div class="cand__title">'+(lead?'<span class="cand__crown" title="최다 득표">👑</span>':'')+esc(c.title)+'</div>'+
+            '<div class="cand__title">'+esc(c.title)+'</div>'+
             (c.author?'<div class="cand__author">'+esc(c.author)+'</div>':'')+
             (c.reason?'<div class="cand__reason">“'+esc(c.reason)+'”</div>':'')+
-            '<div class="cand__by">'+by+'님 추천</div>'+
+            '<div class="cand__by"><span class="cand__bynick">'+by+'</span>님 추천</div>'+
           '</div>'+
           '<div class="cand__side">'+
-            '<button class="cand__vote'+(mine?' on':'')+'" onclick="voteCandidate(\''+c.id+'\')">'+(mine?'💛':'🤍')+' <b>'+cnt+'</b></button>'+
+            '<button class="cand__vote'+(mine?' on':'')+'" title="'+(mine?'투표 취소':'이 책에 투표')+'" onclick="voteCandidate(\''+c.id+'\')"><span class="em">'+(mine?'💛':'🤍')+'</span><b>'+cnt+'</b></button>'+
             (STATE.isHost?'<button class="cand__promote" title="예정 책으로 등록" onclick="promoteCandidate(\''+c.id+'\',\''+esc(c.title)+'\',\''+esc(c.author||'')+'\')">책으로</button>':'')+
             (canDel?'<button class="cand__x" title="후보 삭제" onclick="delCandidate(\''+c.id+'\',\''+esc(c.title)+'\')">&times;</button>':'')+
           '</div>'+
@@ -2113,6 +2148,8 @@ function candidateSectionHtml(seasonId){
     h+='<div class="cand-form"><div class="field"><input class="input" id="cand-title" placeholder="추천할 책 제목" onkeydown="if(event.key===\'Enter\'){event.preventDefault();var a=document.getElementById(\'cand-author\');if(a)a.focus();}"></div>'+
        '<div class="field"><input class="input" id="cand-author" placeholder="저자 (선택)"></div>'+
        '<div class="field"><textarea class="input" id="cand-reason" rows="2" placeholder="추천하는 이유 (선택) — 왜 이 책을 같이 읽고 싶나요?"></textarea></div>'+
+       '<div class="field"><input class="input" id="cand-alias" maxlength="20" placeholder="별명 (선택) — 이 추천에 붙일 이름">'+
+         '<div class="body-2 dim" style="margin-top:6px">비워두면 이렇게 표시돼요 — <b>'+esc(candNick(STATE.phone4||'host',seasonId))+'</b></div></div>'+
        '<div class="row"><button class="btn btn-primary btn-sm btn-pill" onclick="proposeCandidate()">추천 등록</button>'+
        '<button class="btn btn-ghost btn-sm btn-pill" onclick="CANDADD.open=false;renderVote()">취소</button></div></div>';
   } else if(canAdd){
