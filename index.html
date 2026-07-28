@@ -179,8 +179,9 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 
 /* Reaction */
 .reaction-row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
-.reaction-btn{display:inline-flex;align-items:center;gap:5px;background:var(--paper);border:1px solid var(--rule);font-size:13px;color:var(--ink-soft);font-weight:500;padding:6px 12px;cursor:pointer;border-radius:var(--radius-pill);transition:all .2s}
-.reaction-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-tint);transform:scale(1.05)}
+/* 5종 반응이 모바일에서 2줄 안에 들어가도록 여백·글자 축소 (2026-07-28) */
+.reaction-btn{display:inline-flex;align-items:center;gap:4px;background:var(--paper);border:1px solid var(--rule);font-size:12.5px;color:var(--ink-soft);font-weight:500;padding:6px 10px;cursor:pointer;border-radius:var(--radius-pill);transition:all .15s;font-family:inherit;white-space:nowrap}
+.reaction-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-tint)}
 
 /* Link card */
 .link-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--rule-soft);border-radius:var(--radius-md);background:var(--paper);margin-bottom:8px;transition:all .2s;text-decoration:none;color:inherit;cursor:pointer}
@@ -344,7 +345,9 @@ body.is-page-season .book-card__cover{width:96px}
 .cand__main{flex:1;min-width:0}
 .cand__title{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.02em;color:var(--ink);line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
 .cand__author{font-size:13px;color:var(--ink-soft);margin-top:3px}
-.cand__reason{font-size:13px;color:var(--ink-soft);line-height:1.5;margin-top:9px;padding-left:9px;border-left:2px solid var(--rule)}
+/* 추천 이유는 후보 카드의 설득 포인트 — 제목 다음으로 크게 (2026-07-28) */
+.cand__reason{font-size:15px;color:var(--ink);line-height:1.6;margin-top:11px;padding:10px 12px;background:var(--paper-warm);border-left:3px solid var(--accent);border-radius:0 var(--radius-sm) var(--radius-sm) 0;word-break:keep-all}
+.cand--mine .cand__reason{background:var(--paper)}
 .cand__by{font-size:11px;color:var(--ink-dim);margin-top:10px}
 .cand__bynick{display:inline-block;background:var(--highlight);border-radius:var(--radius-pill);padding:3px 9px;margin-right:3px;font-weight:700;color:var(--ink-soft)}
 .cand--mine .cand__bynick{background:var(--paper);color:var(--accent)}
@@ -352,12 +355,16 @@ body.is-page-season .book-card__cover{width:96px}
 .cand__vote{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:58px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-md);padding:8px 10px;font-family:inherit;color:var(--ink-soft);cursor:pointer;transition:all .2s;line-height:1}
 .cand__vote:hover{border-color:var(--accent);color:var(--accent)}
 .cand__vote.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.cand__vote .em{font-size:17px;line-height:1}
+.cand__vote svg{display:block}
 .cand__vote b{font-family:var(--display);font-size:17px;font-weight:800}
-.cand__x{background:none;border:none;color:var(--ink-dim);font-size:18px;line-height:1;cursor:pointer;padding:4px 6px;border-radius:8px;font-family:inherit}
-.cand__x:hover{color:#D44;background:var(--paper-warm)}
+/* 후보 조작 버튼 — × 하나였던 걸 [수정]·[삭제] 로 분리 (2026-07-28). 둘 다 확인 다이얼로그 없이
+   바로 위험하지 않게: 수정은 폼을 열 뿐이고, 삭제만 uiConfirm 을 거친다. */
+.cand__act{background:none;border:1px solid var(--rule);border-radius:var(--radius-pill);font-size:11px;font-weight:700;color:var(--ink-soft);cursor:pointer;padding:6px 8px;font-family:inherit;white-space:nowrap}
+.cand__act:hover{border-color:var(--accent);color:var(--accent)}
+.cand__act--del:hover{border-color:#D44;color:#D44}
 .cand__promote{background:none;border:1px solid var(--rule);border-radius:var(--radius-pill);font-size:11px;font-weight:700;color:var(--ink-soft);cursor:pointer;padding:6px 8px;font-family:inherit;white-space:nowrap}
 .cand__promote:hover{border-color:var(--success);color:var(--success)}
+.cand-form__hd{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px}
 .cand-form{background:var(--paper-warm);border-radius:var(--radius-md);padding:16px;margin-top:14px}
 .cand-add{margin-top:14px}
 /* 책장 '다음 책 정하기' 진입 카드 */
@@ -699,7 +706,7 @@ body.is-page-season .book-card__cover{width:96px}
 
 <div class="scene" id="scene-analysis">
   <div class="scene-analysis__layout">
-    <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요 &middot; 사람은 공감만, 분석은 AI</p></div>
+    <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요 &middot; 사람은 반응만, 분석은 AI</p></div>
     <div class="scene-analysis__grid">
       <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드</div><div class="analysis-keywords"><span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span></div></div>
       <div class="analysis-card"><div class="analysis-card__label">책 별점 분포 (익명 · 5점 만점)</div><div id="stage-rating-rows"></div>
@@ -717,7 +724,7 @@ body.is-page-season .book-card__cover{width:96px}
       <div class="scene-live__speaker-name" id="stage-speaker-name">?</div>
       <div class="sl-crit-row">
         <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'random'})">🎲 무작위</button>
-        <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'empathy'})">💛 공감 최다</button>
+        <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'empathy'})">🙌 반응 최다</button>
         <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'comments'})">💬 댓글 최다</button>
       </div>
       <p class="body-2 dim" style="font-size:12.5px;margin-top:16px;line-height:1.6">별점을 <b>가장 높게/낮게 준 사람</b>은 이 질문과 무관하니,<br><b>[AI 분석]</b> 탭에서 항목을 골라 선정한 뒤 이곳으로 넘어와요.</p>
@@ -1157,13 +1164,15 @@ var RT={
       sb.from('member_book').select('phone4,nickname,submitted,ratings,meta').eq('book_id',bookId),
       sb.from('answer').select('phone4,q_index,body').eq('book_id',bookId),
       sb.from('comment').select('id,q_index,target_phone4,author_phone4,body').eq('book_id',bookId),
-      sb.from('reaction').select('q_index,target_phone4,author_phone4').eq('book_id',bookId),
+      sb.from('reaction').select('q_index,target_phone4,author_phone4,kind').eq('book_id',bookId),
       /* 모임원 발표자료 — v17. 마이그레이션 미적용 환경에선 조용히 빈 목록. */
       sb.from('material').select('id,phone4,title,url,created_at').eq('book_id',bookId).order('created_at')
     ]);
     var mb=rs[0],an=rs[1],cm=rs[2],rx=rs[3],mt=rs[4];
     /* meta 컬럼 미적용(마이그레이션 전) 환경에서도 동작 — 컬럼 없으면 meta 빼고 재조회 */
     if(mb.error&&/meta/.test((mb.error.message||'')+(mb.error.details||''))){ mb=await sb.from('member_book').select('phone4,nickname,submitted,ratings').eq('book_id',bookId); }
+    /* kind(v22) 미적용 환경 폴백 — 컬럼 없으면 종류 없이 조회(전부 empathy 로 취급) */
+    if(rx.error&&/kind/.test((rx.error.message||'')+(rx.error.details||''))){ rx=await sb.from('reaction').select('q_index,target_phone4,author_phone4').eq('book_id',bookId); }
     if(mb.error||an.error||cm.error||rx.error){rtErr(mb.error||an.error||cm.error||rx.error);return;}
     var bk=bookById(bookId);if(!bk)return;
     bk.materials=mt.error?[]:(mt.data||[]);
@@ -1186,17 +1195,19 @@ var RT={
     bk.others=bk.questions.map(function(_,qi){
       return others.map(function(o){return {n:displayNick(o.phone4,bookId),a:(ansMap[o.phone4]||{})[qi]||'',phone4:o.phone4};});
     });
-    var rcCount={},rcMine={},empByPhone={};
+    /* 반응은 종류별로 센다 (kind, v22). kind 없는 레거시 행은 empathy 로 본다. */
+    var rcCount={},rcMine={},empByPhone={},rcTotal={};
     (rx.data||[]).forEach(function(x){
-      var key='q'+x.q_index+'|'+x.target_phone4;
-      rcCount[key]=(rcCount[key]||0)+1;
-      if(x.author_phone4===me) rcMine[key]=true;
+      var key='q'+x.q_index+'|'+x.target_phone4, kd=x.kind||'empathy';
+      (rcCount[key]=rcCount[key]||{})[kd]=((rcCount[key]||{})[kd]||0)+1;
+      rcTotal[key]=(rcTotal[key]||0)+1;
+      if(x.author_phone4===me) (rcMine[key]=rcMine[key]||{})[kd]=true;
       empByPhone[x.target_phone4]=(empByPhone[x.target_phone4]||0)+1;
     });
     bk.reactions={};
     bk.questions.forEach(function(_,qi){ others.forEach(function(o,j){
       var key='q'+qi+'|'+o.phone4;
-      bk.reactions['q'+qi+'a'+j]={count:rcCount[key]||0,mine:!!rcMine[key]};
+      bk.reactions['q'+qi+'a'+j]={counts:rcCount[key]||{},mine:rcMine[key]||{},total:rcTotal[key]||0};
     }); });
     var SR={},SC={};
     /* 이향인 점수는 SR(STAGE_RATINGS)에만 실어 발표 모드에서만 공개. b.others 엔 넣지 않음
@@ -1221,7 +1232,10 @@ var RT={
     /* 내 답변에 '남이' 남긴 댓글(받은 댓글함) + 내 답변에 달린 공감 수 (q_index 별) */
     var myInbox={},myReact={};
     (cm.data||[]).forEach(function(c){ if(c.target_phone4===me && c.author_phone4!==me){ (myInbox[c.q_index]=myInbox[c.q_index]||[]).push({by:displayNick(c.author_phone4,bookId),t:c.body}); } });
-    (rx.data||[]).forEach(function(x){ if(x.target_phone4===me) myReact[x.q_index]=(myReact[x.q_index]||0)+1; });
+    (rx.data||[]).forEach(function(x){ if(x.target_phone4===me){
+      var mr=myReact[x.q_index]=myReact[x.q_index]||{t:0,c:{}}, kd=x.kind||'empathy';
+      mr.t++; mr.c[kd]=(mr.c[kd]||0)+1;
+    } });
     var myMeta=(myMb&&myMb.meta)||{};
     var myIy=myMeta.ihyang||null;
     var myScore=myIy?myIy.score:null;
@@ -1230,14 +1244,24 @@ var RT={
       ihyangScore:myScore,ihyangPct:myIy?myIy.pct:null,ihyangIs:myIy?!!myIy.is:(myScore!=null?myScore>=188:false),ihyangMeta:myMeta};
     applyLocalDrafts(bookId); /* 서버가 빈 칸이면 이 기기의 미제출 백업을 되살린다 */
   },
-  async toggleReaction(bookId,qi,targetPhone4){
-    if(!STATE.phone4){toast('휴대폰 4자리로 입장해야 공감할 수 있어요');return false;}
-    var ex=await sb.from('reaction').select('id').eq('book_id',bookId).eq('q_index',qi).eq('target_phone4',targetPhone4).eq('author_phone4',STATE.phone4).limit(1);
+  async toggleReaction(bookId,qi,targetPhone4,kind){
+    if(!STATE.phone4){toast('휴대폰 4자리로 입장해야 반응할 수 있어요');return false;}
+    var kd=kind||'empathy';
+    var q=sb.from('reaction').select('id').eq('book_id',bookId).eq('q_index',qi).eq('target_phone4',targetPhone4).eq('author_phone4',STATE.phone4);
+    var ex=await q.eq('kind',kd).limit(1);
+    /* kind(v22) 미적용 환경 폴백 — 컬럼이 없으면 종류 구분 없는 단일 공감으로 동작 */
+    var noKind=!!(ex.error&&/kind/.test((ex.error.message||'')+(ex.error.details||'')));
+    if(noKind) ex=await sb.from('reaction').select('id').eq('book_id',bookId).eq('q_index',qi).eq('target_phone4',targetPhone4).eq('author_phone4',STATE.phone4).limit(1);
     if(ex.error){rtErr(ex.error);return false;}
     var e;
     if(ex.data&&ex.data.length) e=(await sb.from('reaction').delete().eq('id',ex.data[0].id)).error;
-    /* upsert(ignoreDuplicates) — 더블탭 경쟁 시 unique 충돌이 사용자 에러로 새지 않게 */
-    else e=(await sb.from('reaction').upsert({book_id:bookId,q_index:qi,target_phone4:targetPhone4,author_phone4:STATE.phone4},{onConflict:'book_id,q_index,target_phone4,author_phone4',ignoreDuplicates:true})).error;
+    else {
+      var row={book_id:bookId,q_index:qi,target_phone4:targetPhone4,author_phone4:STATE.phone4};
+      var conflict='book_id,q_index,target_phone4,author_phone4';
+      if(!noKind){ row.kind=kd; conflict+=',kind'; }
+      /* upsert(ignoreDuplicates) — 더블탭 경쟁 시 unique 충돌이 사용자 에러로 새지 않게 */
+      e=(await sb.from('reaction').upsert(row,{onConflict:conflict,ignoreDuplicates:true})).error;
+    }
     if(e){rtErr(e);return false;}
     await RT.loadBook(bookId);return true;
   },
@@ -1363,6 +1387,14 @@ var RT={
     if(r.error&&/alias/.test((r.error.message||'')+(r.error.details||''))){ delete row.alias; r=await sb.from('next_book_candidate').insert(row); }
     /* reason(v20) 미적용 환경 폴백 — 컬럼 없으면 reason 빼고 재시도 */
     if(r.error&&/reason/.test((r.error.message||'')+(r.error.details||''))){ delete row.reason; r=await sb.from('next_book_candidate').insert(row); }
+    if(r.error){rtErr(r.error);return false;} await RT.loadMeetings(); return true;
+  },
+  async updateCandidate(id,title,author,reason,alias){
+    /* 표(next_book_vote)는 건드리지 않는다 — 후보 id 가 그대로라 그대로 유지된다 */
+    var patch={title:title,author:author||'',reason:reason||'',alias:alias||''};
+    var r=await sb.from('next_book_candidate').update(patch).eq('id',id);
+    if(r.error&&/alias/.test((r.error.message||'')+(r.error.details||''))){ delete patch.alias; r=await sb.from('next_book_candidate').update(patch).eq('id',id); }
+    if(r.error&&/reason/.test((r.error.message||'')+(r.error.details||''))){ delete patch.reason; r=await sb.from('next_book_candidate').update(patch).eq('id',id); }
     if(r.error){rtErr(r.error);return false;} await RT.loadMeetings(); return true;
   },
   async removeCandidate(id){
@@ -2035,8 +2067,13 @@ async function addBookHostSubmit(){
  * 후보(next_book_candidate) + 복수추천 표(next_book_vote). reaction 과 같은 토글 패턴.
  * ONLINE: RT.* + MEET_CACHE 미러. OFFLINE: localStorage 'rt:cands'(시즌ID→후보[]) 단일 저장.
  * 후보 객체 공통 형태: {id,title,author,byPhone,voters:[phone4...]} */
-var CANDADD={open:false};
+var CANDADD={open:false,editId:null}; /* editId 가 있으면 폼은 '수정' 모드 */
 var CAND_LIMIT=3; /* 회원 1인 추천 상한(모임장 제외) */
+/* 투표 버튼 아이콘 — '읽고 싶어 찜한다' 는 뜻의 북마크. on 이면 꽉 채움 (2026-07-28) */
+function icBookmark(on){
+  return '<svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true" fill="'+(on?'currentColor':'none')+
+    '" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4-6.5 4v-16a1 1 0 0 1 1-1z"/></svg>';
+}
 function candStore(){try{return JSON.parse(localStorage.getItem('rt:cands'))||{};}catch(e){return MEM['rt:cands']?JSON.parse(MEM['rt:cands']):{};}}
 function saveCandStore(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:cands',v);}catch(e){MEM['rt:cands']=v;}}
 function seasonCandidates(seasonId){
@@ -2062,10 +2099,30 @@ function candNick(phone4,seasonId){
   return VOTE_ADJ[h%VOTE_ADJ.length]+' '+VOTE_NOUN[Math.floor(h/VOTE_ADJ.length)%VOTE_NOUN.length];
 }
 function candBy(c,seasonId){ return (c.alias||'').trim()||candNick(c.byPhone,seasonId); }
+function closeCandForm(){ CANDADD.open=false;CANDADD.editId=null;renderVote(); }
+/* 수정 = 같은 폼을 값 채워서 여는 것. 권한은 삭제와 동일(본인·모임장)이고
+   표(voters)는 그대로 둔다 — 오타 하나 고쳤다고 모인 표가 날아가면 아무도 안 고친다. */
+function editCandidate(cid){
+  var c=seasonCandidates(STATE.meetingId).filter(function(x){return x.id===cid;})[0];
+  if(!c){toast('후보를 찾을 수 없어요');return;}
+  if(!(STATE.isHost||(STATE.phone4&&c.byPhone===STATE.phone4))){toast('내가 추천한 책만 수정할 수 있어요');return;}
+  CANDADD.open=true;CANDADD.editId=cid;renderVote();
+  var el=document.getElementById('cand-title');if(el&&el.focus)el.focus();
+}
 async function proposeCandidate(){
   var t=val('cand-title');if(!t){toast('책 제목을 입력해 주세요');return;}
   var au=val('cand-author'),rz=val('cand-reason'),al=val('cand-alias').replace(/\s+/g,' ').slice(0,20);
   if(!STATE.phone4&&!STATE.isHost){toast('휴대폰 4자리로 입장해 주세요');return;}
+  var edId=CANDADD.editId;
+  if(edId){
+    if(ONLINE){ if(!(await RT.updateCandidate(edId,t,au,rz,al)))return; }
+    else {
+      var s2=candStore(),arr2=s2[STATE.meetingId]||[];
+      arr2.forEach(function(c){ if(c.id===edId){c.title=t;c.author=au||'';c.reason=rz||'';c.alias=al;} });
+      s2[STATE.meetingId]=arr2;saveCandStore(s2);
+    }
+    closeCandForm();toast('추천을 수정했어요');return;
+  }
   if(!STATE.isHost && myCandCount(STATE.meetingId)>=CAND_LIMIT){toast('한 사람당 '+CAND_LIMIT+'권까지 추천할 수 있어요');return;}
   if(ONLINE){ if(!(await RT.addCandidate(STATE.meetingId,t,au,rz,al)))return; }
   else {
@@ -2073,7 +2130,7 @@ async function proposeCandidate(){
     arr.push({id:'c'+Date.now(),title:t,author:au||'',reason:rz||'',alias:al,byPhone:STATE.phone4||'host',voters:[]});
     s[STATE.meetingId]=arr;saveCandStore(s);
   }
-  CANDADD.open=false;renderVote();toast('후보로 추천했어요');
+  closeCandForm();toast('후보로 추천했어요');
 }
 async function voteCandidate(cid){
   if(!STATE.phone4){toast('휴대폰 4자리로 입장해야 투표할 수 있어요');return;}
@@ -2123,7 +2180,7 @@ function candidateSectionHtml(seasonId){
     cands.forEach(function(c){
       var cnt=c.voters.length, mine=(me&&c.voters.indexOf(me)>=0), lead=(cnt>0&&cnt===maxV);
       var by=esc(candBy(c,seasonId));
-      var canDel=(STATE.isHost||(me&&c.byPhone===me));
+      var canEdit=(STATE.isHost||(me&&c.byPhone===me)); /* 삭제·수정 동일 권한: 본인 또는 모임장 */
       var spine=String(c.title||'').trim().charAt(0)||'책';
       h+='<div class="cand'+(mine?' cand--mine':'')+(lead?' cand--lead':'')+'">'+
           '<div class="cand__spine" aria-hidden="true">'+esc(spine)+
@@ -2135,9 +2192,10 @@ function candidateSectionHtml(seasonId){
             '<div class="cand__by"><span class="cand__bynick">'+by+'</span>님 추천</div>'+
           '</div>'+
           '<div class="cand__side">'+
-            '<button class="cand__vote'+(mine?' on':'')+'" title="'+(mine?'투표 취소':'이 책에 투표')+'" onclick="voteCandidate(\''+c.id+'\')"><span class="em">'+(mine?'💛':'🤍')+'</span><b>'+cnt+'</b></button>'+
+            '<button class="cand__vote'+(mine?' on':'')+'" title="'+(mine?'투표 취소':'이 책에 투표')+'" onclick="voteCandidate(\''+c.id+'\')">'+icBookmark(mine)+'<b>'+cnt+'</b></button>'+
             (STATE.isHost?'<button class="cand__promote" title="예정 책으로 등록" onclick="promoteCandidate(\''+c.id+'\',\''+esc(c.title)+'\',\''+esc(c.author||'')+'\')">책으로</button>':'')+
-            (canDel?'<button class="cand__x" title="후보 삭제" onclick="delCandidate(\''+c.id+'\',\''+esc(c.title)+'\')">&times;</button>':'')+
+            (canEdit?'<button class="cand__act" title="추천 내용 수정" onclick="editCandidate(\''+c.id+'\')">수정</button>':'')+
+            (canEdit?'<button class="cand__act cand__act--del" title="후보 삭제" onclick="delCandidate(\''+c.id+'\',\''+esc(c.title)+'\')">삭제</button>':'')+
           '</div>'+
         '</div>';
     });
@@ -2145,15 +2203,19 @@ function candidateSectionHtml(seasonId){
   }
   var canAdd=(STATE.phone4||STATE.isHost);
   if(CANDADD.open){
-    h+='<div class="cand-form"><div class="field"><input class="input" id="cand-title" placeholder="추천할 책 제목" onkeydown="if(event.key===\'Enter\'){event.preventDefault();var a=document.getElementById(\'cand-author\');if(a)a.focus();}"></div>'+
-       '<div class="field"><input class="input" id="cand-author" placeholder="저자 (선택)"></div>'+
-       '<div class="field"><textarea class="input" id="cand-reason" rows="2" placeholder="추천하는 이유 (선택) — 왜 이 책을 같이 읽고 싶나요?"></textarea></div>'+
-       '<div class="field"><input class="input" id="cand-alias" maxlength="20" placeholder="별명 (선택) — 이 추천에 붙일 이름">'+
-         '<div class="body-2 dim" style="margin-top:6px">비워두면 이렇게 표시돼요 — <b>'+esc(candNick(STATE.phone4||'host',seasonId))+'</b></div></div>'+
-       '<div class="row"><button class="btn btn-primary btn-sm btn-pill" onclick="proposeCandidate()">추천 등록</button>'+
-       '<button class="btn btn-ghost btn-sm btn-pill" onclick="CANDADD.open=false;renderVote()">취소</button></div></div>';
+    /* 등록·수정 겸용 폼 — CANDADD.editId 가 있으면 그 후보의 값을 채워 넣고 저장 버튼만 바뀐다 */
+    var ed=CANDADD.editId?seasonCandidates(seasonId).filter(function(x){return x.id===CANDADD.editId;})[0]:null;
+    h+='<div class="cand-form">'+
+       (ed?'<div class="cand-form__hd">✏️ 「'+esc(ed.title)+'」 추천 수정</div>':'')+
+       '<div class="field"><input class="input" id="cand-title" value="'+esc(ed?ed.title:'')+'" placeholder="추천할 책 제목" onkeydown="if(event.key===\'Enter\'){event.preventDefault();var a=document.getElementById(\'cand-author\');if(a)a.focus();}"></div>'+
+       '<div class="field"><input class="input" id="cand-author" value="'+esc(ed?(ed.author||''):'')+'" placeholder="저자 (선택)"></div>'+
+       '<div class="field"><textarea class="input" id="cand-reason" rows="3" placeholder="추천하는 이유 (선택) — 왜 이 책을 같이 읽고 싶나요?">'+esc(ed?(ed.reason||''):'')+'</textarea></div>'+
+       '<div class="field"><input class="input" id="cand-alias" maxlength="20" value="'+esc(ed?(ed.alias||''):'')+'" placeholder="별명 (선택) — 이 추천에 붙일 이름">'+
+         '<div class="body-2 dim" style="margin-top:6px">비워두면 이렇게 표시돼요 — <b>'+esc(candNick((ed?ed.byPhone:STATE.phone4)||'host',seasonId))+'</b></div></div>'+
+       '<div class="row"><button class="btn btn-primary btn-sm btn-pill" onclick="proposeCandidate()">'+(ed?'수정 저장':'추천 등록')+'</button>'+
+       '<button class="btn btn-ghost btn-sm btn-pill" onclick="closeCandForm()">취소</button></div></div>';
   } else if(canAdd){
-    h+='<button class="btn btn-ghost btn-pill cand-add" onclick="CANDADD.open=true;renderVote()">+ 책 추천하기</button>';
+    h+='<button class="btn btn-ghost btn-pill cand-add" onclick="CANDADD.editId=null;CANDADD.open=true;renderVote()">+ 책 추천하기</button>';
   } else {
     h+='<div class="cand-empty" style="margin-top:12px">휴대폰 4자리로 입장하면 추천·투표할 수 있어요.</div>';
   }
@@ -2296,7 +2358,7 @@ function renderBook(){
     /* ───── 참가자 모드 — 회원용 책 정보 카드 + 답변 진입 ───── */
     /* 별점·답변 진입 버튼을 책 소개 위쪽에 — 스크롤 부담 줄이기 위함 */
     if(b.closed)
-      h+='<div class="locked-note mt-12" style="border-color:#D44;color:#D44;margin-bottom:16px"><b>🔒 마감된 책</b>이에요 (읽기 전용).<br>새 답변·별점·공감은 받지 않지만, 내가 작성한 기록은 그대로 다시 볼 수 있어요.</div>'+
+      h+='<div class="locked-note mt-12" style="border-color:#D44;color:#D44;margin-bottom:16px"><b>🔒 마감된 책</b>이에요 (읽기 전용).<br>새 답변·별점·반응은 받지 않지만, 내가 작성한 기록은 그대로 다시 볼 수 있어요.</div>'+
         (b.report?'<button class="btn btn-primary btn-arrow btn-pill" style="margin-bottom:8px" onclick="go(\'results\')">📊 발표 결과 보기 <span class="arr">&rarr;</span></button>':'')+
         '<button class="btn '+(b.report?'btn-ghost':'btn-primary btn-arrow')+' btn-pill" style="margin-bottom:20px" onclick="go(\'discussion\')">📖 내 기록 보기 '+(b.report?'&rarr;':'<span class="arr">&rarr;</span>')+'</button>';
     else if(cur)
@@ -2645,7 +2707,7 @@ function renderDiscussion(){
   if(b.closed && bs.submitted && DISC.view==='rating') DISC.view='mine';
   if(b.closed){
     h+='<div class="locked-note" style="border-color:#D44;color:#D44"><b>🔒 마감된 책</b> · 읽기 전용<br>'+
-      '내가 남긴 답변·별점·공감은 그대로 볼 수 있어요. 새 입력은 받지 않지만, <b>내 답변은 × 로 언제든 삭제</b>할 수 있어요.'+
+      '내가 남긴 답변·별점·반응은 그대로 볼 수 있어요. 새 입력은 받지 않지만, <b>내 답변은 × 로 언제든 삭제</b>할 수 있어요.'+
       (b.report?'<br><span style="color:var(--success)">📊 발표 결과가 나왔어요 — <a onclick="go(\'results\')" style="color:var(--success);font-weight:700;text-decoration:underline;cursor:pointer">결과 보러 가기 &rarr;</a></span>':'')+
     '</div>';
   }
@@ -2691,7 +2753,7 @@ function renderDiscussion(){
         } else {
           h+='<div class="answer mine'+(editing?'':' has-x')+'" style="position:relative">'+
             /* 우상단 × — 마감 여부와 무관하게 항상 노출. 클릭 시 confirm 후 삭제 (cascade) */
-            (editing?'':'<button class="ans-x" title="이 답변과 딸린 댓글·공감 모두 삭제" onclick="delMyAnswer('+i+')">&times;</button>')+
+            (editing?'':'<button class="ans-x" title="이 답변과 딸린 댓글·반응 모두 삭제" onclick="delMyAnswer('+i+')">&times;</button>')+
             '<div class="answer__who"><span><b>나 ('+esc(displayNick(STATE.phone4,b.id))+')</b></span><span>'+(editing?'수정 중':'제출됨')+'</span></div>'+
             (editing
               ? '<textarea class="input" id="ea-'+i+'" rows="3" enterkeyhint="enter">'+esc(ansBody)+'</textarea>'+
@@ -2706,7 +2768,7 @@ function renderDiscussion(){
     }
   } else if(DISC.view==='others'){
     h+='<div class="section-hd"><div><div class="eyebrow">③ 다른 사람의 답변</div><h2 class="h-1 mt-4">다른<br>생각들.</h2></div></div>';
-    h+='<p class="body-2 mb-16">익명으로 표시됩니다. 공감(💛)·댓글은 모임 당일 토론거리가 돼요.</p>';
+    h+='<p class="body-2 mb-16">익명으로 표시됩니다. 반응(🔖🙌👀🌀👂)·댓글은 모임 당일 토론거리가 돼요.</p>';
     var hasOthers=false;
     b.questions.forEach(function(q,i){
       var oas=(b.others[i]||[]);if(oas.length)hasOthers=true;
@@ -2717,7 +2779,9 @@ function renderDiscussion(){
       if(bs.submitted && myA){
         var inbox=(bs.inbox&&bs.inbox[i])||[];
         var myrc=(bs.myReact&&bs.myReact[i])||0;
-        h+='<div class="answer mine"><div class="answer__who"><span><b>내 답변 ('+esc(displayNick(STATE.phone4,b.id))+')</b></span><span>나 · 💛 '+myrc+'</span></div>'+
+        /* 레거시(숫자)·신규({t,c}) 둘 다 받는다 — 받은 반응은 종류별로 보여줘야 의미가 산다 */
+        var myrcTxt=(typeof myrc==='number')?(myrc?('🙌 '+myrc):'반응 0'):(reactSummary(myrc.c)||'반응 0');
+        h+='<div class="answer mine"><div class="answer__who"><span><b>내 답변 ('+esc(displayNick(STATE.phone4,b.id))+')</b></span><span>나 · '+myrcTxt+'</span></div>'+
           '<div class="answer__body">'+esc(myA)+'</div>';
         if(inbox.length){
           h+='<div class="comment-box"><div style="font-size:12px;color:var(--ink-dim);margin-bottom:6px">💬 내 답변에 달린 댓글 '+inbox.length+'개</div><div class="comment-list">';
@@ -2732,12 +2796,15 @@ function renderDiscussion(){
       oas.forEach(function(o,j){
         if(!(o.a||'').trim())return; /* 별점만 남긴 사람의 빈 답변 껍데기 카드 숨김 */
         var ck='q'+i+'a'+j, list=(bs.comments[ck]||[]);
-        var rc=(b.reactions&&b.reactions[ck])||(bs.reactions&&bs.reactions[ck])||{count:0,mine:false};
+        var rc=normReact((b.reactions&&b.reactions[ck])||(bs.reactions&&bs.reactions[ck]));
         h+='<div class="answer"><div class="answer__who"><span><b>'+esc(o.n)+'</b> · 익명</span></div>'+
           '<div class="answer__body">'+esc(o.a)+'</div>'+
           (b.closed
-            ? '<div class="reaction-row dim" style="font-size:12px">💛 공감 '+(rc.count||0)+' · 마감</div>'
-            : '<div class="reaction-row"><button class="reaction-btn'+(rc.mine?' react-on':'')+'" onclick="toggleReact('+i+','+j+')">💛 공감'+(rc.count?(' '+rc.count):'')+'</button></div>')+
+            ? '<div class="reaction-row dim" style="font-size:12px">'+(reactSummary(rc.counts)||'반응 없음')+' · 마감</div>'
+            : '<div class="reaction-row">'+REACTIONS.map(function(k){
+                var n=rc.counts[k.k]||0;
+                return '<button class="reaction-btn'+(rc.mine[k.k]?' react-on':'')+'" title="'+esc(k.t)+'" onclick="toggleReact('+i+','+j+',\''+k.k+'\')">'+k.e+' '+k.l+(n?(' '+n):'')+'</button>';
+              }).join('')+'</div>')+
           '<div class="comment-box">';
         if(list.length){
           h+='<div class="comment-list">';
@@ -2839,7 +2906,7 @@ async function delMyAnswer(i){
   var b=bookById(STATE.bookId);if(!b)return;
   if(_busy('delans'))return;
   try{
-  if(!(await uiConfirm('Q'+(i+1)+' 답변과 거기 달린 댓글·공감을 모두 삭제할까요? 되돌릴 수 없어요.',{danger:true,okLabel:'삭제'})))return;
+  if(!(await uiConfirm('Q'+(i+1)+' 답변과 거기 달린 댓글·반응을 모두 삭제할까요? 되돌릴 수 없어요.',{danger:true,okLabel:'삭제'})))return;
   if(ONLINE){
     if(!(await RT.deleteMyAnswer(b.id,i)))return;
   } else {
@@ -2855,7 +2922,7 @@ async function delMyAnswer(i){
     setBookState(b.id,bs);
   }
   EDITANS.qi=-1;
-  toast('Q'+(i+1)+' 답변과 딸린 댓글·공감을 삭제했어요');
+  toast('Q'+(i+1)+' 답변과 딸린 댓글·반응을 삭제했어요');
   renderDiscussion();
   } finally { _done('delans'); }
 }
@@ -2919,24 +2986,50 @@ async function delComment(i,j,ci){
   }
   toast('댓글을 삭제했어요');renderDiscussion();
 }
-async function toggleReact(i,j){
+/* ── 답변 반응 5종 (2026-07-28) ──
+ * 이전엔 '💛 공감' 하나뿐이라 "좋다"는 말밖에 못 했다. 반대 의견을 '싫어요' 가 아니라
+ * '전 다르게 읽었어요' 로 받는 게 이 모임 규모(8~10명, 서로 아는 사이)에 맞다.
+ * 'empathy' 키는 그대로 둔다 — 기존 공감 데이터가 백필 없이 🙌 로 승계된다. */
+var REACTIONS=[
+  {k:'underline',e:'🔖',l:'밑줄',t:'밑줄 긋고 싶은 문장이에요'},
+  {k:'empathy',  e:'🙌',l:'완전 동의',t:'나도 똑같이 생각했어요'},
+  {k:'insight',  e:'👀',l:'생각 못 했네요',t:'새로운 시선이에요'},
+  {k:'differ',   e:'🌀',l:'전 다르게',t:'저는 다르게 읽었어요'},
+  {k:'more',     e:'👂',l:'더 듣고 싶어요',t:'모임 당일 더 듣고 싶어요'}
+];
+/* 반응 묶음 정규화 — 레거시 {count,mine}(단일 공감)도 5종 구조로 읽어들인다 */
+function normReact(r){
+  if(r&&r.counts) return {counts:r.counts,mine:r.mine||{},total:r.total||0};
+  var c=(r&&r.count)||0;
+  return {counts:c?{empathy:c}:{},mine:(r&&r.mine)?{empathy:true}:{},total:c};
+}
+/* 이모지+숫자 요약 ('🔖2 🙌1'). 하나도 없으면 빈 문자열 */
+function reactSummary(counts){
+  return REACTIONS.filter(function(k){return counts&&counts[k.k];})
+                  .map(function(k){return k.e+counts[k.k];}).join(' ');
+}
+async function toggleReact(i,j,kind){
   if(closedGuard())return;
   if(_busy('react'))return;
   try{
   var b=bookById(STATE.bookId);
   var tgt=((b.others[i]||[])[j]||{}).phone4;
+  var rk=REACTIONS.filter(function(x){return x.k===kind;})[0]||REACTIONS[1];
   if(ONLINE){
     if(!tgt){toast('대상을 찾을 수 없어요');return;}
-    if(!(await RT.toggleReaction(b.id,i,tgt))) return;
+    if(!(await RT.toggleReaction(b.id,i,tgt,rk.k))) return;
     renderDiscussion();
   } else {
     var bs=bookState(b.id),ck='q'+i+'a'+j;
     if(!bs.reactions) bs.reactions={};
-    var r=bs.reactions[ck]||{count:0,mine:false};
-    r.mine=!r.mine; r.count=Math.max(0,(r.count||0)+(r.mine?1:-1));
+    var r=normReact(bs.reactions[ck]);
+    var on=!r.mine[rk.k];
+    if(on){r.mine[rk.k]=true;r.counts[rk.k]=(r.counts[rk.k]||0)+1;}
+    else {delete r.mine[rk.k];r.counts[rk.k]=Math.max(0,(r.counts[rk.k]||0)-1);if(!r.counts[rk.k])delete r.counts[rk.k];}
+    r.total=REACTIONS.reduce(function(s,k){return s+(r.counts[k.k]||0);},0);
     bs.reactions[ck]=r; setBookState(b.id,bs);
     renderDiscussion();
-    toast(r.mine?'공감했어요 💛':'공감 취소');
+    toast(on?(rk.e+' '+rk.l):(rk.l+' 취소'));
   }
   } finally { _done('react'); }
 }
@@ -3270,7 +3363,7 @@ function renderStageRating(){
   /* 보고서가 없으면: 데모 하드코딩(이향인 키워드·요약)이 그대로 노출되지 않게 비운다 (2026-07-21) */
   if(kwHost) kwHost.innerHTML='<span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span>';
   if(smHost){ smHost.style.whiteSpace='normal'; smHost.textContent='발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.'; }
-  if(sub) sub.innerHTML='AI가 참가자들의 답변을 분석했어요 &middot; 사람은 공감만, 분석은 AI'+(STATE.isHost&&b?(' · '+(b.closed?'<a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 발표자료 생성</a>':'<span class="dim">발표자료는 책을 마감한 뒤 생성할 수 있어요</span>')):'');
+  if(sub) sub.innerHTML='AI가 참가자들의 답변을 분석했어요 &middot; 사람은 반응만, 분석은 AI'+(STATE.isHost&&b?(' · '+(b.closed?'<a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 발표자료 생성</a>':'<span class="dim">발표자료는 책을 마감한 뒤 생성할 수 있어요</span>')):'');
   var ps=stageParts(),h='';
   if(!ps.length){host.innerHTML='<div class="sl-empty">회원 별점 표본이 없어요. 서버 연동 후 표시됩니다(기본 데모 모임에서 시연 가능).</div>';return;}
   RATING_AXES.forEach(function(ax){
@@ -3356,10 +3449,10 @@ function renderStageHighlights(){
   var nPart=stageParts().length+((STATE.phone4&&bookState(STAGE.bookId).submitted)?1:0);
   if(foot)foot.innerHTML='<span class="tag tag-accent">총 답변 '+totalAns+'개</span><span class="tag">반응 '+totalRx+'개</span><span class="tag">참가자 '+nPart+'명</span>';
   if(!grid)return;
-  if(!items.length){grid.innerHTML='<div class="sl-empty" style="grid-column:1/-1">아직 하이라이트가 없어요 — 답변과 공감(💛)이 쌓이면 여기에 표시됩니다.</div>';return;}
-  function card(emoji,label,it){return '<div class="highlight-card"><div class="highlight-card__emoji">'+emoji+'</div><div class="highlight-card__label">'+esc(label)+'</div><div class="highlight-card__quote">"'+esc(it.a)+'"</div><div class="highlight-card__who">&mdash; '+esc(it.n)+(it.rc?' · 공감 '+it.rc:'')+(it.cc?' · 댓글 '+it.cc:'')+'</div></div>';}
+  if(!items.length){grid.innerHTML='<div class="sl-empty" style="grid-column:1/-1">아직 하이라이트가 없어요 — 답변과 반응이 쌓이면 여기에 표시됩니다.</div>';return;}
+  function card(emoji,label,it){return '<div class="highlight-card"><div class="highlight-card__emoji">'+emoji+'</div><div class="highlight-card__label">'+esc(label)+'</div><div class="highlight-card__quote">"'+esc(it.a)+'"</div><div class="highlight-card__who">&mdash; '+esc(it.n)+(it.rc?' · 반응 '+it.rc:'')+(it.cc?' · 댓글 '+it.cc:'')+'</div></div>';}
   /* 선정 기준 (명시) —
-   * ①💛 공감 최다  ②💬 댓글 최다  ③④ 나머지는 공감+댓글 합이 큰 순.
+   * ①🙌 반응 최다  ②💬 댓글 최다  ③④ 나머지는 반응+댓글 합이 큰 순.
    * 반응이 전혀 없으면 채우지 않는다(가짜 하이라이트 방지). */
   var byRx=items.slice().sort(function(x,y){return (y.rc-x.rc)||(y.cc-x.cc);});
   var byCc=items.slice().sort(function(x,y){return (y.cc-x.cc)||(y.rc-x.rc);});
@@ -3367,11 +3460,11 @@ function renderStageHighlights(){
   var used=[],cards=[];
   function pick(arr,cond){for(var i=0;i<arr.length;i++){if(used.indexOf(arr[i])<0&&cond(arr[i]))return arr[i];}return null;}
   var topRx=pick(byRx,function(it){return it.rc>0;});
-  if(topRx){used.push(topRx);cards.push(card('💛','공감 최다 · '+topRx.rc+'개',topRx));}
+  if(topRx){used.push(topRx);cards.push(card('🙌','반응 최다 · '+topRx.rc+'개',topRx));}
   var topCc=pick(byCc,function(it){return it.cc>0;});
   if(topCc){used.push(topCc);cards.push(card('💬','댓글 최다 · '+topCc.cc+'개',topCc));}
-  for(var i=0;i<byBoth.length&&cards.length<4;i++){var it=byBoth[i];if(used.indexOf(it)<0&&(it.rc+it.cc)>0){used.push(it);cards.push(card('✨','공감+댓글 '+(it.rc+it.cc)+'개',it));}}
-  if(foot)foot.innerHTML+='<span class="tag" style="background:none;border:none;color:var(--ink-dim);font-size:11px">기준: 💛공감 최다 · 💬댓글 최다 · ✨공감+댓글 합 순</span>';
+  for(var i=0;i<byBoth.length&&cards.length<4;i++){var it=byBoth[i];if(used.indexOf(it)<0&&(it.rc+it.cc)>0){used.push(it);cards.push(card('✨','반응+댓글 '+(it.rc+it.cc)+'개',it));}}
+  if(foot)foot.innerHTML+='<span class="tag" style="background:none;border:none;color:var(--ink-dim);font-size:11px">기준: 🙌반응 최다 · 💬댓글 최다 · ✨반응+댓글 합 순</span>';
   grid.innerHTML=cards.join('');
 }
 function stageSetQ(i){STAGE.q=i;STAGE.pickedName=null;renderStageLive();}
@@ -3392,7 +3485,7 @@ function renderPickCard(){
     '<div class="sl-pick-card__chips"><span class="sl-chip hot">'+esc(crit)+'</span>'+
     '<span class="sl-chip">댓글 '+cmtCount(p,qi)+'</span>'+
     '<span class="sl-chip">'+esc(axisLabel(STAGE.axis))+' '+p.r[STAGE.axis]+'★</span>'+
-    '<span class="sl-chip">공감 '+p.r.empathy+'</span>'+
+    '<span class="sl-chip">반응 '+p.r.empathy+'</span>'+
     /* 이향인 점수는 발표 모드에서만 공개 */
     ((p.r.ihyangScore!=null)?('<span class="sl-chip'+(p.r.ihyangIs?' hot':'')+'">'+(p.r.ihyangIs?'🌙 이향인 ':'내향성 ')+esc(String(p.r.ihyangScore))+'점·'+esc(String(p.r.ihyangPct))+'%</span>'):'')+
     '</div>'+
@@ -3406,7 +3499,7 @@ function stagePick(opt){
   var ps=stageParts(),picked,crit;
   if(!ps.length){toast('회원 답변 표본이 없어요 (기본 데모 모임에서 시연)');return;}
   if(opt.type==='random'){picked=ps[Math.floor(Math.random()*ps.length)];crit='무작위 선정';}
-  else if(opt.type==='empathy'){picked=ps.reduce(function(a,b){return b.r.empathy>a.r.empathy?b:a;});crit='공감 최다 · '+picked.r.empathy+'개';}
+  else if(opt.type==='empathy'){picked=ps.reduce(function(a,b){return b.r.empathy>a.r.empathy?b:a;});crit='반응 최다 · '+picked.r.empathy+'개';}
   else if(opt.type==='comments'){picked=ps.reduce(function(a,b){return cmtCount(b,STAGE.q)>cmtCount(a,STAGE.q)?b:a;});crit='댓글 최다 · '+cmtCount(picked,STAGE.q)+'개';}
   else{var k=STAGE.axis;
     if(opt.dir==='max'){picked=ps.reduce(function(a,b){return b.r[k]>a.r[k]?b:a;});crit=axisLabel(k)+' 별점 최고 · '+picked.r[k]+'★';}

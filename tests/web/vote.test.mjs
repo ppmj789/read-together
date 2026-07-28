@@ -117,6 +117,64 @@ test('추천인 별명: 20자 초과는 잘리고 공백은 한 칸으로 정규
   assert.equal(c.alias, '아주 긴별명입니다일이삼사오육칠팔구십백천만억'.slice(0, 20));
 });
 
+test('후보 수정: [수정] 버튼으로 폼이 값 채워 열리고 표는 유지된다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지', '개리 마커스', '뇌 이야기', '책덕후사서');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  await a.w.voteCandidate(cid); // 표 1개 모인 상태에서 수정
+  a.w.editCandidate(cid);
+  assert.equal(a.d.getElementById('cand-title').value, '클루지');
+  assert.equal(a.d.getElementById('cand-reason').value, '뇌 이야기');
+  assert.equal(a.d.getElementById('cand-alias').value, '책덕후사서');
+  a.d.getElementById('cand-title').value = '클루지(개정판)';
+  a.d.getElementById('cand-reason').value = '뇌의 설계 결함 이야기';
+  await a.w.proposeCandidate();
+  const cs = a.w.seasonCandidates('m1');
+  assert.equal(cs.length, 1, '수정은 새 후보를 만들지 않는다');
+  assert.equal(cs[0].title, '클루지(개정판)');
+  assert.equal(cs[0].reason, '뇌의 설계 결함 이야기');
+  assert.equal(cs[0].voters.length, 1, '모인 표는 그대로');
+  assert.equal(a.w.CANDADD.editId, null, '저장 후 수정 모드 해제');
+});
+
+test('후보 수정: 남의 추천은 회원이 수정할 수 없다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '남의 책');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  a.w.STATE.phone4 = '9999'; // 다른 회원으로 전환
+  a.w.editCandidate(cid);
+  assert.equal(a.w.CANDADD.open, false);
+  assert.match(a.lastToast() || '', /내가 추천한 책만/);
+});
+
+test('후보 카드에 [수정]·[삭제] 버튼이 분리돼 있다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지');
+  const acts = [...a.d.querySelectorAll('#page-vote .cand__act')].map((x) => x.textContent);
+  assert.deepEqual(acts, ['수정', '삭제']);
+  assert.equal(a.d.querySelectorAll('#page-vote .cand__x').length, 0, '× 버튼은 없어져야 함');
+});
+
+test('투표 버튼은 하트가 아니라 북마크 SVG', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지');
+  const btn = a.d.querySelector('#page-vote .cand__vote');
+  assert.ok(btn.querySelector('svg'), 'SVG 아이콘이어야 함');
+  assert.doesNotMatch(btn.innerHTML, /💛|🤍/);
+  assert.equal(btn.querySelector('svg').getAttribute('fill'), 'none', '안 찍었으면 외곽선');
+  await a.w.voteCandidate(a.w.seasonCandidates('m1')[0].id);
+  const on = a.d.querySelector('#page-vote .cand__vote svg');
+  assert.equal(on.getAttribute('fill'), 'currentColor', '찍으면 꽉 채움');
+});
+
 test('책장 진입 카드 → 별도 투표 페이지로 이동 (같은 페이지 아님)', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
