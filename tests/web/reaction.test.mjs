@@ -106,7 +106,7 @@ test('발표자료(mock)에 반응 종류별 집계가 들어간다', async (t) 
   assert.match(rep.summary, /밑줄 1·전 다르게 1/);
 });
 
-test('발표 결과 화면에 반응 분포 막대 + 종류별 최다 인용이 렌더된다', async (t) => {
+test('발표 결과 화면에 반응 카드(분포 폴백) + 종류별 최다 인용이 렌더된다', async (t) => {
   const a = app(t);
   const b = await othersView(a);
   await a.w.toggleReact(0, 0, 'more');
@@ -114,7 +114,7 @@ test('발표 결과 화면에 반응 분포 막대 + 종류별 최다 인용이 
   b.closed = true;
   a.w.go('results');
   const txt = a.d.getElementById('page-results').textContent;
-  assert.match(txt, /반응 분포/);
+  assert.match(txt, /반응이 몰린 답변/);
   assert.match(txt, /👂 더 듣고 싶어요/);
   assert.match(txt, /더 듣고 싶어요.*최다/);
   assert.match(txt, /반응 1개/, '상단 기록 줄에도 반응 수');
@@ -128,18 +128,16 @@ test('반응이 없는 발표자료는 반응 카드를 아예 안 그린다', a
   b.closed = true;
   a.w.go('results');
   assert.equal(b.report.reactions, null);
-  assert.doesNotMatch(a.d.getElementById('page-results').textContent, /반응 분포/);
+  assert.doesNotMatch(a.d.getElementById('page-results').textContent, /반응이 몰린 답변/);
 });
 
-test('발표모드 [AI 분석] 탭에도 반응 카드가 뜬다 (없으면 숨김)', async (t) => {
+test('[AI 분석] 탭에는 반응 카드가 없다 — 반응은 진행탭·발표 결과 담당 (2026-07-31)', async (t) => {
   const a = app(t);
   const b = await othersView(a);
-  a.w.STAGE.bookId = 'ihyangin';
-  a.w.renderStageRating();
-  assert.equal(a.d.getElementById('analysis-rx-card').style.display, 'none', '자료 없으면 숨김');
   await a.w.toggleReact(0, 0, 'insight');
   b.report = a.w.generateReportMock(b);
+  a.w.STAGE.bookId = 'ihyangin';
   a.w.renderStageRating();
-  assert.notEqual(a.d.getElementById('analysis-rx-card').style.display, 'none');
-  assert.match(a.d.getElementById('analysis-rx').textContent, /👀 생각 못 했네요/);
+  assert.equal(a.d.getElementById('analysis-rx-card'), null, '분석 탭 반응 카드는 삭제됨');
+  assert.equal(a.d.getElementById('analysis-star-pick'), null, '별점으로 발언자 뽑기도 삭제됨');
 });

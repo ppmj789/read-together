@@ -478,26 +478,24 @@ body.is-page-season .book-card__cover{width:96px}
 .stage-roadmap__people{font-size:14px;color:var(--ink-soft);font-weight:500}
 .stage-roadmap__people b{font-weight:800;color:var(--ink);font-size:20px}
 
-.scene-live__layout{display:flex;gap:24px;min-height:50vh}
-.scene-live__left{flex:0 0 40%;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper);padding:28px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;box-shadow:var(--shadow-sm)}
-.scene-live__right{flex:1;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper-warm);padding:24px;display:flex;flex-direction:column;box-shadow:var(--shadow-sm)}
+/* 진행탭 전체 폭 (2026-07-31 사용자 피드백) — 질문·무리 지도가 메인, 발언자 뽑기는
+   질문선택 줄 오른쪽 공백에 배치 */
+.scene-live__full{border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper-warm);padding:24px;box-shadow:var(--shadow-sm);min-height:50vh;display:flex;flex-direction:column}
+.sl-topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:14px;flex-wrap:wrap}
+.sl-topbar__q{flex:1;min-width:260px}
+.sl-pickbar{flex:0 0 auto;text-align:right}
+.sl-speaker{margin-top:10px;font-size:13px;color:var(--ink-dim);font-weight:600;display:flex;align-items:baseline;justify-content:flex-end;gap:8px}
+.sl-speaker b{font-family:var(--display);font-weight:900;font-size:24px;color:var(--accent);letter-spacing:-.02em}
 .scene-timer__phase{font-size:14px;font-weight:600;color:var(--ink-dim);margin-bottom:12px}
-.scene-live__speaker-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--rule-soft);width:100%}
 .scene-live__speaker-label{font-size:12px;font-weight:600;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.scene-live__speaker-name{font-family:var(--display);font-weight:900;font-size:clamp(44px,6.5vw,76px);line-height:1.05;color:var(--accent);margin-bottom:18px;transition:color .2s;letter-spacing:-.03em;min-height:1.05em}
-.scene-live__speaker-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 /* 진행탭 질문 선택 — 글자 키움 */
 .sl-qtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .sl-qtab{padding:9px 18px;border:1px solid var(--rule);background:var(--paper);border-radius:var(--radius-pill);font-size:16px;font-weight:700;cursor:pointer;color:var(--ink-soft);transition:all .2s}
 .sl-qtab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.sl-qtext{font-size:17px;font-weight:700;line-height:1.5;color:var(--ink);margin:0 0 14px;word-break:keep-all}
+.sl-qtext{font-size:21px;font-weight:800;line-height:1.5;color:var(--ink);margin:0 0 14px;word-break:keep-all}
 /* 발언 순서 — 이름 클릭 가능 */
 .sl-order li{cursor:pointer}
 .sl-order li:hover{border-color:var(--accent);background:var(--accent-tint)}
-/* AI 분석 별점 최고/최저 선정 → 진행탭 이동 */
-.sl-starpick{margin-top:14px;padding-top:14px;border-top:1px dashed var(--rule)}
-.sl-starpick__axes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px}
-.sl-starpick__acts{display:flex;gap:8px;flex-wrap:wrap}
 .scene-q__eye{font-size:13px;font-weight:600;color:var(--ink-dim);margin-bottom:14px;letter-spacing:.04em;text-transform:uppercase}
 
 .scene-analysis__layout{display:flex;flex-direction:column;gap:24px}
@@ -512,10 +510,50 @@ body.is-page-season .book-card__cover{width:96px}
 .kw{display:inline-block;padding:6px 14px;background:var(--accent-tint);color:var(--accent);border-radius:var(--radius-pill);font-weight:600;transition:transform .2s;cursor:default}
 .kw:hover{transform:scale(1.1)}
 .kw-sm{font-size:13px;opacity:.7}.kw-md{font-size:16px}.kw-lg{font-size:22px;font-weight:800;padding:8px 18px;background:var(--accent);color:#fff}
-.kw-has-tip{cursor:help;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
-.kw-tip{position:fixed;z-index:300;max-width:340px;display:none;background:var(--ink);color:var(--paper);padding:12px 14px;border-radius:10px;box-shadow:var(--shadow-lg);font-size:13px;line-height:1.55;pointer-events:none}
-.kw-tip__why{font-weight:700;margin-bottom:6px}
-.kw-tip__q{opacity:.85;font-style:italic}
+/* 키워드 클릭 고정 패널 (2026-07-31 사용자 피드백) — 호버 툴팁 대신 카드 아래 고정 표시 */
+.kw-has-tip{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.kw.kw-on{outline:2px solid var(--accent);outline-offset:2px}
+.kw-detail{display:none;margin-top:14px;padding:14px 16px;background:var(--paper-warm);border-radius:var(--radius-md);border-left:4px solid var(--accent);font-size:14px;line-height:1.6}
+.kw-detail.show{display:block}
+.kw-detail__w{font-weight:800;color:var(--accent);margin-bottom:4px}
+.kw-detail__why{font-weight:600;color:var(--ink);margin-bottom:6px}
+.kw-detail__q{color:var(--ink-soft);font-style:italic}
+/* 별점 요약 코멘트 (2026-07-31) — '팀원들은 이렇게 생각했다' 한 문단 */
+.rt-comment{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--rule);font-size:13.5px;line-height:1.65;color:var(--ink-soft)}
+.rt-comment.show{display:block}
+/* 멤버 추리 씬 (2026-07-31) — 닉네임 프로필 카드, 누구인지 맞히기 */
+.member-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.member-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px}
+.member-card__nick{font-family:var(--display);font-weight:900;font-size:20px;font-style:italic;color:var(--accent);letter-spacing:-.02em}
+.member-card__title{font-weight:700;font-size:15px;color:var(--ink)}
+.member-card__desc{font-size:13.5px;line-height:1.65;color:var(--ink-soft);word-break:keep-all}
+.member-card__quote{font-size:13px;font-style:italic;color:var(--ink-dim);border-left:3px solid var(--rule);padding-left:10px;line-height:1.55}
+/* 닉네임 구분 (2026-07-31 사용자 피드백) — 본문 속 닉네임은 이탤릭+강조색 */
+.nick{font-style:italic;color:var(--accent);font-weight:600}
+/* 카드 확대 오버레이 (2026-07-31 사용자 피드백) — 발표모드에서 카드를 누르면 그 카드만 크게 */
+.zoom-ov{position:fixed;inset:0;z-index:400;background:rgba(24,18,12,.55);display:none;align-items:center;justify-content:center;gap:18px;padding:4vh 3vw;cursor:zoom-out}
+.zoom-ov.show{display:flex}
+.zoom-ov__stack{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:920px;width:100%;min-width:0}
+.zoom-ov__inner{width:100%;max-height:84vh;overflow-y:auto;zoom:1.45;cursor:zoom-out}
+.zoom-ov__inner>*{margin:0;box-shadow:var(--shadow-lg)}
+.zoom-ov__nav{flex:0 0 auto;width:52px;height:52px;border-radius:50%;border:none;background:var(--paper);color:var(--ink);font-size:30px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-md);line-height:1;display:flex;align-items:center;justify-content:center;padding-bottom:4px}
+.zoom-ov__nav:hover{background:var(--accent);color:#fff}
+.zoom-ov__cnt{color:#fff;font-weight:700;font-size:14px;opacity:.85;letter-spacing:.04em}
+.stage-wrap .sum-slide,.stage-wrap .member-card,.stage-wrap .highlight-card,.stage-wrap .analysis-card{cursor:zoom-in}
+/* 무리 모션 (2026-07-31 사용자 피드백) — 질문마다 비슷한 답끼리 조약돌처럼 모이는 애니메이션 */
+.grp-wrap{position:relative;height:270px;margin:0 0 14px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-md);overflow:hidden}
+.grp-zone{position:absolute;top:0;height:100%;padding-top:10px;text-align:center;font-size:14px;font-weight:800;color:var(--ink-dim);letter-spacing:.02em;pointer-events:none;border-left:1px dashed var(--rule-soft);word-break:keep-all}
+.grp-zone:first-of-type{border-left:none}
+.grp-zone b{color:var(--accent)}
+.grp-peb{position:absolute;padding:6px 13px;border-radius:var(--radius-pill);background:var(--accent-tint);border:1px solid var(--accent);color:var(--accent);font-size:14px;font-weight:700;white-space:nowrap;max-width:185px;overflow:hidden;text-overflow:ellipsis;transition:left 1.1s cubic-bezier(.45,1.4,.4,1),top 1.1s cubic-bezier(.45,1.4,.4,1),opacity .6s;will-change:left,top;cursor:pointer}
+.grp-peb:hover{background:var(--accent);color:#fff}
+.grp-peb.is-picked{background:var(--accent);color:#fff;box-shadow:var(--shadow-md)}
+.grp-peb .wob{display:inline-block;animation:peb-wob 3s ease-in-out infinite alternate}
+@keyframes peb-wob{0%{transform:translate(0,0) rotate(-1deg)}33%{transform:translate(2px,-2px) rotate(1deg)}66%{transform:translate(-2px,1px) rotate(-.6deg)}100%{transform:translate(1px,2px) rotate(.8deg)}}
+/* 하이라이트 카드 — 선정 이유(label)가 큰 제목 (2026-07-31 사용자 피드백) */
+.highlight-card__crit{font-family:var(--display);font-weight:800;font-size:19px;line-height:1.35;color:var(--accent);margin-bottom:6px;word-break:keep-all}
+.highlight-card__q{font-size:12.5px;font-weight:600;color:var(--ink-dim);margin-bottom:8px}
+.highlight-card__body{font-size:14.5px;line-height:1.65;color:var(--ink);white-space:pre-line;word-break:keep-all}
 .analysis-bars{display:flex;flex-direction:column;gap:14px}
 .analysis-bar__label{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px}
 .analysis-bar__label span{font-weight:400;color:var(--ink-soft);font-size:13px}
@@ -533,6 +571,25 @@ body.is-page-season .book-card__cover{width:96px}
 .rx-top__it b{color:var(--ink)}
 .analysis-summary{font-size:18px;line-height:1.7;color:var(--ink);font-weight:500;padding:16px 20px;background:var(--paper-warm);border-radius:var(--radius-md);border-left:4px solid var(--accent)}
 .analysis-summary b{color:var(--accent);font-weight:700}
+/* PPT 슬라이드형 AI 요약 (2026-07-31) — summary_slides 가 있으면 문단 대신 슬라이드 카드 */
+.analysis-summary--slides{background:none;border-left:none;padding:0}
+.sum-slides{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.sum-slide{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:20px 22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px}
+.sum-slide__ic{font-size:28px;line-height:1}
+.sum-slide__t{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.02em;color:var(--ink);line-height:1.3;word-break:keep-all}
+.sum-slide__b{font-size:14.5px;line-height:1.65;color:var(--ink-soft);word-break:keep-all}
+.sum-slide--hero{grid-column:1/-1;background:var(--accent);border-color:var(--accent)}
+.sum-slide--hero .sum-slide__t{color:#fff;font-size:24px}
+.sum-slide--hero .sum-slide__b{color:rgba(255,255,255,.88);font-size:16px}
+/* 답변 기준 반응 (2026-07-31) — 반응은 답변에 달리므로 '반응이 몰린 답변'으로 보여준다 */
+.rx-total{font-size:12.5px;color:var(--ink-dim);margin-bottom:8px;font-weight:600}
+.rxa{padding:10px 0;border-bottom:1px solid var(--rule-soft)}
+.rxa:last-child{border-bottom:none}
+.rxa__meta{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.rxa__q{font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:var(--radius-pill);flex-shrink:0}
+.rxa__nick{font-size:12px;color:var(--ink-dim);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rxa__badges{margin-left:auto;font-size:13.5px;font-weight:700;color:var(--ink);white-space:nowrap;flex-shrink:0}
+.rxa__quote{font-size:13.5px;line-height:1.6;color:var(--ink-soft)}
 
 .scene-highlights__layout{display:flex;flex-direction:column;align-items:center;gap:24px}
 .scene-highlights__title{font-family:var(--display);font-weight:900;font-size:clamp(28px,4vw,48px);letter-spacing:-.04em;color:var(--ink);text-align:center}
@@ -543,28 +600,33 @@ body.is-page-season .book-card__cover{width:96px}
 .highlight-card__label{font-size:12px;font-weight:600;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
 .highlight-card__quote{font-size:16px;line-height:1.6;color:var(--ink);font-weight:500;font-style:italic}
 .highlight-card__who{font-size:13px;color:var(--accent);font-weight:600;margin-top:10px}
-.scene-highlights__footer{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.scene-highlights__footer{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;flex-direction:column;align-items:center}
+/* 하이라이트 푸터 — 버튼(태그 알약)처럼 보이지 않는 평문 (2026-07-31 사용자 피드백) */
+.hl-foot{margin:0;font-size:12.5px;color:var(--ink-dim);font-weight:500;text-align:center;line-height:1.6}
 
 /* Stage roadmap (책 흐름) */
 .sr-season{text-align:center}
 .sr-season__eyebrow{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim)}
 .sr-season__title{font-family:var(--display);font-weight:900;font-size:clamp(32px,5vw,52px);letter-spacing:-.04em;color:var(--ink);margin-top:8px}
 .sr-season__sub{font-size:16px;color:var(--accent);font-weight:700;margin-top:8px}
-.sr-flow{display:flex;align-items:stretch;gap:0;max-width:880px;width:100%;justify-content:center}
-.sr-book{flex:1;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:22px 16px;text-align:center;opacity:.5;transition:all .3s}
-.sr-book.current{opacity:1;border-color:var(--accent);border-width:2px;background:var(--accent-tint);box-shadow:var(--shadow-md);transform:scale(1.04)}
+.sr-flow{display:flex;align-items:stretch;gap:12px;max-width:880px;width:100%;justify-content:center}
+.sr-book{flex:1;min-width:0;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:22px 16px;text-align:center;opacity:.5;transition:all .3s}
+.sr-book.current{opacity:1;border-color:var(--accent);border-width:2px;background:var(--accent-tint);box-shadow:var(--shadow-md);transform:scale(1.04);z-index:1}
 .sr-book.done{opacity:.8}
 .sr-book__month{font-size:13px;font-weight:700;color:var(--accent)}
 .sr-book.upcoming .sr-book__month{color:var(--ink-dim)}
 .sr-book__spine{width:54px;height:74px;margin:12px auto;border-radius:var(--radius-sm);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:24px}
 .sr-book.upcoming .sr-book__spine{background:var(--ink-soft)}
+/* 로드맵 실제 표지 (2026-07-31) — coverFor() 이미지가 있으면 책등 글자 대신 표지 */
+.sr-book__cover{width:74px;height:106px;margin:12px auto;display:block;object-fit:cover;border-radius:var(--radius-sm);box-shadow:var(--shadow-md);border:1px solid var(--rule)}
+.sr-book.upcoming .sr-book__cover{filter:grayscale(.7);opacity:.75}
 .sr-book__title{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em}
 .sr-book__author{font-size:13px;color:var(--ink-soft);margin-top:2px}
 .sr-book__angle{font-size:13px;color:var(--ink-soft);margin-top:10px;line-height:1.5}
 .sr-book__badge{display:inline-block;margin-top:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:4px 12px;border-radius:var(--radius-pill)}
 .sr-book__badge.now{background:var(--accent);color:#fff}
 .sr-book__badge.soon{background:var(--highlight);color:var(--ink-dim)}
-.sr-arrow{display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--ink-dim);padding:0 4px;font-weight:700}
+.sr-arrow{display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--ink-dim);padding:0;font-weight:700;flex:0 0 auto}
 .sr-meta{font-size:15px;color:var(--ink-soft);font-weight:500}
 .sr-meta b{font-weight:900;color:var(--ink);font-size:22px}
 /* Stage rating stars */
@@ -582,10 +644,12 @@ body.is-page-season .book-card__cover{width:96px}
 .sl-crit-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .sl-axis{padding:6px 12px;border:1px solid var(--rule);background:var(--paper);border-radius:var(--radius-pill);font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-soft);transition:all .2s}
 .sl-axis.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.sl-order{list-style:none;display:flex;flex-direction:column;gap:6px;margin:8px 0 16px}
-.sl-order li{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-sm);padding:9px 14px;font-size:14px;transition:all .2s}
+/* 발언 순서 — 세로 리스트 대신 3열 그리드로 압축, 답변 카드가 한 화면에 들어오게 (2026-07-31) */
+.sl-order{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 16px}
+.sl-order li{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-sm);padding:7px 10px;font-size:13px;transition:all .2s;min-width:0}
+.sl-order li>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sl-order li.is-picked{border-color:var(--accent);background:var(--accent-tint);font-weight:700}
-.sl-order__n{font-family:var(--display);font-weight:900;font-size:18px;color:var(--accent);width:24px;text-align:center}
+.sl-order__n{font-family:var(--display);font-weight:900;font-size:16px;color:var(--accent);width:18px;text-align:center;flex-shrink:0}
 .sl-pick-card{padding:22px;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper)}
 .sl-pick-card__top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .sl-pick-card__av{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0}
@@ -664,6 +728,7 @@ body.is-page-season .book-card__cover{width:96px}
   <div class="toc__group">
     <a class="active" data-scene="roadmap" onclick="showStageScene('roadmap')">로드맵</a>
     <a data-scene="analysis" onclick="showStageScene('analysis')">AI 분석</a>
+    <a data-scene="members" onclick="showStageScene('members')">멤버 추리</a>
     <a data-scene="live" onclick="showStageScene('live')">진행</a>
     <a data-scene="highlights" onclick="showStageScene('highlights')">하이라이트</a>
   </div>
@@ -737,39 +802,49 @@ body.is-page-season .book-card__cover{width:96px}
   <div class="scene-analysis__layout">
     <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요 &middot; 사람은 반응만, 분석은 AI</p></div>
     <div class="scene-analysis__grid">
-      <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드</div><div class="analysis-keywords"><span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span></div></div>
+      <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드 <span style="color:var(--ink-dim);font-weight:400;text-transform:none">— 누르면 아래에 선정 이유가 고정돼요</span></div><div class="analysis-keywords"><span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span></div><div class="kw-detail" id="analysis-kw-detail"></div></div>
       <div class="analysis-card"><div class="analysis-card__label">책 별점 분포 (익명 · 5점 만점)</div><div id="stage-rating-rows"></div>
-        <div class="sl-starpick" id="analysis-star-pick"></div>
+        <div class="rt-comment" id="analysis-rating-comment"></div>
       </div>
-      <div class="analysis-card" id="analysis-rx-card" style="display:none"><div class="analysis-card__label">반응 분포 (익명)</div><div id="analysis-rx"></div></div>
-      <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 한줄 요약</div><div class="analysis-summary">발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.</div></div>
+      <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 요약</div><div class="analysis-summary">발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.</div></div>
     </div>
   </div>
 </div>
 
+<div class="scene" id="scene-members">
+  <div class="scene-analysis__layout">
+    <div class="scene-analysis__header"><h2 class="scene-analysis__title">이 사람은 누구일까요?</h2><p class="scene-analysis__sub">AI가 답변·댓글 스타일로 뽑은 멤버 프로필 — 닉네임만 보고 누구인지 맞혀보세요</p></div>
+    <div class="member-grid" id="stage-members-grid"></div>
+  </div>
+</div>
+
 <div class="scene" id="scene-live">
-  <div class="scene-live__layout">
-    <div class="scene-live__left">
-      <div class="scene-live__speaker-label" id="speaker-prompt">발언자를 뽑아보세요</div>
-      <div class="scene-live__speaker-name" id="stage-speaker-name">?</div>
-      <div class="sl-crit-row">
-        <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'random'})">🎲 무작위</button>
-        <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'empathy'})">🙌 반응 최다</button>
-        <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'comments'})">💬 댓글 최다</button>
+  <!-- 진행탭 전체 폭 (2026-07-31 사용자 피드백) — 질문·무리 지도가 메인,
+       발언자 뽑기는 질문선택 줄 오른쪽 공백에 배치 -->
+  <div class="scene-live__full">
+    <div class="sl-topbar">
+      <div class="sl-topbar__q">
+        <div class="scene-live__speaker-label" style="margin:0 0 8px">질문 선택</div>
+        <div class="sl-qtabs" id="sl-qtabs" style="margin:0"></div>
       </div>
-      <p class="body-2 dim" style="font-size:12.5px;margin-top:16px;line-height:1.6">별점을 <b>가장 높게/낮게 준 사람</b>은 이 질문과 무관하니,<br><b>[AI 분석]</b> 탭에서 항목을 골라 선정한 뒤 이곳으로 넘어와요.</p>
-    </div>
-    <div class="scene-live__right">
-      <div class="scene-live__speaker-label" style="margin:0 0 8px">질문 선택</div>
-      <div class="sl-qtabs" id="sl-qtabs"></div>
-      <div id="sl-qtext" class="sl-qtext"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <span class="scene-live__speaker-label" style="margin:0">발언 순서 · <span style="color:var(--accent)">이름을 누르면 답변이 열려요</span></span>
-        <button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="stageReshuffle()">순서 섞기</button>
+      <div class="sl-pickbar">
+        <div class="scene-live__speaker-label" style="margin:0 0 8px;text-align:right">발언자 뽑기</div>
+        <div class="sl-crit-row" style="justify-content:flex-end">
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'random'})">🎲 무작위</button>
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'empathy'})">🙌 반응 최다</button>
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'comments'})">💬 댓글 최다</button>
+        </div>
+        <div class="sl-speaker"><span id="speaker-prompt">발언자를 뽑아보세요</span><b id="stage-speaker-name">?</b></div>
       </div>
-      <ol class="sl-order" id="sl-order"></ol>
-      <div id="sl-pickcard"></div>
     </div>
+    <div id="sl-qtext" class="sl-qtext"></div>
+    <div class="grp-wrap" id="sl-groups" style="display:none"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <span class="scene-live__speaker-label" style="margin:0">발언 순서 · <span style="color:var(--accent)">이름을 누르면 답변이 열려요</span></span>
+      <button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="stageReshuffle()">순서 섞기</button>
+    </div>
+    <ol class="sl-order" id="sl-order"></ol>
+    <div id="sl-pickcard"></div>
   </div>
 </div>
 
@@ -1952,18 +2027,81 @@ async function startShare(bookId){
   STAGE.bookId=bookId;STAGE.order=[];STAGE.pickedName=null;
   if(ONLINE){try{await RT.loadBook(bookId);}catch(e){rtErr(e);}}
   setStage(true);
-  renderStageRoadmap();renderStageRating();renderStageLive();renderStageHighlights();
+  wireCardZoom();renderStageRoadmap();renderStageRating();renderStageMembers();renderStageLive();renderStageHighlights();
   toast('발표를 시작합니다');
 }
 function exitStage(){setStage(false);}
 function toggleMode(){if(isStage)exitStage();else startShare(currentBookId());}
+/* 카드 확대 (2026-07-31 사용자 피드백) — 발표모드 카드 클릭 → 오버레이로 그 카드만 확대.
+   오버레이 아무 곳이나 클릭 또는 ESC 로 닫는다 */
+var ZOOM={list:null,idx:-1}; /* 좌우 넘기기 컨텍스트 — 같은 목록(슬라이드·멤버·하이라이트)의 형제 카드들 */
+function zoomOvEl(){
+  var el=document.getElementById('zoom-ov');
+  if(!el){
+    el=document.createElement('div');el.id='zoom-ov';el.className='zoom-ov';
+    el.innerHTML='<button class="zoom-ov__nav" id="zoom-nav-l" onclick="zoomNav(-1);event.stopPropagation()">&#8249;</button>'+
+      '<div class="zoom-ov__stack"><div class="zoom-ov__inner" id="zoom-ov-inner"></div><div class="zoom-ov__cnt" id="zoom-ov-cnt"></div></div>'+
+      '<button class="zoom-ov__nav" id="zoom-nav-r" onclick="zoomNav(1);event.stopPropagation()">&#8250;</button>';
+    /* 키워드 칩·고정 패널·넘기기 버튼 클릭은 확대 유지 — 그 외 클릭은 닫기 (2026-07-31) */
+    el.addEventListener('click',function(e){
+      if(e.target.closest&&e.target.closest('.kw,.kw-detail,.zoom-ov__nav'))return;
+      el.classList.remove('show');
+    });
+    document.addEventListener('keydown',function(e){
+      if(!el.classList.contains('show'))return;
+      if(e.key==='Escape')el.classList.remove('show');
+      else if(e.key==='ArrowLeft')zoomNav(-1);
+      else if(e.key==='ArrowRight')zoomNav(1);
+    });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+/* 확대 내용 채우기 — 목록이 있으면 ‹ › 화살표·페이지 표시로 확대 상태 그대로 넘긴다 (2026-07-31 사용자 피드백) */
+function _zoomFill(card){
+  var inner=document.getElementById('zoom-ov-inner');
+  inner.innerHTML=card.outerHTML;
+  inner.querySelectorAll('[id]').forEach(function(nd){nd.removeAttribute('id');}); /* 클론 중복 id 방지 */
+  /* 확대 상태에서도 키워드 클릭 → 클론 안의 고정 패널에 표시 */
+  var kh=inner.querySelector('.analysis-keywords'),kd=inner.querySelector('.kw-detail');
+  if(kh&&kd)wireKwDetail(kh,kd);
+  var has=!!(ZOOM.list&&ZOOM.list.length>1);
+  var cnt=document.getElementById('zoom-ov-cnt'),l=document.getElementById('zoom-nav-l'),r=document.getElementById('zoom-nav-r');
+  if(cnt)cnt.textContent=has?((ZOOM.idx+1)+' / '+ZOOM.list.length):'';
+  if(l)l.style.visibility=has?'visible':'hidden';
+  if(r)r.style.visibility=has?'visible':'hidden';
+}
+function zoomNav(d){
+  if(!ZOOM.list||ZOOM.list.length<2)return;
+  ZOOM.idx=(ZOOM.idx+d+ZOOM.list.length)%ZOOM.list.length;
+  _zoomFill(ZOOM.list[ZOOM.idx]);
+}
+function wireCardZoom(){
+  var wrap=document.getElementById('stage-wrap');
+  if(!wrap||wrap._zoomWired)return; wrap._zoomWired=true;
+  wrap.addEventListener('click',function(e){
+    if(e.target.closest('button,a,input,textarea,.kw,.sl-qtab,.sl-order,.rxa,.sl-pick-card'))return;
+    var card=e.target.closest('.sum-slide,.member-card,.highlight-card')||e.target.closest('.analysis-card');
+    if(!card)return;
+    var base=['sum-slide','member-card','highlight-card'].filter(function(cl){return card.classList.contains(cl);})[0];
+    if(base&&card.parentElement){
+      ZOOM.list=Array.prototype.filter.call(card.parentElement.children,function(c){return c.classList&&c.classList.contains(base);});
+      ZOOM.idx=ZOOM.list.indexOf(card);
+    } else { ZOOM.list=null; ZOOM.idx=-1; }
+    var ov=zoomOvEl();
+    _zoomFill(card);
+    ov.classList.add('show');
+  });
+}
 function showStageScene(name){
+  wireCardZoom();
   document.querySelectorAll('.stage-wrap .scene').forEach(function(s){s.classList.remove('active')});
   var el=document.getElementById('scene-'+name);
   if(el) el.classList.add('active');
   document.querySelectorAll('#top-nav a').forEach(function(a){a.classList.remove('active');if(a.dataset.scene===name)a.classList.add('active')});
   if(name==='roadmap') renderStageRoadmap();
   else if(name==='analysis') renderStageRating();
+  else if(name==='members') renderStageMembers();
   else if(name==='live') renderStageLive();
   else if(name==='highlights') renderStageHighlights();
 }
@@ -2611,32 +2749,52 @@ function renderResults(){
       h+='<span class="kw kw-'+esc(k.size||'md')+(tip?' kw-has-tip':'')+'"'+tip+'>'+esc(k.w)+'</span>';
     });
   } else h+='<span class="dim">키워드가 없어요.</span>';
-  h+='</div><p class="body-2 dim" style="font-size:11px;text-align:center">키워드를 누르면 뽑은 이유와 답변 인용이 보여요</p></div>';
-  /* AI 요약 — 빈 줄 기준으로 문단을 나눠 읽기 편하게 */
-  if(rep.summary){
+  h+='</div><div class="kw-detail" id="res-kw-detail"></div><p class="body-2 dim" style="font-size:11px;text-align:center">키워드를 누르면 뽑은 이유와 답변 인용이 아래에 고정돼요</p></div>';
+  /* AI 요약 — 슬라이드(summary_slides)가 있으면 PPT 카드, 없으면 문단 폴백 */
+  var slh=summarySlidesHtml(rep);
+  if(slh) h+='<div class="analysis-card mb-16"><div class="analysis-card__label">AI 요약</div>'+slh+'</div>';
+  else if(rep.summary){
     var paras=String(rep.summary).split(/\n+/).map(function(s){return s.trim();}).filter(function(s){return s;});
     h+='<div class="analysis-card mb-16"><div class="analysis-card__label">AI 요약</div><div style="font-size:15px;line-height:1.75;color:var(--ink)">'+
       paras.map(function(p){return '<p style="margin:0 0 12px">'+esc(p)+'</p>';}).join('')+'</div></div>';
   }
-  /* 반응 분포 (v22) — 종류별 반응이 기록된 발표자료에만 표시 */
+  /* 답변에 달린 반응 (2026-07-31) — by_answer 있으면 답변 기준, 구 report 는 분포 폴백 */
   var rxh=reactionStatsHtml(rep.reactions);
-  if(rxh) h+='<div class="analysis-card mb-16"><div class="analysis-card__label">반응 분포 (익명)</div>'+rxh+'</div>';
-  /* 별점 평균 */
+  if(rxh) h+='<div class="analysis-card mb-16"><div class="analysis-card__label">반응이 몰린 답변</div>'+rxh+'</div>';
+  /* 별점 평균 + 팀원 정서 요약 코멘트 (2026-07-31) */
+  var repNickList=repNicks(rep);
   h+='<div class="analysis-card mb-16"><div class="analysis-card__label">모두의 별점</div>';
   RATING_AXES.forEach(function(ax){
     var rr=(rep.ratings||{})[ax.k]||{avg:0,n:0};
     h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'</div>'+
       '<div><span class="rt-stars">'+starStr(Math.round(rr.avg||0))+'</span><span class="rt-stars__num">'+(rr.avg||0).toFixed(1)+' · '+(rr.n||0)+'명</span></div></div>';
   });
+  if(rep.ratings_comment) h+='<div class="rt-comment show">'+markNicks(rep.ratings_comment,repNickList)+'</div>';
   h+='</div>';
-  /* 하이라이트 — 형식: "질문\n→ 의견". 첫 줄은 질문(굵게), 나머지는 의견. */
+  /* 멤버 프로필 (2026-07-31) — 발표모드 [멤버 추리] 씬과 같은 데이터 */
+  if(rep.member_profiles&&rep.member_profiles.length){
+    h+='<div class="analysis-card mb-16"><div class="analysis-card__label">멤버 프로필 — 이 사람은 누구일까요?</div><div class="member-grid">';
+    rep.member_profiles.forEach(function(p){
+      h+='<div class="member-card"><div class="member-card__nick">'+esc(p.nick||'')+'</div>'+
+        (p.title?'<div class="member-card__title">'+esc(p.title)+'</div>':'')+
+        (p.desc?'<div class="member-card__desc">'+markNicks(p.desc,repNickList)+'</div>':'')+
+        (p.quote?'<div class="member-card__quote">“'+esc(p.quote)+'”</div>':'')+'</div>';
+    });
+    h+='</div></div>';
+  }
+  /* 하이라이트 — 신형 {label(선정 기준),q,body} 객체 + 구형 "질문\n→ 의견" 문자열 하위호환.
+     label 은 '왜 뽑혔는지'의 명시 기준 (예: 🙌 공감 최다 답변). */
   if(rep.highlights&&rep.highlights.length){
     h+='<div class="analysis-card mb-16"><div class="analysis-card__label">하이라이트</div>';
     rep.highlights.forEach(function(t){
-      var ls=String(t).split('\n'),q=(ls[0]||'').trim(),body=ls.slice(1).join('\n').trim();
+      var lab='',q='',body='';
+      if(t&&typeof t==='object'){ lab=t.label||''; q=t.q||''; body=t.body||''; }
+      else { var ls=String(t).split('\n'); q=(ls[0]||'').trim(); body=ls.slice(1).join('\n').trim(); }
+      /* 선정 이유(label)가 제목 — 질문은 그 아래 보조 줄 (2026-07-31 사용자 피드백) */
       h+='<div style="padding:12px 0;border-bottom:1px solid var(--rule-soft)">'+
-        '<div style="font-weight:700;font-size:14px;margin-bottom:'+(body?'6px':'0')+'">'+esc(q)+'</div>'+
-        (body?'<div class="body-2" style="white-space:pre-line;line-height:1.65">'+esc(body)+'</div>':'')+'</div>';
+        (lab?'<div style="font-weight:800;font-size:16.5px;color:var(--accent);line-height:1.35;margin-bottom:3px;word-break:keep-all">'+esc(lab)+'</div>':'')+
+        (q?'<div style="font-size:12.5px;color:var(--ink-dim);font-weight:600;margin-bottom:'+(body?'6px':'0')+'">'+esc(q)+'</div>':'')+
+        (body?'<div class="body-2" style="white-space:pre-line;line-height:1.65">'+markNicks(body,repNickList)+'</div>':'')+'</div>';
     });
     h+='</div>';
   }
@@ -2657,7 +2815,7 @@ function renderResults(){
   h+='<p class="body-2 dim mt-12" style="font-size:11px;text-align:center">발표자료 — '+esc(rep.source||'mock')+' · '+esc((rep.generated_at||'').slice(0,16).replace('T',' '))+'</p>';
   document.getElementById('page-results').innerHTML=h;
   var kwHost=document.getElementById('res-kws');
-  if(kwHost)wireKwTips(kwHost);
+  if(kwHost)wireKwDetail(kwHost,document.getElementById('res-kw-detail'));
 }
 /* 책 정보 편집 모드 진입 — buf 가 null 이면 읽기 전용, 채워지면 편집 폼 노출 */
 function editBookInfo(){
@@ -3147,7 +3305,34 @@ var REACTIONS=[
 /* 발표자료(report.reactions)의 종류별 반응을 막대 + 종류별 최다 인용으로 렌더.
    report_fetch.py 가 채우는 {total, by_kind:{kind:n}, top:[{kind,count,quote}]} 를 읽는다.
    데이터가 없으면 빈 문자열 → 호출부가 카드 자체를 숨긴다. */
+/* PPT 슬라이드형 AI 요약 (2026-07-31) — report.summary_slides:[{icon,t,b,hero?}] */
+function summarySlidesHtml(rep){
+  var ss=(rep&&rep.summary_slides)||[];
+  if(!ss.length) return '';
+  var nicks=repNicks(rep);
+  return '<div class="sum-slides">'+ss.map(function(s){
+    return '<div class="sum-slide'+(s.hero?' sum-slide--hero':'')+'">'+
+      (s.icon?'<div class="sum-slide__ic">'+esc(s.icon)+'</div>':'')+
+      '<div class="sum-slide__t">'+esc(s.t||'')+'</div>'+
+      '<div class="sum-slide__b">'+markNicks(s.b,nicks).replace(/\n/g,'<br>')+'</div></div>';
+  }).join('')+'</div>';
+}
 function reactionStatsHtml(rx){
+  if(!rx) return '';
+  /* 답변 기준 (2026-07-31) — 반응은 답변에 달리는 것이므로, 종류별 분포 대신
+     '반응이 몰린 답변 TOP' 을 보여준다. by_answer 없는 구 report 는 아래 분포 폴백. */
+  var ba=rx.by_answer||[];
+  if(ba.length){
+    var h='<div class="rx-total">전체 '+(rx.total||0)+'개 · '+esc(reactSummary(rx.by_kind||{}))+'</div>';
+    h+=ba.map(function(a){
+      var qq=String(a.quote||''),em=reactSummary(a.counts||{});
+      return '<div class="rxa"><div class="rxa__meta"><span class="rxa__q">Q'+((a.q_index|0)+1)+'</span>'+
+        (a.nick?'<span class="rxa__nick">'+esc(a.nick)+'</span>':'')+
+        '<span class="rxa__badges">'+esc(em)+'</span></div>'+
+        '<div class="rxa__quote">“'+esc(qq.slice(0,120))+(qq.length>120?'…':'')+'”</div></div>';
+    }).join('');
+    return h;
+  }
   var bk=(rx&&rx.by_kind)||{};
   var kinds=REACTIONS.filter(function(k){return bk[k.k];});
   if(!kinds.length) return '';
@@ -3435,7 +3620,7 @@ function _done(k){ delete BUSY[k]; for(var x in BUSY){ if(BUSY.hasOwnProperty(x)
 /* ═══════════ STAGE (발표·모임장 전용) ═══════════
    (2026-07-21) 타이머 코드 삭제 — UI 진입점이 없는 죽은 기능이었음 (7차 개편 잔재) */
 var scrambleInt=null;
-var STAGE={bookId:'ihyangin',q:0,axis:'fun',order:[],pickedName:null,critText:'',analysisAxis:'overall'};
+var STAGE={bookId:'ihyangin',q:0,axis:'fun',order:[],pickedName:null,critText:''};
 function cmtCount(p,qi){
   var c=(STAGE_COMMENTS['q'+qi+'|'+p.name]||[]).length;
   if(STATE.phone4){var bs=bookState(STAGE.bookId),uk='q'+qi+'a'+p.idx;c+=((bs.comments&&bs.comments[uk])||[]).length;}
@@ -3474,8 +3659,10 @@ function renderStageRoadmap(){
     '<div class="stage-roadmap__progress-label">'+(curIdx+1)+' / '+bks.length+'권째</div></div><div class="sr-flow">';
   bks.forEach(function(b,i){
     var st=i<curIdx?'done':(i===curIdx?'current':'upcoming');
+    var cv=coverFor(b.title);
     h+='<div class="sr-book '+st+'"><div class="sr-book__month">'+esc(b.month||'이번 모임')+'</div>'+
-      '<div class="sr-book__spine">'+esc(b.spine)+'</div>'+
+      (cv?'<img class="sr-book__cover" src="'+esc(cv)+'" alt="'+esc(b.title)+' 표지" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;sr-book__spine&quot;>'+esc(b.spine)+'</div>\'">'
+         :'<div class="sr-book__spine">'+esc(b.spine)+'</div>')+
       '<div class="sr-book__title">'+esc(b.title)+'</div>'+
       '<div class="sr-book__author">'+esc(b.author)+'</div>'+
       '<div class="sr-book__angle">'+esc(b.angle||'')+'</div>'+
@@ -3485,38 +3672,9 @@ function renderStageRoadmap(){
   h+='</div><div class="sr-meta"><b>'+submittedCount()+'</b>명 답변 제출 · 이번 책 「'+esc(bks[curIdx].title)+'」</div>';
   host.innerHTML=h;
 }
-/* AI 분석 탭 — 별점 항목별 최고/최저로 준 사람을 뽑아 진행탭으로 넘긴다.
-   (이 선정은 특정 질문과 무관하므로 진행탭이 아니라 분석탭에 둔다) */
-function renderAnalysisStarPick(){
-  var host=document.getElementById('analysis-star-pick');if(!host)return;
-  var ps=stageParts();
-  if(!ps.length){host.innerHTML='';return;}
-  var axh=RATING_AXES.map(function(a){return '<button class="sl-qtab'+(a.k===STAGE.analysisAxis?' active':'')+'" style="font-size:13px;padding:6px 13px" onclick="stageSetAnalysisAxis(\''+a.k+'\')">'+esc(a.label)+'</button>';}).join('');
-  var lbl=esc(axisLabel(STAGE.analysisAxis));
-  host.innerHTML='<div class="analysis-card__label" style="margin-bottom:2px">별점으로 발언자 뽑기 <span style="color:var(--ink-dim);font-weight:400">→ 진행탭으로 이동</span></div>'+
-    '<div class="sl-starpick__axes">'+axh+'</div>'+
-    '<div class="sl-starpick__acts">'+
-      '<button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePickStar(\'max\')">★ '+lbl+' 최고로 준 사람</button>'+
-      '<button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePickStar(\'min\')">★ '+lbl+' 최저로 준 사람</button>'+
-    '</div>';
-}
-function stageSetAnalysisAxis(k){STAGE.analysisAxis=k;renderAnalysisStarPick();}
-function stagePickStar(dir){
-  var ps=stageParts();if(!ps.length){toast('별점 표본이 없어요 (기본 데모 모임에서 시연)');return;}
-  var k=STAGE.analysisAxis;
-  var picked=(dir==='max')?ps.reduce(function(a,b){return b.r[k]>a.r[k]?b:a;}):ps.reduce(function(a,b){return b.r[k]<a.r[k]?b:a;});
-  var crit=axisLabel(k)+' 별점 '+(dir==='max'?'최고':'최저')+' · '+picked.r[k]+'★';
-  STAGE.pickedName=picked.name;STAGE.critText=crit;
-  showStageScene('live');
-  var nameEl=document.getElementById('stage-speaker-name'),promptEl=document.getElementById('speaker-prompt');
-  if(nameEl){nameEl.textContent=picked.name;nameEl.style.color='var(--accent)';}
-  if(promptEl)promptEl.textContent=crit;
-  renderStageLive();
-  toast('★ '+picked.name+' 선정 — '+crit);
-}
+/* 별점으로 발언자 뽑기(star-pick)는 2026-07-31 사용자 피드백으로 삭제 — 발언자 선정은 진행탭 전담 */
 function renderStageRating(){
   var host=document.getElementById('stage-rating-rows');if(!host)return;
-  renderAnalysisStarPick();
   var b=bookById(STAGE.bookId);
   var sub=document.querySelector('.scene-analysis__sub');
   var kwHost=document.querySelector('#scene-analysis .analysis-keywords');
@@ -3530,6 +3688,9 @@ function renderStageRating(){
         '<div><span class="rt-stars">'+starStr(Math.round(rr.avg||0))+'</span><span class="rt-stars__num">'+(rr.avg||0).toFixed(1)+' · '+rr.n+'명</span></div></div>';
     });
     host.innerHTML=h;
+    /* 별점 요약 코멘트 — '팀원들은 이렇게 생각했다' (2026-07-31) */
+    var rcEl=document.getElementById('analysis-rating-comment');
+    if(rcEl){ var rc=rep.ratings_comment||''; rcEl.innerHTML=rc?markNicks(rc,repNicks(rep)):''; rcEl.classList.toggle('show',!!rc); }
     if(kwHost){
       if(rep.keywords&&rep.keywords.length){
         kwHost.innerHTML=rep.keywords.map(function(k){
@@ -3537,21 +3698,23 @@ function renderStageRating(){
           var tip=(q||why)?(' data-q="'+esc(q)+'" data-why="'+esc(why)+'"'):'';
           return '<span class="kw kw-'+esc(k.size||'md')+(tip?' kw-has-tip':'')+'"'+tip+'>'+esc(k.w)+'</span>';
         }).join('');
-        wireKwTips(kwHost);
+        wireKwDetail(kwHost,document.getElementById('analysis-kw-detail'));
       }
       else kwHost.innerHTML='<span class="dim">키워드가 없어요.</span>';
     }
-    if(smHost){ smHost.style.whiteSpace='pre-line'; smHost.textContent=rep.summary||''; }
-    /* 반응 분포 — 발표자료에 있을 때만 카드 노출 */
-    var rxHost=document.getElementById('analysis-rx'),rxCard=document.getElementById('analysis-rx-card');
-    if(rxHost&&rxCard){ var rxh=reactionStatsHtml(rep.reactions); rxHost.innerHTML=rxh; rxCard.style.display=rxh?'':'none'; }
+    if(smHost){
+      var slh=summarySlidesHtml(rep);
+      if(slh){ smHost.classList.add('analysis-summary--slides'); smHost.style.whiteSpace='normal'; smHost.innerHTML=slh; }
+      else { smHost.classList.remove('analysis-summary--slides'); smHost.style.whiteSpace='pre-line'; smHost.textContent=rep.summary||''; }
+    }
     if(sub) sub.innerHTML='발표자료 — '+esc(rep.source||'mock')+' · '+esc((rep.generated_at||'').slice(0,16).replace('T',' '))+(STATE.isHost?(' · <a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 다시 생성</a>'):'');
     return;
   }
   /* 보고서가 없으면: 데모 하드코딩(이향인 키워드·요약)이 그대로 노출되지 않게 비운다 (2026-07-21) */
-  var rxCard0=document.getElementById('analysis-rx-card'); if(rxCard0) rxCard0.style.display='none';
+  var rcEl0=document.getElementById('analysis-rating-comment'); if(rcEl0) rcEl0.classList.remove('show');
+  var kwd0=document.getElementById('analysis-kw-detail'); if(kwd0) kwd0.classList.remove('show');
   if(kwHost) kwHost.innerHTML='<span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span>';
-  if(smHost){ smHost.style.whiteSpace='normal'; smHost.textContent='발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.'; }
+  if(smHost){ smHost.classList.remove('analysis-summary--slides'); smHost.style.whiteSpace='normal'; smHost.textContent='발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.'; }
   if(sub) sub.innerHTML='AI가 참가자들의 답변을 분석했어요 &middot; 사람은 반응만, 분석은 AI'+(STATE.isHost&&b?(' · '+(b.closed?'<a onclick="hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')" style="color:var(--accent);font-weight:700;cursor:pointer">📊 발표자료 생성</a>':'<span class="dim">발표자료는 책을 마감한 뒤 생성할 수 있어요</span>')):'');
   var ps=stageParts(),h='';
   if(!ps.length){host.innerHTML='<div class="sl-empty">회원 별점 표본이 없어요. 서버 연동 후 표시됩니다(기본 데모 모임에서 시연 가능).</div>';return;}
@@ -3564,30 +3727,118 @@ function renderStageRating(){
   });
   host.innerHTML=h;
 }
-/* 키워드 오버레이 — 마우스를 올리면 그 키워드를 뽑은 이유 + 실제 답변 인용 표시 */
-function kwTipEl(){
-  var el=document.getElementById('kw-tip');
-  if(!el){el=document.createElement('div');el.id='kw-tip';el.className='kw-tip';document.body.appendChild(el);}
-  return el;
+/* 키워드 클릭 고정 패널 (2026-07-31 사용자 피드백) — 호버 툴팁 대신, 누르면 카드
+   아래 지정 영역에 선정 이유+인용이 고정 표시되고 다른 키워드를 누르면 교체된다 */
+function wireKwDetail(host,detailEl){
+  if(!host||!detailEl||host._kwWired)return; host._kwWired=true;
+  host.addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.kw-has-tip'):null;if(!t)return;
+    var q=t.getAttribute('data-q')||'',why=t.getAttribute('data-why')||'';
+    host.querySelectorAll('.kw-on').forEach(function(x){x.classList.remove('kw-on');});
+    t.classList.add('kw-on');
+    detailEl.innerHTML='<div class="kw-detail__w">'+esc(t.textContent)+'</div>'+
+      (why?'<div class="kw-detail__why">'+esc(why)+'</div>':'')+
+      (q?'<div class="kw-detail__q">“'+esc(q)+'”</div>':'');
+    detailEl.classList.add('show');
+  });
 }
-function wireKwTips(host){
-  if(host._kwWired)return; host._kwWired=true;
-  function place(e){var el=document.getElementById('kw-tip');if(!el||el.style.display!=='block')return;
-    var x=e.clientX+14,y=e.clientY+16,w=el.offsetWidth,h=el.offsetHeight;
-    if(x+w>window.innerWidth-8)x=window.innerWidth-w-8;
-    if(y+h>window.innerHeight-8)y=e.clientY-h-12;
-    el.style.left=x+'px';el.style.top=y+'px';
+/* 본문 속 닉네임 구분 (2026-07-31 사용자 피드백) — report 에 등장하는 닉네임 목록을
+   모아, 텍스트를 esc 한 뒤 닉네임 부분만 <i class="nick">(이탤릭+강조색)로 감싼다 */
+function repNicks(rep){
+  var s={};
+  ((rep&&rep.member_profiles)||[]).forEach(function(p){if(p.nick)s[p.nick]=1;});
+  (((rep&&rep.reactions)||{}).by_answer||[]).forEach(function(a){if(a.nick)s[a.nick]=1;});
+  return Object.keys(s).sort(function(a,b){return b.length-a.length;});
+}
+function markNicks(text,nicks){
+  var h=esc(String(text||''));
+  (nicks||[]).forEach(function(n){ if(!n)return; h=h.split(esc(n)).join('<i class="nick">'+esc(n)+'</i>'); });
+  return h;
+}
+/* 멤버 추리 씬 (2026-07-31) — report.member_profiles 를 닉네임 카드로. 누구인지 맞히기용 */
+function renderStageMembers(){
+  var grid=document.getElementById('stage-members-grid');if(!grid)return;
+  var b=bookById(STAGE.bookId),rep=b&&b.report,mp=(rep&&rep.member_profiles)||[];
+  if(!mp.length){grid.innerHTML='<div class="sl-empty" style="grid-column:1/-1">발표자료에 멤버 프로필이 없어요 — 발표자료를 (다시) 생성하면 채워집니다.</div>';return;}
+  var nicks=repNicks(rep);
+  grid.innerHTML=mp.map(function(p){
+    return '<div class="member-card"><div class="member-card__nick">'+esc(p.nick||'')+'</div>'+
+      (p.title?'<div class="member-card__title">'+esc(p.title)+'</div>':'')+
+      (p.desc?'<div class="member-card__desc">'+markNicks(p.desc,nicks)+'</div>':'')+
+      (p.quote?'<div class="member-card__quote">“'+esc(p.quote)+'”</div>':'')+'</div>';
+  }).join('');
+}
+/* 무리 모션 (2026-07-31 사용자 피드백) — report.question_groups 기반. 질문마다 비슷한
+   답변끼리 무리(zone)로 나뉘고, 조약돌(닉네임 칩)이 무리 사이를 이동한다. 조약돌 DOM 은
+   질문이 바뀌어도 재사용 → CSS transition 으로 스르륵 이동, wob 키프레임으로 오밀조밀 흔들림 */
+function _hashInt(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return Math.abs(h);}
+function renderStageGroups(){
+  var host=document.getElementById('sl-groups');if(!host)return;
+  var b=bookById(STAGE.bookId),rep=b&&b.report;
+  var qg=((rep&&rep.question_groups)||[]).filter(function(g){return g.q_index===STAGE.q;})[0];
+  var groups=(qg&&qg.groups)||[];
+  if(!groups.length){host.style.display='none';host.innerHTML='';host._pebs=null;return;}
+  host.style.display='block';
+  if(!host._pebs)host._pebs={};
+  host.querySelectorAll('.grp-zone').forEach(function(z){z.remove();});
+  var W=host.clientWidth||640,H=host.clientHeight||270,n=groups.length,inGroup={},targets=[];
+  groups.forEach(function(g,gi){
+    var zone=document.createElement('div');
+    zone.className='grp-zone';zone.style.left=Math.round(W*gi/n)+'px';zone.style.width=Math.round(W/n)+'px';
+    zone.innerHTML=esc((g.emoji?g.emoji+' ':'')+(g.name||''))+' <b>'+(g.members||[]).length+'</b>';
+    host.appendChild(zone);
+    var cx=W*(gi+0.5)/n,zw=W/n;
+    (g.members||[]).forEach(function(nick){
+      inGroup[nick]=1;
+      var p=host._pebs[nick];
+      if(!p){
+        p=document.createElement('div');p.className='grp-peb';p.title='누르면 답변이 열려요';
+        p.innerHTML='<span class="wob" style="animation-duration:'+(2.4+(_hashInt(nick)%17)/10)+'s;animation-delay:-'+((_hashInt(nick)%20)/10)+'s">'+esc(nick)+'</span>';
+        p.style.left=Math.round(W/2)+'px';p.style.top=(H+34)+'px'; /* 첫 등장은 아래에서 떠오른다 */
+        p.addEventListener('click',function(){stagePickNick(nick);}); /* 조약돌 클릭 → 그 사람 답변 (2026-07-31) */
+        host.appendChild(p);host._pebs[nick]=p;
+      }
+      p.classList.toggle('is-picked',nick===STAGE.pickedName);
+      var ox=(_hashInt(nick+'|'+STAGE.q)%Math.max(1,Math.round(zw*0.62)))-zw*0.31;
+      var oy=(_hashInt(STAGE.q+'#'+nick)%150)-20;
+      targets.push({el:p,x:cx+ox-60,y:H*0.40+oy,x0:W*gi/n+6,x1:W*(gi+1)/n-128});
+    });
+  });
+  /* 겹침 방지 (2026-07-31 사용자 피드백) — 조약돌끼리 안 겹치게 반복 완화로 밀어낸다.
+     x 는 자기 무리 구역 안에서만, y 는 라벨 아래~바닥 사이에서만 움직인다 */
+  var BW=136,BH=40; /* 조약돌 14px 확대에 맞춘 겹침 판정 박스 (2026-07-31) */
+  function clampT(t){t.x=Math.max(t.x0,Math.min(t.x1,t.x));t.y=Math.max(48,Math.min(H-40,t.y));}
+  targets.forEach(clampT);
+  for(var it=0;it<40;it++){
+    var moved=false;
+    for(var i=0;i<targets.length;i++)for(var j=i+1;j<targets.length;j++){
+      var a=targets[i],c=targets[j],dx=c.x-a.x,dy=c.y-a.y;
+      var ovx=BW-Math.abs(dx),ovy=BH-Math.abs(dy);
+      if(ovx>0&&ovy>0){
+        moved=true;
+        if(ovy<=ovx){var sy=ovy/2+1,dyd=(dy>=0?1:-1);a.y-=sy*dyd;c.y+=sy*dyd;}
+        else{var sx=ovx/2+1,dxd=(dx>=0?1:-1);a.x-=sx*dxd;c.x+=sx*dxd;}
+        clampT(a);clampT(c);
+      }
+    }
+    if(!moved)break;
   }
-  host.addEventListener('mouseover',function(e){var t=e.target.closest?e.target.closest('.kw-has-tip'):null;if(!t)return;
-    var q=t.getAttribute('data-q')||'',why=t.getAttribute('data-why')||'';if(!q&&!why)return;
-    var el=kwTipEl();el.innerHTML=(why?'<div class="kw-tip__why">'+esc(why)+'</div>':'')+(q?'<div class="kw-tip__q">“'+esc(q)+'”</div>':'');
-    el.style.display='block';place(e);
+  targets.forEach(function(t){
+    t.el.style.opacity=1;
+    setTimeout(function(){t.el.style.left=Math.round(t.x)+'px';t.el.style.top=Math.round(t.y)+'px';},30);
   });
-  host.addEventListener('mousemove',place);
-  host.addEventListener('mouseout',function(e){var t=e.target.closest?e.target.closest('.kw-has-tip'):null;if(t){var el=document.getElementById('kw-tip');if(el)el.style.display='none';}});
-  host.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('.kw-has-tip'):null;if(!t)return;
-    var why=t.getAttribute('data-why')||'',q=t.getAttribute('data-q')||'';if(why||q)toast((why?why:'')+(why&&q?' — ':'')+(q?'“'+q+'”':''));
+  Object.keys(host._pebs).forEach(function(nick){
+    if(!inGroup[nick]){var p=host._pebs[nick];p.style.opacity=0;p.style.top=(H+34)+'px';}
   });
+}
+/* 조약돌 클릭 → 그 사람 지목 + 답변 카드 열기 (2026-07-31 사용자 피드백) */
+function stagePickNick(nick){
+  STAGE.pickedName=nick;STAGE.critText='무리 지도에서 선택';
+  var nameEl=document.getElementById('stage-speaker-name'),promptEl=document.getElementById('speaker-prompt');
+  if(nameEl){nameEl.textContent=nick;nameEl.style.color='var(--accent)';}
+  if(promptEl)promptEl.textContent='무리 지도에서 선택';
+  renderStageLive();
+  renderStageGroups(); /* 표본이 없어 renderStageLive 가 조기 리턴해도 지도 강조는 갱신 */
 }
 function renderStageLive(){
   var ps=stageParts();
@@ -3604,6 +3855,7 @@ function renderStageLive(){
   if(qt){var qh='';bk.questions.forEach(function(q,i){qh+='<button class="sl-qtab'+(i===STAGE.q?' active':'')+'" onclick="stageSetQ('+i+')">Q'+(i+1)+'</button>';});qt.innerHTML=qh;}
   var qx=document.getElementById('sl-qtext');
   if(qx)qx.textContent=bk.questions.length?('Q'+(STAGE.q+1)+'. '+bk.questions[STAGE.q]):'';
+  renderStageGroups(); /* 질문이 바뀌면 조약돌이 새 무리로 이동 (2026-07-31) */
   if(!STAGE.order.length)STAGE.order=shuffle(ps.map(function(p){return p.name;}));
   var ol='';STAGE.order.forEach(function(nm,i){ol+='<li'+(nm===STAGE.pickedName?' class="is-picked"':'')+' onclick="stagePickOrder('+i+')" title="답변 보기"><span class="sl-order__n">'+(i+1)+'</span><span>'+esc(nm)+'</span></li>';});
   orderEl.innerHTML=ol;
@@ -3622,6 +3874,24 @@ function renderStageHighlights(){
   var grid=document.getElementById('stage-highlights-grid');
   var foot=document.getElementById('stage-highlights-footer');
   var b=bookById(STAGE.bookId);
+  /* 발표자료 하이라이트가 있으면 그것이 정본 — 선정 이유(label)가 큰 제목 (2026-07-31 사용자 피드백) */
+  var rep=b&&b.report;
+  if(grid&&rep&&rep.highlights&&rep.highlights.length){
+    var nicks=repNicks(rep);
+    grid.innerHTML=rep.highlights.map(function(t){
+      var lab='',q='',body='';
+      if(t&&typeof t==='object'){ lab=t.label||''; q=t.q||''; body=t.body||''; }
+      else { var ls=String(t).split('\n'); q=(ls[0]||'').trim(); body=ls.slice(1).join('\n').trim(); }
+      return '<div class="highlight-card">'+
+        (lab?'<div class="highlight-card__crit">'+esc(lab)+'</div>':'')+
+        (q?'<div class="highlight-card__q">'+esc(q)+'</div>':'')+
+        (body?'<div class="highlight-card__body">'+markNicks(body,nicks)+'</div>':'')+'</div>';
+    }).join('');
+    var st=rep.stats||{};
+    /* 푸터는 클릭 요소로 오해되지 않게 평문 한 줄 (2026-07-31 사용자 피드백) */
+    if(foot)foot.innerHTML='<p class="hl-foot">총 답변 '+(st.answers||0)+'개 · 댓글 '+(st.comments||0)+'개 · 반응 '+(st.reactions||0)+'개 · 참가자 '+(st.participants||0)+'명 — 제목이 곧 선정 이유, AI가 반응·댓글 수치로 뽑았어요</p>';
+    return;
+  }
   var items=[],totalAns=0,totalRx=0;
   if(b&&b.others){
     b.questions.forEach(function(q,qi){
@@ -3636,7 +3906,7 @@ function renderStageHighlights(){
     });
   }
   var nPart=stageParts().length+((STATE.phone4&&bookState(STAGE.bookId).submitted)?1:0);
-  if(foot)foot.innerHTML='<span class="tag tag-accent">총 답변 '+totalAns+'개</span><span class="tag">반응 '+totalRx+'개</span><span class="tag">참가자 '+nPart+'명</span>';
+  if(foot)foot.innerHTML='<p class="hl-foot">총 답변 '+totalAns+'개 · 반응 '+totalRx+'개 · 참가자 '+nPart+'명</p>';
   if(!grid)return;
   if(!items.length){grid.innerHTML='<div class="sl-empty" style="grid-column:1/-1">아직 하이라이트가 없어요 — 답변과 반응이 쌓이면 여기에 표시됩니다.</div>';return;}
   function card(emoji,label,it){return '<div class="highlight-card"><div class="highlight-card__emoji">'+emoji+'</div><div class="highlight-card__label">'+esc(label)+'</div><div class="highlight-card__quote">"'+esc(it.a)+'"</div><div class="highlight-card__who">&mdash; '+esc(it.n)+(it.rc?' · 반응 '+it.rc:'')+(it.cc?' · 댓글 '+it.cc:'')+'</div></div>';}
@@ -3653,7 +3923,7 @@ function renderStageHighlights(){
   var topCc=pick(byCc,function(it){return it.cc>0;});
   if(topCc){used.push(topCc);cards.push(card('💬','댓글 최다 · '+topCc.cc+'개',topCc));}
   for(var i=0;i<byBoth.length&&cards.length<4;i++){var it=byBoth[i];if(used.indexOf(it)<0&&(it.rc+it.cc)>0){used.push(it);cards.push(card('✨','반응+댓글 '+(it.rc+it.cc)+'개',it));}}
-  if(foot)foot.innerHTML+='<span class="tag" style="background:none;border:none;color:var(--ink-dim);font-size:11px">기준: 🙌반응 최다 · 💬댓글 최다 · ✨반응+댓글 합 순</span>';
+  if(foot)foot.innerHTML+='<p class="hl-foot" style="margin-top:2px">기준: 🙌반응 최다 · 💬댓글 최다 · ✨반응+댓글 합 순</p>';
   grid.innerHTML=cards.join('');
 }
 function stageSetQ(i){STAGE.q=i;STAGE.pickedName=null;renderStageLive();}
@@ -3710,7 +3980,7 @@ function stagePick(opt){
     }
   },60);
 }
-function renderStageAll(){STAGE.bookId=currentBookId();STAGE.q=0;STAGE.order=[];STAGE.pickedName=null;renderStageRoadmap();renderStageRating();renderStageLive();renderStageHighlights();}
+function renderStageAll(){STAGE.bookId=currentBookId();STAGE.q=0;STAGE.order=[];STAGE.pickedName=null;wireCardZoom();renderStageRoadmap();renderStageRating();renderStageMembers();renderStageLive();renderStageHighlights();}
 
 /* ── 브라우저 뒤로가기 = 앱 내 이전 화면 ── */
 async function onPop(ev){

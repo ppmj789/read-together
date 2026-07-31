@@ -102,15 +102,19 @@ def main():
         by_q.setdefault(a['q_index'], []).append(a.get('body') or '')
 
     # 반응 종류별 집계 (v22) — 종류별 합계 + 그 종류를 가장 많이 받은 답변 인용(익명)
+    nick_of = {m['phone4']: (m.get('nickname') or '') for m in members}
     body_of = {}
     for a in answers:
         body_of[(a['q_index'], a['phone4'])] = a.get('body') or ''
     by_kind, per_answer = {}, {}
+    ans_counts = {}   # (q_index, phone4) → {kind: n} — 답변 기준 집계 (2026-07-31)
     for r in reactions:
         kd = r.get('kind') or 'empathy'
         by_kind[kd] = by_kind.get(kd, 0) + 1
         akey = (r['q_index'], r['target_phone4'])
         per_answer[(kd, akey)] = per_answer.get((kd, akey), 0) + 1
+        ans_counts.setdefault(akey, {})
+        ans_counts[akey][kd] = ans_counts[akey].get(kd, 0) + 1
     top = []
     for kd in KIND_ORDER + [k for k in by_kind if k not in KIND_ORDER]:
         cands = [(n, ak) for (k, ak), n in per_answer.items() if k == kd]
@@ -118,8 +122,31 @@ def main():
             continue
         n, ak = max(cands, key=lambda x: x[0])
         top.append({'kind': kd, 'count': n, 'q_index': ak[0], 'quote': body_of.get(ak, '')})
+    # 답변 기준 반응 (2026-07-31) — 반응은 답변에 달리므로, '반응이 몰린 답변' 목록이 정본.
+    # 프론트(reactionStatsHtml)가 by_answer 를 그대로 렌더한다. phone4 는 내보내지 않는다(닉네임만).
+    by_answer = []
+    for (qi, ph), cnts in ans_counts.items():
+        by_answer.append({'q_index': qi, 'nick': nick_of.get(ph, ''),
+                          'quote': body_of.get((qi, ph), ''),
+                          'counts': cnts, 'total': sum(cnts.values())})
+    by_answer.sort(key=lambda a: (-a['total'], a['q_index']))
+    by_answer = by_answer[:8]
     reactions_out = ({'total': nR if nR is not None else len(reactions),
-                      'by_kind': by_kind, 'top': top} if by_kind else None)
+                      'by_kind': by_kind, 'top': top, 'by_answer': by_answer} if by_kind else None)
+
+    # 답변 상세 (2026-07-31, 집단 분석용) — 질문별 {nick, body, reactions, comments[]}.
+    # 댓글은 (q_index, target_phone4) 로 대상 답변에 연결. phone4 는 출력하지 않는다.
+    detail, aidx = {}, {}
+    for a in answers:
+        d = {'nick': nick_of.get(a['phone4'], ''), 'body': a.get('body') or '',
+             'reactions': ans_counts.get((a['q_index'], a['phone4']), {}), 'comments': []}
+        detail.setdefault(a['q_index'], []).append(d)
+        aidx[(a['q_index'], a['phone4'])] = d
+    for c in comments:
+        d = aidx.get((c.get('q_index'), c.get('target_phone4')))
+        if d is not None:
+            d['comments'].append({'nick': nick_of.get(c.get('author_phone4'), ''),
+                                  'body': c.get('body') or ''})
 
     out = {
         'book': {'id': bid, 'title': book['title'], 'author': book.get('author'),
@@ -135,6 +162,7 @@ def main():
                                 'passed': sum(1 for d in dist if d['is_ihyang']),
                                 'scores': dist} if dist else None),
         'answers_by_question': by_q,
+        'answers_detail': detail,
         'comments': [c.get('body') or '' for c in comments],
     }
     print(json.dumps(out, ensure_ascii=False, indent=2))
