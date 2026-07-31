@@ -348,8 +348,13 @@ body.is-page-season .book-card__cover{width:96px}
 /* 표지가 있으면 책등 대신 표지 이미지 (v23) — 원본 비율 유지, 글자 책등과 같은 폭 */
 .cand__spine--cover{background:none;box-shadow:none;min-height:0;width:62px}
 .cand__cover{display:block;width:62px;height:auto;border-radius:var(--radius-sm);box-shadow:var(--shadow-sm)}
+/* 표지·책등 → 서점(알라딘) 링크 — flex 자식 자리를 앵커가 이어받는다 */
+.cand__spinelink{flex-shrink:0;display:block;text-decoration:none;color:inherit}
+.cand__spinelink:hover .cand__cover,.cand__spinelink:hover .cand__spine{box-shadow:var(--shadow-md)}
 /* 출판사·가격 — 추천 이유(주관)와 분리된 객관 정보 줄 (v23) */
 .cand__meta{font-size:12px;color:var(--ink-dim);margin-top:4px}
+.cand__storelink{color:var(--accent);font-weight:700;text-decoration:none}
+.cand__storelink:hover{text-decoration:underline;text-underline-offset:2px}
 /* 후보 의견(댓글) — 카드 하단 접이식 패널 (v23) */
 .cand-cmt{margin-top:10px}
 .cand-cmt__toggle{background:none;border:1px solid var(--rule);border-radius:var(--radius-pill);font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;padding:5px 11px;font-family:inherit}
@@ -1063,6 +1068,22 @@ var BOOK_COVERS={
   '바람의 노래를 들어라':'assets/covers/baram-norae.jpg'
 };
 function coverFor(title){ return BOOK_COVERS[String(title||'').replace(/\s+/g,' ').trim()]||null; }
+/* 서점(알라딘) 상품 페이지 — 표지와 같은 정적 맵 방식(ItemId). 새 책은 여기 한 줄 추가.
+   맵에 없으면 제목+저자 검색 결과로 폴백 → 어떤 후보든 링크가 끊기지 않는다 (2026-07-31) */
+var BOOK_STORE_IDS={
+  '체호프 단편선':'389003',
+  '눈물을 마시는 새':'398115',
+  '가면산장 살인사건':'47455104',
+  '아이기스':'398017702',
+  '코스모스':'396765073',
+  '바람의 노래를 들어라':'341555925'
+};
+function bookStoreUrl(title,author){
+  var t=String(title||'').replace(/\s+/g,' ').trim();
+  var id=BOOK_STORE_IDS[t];
+  if(id) return 'https://www.aladin.co.kr/shop/wproduct.aspx?ItemId='+id;
+  return 'https://www.aladin.co.kr/search/wsearchresult.aspx?SearchTarget=Book&SearchWord='+encodeURIComponent((t+' '+String(author||'').trim()).trim());
+}
 /* 책 카드 왼쪽 책등 — 표지가 있으면 이미지로, 없으면 기존처럼 제목 첫 글자로 */
 function spineHtml(b){
   var cov=coverFor(b.title);
@@ -2270,15 +2291,18 @@ function candidateSectionHtml(seasonId){
       var by=esc(candBy(c,seasonId));
       var canEdit=(STATE.isHost||(me&&c.byPhone===me)); /* 삭제·수정 동일 권한: 본인 또는 모임장 */
       var spine=String(c.title||'').trim().charAt(0)||'책';
-      /* 표지 — 정적 파일(assets/covers/, BOOK_COVERS) 우선, 없으면 DB cover_url, 둘 다 없으면 첫 글자 책등 */
+      /* 표지 — 정적 파일(assets/covers/, BOOK_COVERS) 우선, 없으면 DB cover_url, 둘 다 없으면 첫 글자 책등.
+         표지·책등을 누르면 서점(알라딘) 페이지로 (2026-07-31) */
       var cov=coverFor(c.title)||(c.cover||'');
-      var spineHtml_=cov
+      var store=bookStoreUrl(c.title,c.author);
+      var spineHtml_='<a class="cand__spinelink" href="'+esc(store)+'" target="_blank" rel="noopener" title="알라딘에서 보기">'+(cov
         ?'<div class="cand__spine cand__spine--cover" aria-hidden="true"><img class="cand__cover" src="'+esc(cov)+'" alt="" loading="lazy">'+
           (lead?'<span class="cand__crown" title="최다 득표">👑</span>':'')+'</div>'
         :'<div class="cand__spine" aria-hidden="true">'+esc(spine)+
-          (lead?'<span class="cand__crown" title="최다 득표">👑</span>':'')+'</div>';
-      /* 출판사·가격 — 추천 이유(주관)와 분리된 객관 정보 줄 */
+          (lead?'<span class="cand__crown" title="최다 득표">👑</span>':'')+'</div>')+'</a>';
+      /* 출판사·가격 — 추천 이유(주관)와 분리된 객관 정보 줄 + 서점 링크 */
       var meta=[c.publisher,c.price].filter(function(x){return x&&String(x).trim();}).map(esc).join(' · ');
+      meta=(meta?meta+' · ':'')+'<a class="cand__storelink" href="'+esc(store)+'" target="_blank" rel="noopener">책 정보 ↗</a>';
       var cmts=c.comments||[],open=!!CANDCMT.open[c.id];
       var cmtHtml='<div class="cand-cmt">'+
         '<button class="cand-cmt__toggle'+(open?' on':'')+'" onclick="toggleCandCmt(\''+c.id+'\')">💬 의견 '+(cmts.length||0)+(open?' 접기':'')+'</button>';

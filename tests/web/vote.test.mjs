@@ -294,16 +294,36 @@ test('책 정보: 출판사·가격이 저장되고 이유와 분리된 meta 줄
   assert.equal(c.price, '13,500원');
   const meta = a.d.querySelector('#page-vote .cand__meta');
   assert.ok(meta, 'meta 줄이 있어야 함');
-  assert.equal(meta.textContent, '갤리온 · 13,500원');
+  assert.match(meta.textContent, /^갤리온 · 13,500원/);
   assert.ok(!meta.closest('.cand__reason'), '추천 이유 블록과 분리');
 });
 
-test('책 정보: 출판사만 있으면 구분점 없이 출판사만 표시', async (t) => {
+test('책 정보: 출판사만 있으면 가격 구분점 없이 출판사 + 서점 링크만', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   a.w.enterMeeting('m1');
   await proposeFull(a, '클루지', '갤리온');
-  assert.equal(a.d.querySelector('#page-vote .cand__meta').textContent, '갤리온');
+  assert.match(a.d.querySelector('#page-vote .cand__meta').textContent, /^갤리온 · 책 정보 ↗$/);
+});
+
+test('서점 링크: 아는 책은 알라딘 상품 페이지, 모르는 책은 제목+저자 검색으로 폴백', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '코스모스', '칼 세이건');
+  await propose(a, '미지의 신간', '무명 작가');
+  const cards = [...a.d.querySelectorAll('#page-vote .cand')];
+  const cosmos = cards.find((x) => x.querySelector('.cand__title').textContent === '코스모스');
+  // 표지(책등)와 meta 줄 양쪽에 같은 링크, 새 탭
+  const spineA = cosmos.querySelector('.cand__spinelink');
+  assert.match(spineA.getAttribute('href'), /wproduct\.aspx\?ItemId=396765073/);
+  assert.equal(spineA.getAttribute('target'), '_blank');
+  assert.equal(spineA.getAttribute('rel'), 'noopener');
+  assert.equal(cosmos.querySelector('.cand__storelink').getAttribute('href'), spineA.getAttribute('href'));
+  const unknown = cards.find((x) => x.querySelector('.cand__title').textContent === '미지의 신간');
+  const href = unknown.querySelector('.cand__storelink').getAttribute('href');
+  assert.match(href, /wsearchresult\.aspx\?SearchTarget=Book&SearchWord=/);
+  assert.match(decodeURIComponent(href), /미지의 신간 무명 작가/);
 });
 
 test('후보 수정: 출판사·가격도 폼에 채워지고 수정된다', async (t) => {
