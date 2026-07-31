@@ -270,3 +270,140 @@ test('모임장 확정: 후보를 예정 책으로 등록하고 후보에서 제
   assert.equal(a.w.bookStatus(m2.season.books.find((b) => b.title === '승자책')), 'upcoming');
   assert.equal(a.w.seasonCandidates(m.id).length, 0, '후보에서 제거됨');
 });
+
+/* ═══ v23 — 책 정보(출판사·가격·표지) + 후보 의견(댓글) ═══ */
+
+async function proposeFull(a, title, pub = '', price = '') {
+  a.w.CANDADD.open = true;
+  a.w.renderVote();
+  a.d.getElementById('cand-title').value = title;
+  const pb = a.d.getElementById('cand-publisher');
+  if (pb) pb.value = pub;
+  const pr = a.d.getElementById('cand-price');
+  if (pr) pr.value = price;
+  await a.w.proposeCandidate();
+}
+
+test('책 정보: 출판사·가격이 저장되고 이유와 분리된 meta 줄로 표시된다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await proposeFull(a, '클루지', '갤리온', '13,500원');
+  const c = a.w.seasonCandidates('m1')[0];
+  assert.equal(c.publisher, '갤리온');
+  assert.equal(c.price, '13,500원');
+  const meta = a.d.querySelector('#page-vote .cand__meta');
+  assert.ok(meta, 'meta 줄이 있어야 함');
+  assert.equal(meta.textContent, '갤리온 · 13,500원');
+  assert.ok(!meta.closest('.cand__reason'), '추천 이유 블록과 분리');
+});
+
+test('책 정보: 출판사만 있으면 구분점 없이 출판사만 표시', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await proposeFull(a, '클루지', '갤리온');
+  assert.equal(a.d.querySelector('#page-vote .cand__meta').textContent, '갤리온');
+});
+
+test('후보 수정: 출판사·가격도 폼에 채워지고 수정된다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await proposeFull(a, '클루지', '갤리온', '13,500원');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  a.w.editCandidate(cid);
+  assert.equal(a.d.getElementById('cand-publisher').value, '갤리온');
+  assert.equal(a.d.getElementById('cand-price').value, '13,500원');
+  a.d.getElementById('cand-price').value = '11,000원';
+  await a.w.proposeCandidate();
+  assert.equal(a.w.seasonCandidates('m1')[0].price, '11,000원');
+});
+
+test('표지: BOOK_COVERS 에 있는 제목이면 책등 글자 대신 표지 이미지', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '코스모스', '칼 세이건');
+  await propose(a, '표지없는 미지의 책');
+  const cards = [...a.d.querySelectorAll('#page-vote .cand')];
+  const cosmos = cards.find((x) => x.querySelector('.cand__title').textContent === '코스모스');
+  const img = cosmos.querySelector('.cand__cover');
+  assert.ok(img, '코스모스는 표지 이미지');
+  assert.match(img.getAttribute('src'), /assets\/covers\/cosmos\.jpg/);
+  const plain = cards.find((x) => x.querySelector('.cand__title').textContent === '표지없는 미지의 책');
+  assert.ok(!plain.querySelector('.cand__cover'), '표지 없으면 이미지 없음');
+  assert.equal(plain.querySelector('.cand__spine').textContent.trim().charAt(0), '표');
+});
+
+test('의견: 접힌 토글(💬 의견 0)로 시작, 펼쳐서 등록하면 목록·카운트 갱신', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  const tog = a.d.querySelector('#page-vote .cand-cmt__toggle');
+  assert.match(tog.textContent, /의견 0/);
+  assert.ok(!a.d.querySelector('#page-vote .cand-cmt__list'), '접힘 상태에선 목록 없음');
+  a.w.toggleCandCmt(cid);
+  a.d.getElementById('ccmt-in-' + cid).value = '이 책 절판 아닌가요?';
+  await a.w.addCandCmt(cid);
+  const c = a.w.seasonCandidates('m1')[0];
+  assert.equal(c.comments.length, 1);
+  assert.equal(c.comments[0].body, '이 책 절판 아닌가요?');
+  assert.equal(c.comments[0].byPhone, '1234');
+  const txt = a.d.getElementById('page-vote').textContent;
+  assert.match(txt, /이 책 절판 아닌가요\?/);
+  assert.match(a.d.querySelector('#page-vote .cand-cmt__toggle').textContent, /의견 1/);
+});
+
+test('의견: 작성자 이름은 번호가 아니라 서재 닉네임(모임장은 모임장)', async (t) => {
+  const a = app(t);
+  await a.loginAs('7220');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  a.w.toggleCandCmt(cid);
+  a.d.getElementById('ccmt-in-' + cid).value = '재밌어 보여요';
+  await a.w.addCandCmt(cid);
+  const item = a.d.querySelector('#page-vote .cand-cmt__item');
+  assert.match(item.textContent, new RegExp(a.w.candNick('7220', 'm1')));
+  assert.doesNotMatch(item.textContent, /7220/);
+});
+
+test('의견 삭제: 내 의견만 × 가 보이고, 삭제하면 목록에서 빠진다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  a.w.toggleCandCmt(cid);
+  a.d.getElementById('ccmt-in-' + cid).value = '첫 의견';
+  await a.w.addCandCmt(cid);
+  // 남의 의견엔 × 없음
+  a.w.STATE.phone4 = '9999';
+  a.w.renderVote();
+  assert.ok(!a.d.querySelector('#page-vote .cand-cmt__item .cmt-x'), '남의 의견엔 삭제 버튼 없음');
+  // 본인은 삭제 가능
+  a.w.STATE.phone4 = '1234';
+  a.w.renderVote();
+  const x = a.d.querySelector('#page-vote .cand-cmt__item .cmt-x');
+  assert.ok(x, '내 의견엔 삭제 버튼');
+  const cmtId = a.w.seasonCandidates('m1')[0].comments[0].id;
+  await a.w.delCandCmt(cmtId, cid);
+  assert.equal(a.w.seasonCandidates('m1')[0].comments.length, 0);
+});
+
+test('의견: 로그인 없이 등록하면 막힌다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '클루지');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  a.w.toggleCandCmt(cid);
+  a.d.getElementById('ccmt-in-' + cid).value = '몰래 쓰기';
+  a.w.STATE.phone4 = null;
+  await a.w.addCandCmt(cid);
+  assert.equal((a.w.seasonCandidates('m1')[0].comments || []).length, 0);
+  assert.match(a.lastToast() || '', /입장/);
+});
