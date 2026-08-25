@@ -268,23 +268,51 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .book-card__host{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-soft);flex-wrap:wrap}
 .book-card__host .btn{min-height:34px;font-size:12px}
 .book-card.upcoming .book-card__spine{background:var(--ink-soft)}
-/* ── 책장 (시즌 고르기 = 서재 컨셉) ──
-   시즌 하나 = 책장에 꽂힌 하드커버 한 권. 책등을 눌러 입장한다. */
-.shelf{margin-bottom:2px}
-.shelf__books{display:flex;align-items:flex-end;gap:13px;padding:22px 20px 0;min-height:216px;background:linear-gradient(180deg,var(--paper-warm) 0%,rgba(0,0,0,.035) 96%,rgba(0,0,0,.09) 100%);border-radius:10px 10px 0 0}
-.shelf__board{height:15px;background:linear-gradient(180deg,#C9A276 0%,#A87C50 55%,#8A6240 100%);border-radius:2px 2px 5px 5px;box-shadow:0 7px 14px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.4);margin-bottom:18px}
-.spine-book{position:relative;width:76px;height:var(--sp-h,200px);background:var(--sp-bg,var(--accent));border-radius:3px 8px 8px 3px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:16px 0 12px;cursor:pointer;box-shadow:3px 2px 8px rgba(0,0,0,.22),inset 5px 0 7px rgba(255,255,255,.16),inset -4px 0 6px rgba(0,0,0,.22);transition:transform .18s ease,box-shadow .18s ease;flex-shrink:0}
-.spine-book:hover{transform:translateY(-10px);box-shadow:3px 10px 18px rgba(0,0,0,.28),inset 5px 0 7px rgba(255,255,255,.16),inset -4px 0 6px rgba(0,0,0,.22)}
-.spine-book::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.3);border-radius:2px}
-.spine-book::after{content:"";position:absolute;left:0;right:0;top:9px;height:1px;background:rgba(255,255,255,.25)}
-.spine-book__title{writing-mode:vertical-rl;font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.12em;color:#fff;max-height:140px;overflow:hidden;line-height:1.15;word-break:keep-all}
-.spine-book__meta{font-size:10px;font-weight:700;color:rgba(255,255,255,.9);background:rgba(0,0,0,.2);padding:2px 8px;border-radius:10px;letter-spacing:.04em}
-.spine-book--add{background:transparent;border:2px dashed var(--rule);box-shadow:none}
-.spine-book--add::before,.spine-book--add::after{display:none}
-.spine-book--add .spine-book__title{color:var(--ink-dim);font-weight:700;font-size:14px}
-.spine-book--add .spine-book__meta{color:var(--ink-dim);background:var(--paper);border:1px solid var(--rule)}
-.spine-book--add:hover{border-color:var(--accent);transform:translateY(-6px)}
-.spine-book--add:hover .spine-book__title{color:var(--accent)}
+/* ── 칸 나눠진 책꽂이 (시즌 고르기 = 서재 컨셉) ──
+   나무 프레임 안에 칸(cubby)이 격자로 들어가고, 칸 사이 나무가 그대로 칸막이가 된다.
+   한 칸 = 시즌 하나, 칸 안에 그 시즌의 책 3권이 꽂힌다 (2026-08-21). */
+.bookcase{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;padding:9px;background:linear-gradient(180deg,#332B24 0%,#241E19 100%);border-radius:12px;box-shadow:0 18px 34px rgba(26,22,18,.22),inset 0 1px 0 rgba(255,255,255,.14);margin-bottom:18px}
+@media(min-width:560px){.bookcase{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:860px){.bookcase{grid-template-columns:repeat(4,1fr)}}
+.cubby{display:flex;flex-direction:column;background:linear-gradient(180deg,var(--paper) 0%,var(--paper-warm) 78%,#EDE6D6 100%);border-radius:2px;box-shadow:inset 0 4px 10px rgba(26,22,18,.16);overflow:hidden}
+.cubby__label{display:flex;flex-direction:column;gap:3px;padding:10px 10px 0;cursor:pointer}
+.cubby__title{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:-.03em;color:var(--ink);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+.cubby__label:hover .cubby__title{color:var(--accent)}
+.cubby__meta{font-size:10.5px;font-weight:700;color:var(--ink-dim);letter-spacing:.02em}
+.cubby__books{display:flex;align-items:flex-end;gap:4px;padding:12px 6px 0;min-height:160px;flex:1;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;cursor:pointer}
+.cubby__books::-webkit-scrollbar{display:none}
+/* 칸 바닥 널 */
+.cubby__floor{height:9px;background:linear-gradient(180deg,#4A4038 0%,#332B24 60%,#241E19 100%);box-shadow:0 3px 8px rgba(26,22,18,.28),inset 0 1px 0 rgba(255,255,255,.12)}
+/* 마지막 칸 — 다음을 정하는 칸. 새 시즌 꽂기 + 다음 책 투표가 여기 모인다 */
+.cubby--next{justify-content:center;align-items:stretch;gap:7px;padding:12px 9px;background:rgba(253,250,243,.06);box-shadow:inset 0 4px 10px rgba(0,0,0,.3);border:1px dashed rgba(253,250,243,.26)}
+.cubby__nexthd{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(253,250,243,.55);text-align:center;margin-bottom:1px}
+.cubby__btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;padding:11px 6px;border-radius:var(--radius-sm);border:1px solid rgba(253,250,243,.28);background:rgba(253,250,243,.08);color:var(--paper);font-family:inherit;font-size:12px;font-weight:700;line-height:1.3;cursor:pointer;transition:background .18s,border-color .18s}
+.cubby__btn:hover{background:rgba(253,250,243,.18);border-color:rgba(253,250,243,.5)}
+.cubby__btn--vote{background:var(--accent);border-color:var(--accent-soft);color:#fff;padding:13px 6px}
+.cubby__btn--vote:hover{background:var(--accent-soft);border-color:var(--accent-soft)}
+.cubby__btn .n{font-family:var(--display);font-size:11px;font-weight:800;background:rgba(255,255,255,.2);border-radius:var(--radius-pill);padding:1px 8px}
+/* 칸에 꽂힌 책등 — 칸 폭(3권 기준)에 맞춰 조금 좁게 */
+.spine-book{position:relative;flex:1 1 0;min-width:28px;max-width:72px;height:var(--sp-h,148px);background:var(--sp-bg,var(--accent));border-radius:1px 4px 4px 1px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:10px 0 8px;cursor:pointer;box-shadow:2px 0 5px rgba(26,22,18,.24),inset 4px 0 7px rgba(255,255,255,.14),inset -3px 0 6px rgba(0,0,0,.24);transition:transform .18s ease,box-shadow .18s ease}
+.spine-book:hover{transform:translateY(-6px);box-shadow:2px 9px 16px rgba(26,22,18,.3),inset 4px 0 7px rgba(255,255,255,.14),inset -3px 0 6px rgba(0,0,0,.24)}
+.spine-book::before{content:"";position:absolute;left:7px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.3);border-radius:2px}
+.spine-book::after{content:"";position:absolute;left:0;right:0;top:8px;height:1px;background:rgba(255,255,255,.25)}
+.spine-book__title{writing-mode:vertical-rl;font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:.06em;color:#fff;max-height:104px;overflow:hidden;line-height:1.15;word-break:keep-all}
+.spine-book__meta{font-size:9px;font-weight:700;color:rgba(255,255,255,.9);background:rgba(0,0,0,.22);padding:1px 5px;border-radius:9px;letter-spacing:.04em}
+/* 책 상태를 책등 색으로 — 열림은 그대로, 닫힘은 바래고, 예정은 회색 */
+.spine-book--closed{opacity:.62}
+.spine-book--upcoming{opacity:.82}
+/* 표지 활용 (2026-08-21) — 서점 진열처럼 두 가지.
+   ① 읽는 중인 책은 표지가 정면으로 보이게 면진열 (.spine-book--face)
+   ② 나머지 표지 있는 책은 표지를 책등 질감으로 깔고 제목을 얹는다 (.spine-book--cover) */
+.spine-book--face{flex:1.9 1 0;min-width:44px;max-width:118px;padding:0;overflow:hidden;border-radius:2px 5px 5px 2px;background:var(--ink-soft)}
+.spine-book__face{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+.spine-book--face::after{display:none}
+.spine-book--face::before{width:3px;left:0;background:linear-gradient(90deg,rgba(0,0,0,.4),rgba(255,255,255,.1));border-radius:0;z-index:1}
+.spine-book--face .spine-book__meta{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);background:rgba(26,22,18,.62);backdrop-filter:blur(2px)}
+.spine-book--cover{background-image:linear-gradient(180deg,rgba(0,0,0,.52) 0%,rgba(0,0,0,.16) 42%,rgba(0,0,0,.62) 100%),var(--sp-img);background-size:cover;background-position:center;background-blend-mode:normal}
+.spine-book--cover .spine-book__title{text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.spine-book--cover .spine-book__meta{background:rgba(0,0,0,.42)}
+.cubby-empty{flex:1;align-self:center;text-align:center;color:var(--ink-dim);font-size:12.5px;line-height:1.6;padding-bottom:22px}
 .shelf-empty{padding:60px 0 34px;text-align:center;color:var(--ink-dim);font-size:14px}
 /* 표지 이미지가 있는 책 — 첫 글자 대신 <img> 로 표지를 보여준다.
    img 는 원본 비율 그대로(height:auto)라 어떤 표지 비율이든 안 잘린다.
@@ -1805,7 +1833,7 @@ async function enterClub(id,quiet){
 
 /* ═══════════ RENDER: 시즌 리스트 (선택된 모임 안) ═══════════ */
 /* 시즌 고르기 = 서재 책장. 시즌 하나가 책등 한 권으로 꽂혀 있다 (2026-07-21 컨셉 확정). */
-var SHELF_COLORS=['var(--accent)','#7C4A3A','#50604A','#8F7440','#5A4A6B','#3A6B6B'];
+var SHELF_COLORS=['#3B5998','#7E3B49','#2E5D52','#8A6A2F','#4B4468','#2F4858'];
 function renderMeetings(){
   if(!STATE.phone4&&!STATE.isHost){go('login');return;}
   if(!STATE.clubId){go(STATE.phone4?'clubs':'manage');return;}
@@ -1813,33 +1841,72 @@ function renderMeetings(){
   var all=clubMeetings(STATE.clubId).slice();
   var h=''+
    '<div class="section-hd"><div><div class="eyebrow">'+esc(club.name)+(club.intro?' · '+esc(club.intro):'')+'</div><h2 class="h-1 mt-4">서재에서<br>시즌 꺼내기.</h2></div></div>'+
-   '<p class="body-2 mb-16">'+(STATE.phone4?'열람증 <b style="color:var(--ink)">No. '+esc(STATE.phone4)+'</b> · ':'')+'책등을 눌러 시즌에 입장하세요.</p>';
-  /* 책등 목록 — 시즌들 + (모임장) 새 시즌 슬롯 */
-  var spines=all.map(function(m,i){
-    var sn=m.kind==='custom'?m.season:SEASON;
-    var hgt=188+((i*17)%26);
-    return '<div class="spine-book" style="--sp-bg:'+SHELF_COLORS[i%SHELF_COLORS.length]+';--sp-h:'+hgt+'px" onclick="enterMeeting(\''+m.id+'\')" role="button" aria-label="시즌 '+esc(sn.title)+' 입장">'+
-      '<span class="spine-book__title">'+esc(sn.title)+'</span>'+
-      '<span class="spine-book__meta">'+sn.books.length+'권</span>'+
-    '</div>';
+   '<p class="body-2 mb-16">'+(STATE.phone4?'열람증 <b style="color:var(--ink)">No. '+esc(STATE.phone4)+'</b> · ':'')+'책꽂이 한 칸이 시즌 하나예요. 책등을 눌러 바로 들어가세요.</p>';
+  /* 칸 나눠진 책꽂이 — 한 칸 = 시즌 하나, 칸 안에 그 시즌 책들 (2026-08-21) */
+  var cells='';
+  all.forEach(function(m){
+    var sn=(m.kind==='custom'||ONLINE)?m.season:SEASON;
+    if(!sn) sn=SEASON;
+    var books=sn.books||[],openBk=null;
+    books.forEach(function(b){ if(!openBk&&bookStatus(b)==='open') openBk=b; });
+    cells+='<div class="cubby">'+
+       '<div class="cubby__label" onclick="enterMeeting(\''+m.id+'\')" role="button" tabindex="0" aria-label="시즌 '+esc(sn.title)+' 입장">'+
+         '<div class="cubby__title">'+esc(sn.title)+'</div>'+
+         '<div class="cubby__meta">'+(openBk?'🟢 읽는 중 · ':'')+books.length+'권</div>'+
+       '</div>'+
+       '<div class="cubby__books" onclick="enterMeeting(\''+m.id+'\')">'+
+         (books.length?books.map(function(b,i){return shelfSpineHtml(m.id,b,i);}).join('')
+                      :'<div class="cubby-empty">아직 꽂힌 책이 없어요.</div>')+
+       '</div>'+
+       '<div class="cubby__floor"></div>'+
+     '</div>';
   });
-  if(STATE.isHost)
-    spines.push('<div class="spine-book spine-book--add" style="--sp-h:188px" onclick="go(\'create\')" role="button" aria-label="새 시즌 만들기">'+
-      '<span class="spine-book__title">새 시즌 꽂기</span><span class="spine-book__meta">+</span></div>');
-  if(!spines.length){
-    h+='<div class="shelf"><div class="shelf__books"><div class="shelf-empty" style="flex:1">아직 책장이 비어 있어요.<br>모임장이 시즌을 꽂을 때까지 잠시 기다려 주세요.</div></div><div class="shelf__board"></div></div>';
+  /* 마지막 칸 = 다음을 정하는 칸 — (모임장) 새 시즌 꽂기 + 다음 책 투표 */
+  var voteTarget=null;
+  all.forEach(function(m){
+    var sn=(m.kind==='custom'||ONLINE)?m.season:SEASON;
+    if(!voteTarget) voteTarget=m;
+    if(sn&&(sn.books||[]).some(function(b){return bookStatus(b)==='open';})) voteTarget=m;
+  });
+  if(STATE.isHost||voteTarget){
+    cells+='<div class="cubby cubby--next">'+
+       '<div class="cubby__nexthd">다음</div>'+
+       (STATE.isHost?'<button class="cubby__btn" onclick="go(\'create\')">+ 새 시즌 꽂기</button>':'')+
+       (voteTarget?'<button class="cubby__btn cubby__btn--vote" onclick="shelfGoVote(\''+voteTarget.id+'\')">🗳️ 다음 책 투표<span class="n">'+seasonCandidates(voteTarget.id).length+'</span></button>':'')+
+     '</div>';
+  }
+  if(!all.length&&!STATE.isHost){
+    h+='<div class="bookcase"><div class="cubby"><div class="cubby__books"><div class="cubby-empty" style="padding:44px 12px">아직 책꽂이가 비어 있어요.<br>모임장이 시즌을 꽂을 때까지<br>잠시 기다려 주세요.</div></div><div class="cubby__floor"></div></div></div>';
   } else {
-    /* 한 칸에 4권씩 — 넘치면 아래 칸 */
-    for(var s=0;s<spines.length;s+=4){
-      h+='<div class="shelf"><div class="shelf__books">'+spines.slice(s,s+4).join('')+'</div><div class="shelf__board"></div></div>';
-    }
+    h+='<div class="bookcase">'+cells+'</div>';
   }
   if(STATE.isHost){
-    h+='<div class="host-links" style="margin-top:16px;font-size:13px">'+
+    h+='<div class="host-links" style="margin-top:8px;font-size:13px">'+
          '<a onclick="go(\'owners\')">⚙️ 모임 설정</a>'+
        '</div>';
   }
   document.getElementById('page-meetings').innerHTML=h;
+}
+/* 책꽂이 칸에 꽂힌 책 한 권. 표지가 있으면 살려 쓴다 —
+   읽는 중인 책은 표지 면진열, 나머지는 표지를 책등 질감으로. 표지가 없으면 색 책등. */
+function shelfSpineHtml(mid,b,i){
+  var st=bookStatus(b),hgt=148-(i%3)*6;   /* 148·142·136 — 제일 큰 책이 칸 천장에 딱 */
+  var cov=coverFor(b.title),face=!!cov&&st==='open';
+  var cls='spine-book spine-book--'+st+(face?' spine-book--face':(cov?' spine-book--cover':''));
+  var style='--sp-bg:'+SHELF_COLORS[i%SHELF_COLORS.length]+';--sp-h:'+hgt+'px'+((cov&&!face)?";--sp-img:url('"+esc(cov)+"')":'');
+  return '<div class="'+cls+'" style="'+style+'"'+
+    ' onclick="event.stopPropagation();shelfOpenBook(\''+mid+'\',\''+b.id+'\')" role="button" tabindex="0" aria-label="'+esc(b.title)+' · '+bookStatusLabel(st)+'">'+
+    (face?'<img class="spine-book__face" src="'+esc(cov)+'" alt="'+esc(b.title)+' 표지" loading="lazy">'
+         :'<span class="spine-book__title">'+esc(b.title)+'</span>')+
+    '<span class="spine-book__meta">'+bookStatusEmoji(st)+'</span>'+
+  '</div>';
+}
+/* 메인 책장에서 곧바로 들어가는 동선 — 시즌을 먼저 잡고 목적지로 */
+function shelfOpenBook(mid,bid){ STATE.meetingId=mid;STATE.bookId=null;setNick();openBook(bid); }
+function shelfGoVote(mid,addForm){
+  STATE.meetingId=mid;setNick();
+  if(addForm&&(STATE.phone4||STATE.isHost)){ CANDADD.editId=null;CANDADD.open=true; }
+  go('vote');
 }
 function renderOwners(){
   if(!STATE.isHost){go(STATE.clubId?'meetings':'clubs');return;}

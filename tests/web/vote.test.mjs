@@ -427,3 +427,101 @@ test('의견: 로그인 없이 등록하면 막힌다', async (t) => {
   assert.equal((a.w.seasonCandidates('m1')[0].comments || []).length, 0);
   assert.match(a.lastToast() || '', /입장/);
 });
+
+/* ── 메인 책꽂이 개편(2026-08-21): 칸 나눠진 책꽂이, 한 칸 = 시즌 ── */
+
+test('메인 책꽂이: 한 칸이 시즌 하나, 칸 안에 그 시즌 책이 책등으로 꽂힌다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  await tick();
+  const el = a.d.getElementById('page-meetings');
+  const bc = el.querySelector('.bookcase');
+  assert.ok(bc, '책꽂이 프레임(.bookcase)');
+  const cubbies = [...bc.querySelectorAll('.cubby')];
+  assert.equal(cubbies.length, 2, '시즌 칸 1개 + 다음 칸 1개');
+  assert.match(cubbies[0].querySelector('.cubby__title').textContent, /인간 본성 탐구/);
+  assert.equal(cubbies[0].querySelector('.cubby__btn'), null, '시즌 칸엔 투표 버튼이 없다');
+  const spines = [...cubbies[0].querySelectorAll('.spine-book')];
+  assert.equal(spines.length, 3, '칸 안엔 그 시즌 책 3권만 (투표 슬롯 없음)');
+  assert.match(spines[0].getAttribute('onclick'), /shelfOpenBook\('m1','ihyangin'\)/);
+});
+
+test('메인 책꽂이: 책등을 누르면 시즌을 거치지 않고 그 책 페이지로 간다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  await tick();
+  /* 실제 클릭 — 칸 빈자리 클릭(시즌 입장)에 먹히지 않고 책으로 가야 한다 */
+  const spine = a.d.getElementById('page-meetings').querySelector('.spine-book');
+  spine.dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
+  await tick();
+  assert.equal(a.page(), 'book');
+  assert.equal(a.w.STATE.meetingId, 'm1');
+  assert.equal(a.w.STATE.bookId, 'ihyangin');
+});
+
+test('메인 책꽂이: 투표 내용은 펼쳐지지 않고, 버튼을 눌러야 투표 페이지로 들어간다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '코스모스', '칼 세이건');
+  a.w.go('meetings');
+  await tick();
+  const el = a.d.getElementById('page-meetings');
+  /* 후보 제목·투표 버튼은 메인에 노출되지 않는다 */
+  assert.doesNotMatch(el.textContent, /코스모스/);
+  assert.equal(el.querySelector('.vote-strip'), null);
+  assert.equal(el.querySelector('.cand__vote'), null);
+  /* '다음' 칸의 투표 버튼 — 후보 수만 배지로 */
+  const btn = el.querySelector('.cubby--next .cubby__btn--vote');
+  assert.ok(btn, '다음 칸에 다음 책 투표 버튼');
+  assert.match(btn.textContent, /다음 책 투표/);
+  assert.equal(btn.querySelector('.n').textContent, '1');
+  btn.dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
+  await tick();
+  assert.equal(a.page(), 'vote');
+  assert.match(a.d.getElementById('page-vote').textContent, /코스모스/);
+});
+
+test('메인 책꽂이: 다음 칸엔 모임장만 새 시즌 꽂기, 투표 버튼은 그 아래', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  a.w.go('meetings');
+  await tick();
+  const next = a.d.getElementById('page-meetings').querySelector('.cubby--next');
+  const btns = [...next.querySelectorAll('.cubby__btn')];
+  assert.equal(btns.length, 2, '새 시즌 꽂기 + 다음 책 투표');
+  assert.match(btns[0].textContent, /새 시즌 꽂기/);
+  assert.match(btns[1].textContent, /다음 책 투표/);
+  btns[0].dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
+  await tick();
+  assert.equal(a.page(), 'create');
+});
+
+test('메인 책꽂이: 회원에겐 다음 칸에 투표 버튼만 (새 시즌 꽂기 없음)', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  await tick();
+  const next = a.d.getElementById('page-meetings').querySelector('.cubby--next');
+  const btns = [...next.querySelectorAll('.cubby__btn')];
+  assert.equal(btns.length, 1);
+  assert.match(btns[0].textContent, /다음 책 투표/);
+  assert.doesNotMatch(next.textContent, /새 시즌 꽂기/);
+});
+
+test('메인 책꽂이 표지: 읽는 중인 책은 표지 면진열, 표지 있는 예정 책은 책등 질감', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  await tick();
+  const spines = [...a.d.getElementById('page-meetings').querySelectorAll('.spine-book')];
+  /* 이향인(열림·표지 있음) → 면진열 */
+  assert.ok(spines[0].className.includes('spine-book--face'));
+  const img = spines[0].querySelector('.spine-book__face');
+  assert.match(img.getAttribute('src'), /covers\/ihyangin\.jpg/);
+  /* 프로젝트 헤일메리(예정·표지 있음) → 표지를 책등 배경으로 + 제목 유지 */
+  assert.ok(spines[1].className.includes('spine-book--cover'));
+  assert.match(spines[1].getAttribute('style'), /--sp-img:url\('assets\/covers\/hailmary\.jpg'\)/);
+  assert.match(spines[1].querySelector('.spine-book__title').textContent, /프로젝트 헤일메리/);
+  /* 다크 심리학(표지 없음) → 색 책등 그대로 */
+  assert.ok(!spines[2].className.includes('spine-book--cover'));
+  assert.match(spines[2].getAttribute('style'), /--sp-bg:#2E5D52/);
+});
