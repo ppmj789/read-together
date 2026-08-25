@@ -140,7 +140,7 @@ test('세션 복원: 알 수 없는 페이지명은 홈으로 폴백', async (t)
   assert.equal(a.page(), 'meetings'); // clubs 는 단일 모임이라 서재로 forward
 });
 
-test('내부 뒤로가기 체인: 답변→사전정보→시즌→서재', async (t) => {
+test('내부 뒤로가기 체인: 답변→사전정보→책꽂이 (시즌 리스트는 건너뛴다)', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   a.w.enterMeeting('m1');
@@ -149,8 +149,7 @@ test('내부 뒤로가기 체인: 답변→사전정보→시즌→서재', asyn
   assert.equal(a.page(), 'discussion');
   a.w.back();
   assert.equal(a.page(), 'book');
-  a.w.back();
-  assert.equal(a.page(), 'season');
+  /* 책 상세의 뒤로는 시즌 리스트(모임장 열기/닫기 화면)를 거치지 않고 책꽂이로 (2026-08-25) */
   a.w.back();
   assert.equal(a.page(), 'meetings');
 });

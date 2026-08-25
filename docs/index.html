@@ -415,6 +415,18 @@ body.is-page-season .book-card__cover{width:96px}
 .cand-form__hd{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px}
 .cand-form{background:var(--paper-warm);border-radius:var(--radius-md);padding:16px;margin-top:14px}
 .cand-add{margin-top:14px}
+/* 추천 회차 (2026-08-25) — 이번 회차 배지 · 모임장 마감 버튼 · 지난 회차 열람 */
+.cand-round{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.cand-round__badge{font-size:11.5px;font-weight:800;letter-spacing:.02em;color:var(--accent);background:var(--paper-warm);border:1px solid var(--rule);border-radius:var(--radius-pill);padding:3px 10px}
+.cand-round__new{margin-left:auto;font-family:inherit;font-size:12px;font-weight:700;color:var(--ink-dim);background:none;border:1px solid var(--rule);border-radius:var(--radius-pill);padding:4px 11px;cursor:pointer}
+.cand-round__new:hover{color:var(--accent);border-color:var(--accent)}
+.cand-past{margin-top:20px}
+.cand-past__toggle{width:100%;text-align:left;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink-dim);background:var(--paper-warm);border:1px solid var(--rule);border-radius:var(--radius-sm);padding:9px 12px;cursor:pointer}
+.cand-past__toggle:hover{color:var(--accent)}
+.cand-past__round{margin-top:12px}
+.cand-past__hd{font-size:11.5px;font-weight:800;color:var(--ink-dim);letter-spacing:.04em;margin-bottom:4px}
+.cand-past__item{display:flex;align-items:baseline;gap:8px;padding:7px 10px;border-bottom:1px solid var(--rule-soft);font-size:13px}
+.cand-past__votes{margin-left:auto;font-size:12px;font-weight:800;color:var(--ink-dim);white-space:nowrap}
 /* 책장 '다음 책 정하기' 진입 카드 */
 .book-card.vote-entry{cursor:pointer;border-style:dashed;background:var(--paper-warm)}
 .book-card.vote-entry:hover{border-color:var(--accent);transform:translateY(-1px)}
@@ -1279,7 +1291,12 @@ var RT={
   },
   async loadMeetings(){
     /* v18: meeting → season 테이블 리네임. 시즌 코드/비번 컬럼도 정리됨. */
-    var r=await sb.from('season').select('id,club_id,name,season_title,season_sub,is_open,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,opened_at,closed_at,report)');
+    var scols='id,club_id,name,season_title,season_sub,is_open,cand_round,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,opened_at,closed_at,report)';
+    var r=await sb.from('season').select(scols);
+    /* 추천 회차(v24 cand_round) 미적용 환경 폴백 — 컬럼 없으면 빼고 재조회(전부 1회차) */
+    if(r.error&&/cand_round/.test((r.error.message||'')+(r.error.details||''))){
+      scols=scols.replace('cand_round,',''); r=await sb.from('season').select(scols);
+    }
     if(r.error){rtErr(r.error);return;}
     MEET_CACHE=(r.data||[]).map(function(m){
       var books=(m.book||[]).slice().sort(function(a,b){return (a.ord||0)-(b.ord||0);}).map(function(bk){
@@ -1288,15 +1305,19 @@ var RT={
       });
       applySchedule(books);
       return {id:m.id,clubId:m.club_id||null,name:m.name,kind:'custom',isOpen:(m.is_open!==false),
-        season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'',books:books,candidates:[]}};
+        season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'',books:books,candidates:[],candRound:(m.cand_round||1)}};
     });
     await RT._loadCandidates();
   },
   async _loadCandidates(){
     /* 다음 책 투표 후보(v19) — material 과 동일하게 별도 쿼리·graceful fallback.
        마이그레이션 미적용 환경에선 조용히 빈 목록(시즌 로딩 자체는 깨지지 않게). */
-    var cols='id,season_id,title,author,reason,alias,publisher,price,cover_url,by_phone4,next_book_vote(voter_phone4),next_book_comment(id,author_phone4,body,created_at)';
+    var cols='id,season_id,round,title,author,reason,alias,publisher,price,cover_url,by_phone4,next_book_vote(voter_phone4),next_book_comment(id,author_phone4,body,created_at)';
     var r=await sb.from('next_book_candidate').select(cols);
+    /* 회차(v24 round) 미적용 환경 폴백 — 컬럼 없으면 빼고 재조회(전부 1회차) */
+    if(r.error&&/round/.test((r.error.message||'')+(r.error.details||''))){
+      cols=cols.replace('round,',''); r=await sb.from('next_book_candidate').select(cols);
+    }
     /* 의견(v23 next_book_comment) 미적용 환경 폴백 — 테이블 없으면 임베드 빼고 재조회 */
     if(r.error&&/next_book_comment/.test((r.error.message||'')+(r.error.details||''))){
       cols=cols.replace(',next_book_comment(id,author_phone4,body,created_at)',''); r=await sb.from('next_book_candidate').select(cols);
@@ -1319,7 +1340,7 @@ var RT={
       var cmts=(c.next_book_comment||[]).slice().sort(function(a,b){return a.created_at<b.created_at?-1:1;})
         .map(function(x){return {id:x.id,byPhone:x.author_phone4,body:x.body};});
       (bySeason[c.season_id]=bySeason[c.season_id]||[]).push({
-        id:c.id,title:c.title,author:c.author||'',reason:c.reason||'',alias:c.alias||'',
+        id:c.id,round:(c.round||1),title:c.title,author:c.author||'',reason:c.reason||'',alias:c.alias||'',
         publisher:c.publisher||'',price:c.price||'',cover:c.cover_url||'',byPhone:c.by_phone4||'',
         voters:(c.next_book_vote||[]).map(function(v){return v.voter_phone4;}),comments:cmts});
     });
@@ -1548,8 +1569,10 @@ var RT={
   },
   /* ── 다음 책 투표(v19) ── */
   async addCandidate(seasonId,title,author,reason,alias,publisher,price){
-    var row={season_id:seasonId,title:title,author:author||'',reason:reason||'',alias:alias||'',publisher:publisher||'',price:price||'',by_phone4:STATE.phone4||'host'};
+    var row={season_id:seasonId,round:seasonRound(seasonId),title:title,author:author||'',reason:reason||'',alias:alias||'',publisher:publisher||'',price:price||'',by_phone4:STATE.phone4||'host'};
     var r=await sb.from('next_book_candidate').insert(row);
+    /* 회차(v24) 미적용 환경 폴백 — 컬럼 없으면 round 빼고 재시도 */
+    if(r.error&&/round/.test((r.error.message||'')+(r.error.details||''))){ delete row.round; r=await sb.from('next_book_candidate').insert(row); }
     /* 책 정보(v23) 미적용 환경 폴백 — 컬럼 없으면 publisher/price 빼고 재시도 */
     if(r.error&&/publisher|price/.test((r.error.message||'')+(r.error.details||''))){ delete row.publisher; delete row.price; r=await sb.from('next_book_candidate').insert(row); }
     /* alias(v21) 미적용 환경 폴백 — 컬럼 없으면 alias 빼고 재시도 */
@@ -1565,6 +1588,14 @@ var RT={
     if(r.error&&/publisher|price/.test((r.error.message||'')+(r.error.details||''))){ delete patch.publisher; delete patch.price; r=await sb.from('next_book_candidate').update(patch).eq('id',id); }
     if(r.error&&/alias/.test((r.error.message||'')+(r.error.details||''))){ delete patch.alias; r=await sb.from('next_book_candidate').update(patch).eq('id',id); }
     if(r.error&&/reason/.test((r.error.message||'')+(r.error.details||''))){ delete patch.reason; r=await sb.from('next_book_candidate').update(patch).eq('id',id); }
+    if(r.error){rtErr(r.error);return false;} await RT.loadMeetings(); return true;
+  },
+  /* ── 추천 회차(v24) — 시즌의 '지금 받는 회차' 를 한 칸 올린다 ── */
+  async setCandRound(seasonId,round){
+    var r=await sb.from('season').update({cand_round:round}).eq('id',seasonId);
+    if(r.error&&/cand_round/.test((r.error.message||'')+(r.error.details||''))){
+      toast('추천 회차 기능은 v24 마이그레이션 적용 후에 쓸 수 있어요');return false;
+    }
     if(r.error){rtErr(r.error);return false;} await RT.loadMeetings(); return true;
   },
   /* ── 후보 의견(v23 next_book_comment) ── */
@@ -1740,7 +1771,9 @@ function back(){
   var cur=document.querySelector('.page.active');
   var id=cur?cur.id.replace('page-',''):'login';
   var authed=!!(STATE.phone4||STATE.isHost);
-  if(id==='book'||id==='history'||id==='vote') go('season');
+  /* 책 상세·투표·내 기록의 뒤로는 시즌 리스트를 건너뛰고 책꽂이로 (2026-08-25).
+     시즌 리스트는 모임장이 책을 열고 닫을 때 쓰는 화면이라 일반 동선에서 뺀다. */
+  if(id==='book'||id==='history'||id==='vote') go('meetings');
   else if(id==='results'&&RESULTS_FROM==='season'){ RESULTS_FROM='book'; go('season'); } /* 시즌에서 직진입한 결과 페이지 — 온 곳으로 돌려보냄 */
   else if(id==='discussion'||id==='results') go('book');
   else if(id==='season') go('meetings');
@@ -2357,9 +2390,38 @@ function icBookmark(on){
 }
 function candStore(){try{return JSON.parse(localStorage.getItem('rt:cands'))||{};}catch(e){return MEM['rt:cands']?JSON.parse(MEM['rt:cands']):{};}}
 function saveCandStore(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:cands',v);}catch(e){MEM['rt:cands']=v;}}
-function seasonCandidates(seasonId){
+/* ── 추천 회차 (round, 2026-08-25) ─────────────────────────────────────────
+ * 후보를 시즌에 무한정 쌓지 않고 '회차' 단위로 받는다. 한 권을 고르고 나면 모임장이
+ * 회차를 넘기고(startCandRound), 새 회차는 빈 목록에서 다시 시작한다. 지난 회차
+ * 후보는 지우지 않고 남겨 [지난 회차 추천 보기] 로 읽기 전용 열람만 — "그때 그 책
+ * 뭐였지" 를 나중에 다시 꺼내 쓸 수 있게.
+ * 저장: ONLINE = season.cand_round + next_book_candidate.round (v24 마이그레이션),
+ *      OFFLINE = localStorage 'rt:candround' (시즌ID→현재 회차).
+ * 컬럼·값이 없으면 전부 1회차로 본다 — 마이그레이션 전 환경에서도 기존 동작 유지. */
+function candRoundStore(){try{return JSON.parse(localStorage.getItem('rt:candround'))||{};}catch(e){return MEM['rt:candround']?JSON.parse(MEM['rt:candround']):{};}}
+function saveCandRoundStore(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:candround',v);}catch(e){MEM['rt:candround']=v;}}
+function seasonRound(seasonId){
+  if(ONLINE){var m=meetingById(seasonId);return (m&&m.season&&m.season.candRound)||1;}
+  return candRoundStore()[seasonId]||1;
+}
+function candRound(c){ return (c&&c.round)||1; }
+/* 회차 구분 없는 전체 후보 — 지난 회차 열람용 */
+function allSeasonCandidates(seasonId){
   if(ONLINE){var m=meetingById(seasonId);return (m&&m.season&&m.season.candidates)||[];}
   return candStore()[seasonId]||[];
+}
+/* 기본은 '이번 회차' 후보만 — 화면·집계·1인 상한(CAND_LIMIT)이 전부 이 함수를 탄다 */
+function seasonCandidates(seasonId,round){
+  var r=(round===undefined||round===null)?seasonRound(seasonId):round;
+  return allSeasonCandidates(seasonId).filter(function(c){return candRound(c)===r;});
+}
+/* 지난 회차 묶음 — [{round,cands}] 최신 회차부터, 각 회차 안은 표 많은 순 */
+function pastCandRounds(seasonId){
+  var cur=seasonRound(seasonId),by={};
+  allSeasonCandidates(seasonId).forEach(function(c){var r=candRound(c);if(r<cur)(by[r]=by[r]||[]).push(c);});
+  return Object.keys(by).map(Number).sort(function(a,b){return b-a;}).map(function(r){
+    return {round:r,cands:by[r].slice().sort(function(a,b){return b.voters.length-a.voters.length;})};
+  });
 }
 function myCandCount(seasonId){var me=STATE.phone4;if(!me)return 0;
   return seasonCandidates(seasonId).filter(function(c){return c.byPhone===me;}).length;}
@@ -2381,6 +2443,20 @@ function candNick(phone4,seasonId){
 }
 function candBy(c,seasonId){ return (c.alias||'').trim()||candNick(c.byPhone,seasonId); }
 function closeCandForm(){ CANDADD.open=false;CANDADD.editId=null;renderVote(); }
+/* 지난 회차 펼침 — 화면 상태만, 저장하지 않는다 */
+var CANDPAST={open:false};
+function togglePastRounds(){ CANDPAST.open=!CANDPAST.open;renderVote(); }
+/* 모임장: 이번 회차를 마감하고 새 회차를 연다. 후보·표는 지우지 않고 지난 회차로 넘어간다.
+   (책으로 등록한 뒤 목록을 비우고 새로 받는 자리 — 삭제가 아니라 보관이라 되돌아볼 수 있다) */
+async function startCandRound(){
+  if(!STATE.isHost){toast('모임장만 새 회차를 시작할 수 있어요');return;}
+  var sid=STATE.meetingId,cur=seasonRound(sid),n=seasonCandidates(sid).length;
+  if(!(await uiConfirm(cur+'회차 추천을 마감하고 '+(cur+1)+'회차를 새로 받을까요?\n지금 후보 '+n+'권과 모인 표는 지우지 않고 지난 회차로 보관돼요.',{okLabel:'새로 받기'})))return;
+  if(ONLINE){ if(!(await RT.setCandRound(sid,cur+1)))return; }
+  else { var st=candRoundStore();st[sid]=cur+1;saveCandRoundStore(st); }
+  CANDADD.open=false;CANDADD.editId=null;CANDPAST.open=false;
+  renderVote();toast((cur+1)+'회차 추천을 시작했어요');
+}
 /* 수정 = 같은 폼을 값 채워서 여는 것. 권한은 삭제와 동일(본인·모임장)이고
    표(voters)는 그대로 둔다 — 오타 하나 고쳤다고 모인 표가 날아가면 아무도 안 고친다. */
 function editCandidate(cid){
@@ -2409,7 +2485,7 @@ async function proposeCandidate(){
   if(ONLINE){ if(!(await RT.addCandidate(STATE.meetingId,t,au,rz,al,pb,pr)))return; }
   else {
     var s=candStore(),arr=s[STATE.meetingId]||[];
-    arr.push({id:'c'+Date.now(),title:t,author:au||'',reason:rz||'',alias:al,publisher:pb,price:pr,byPhone:STATE.phone4||'host',voters:[],comments:[]});
+    arr.push({id:'c'+Date.now(),round:seasonRound(STATE.meetingId),title:t,author:au||'',reason:rz||'',alias:al,publisher:pb,price:pr,byPhone:STATE.phone4||'host',voters:[],comments:[]});
     s[STATE.meetingId]=arr;saveCandStore(s);
   }
   closeCandForm();toast('후보로 추천했어요');
@@ -2478,17 +2554,21 @@ async function promoteCandidate(cid,title,author){
 function renderVote(){
   var m=activeMeeting();
   var h=candidateSectionHtml(m.id)+
-    '<button class="btn btn-ghost btn-pill mt-24" onclick="go(\'season\')">&larr; 시즌으로 돌아가기</button>';
+    '<button class="btn btn-ghost btn-pill mt-24" onclick="go(\'meetings\')">&larr; 책꽂이로 돌아가기</button>';
   document.getElementById('page-vote').innerHTML=h;
 }
 function candidateSectionHtml(seasonId){
   var cands=seasonCandidates(seasonId).slice().sort(function(a,b){return b.voters.length-a.voters.length;});
   var me=STATE.phone4,maxV=cands.reduce(function(mx,c){return Math.max(mx,c.voters.length);},0);
+  var round=seasonRound(seasonId),past=pastCandRounds(seasonId);
   var h='<div class="cand-sec"><div class="eyebrow">다음 책 투표</div>'+
     '<h3 class="cand-sec__title">🗳️ 다음엔 어떤 책?</h3>'+
+    '<div class="cand-round"><span class="cand-round__badge">'+round+'회차 추천</span>'+
+      (STATE.isHost?'<button class="cand-round__new" onclick="startCandRound()">이번 추천 마감하고 새로 받기</button>':'')+
+    '</div>'+
     '<p class="cand-sec__sub">읽고 싶은 책을 <b>여러 권</b> 골라도 돼요. 마음이 바뀌면 다시 눌러 취소할 수 있어요.</p>';
   if(!cands.length){
-    h+='<div class="cand-empty">아직 추천된 책이 없어요.<br>맨 먼저 읽고 싶은 책을 추천해 보세요.</div>';
+    h+='<div class="cand-empty">아직 '+round+'회차에 추천된 책이 없어요.<br>맨 먼저 읽고 싶은 책을 추천해 보세요.</div>';
   } else {
     h+='<div class="cand-list">';
     cands.forEach(function(c){
@@ -2566,6 +2646,23 @@ function candidateSectionHtml(seasonId){
     h+='<button class="btn btn-ghost btn-pill cand-add" onclick="CANDADD.editId=null;CANDADD.open=true;renderVote()">+ 책 추천하기</button>';
   } else {
     h+='<div class="cand-empty" style="margin-top:12px">휴대폰 4자리로 입장하면 추천·투표할 수 있어요.</div>';
+  }
+  /* 지난 회차 — 제목·추천자·표수만 접어서 보여준다. 투표·수정·삭제는 이번 회차만. */
+  if(past.length){
+    h+='<div class="cand-past"><button class="cand-past__toggle" onclick="togglePastRounds()">'+
+       (CANDPAST.open?'▾':'▸')+' 지난 회차 추천 보기 ('+past.length+'개 회차)</button>';
+    if(CANDPAST.open){
+      past.forEach(function(g){
+        h+='<div class="cand-past__round"><div class="cand-past__hd">'+g.round+'회차 · '+g.cands.length+'권</div>';
+        g.cands.forEach(function(c){
+          h+='<div class="cand-past__item"><b>'+esc(c.title)+'</b>'+
+             (c.author?'<span class="dim">'+esc(c.author)+'</span>':'')+
+             '<span class="cand-past__votes">'+c.voters.length+'표</span></div>';
+        });
+        h+='</div>';
+      });
+    }
+    h+='</div>';
   }
   return h+'</div>';
 }

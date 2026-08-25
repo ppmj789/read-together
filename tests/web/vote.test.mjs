@@ -525,3 +525,113 @@ test('메인 책꽂이 표지: 읽는 중인 책은 표지 면진열, 표지 있
   assert.ok(!spines[2].className.includes('spine-book--cover'));
   assert.match(spines[2].getAttribute('style'), /--sp-bg:#2E5D52/);
 });
+
+/* ── 추천 회차(round, 2026-08-25): 시즌별로 회차를 나눠 새로 받는다 ── */
+
+test('회차: 모임장이 마감하면 이번 목록은 비고 지난 회차로 보관된다', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  a.w.enterMeeting('m1');
+  await propose(a, '코스모스', '칼 세이건');
+  await propose(a, '총 균 쇠', '재레드 다이아몬드');
+  assert.equal(a.w.seasonRound('m1'), 1);
+  assert.equal(a.w.seasonCandidates('m1').length, 2);
+
+  await a.w.startCandRound();
+  assert.equal(a.w.seasonRound('m1'), 2, '회차가 2로 올라간다');
+  assert.equal(a.w.seasonCandidates('m1').length, 0, '새 회차는 빈 목록에서 시작');
+  assert.equal(a.w.allSeasonCandidates('m1').length, 2, '후보 자체는 지워지지 않는다');
+  const past = a.w.pastCandRounds('m1');
+  assert.equal(past.length, 1);
+  assert.equal(past[0].round, 1);
+  assert.equal(past[0].cands.length, 2);
+  /* 화면: 회차 배지 + 이번 회차 비어있음 안내 */
+  const el = a.d.getElementById('page-vote');
+  assert.match(el.querySelector('.cand-round__badge').textContent, /2회차/);
+  assert.match(el.querySelector('.cand-empty').textContent, /2회차/);
+  assert.doesNotMatch(el.querySelector('.cand-list, .cand-empty').textContent, /코스모스/);
+});
+
+test('회차: 새 회차에 추천하면 이번 회차에만 잡히고 책꽂이 배지도 새 회차 수', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  a.w.enterMeeting('m1');
+  await propose(a, '코스모스');
+  await a.w.startCandRound();
+  await propose(a, '설국열차');
+  const cur = a.w.seasonCandidates('m1');
+  assert.equal(cur.length, 1);
+  assert.equal(cur[0].title, '설국열차');
+  assert.equal(cur[0].round, 2, '새 후보엔 현재 회차가 찍힌다');
+  a.w.go('meetings');
+  await tick();
+  const badge = a.d.getElementById('page-meetings').querySelector('.cubby__btn--vote .n');
+  assert.equal(badge.textContent, '1', '책꽂이 투표 배지는 이번 회차 후보 수');
+});
+
+test('회차: 회원에겐 마감 버튼이 없고, 직접 호출해도 막힌다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '코스모스');
+  assert.equal(a.d.getElementById('page-vote').querySelector('.cand-round__new'), null);
+  await a.w.startCandRound();
+  assert.equal(a.w.seasonRound('m1'), 1, '회차가 넘어가지 않는다');
+  assert.match(a.lastToast() || '', /모임장만/);
+});
+
+test('회차: 지난 회차 보기 — 제목·표수만 읽기 전용으로 펼쳐진다', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  a.w.enterMeeting('m1');
+  await propose(a, '코스모스', '칼 세이건');
+  a.w.STATE.phone4 = '1234';
+  await a.w.voteCandidate(a.w.seasonCandidates('m1')[0].id);
+  await a.w.startCandRound();
+
+  const el = a.d.getElementById('page-vote');
+  const toggle = el.querySelector('.cand-past__toggle');
+  assert.ok(toggle, '지난 회차 토글');
+  assert.equal(el.querySelector('.cand-past__item'), null, '접힌 채로 시작');
+  toggle.dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
+  await tick();
+  const items = [...a.d.getElementById('page-vote').querySelectorAll('.cand-past__item')];
+  assert.equal(items.length, 1);
+  assert.match(items[0].textContent, /코스모스/);
+  assert.match(items[0].querySelector('.cand-past__votes').textContent, /1표/);
+  /* 지난 회차엔 투표·수정·삭제가 붙지 않는다 */
+  assert.equal(items[0].querySelector('.cand__vote'), null);
+  assert.equal(items[0].querySelector('.cand__act'), null);
+});
+
+test('회차: 1인 추천 상한(3권)은 회차마다 다시 채울 수 있다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '책A');
+  await propose(a, '책B');
+  await propose(a, '책C');
+  await propose(a, '책D');
+  assert.match(a.lastToast() || '', /3권까지/);
+  assert.equal(a.w.seasonCandidates('m1').length, 3);
+  /* 모임장이 회차를 넘기면 상한도 새 회차 기준으로 다시 센다 */
+  a.w.STATE.isHost = true;
+  await a.w.startCandRound();
+  a.w.STATE.isHost = false;
+  await propose(a, '책E');
+  assert.equal(a.w.myCandCount('m1'), 1);
+  assert.equal(a.w.seasonCandidates('m1')[0].title, '책E');
+});
+
+test('회차: 회차 정보가 없는 옛 후보는 1회차로 본다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  /* v24 이전에 저장된 후보 — round 키가 아예 없다 */
+  a.w.localStorage.setItem('rt:cands', JSON.stringify({
+    m1: [{ id: 'old1', title: '옛날 후보', author: '', reason: '', alias: '', byPhone: '1234', voters: [], comments: [] }],
+  }));
+  assert.equal(a.w.seasonRound('m1'), 1);
+  assert.equal(a.w.seasonCandidates('m1').length, 1);
+  assert.equal(a.w.pastCandRounds('m1').length, 0);
+});
