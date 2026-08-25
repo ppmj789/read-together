@@ -1293,8 +1293,10 @@ var RT={
     /* v18: meeting → season 테이블 리네임. 시즌 코드/비번 컬럼도 정리됨. */
     var scols='id,club_id,name,season_title,season_sub,is_open,cand_round,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,opened_at,closed_at,report)';
     var r=await sb.from('season').select(scols);
-    /* 추천 회차(v24 cand_round) 미적용 환경 폴백 — 컬럼 없으면 빼고 재조회(전부 1회차) */
-    if(r.error&&/cand_round/.test((r.error.message||'')+(r.error.details||''))){
+    /* 추천 회차(v24 cand_round) 미적용 환경 폴백 — 컬럼 없으면 빼고 재조회(전부 1회차).
+       season 은 컬럼 단위 grant(v16) 테이블이라 grant 누락 시 컬럼명 없는
+       'permission denied for table season'(42501) 로 떨어진다 — 그것도 같이 받는다. */
+    if(r.error&&(/cand_round/.test((r.error.message||'')+(r.error.details||''))||r.error.code==='42501'||/permission denied/.test(r.error.message||''))){
       scols=scols.replace('cand_round,',''); r=await sb.from('season').select(scols);
     }
     if(r.error){rtErr(r.error);return;}
