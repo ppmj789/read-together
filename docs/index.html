@@ -1224,7 +1224,13 @@ var BOOK_COVERS={
   '가면산장 살인사건':'assets/covers/gamyeonsanjang.jpg',
   '아이기스':'assets/covers/aigis.jpg',
   '코스모스':'assets/covers/cosmos.jpg',
-  '바람의 노래를 들어라':'assets/covers/baram-norae.jpg'
+  '바람의 노래를 들어라':'assets/covers/baram-norae.jpg',
+  /* 가을의 문장 시즌 후보 (2026-08-27, 알라딘 cover500) */
+  '베어타운':'assets/covers/beartown.jpg',
+  '호밀밭의 파수꾼':'assets/covers/catcher.jpg',
+  '여름은 오래 그곳에 남아':'assets/covers/natsu.jpg',
+  '우리는 가장 밝은 밤에 헤어졌다(원제:백야)':'assets/covers/baekya.jpg',
+  '우리는 가장 밝은 밤에 헤어졌다':'assets/covers/baekya.jpg'
 };
 function coverFor(title){ return BOOK_COVERS[String(title||'').replace(/\s+/g,' ').trim()]||null; }
 /* 서점(알라딘) 상품 페이지 — 표지와 같은 정적 맵 방식(ItemId). 새 책은 여기 한 줄 추가.
@@ -1235,7 +1241,12 @@ var BOOK_STORE_IDS={
   '가면산장 살인사건':'47455104',
   '아이기스':'398017702',
   '코스모스':'396765073',
-  '바람의 노래를 들어라':'341555925'
+  '바람의 노래를 들어라':'341555925',
+  '베어타운':'141114486',
+  '호밀밭의 파수꾼':'308822243',
+  '여름은 오래 그곳에 남아':'74920956',
+  '우리는 가장 밝은 밤에 헤어졌다(원제:백야)':'395813767',
+  '우리는 가장 밝은 밤에 헤어졌다':'395813767'
 };
 function bookStoreUrl(title,author){
   var t=String(title||'').replace(/\s+/g,' ').trim();
