@@ -251,10 +251,24 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .book-card__host .btn{min-height:36px}
 
 /* ═══ SEASON PORTAL ═══ */
+/* ── 시즌 테마 (2026-08-27) ──
+   시즌마다 결이 다르다. season.theme 값이 붙으면 그 시즌 화면·책꽂이 칸의 강조색이
+   바뀐다. 팔레트 자체는 안 건드리고 --season-* 지역 변수만 갈아끼운다. */
+.theme-autumn{--season-accent:#B4551F;--season-soft:#D2762F;--season-tint:rgba(180,85,31,.09);--season-paper:linear-gradient(180deg,#FCF4E6 0%,#F6E7CE 100%)}
+/* ── 에피그래프 — 시즌을 여는 인용 한 줄. 추천의 기준이 되는 문장이라
+   시즌 페이지와 투표 페이지 양쪽에 같은 얼굴로 놓는다. */
+.epigraph{position:relative;margin:18px 0 6px;padding:18px 20px 15px;background:var(--season-paper,var(--paper-warm));border:1px solid var(--rule);border-left:3px solid var(--season-accent,var(--accent));border-radius:var(--radius-md);text-align:left;overflow:hidden}
+.epigraph__q{position:relative;font-family:var(--display);font-size:16.5px;font-weight:800;line-height:1.6;letter-spacing:-.025em;color:var(--ink);word-break:keep-all}
+.epigraph__by{margin-top:10px;font-size:12.5px;font-weight:700;color:var(--season-accent,var(--accent));text-align:right}
+.epigraph__leaf{position:absolute;right:12px;top:8px;font-size:34px;line-height:1;opacity:.18;pointer-events:none}
+.epigraph--sm{margin:10px 0 14px;padding:13px 15px 11px}
+.epigraph--sm .epigraph__q{font-size:13.5px;line-height:1.55}
+.epigraph--sm .epigraph__by{margin-top:7px;font-size:11.5px}
+.epigraph--sm .epigraph__leaf{font-size:26px}
 .season-hd{text-align:center;padding:20px 0 4px}
 .season-hd__eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-dim);margin-bottom:12px}
 .season-hd__title{font-family:var(--display);font-weight:900;font-size:clamp(34px,8.5vw,52px);line-height:1.04;letter-spacing:-.045em;color:var(--ink)}
-.season-hd__sub{font-size:16px;color:var(--accent);font-weight:700;margin-top:12px}
+.season-hd__sub{font-size:16px;color:var(--season-accent,var(--accent));font-weight:700;margin-top:12px}
 .season-hd__meta{font-size:13px;color:var(--ink-soft);margin-top:8px;line-height:1.6}
 .season-books{display:flex;flex-direction:column;align-items:stretch;gap:14px;margin-top:24px}
 .book-card{position:relative;display:flex;gap:16px;align-items:stretch;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:18px;cursor:pointer;transition:transform .25s,box-shadow .25s,border-color .25s;text-align:left;box-shadow:var(--shadow-sm)}
@@ -277,6 +291,8 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .cubby{display:flex;flex-direction:column;background:linear-gradient(180deg,var(--paper) 0%,var(--paper-warm) 78%,#EDE6D6 100%);border-radius:2px;box-shadow:inset 0 4px 10px rgba(26,22,18,.16);overflow:hidden}
 .cubby__label{display:flex;flex-direction:column;gap:3px;padding:10px 10px 0;cursor:pointer}
 .cubby__title{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:-.03em;color:var(--ink);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+.cubby.theme-autumn{background:var(--season-paper)}
+.cubby.theme-autumn .cubby__label:hover .cubby__title,.cubby.theme-autumn .cubby-empty__hint{color:var(--season-accent)}
 .cubby__label:hover .cubby__title{color:var(--accent)}
 .cubby__meta{font-size:10.5px;font-weight:700;color:var(--ink-dim);letter-spacing:.02em}
 .cubby__books{display:flex;align-items:flex-end;gap:4px;padding:12px 6px 0;min-height:160px;flex:1;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;cursor:pointer}
@@ -293,6 +309,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .cubby__btn .n{font-family:var(--display);font-size:11px;font-weight:800;background:rgba(255,255,255,.2);border-radius:var(--radius-pill);padding:1px 8px}
 .cubby__btn-sub{font-size:10.5px;font-weight:700;opacity:.88;letter-spacing:-.01em;line-height:1.25;word-break:keep-all}
 .cubby-empty__hint{display:block;margin-top:6px;font-size:11px;font-weight:700;color:var(--accent)}
+.cubby__quote{display:block;margin-top:5px;font-size:10.5px;font-weight:700;color:var(--season-accent,var(--ink-dim));line-height:1.4;word-break:keep-all;opacity:.9}
 /* 칸에 꽂힌 책등 — 칸 폭(3권 기준)에 맞춰 조금 좁게 */
 .spine-book{position:relative;flex:1 1 0;min-width:28px;max-width:72px;height:var(--sp-h,148px);background:var(--sp-bg,var(--accent));border-radius:1px 4px 4px 1px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:10px 0 8px;cursor:pointer;box-shadow:2px 0 5px rgba(26,22,18,.24),inset 4px 0 7px rgba(255,255,255,.14),inset -3px 0 6px rgba(0,0,0,.24);transition:transform .18s ease,box-shadow .18s ease}
 .spine-book:hover{transform:translateY(-6px);box-shadow:2px 9px 16px rgba(26,22,18,.3),inset 4px 0 7px rgba(255,255,255,.14),inset -3px 0 6px rgba(0,0,0,.24)}
@@ -1293,8 +1310,12 @@ var RT={
   },
   async loadMeetings(){
     /* v18: meeting → season 테이블 리네임. 시즌 코드/비번 컬럼도 정리됨. */
-    var scols='id,club_id,name,season_title,season_sub,is_open,cand_round,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,opened_at,closed_at,report)';
+    var scols='id,club_id,name,season_title,season_sub,is_open,cand_round,epigraph,epigraph_by,theme,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,opened_at,closed_at,report)';
     var r=await sb.from('season').select(scols).order('created_at');
+    /* 시즌 테마·에피그래프(v26) 미적용 환경 폴백 — 컬럼 없으면 빼고 재조회 */
+    if(r.error&&(/epigraph|theme/.test((r.error.message||'')+(r.error.details||''))||r.error.code==='42501'||/permission denied/.test(r.error.message||''))){
+      scols=scols.replace('epigraph,epigraph_by,theme,',''); r=await sb.from('season').select(scols).order('created_at');
+    }
     /* 추천 회차(v24 cand_round) 미적용 환경 폴백 — 컬럼 없으면 빼고 재조회(전부 1회차).
        season 은 컬럼 단위 grant(v16) 테이블이라 grant 누락 시 컬럼명 없는
        'permission denied for table season'(42501) 로 떨어진다 — 그것도 같이 받는다. */
@@ -1309,7 +1330,8 @@ var RT={
       });
       applySchedule(books);
       return {id:m.id,clubId:m.club_id||null,name:m.name,kind:'custom',isOpen:(m.is_open!==false),
-        season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'',books:books,candidates:[],candRound:(m.cand_round||1)}};
+        season:{title:m.season_title,sub:m.season_sub||'',eyebrow:'모임 · '+m.name,meta:'',books:books,candidates:[],candRound:(m.cand_round||1),
+          epigraph:m.epigraph||'',epigraphBy:m.epigraph_by||'',theme:m.theme||''}};
     });
     await RT._loadCandidates();
   },
@@ -1868,6 +1890,26 @@ async function enterClub(id,quiet){
   if(!quiet)toast(STATE.isHost?'모임장 권한으로 입장':'모임에 입장했어요');
 }
 
+/* ═══════════ 시즌 테마·에피그래프 (2026-08-27) ═══════════
+ * 시즌마다 여는 문장(에피그래프)과 결(theme)을 둔다. 「가을의 문장」은 카뮈의
+ * "가을은 모든 잎이 꽃이 되는 두 번째 봄이다" 에서 출발했고, 그 문장이 곧 어떤
+ * 책을 추천할지의 기준이 된다 — 그래서 시즌 페이지와 투표 페이지 양쪽에 띄운다.
+ * theme 는 DB 에서 온 값이라 클래스명에 쓰기 전에 [a-z-] 로만 걸러 쓴다. */
+function seasonThemeClass(sn){
+  var t=String((sn&&sn.theme)||'').toLowerCase().replace(/[^a-z-]/g,'').slice(0,20);
+  return t?' theme-'+t:'';
+}
+var THEME_LEAF={autumn:'🍂'};
+function epigraphHtml(sn,small){
+  if(!sn||!sn.epigraph) return '';
+  var leaf=THEME_LEAF[String((sn.theme||'')).toLowerCase()]||'';
+  return '<div class="epigraph'+(small?' epigraph--sm':'')+seasonThemeClass(sn)+'">'+
+    (leaf?'<span class="epigraph__leaf" aria-hidden="true">'+leaf+'</span>':'')+
+    '<div class="epigraph__q">“'+esc(sn.epigraph)+'”</div>'+
+    (sn.epigraphBy?'<div class="epigraph__by">— '+esc(sn.epigraphBy)+'</div>':'')+
+  '</div>';
+}
+
 /* ═══════════ RENDER: 시즌 리스트 (선택된 모임 안) ═══════════ */
 /* 시즌 고르기 = 서재 책장. 시즌 하나가 책등 한 권으로 꽂혀 있다 (2026-07-21 컨셉 확정). */
 var SHELF_COLORS=['#3B5998','#7E3B49','#2E5D52','#8A6A2F','#4B4468','#2F4858'];
@@ -1886,14 +1928,16 @@ function renderMeetings(){
     if(!sn) sn=SEASON;
     var books=sn.books||[],openBk=null;
     books.forEach(function(b){ if(!openBk&&bookStatus(b)==='open') openBk=b; });
-    cells+='<div class="cubby">'+
+    cells+='<div class="cubby'+seasonThemeClass(sn)+'">'+
        '<div class="cubby__label" onclick="enterMeeting(\''+m.id+'\')" role="button" tabindex="0" aria-label="시즌 '+esc(sn.title)+' 입장">'+
          '<div class="cubby__title">'+esc(sn.title)+'</div>'+
          '<div class="cubby__meta">'+(openBk?'🟢 읽는 중 · ':'')+books.length+'권</div>'+
        '</div>'+
        '<div class="cubby__books" onclick="enterMeeting(\''+m.id+'\')">'+
          (books.length?books.map(function(b,i){return shelfSpineHtml(m.id,b,i);}).join('')
-                      :'<div class="cubby-empty">아직 꽂힌 책이<br>없어요.<br><span class="cubby-empty__hint">다음 책 투표로<br>채워요</span></div>')+
+                      :'<div class="cubby-empty">아직 꽂힌 책이<br>없어요.'+
+                        (sn.epigraph?'<span class="cubby__quote">“'+esc(String(sn.epigraph).slice(0,34))+'”</span>':'')+
+                        '<span class="cubby-empty__hint">다음 책 투표로<br>채워요</span></div>')+
        '</div>'+
        '<div class="cubby__floor"></div>'+
      '</div>';
@@ -2273,12 +2317,14 @@ function renderSeason(){
   var title=sn.title;
   var sub=custom?(sn.sub||(sn.books.length+'권 시즌')):SEASON.sub;
   var meta=custom?'':SEASON.meta;
-  var h='<div class="season-hd">'+
+  var h='<div class="season-page'+seasonThemeClass(sn)+'">'+
+   '<div class="season-hd">'+
      '<div class="season-hd__eyebrow">'+esc(eyebrow)+'</div>'+
      '<div class="season-hd__title">'+esc(title)+'</div>'+
      '<div class="season-hd__sub">'+esc(sub)+'</div>'+
      (meta?'<div class="season-hd__meta">'+esc(meta)+'</div>':'')+
    '</div>'+
+   epigraphHtml(sn)+
    (STATE.isHost?'<div class="host-banner">&#128081; 모임장 모드 — 카드에서 <b>열기/닫기 · 발표자료 · 발표 시작</b>, 카드를 누르면 <b>편집 페이지</b>로 (내 답변은 편집 페이지 하단)</div>':'')+
    '<div class="season-books">';
   books.forEach(function(b,i){
@@ -2339,7 +2385,8 @@ function renderSeason(){
           '</div>'
         : '<button class="btn btn-ghost btn-pill mt-16" onclick="SADD.adding=true;renderSeason()">+ 책 추가</button>')+
        '<div class="center mt-24"><button class="danger-link" onclick="delMeetingHost()">이 시즌 삭제</button></div>'
-     : '<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>');
+     : '<button class="btn btn-ghost btn-pill mt-24" onclick="openHistory()">&#128218; 내 기록 보기</button>')+
+   '</div>';
   document.getElementById('page-season').innerHTML=h;
 }
 async function openBook(id){STATE.bookId=id;DISC.view='rating';BINFO.buf=null;QEDIT.buf=null;MADD.open=false;RESULTS_FROM='book';setNick();if(ONLINE){loading(true);try{await RT.loadBook(id);}catch(e){rtErr(e);}loading(false);}go('book');}
@@ -2567,8 +2614,10 @@ function candidateSectionHtml(seasonId){
   var me=STATE.phone4,maxV=cands.reduce(function(mx,c){return Math.max(mx,c.voters.length);},0);
   var round=seasonRound(seasonId),past=pastCandRounds(seasonId);
   var vsn=(function(){var m=meetingById(seasonId);return (m&&((m.kind==='custom'||ONLINE)?m.season:SEASON))||null;})();
-  var h='<div class="cand-sec"><div class="eyebrow">'+((vsn&&vsn.title)?esc(vsn.title)+' · 다음 책 투표':'다음 책 투표')+'</div>'+
+  var h='<div class="cand-sec'+seasonThemeClass(vsn)+'"><div class="eyebrow">'+((vsn&&vsn.title)?esc(vsn.title)+' · 다음 책 투표':'다음 책 투표')+'</div>'+
     '<h3 class="cand-sec__title">🗳️ 다음엔 어떤 책?</h3>'+
+    epigraphHtml(vsn,true)+
+    ((vsn&&vsn.epigraph)?'<p class="cand-sec__sub" style="margin:0 0 12px">이 문장에 어울리는 책을 추천해 주세요. 모인 책을 엮어 시즌의 이야기를 만듭니다.</p>':'')+
     '<div class="cand-round"><span class="cand-round__badge">'+round+'회차 추천</span>'+
       (STATE.isHost?'<button class="cand-round__new" onclick="startCandRound()">이번 추천 마감하고 새로 받기</button>':'')+
     '</div>'+

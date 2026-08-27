@@ -676,3 +676,84 @@ test('책꽂이: 책이 없는 시즌 칸은 다음 책 투표로 채우라고 �
   assert.equal(cubby.querySelectorAll('.spine-book').length, 0);
   assert.match(cubby.querySelector('.cubby-empty').textContent, /다음 책 투표로/);
 });
+
+/* ── 시즌 에피그래프·테마 (2026-08-27) ── */
+
+/* 오프라인 커스텀 시즌에 여는 문장·테마를 심는다 (ONLINE 은 season 컬럼에서 옴) */
+function seedThemedSeason(a, extra = {}) {
+  const cs = JSON.parse(a.w.localStorage.getItem('rt:meetings') || '[]');
+  cs.push({
+    id: 'mAutumn', clubId: 'c1', name: '未知의 서재', kind: 'custom', isOpen: true,
+    season: {
+      title: '가을의 문장', sub: '모든 잎이 꽃이 되는, 두 번째 봄',
+      eyebrow: '모임 · 未知의 서재', meta: '', books: [],
+      epigraph: '가을은 모든 잎이 꽃이 되는 두 번째 봄이다.',
+      epigraphBy: '알베르 카뮈', theme: 'autumn', ...extra,
+    },
+  });
+  a.w.localStorage.setItem('rt:meetings', JSON.stringify(cs));
+}
+
+test('에피그래프: 시즌 페이지에 여는 문장과 출처가 뜬다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedThemedSeason(a);
+  a.w.enterMeeting('mAutumn');
+  await tick();
+  const el = a.d.getElementById('page-season');
+  const ep = el.querySelector('.epigraph');
+  assert.ok(ep, '에피그래프 카드');
+  assert.match(ep.querySelector('.epigraph__q').textContent, /모든 잎이 꽃이 되는 두 번째 봄/);
+  assert.match(ep.querySelector('.epigraph__by').textContent, /알베르 카뮈/);
+  assert.ok(el.querySelector('.season-page').className.includes('theme-autumn'), '가을 테마 스코프');
+  assert.equal(ep.querySelector('.epigraph__leaf').textContent, '🍂');
+});
+
+test('에피그래프: 투표 페이지에도 같은 문장 + 추천 기준 안내', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedThemedSeason(a);
+  a.w.shelfGoVote('mAutumn');
+  await tick();
+  const el = a.d.getElementById('page-vote');
+  assert.match(el.querySelector('.epigraph--sm .epigraph__q').textContent, /두 번째 봄/);
+  assert.match(el.textContent, /이 문장에 어울리는 책을 추천해 주세요/);
+  assert.ok(el.querySelector('.cand-sec').className.includes('theme-autumn'));
+});
+
+test('에피그래프: 여는 문장이 없는 시즌엔 카드가 안 붙는다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await tick();
+  assert.equal(a.d.getElementById('page-season').querySelector('.epigraph'), null);
+  a.w.go('vote');
+  await tick();
+  assert.equal(a.d.getElementById('page-vote').querySelector('.epigraph'), null);
+});
+
+test('테마: 책꽂이 칸도 시즌 결을 따라가고, 빈 칸엔 여는 문장이 스친다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedThemedSeason(a);
+  a.w.go('meetings');
+  await tick();
+  const cubbies = [...a.d.getElementById('page-meetings').querySelectorAll('.cubby')];
+  const autumn = cubbies.find((c) => /가을의 문장/.test(c.textContent));
+  assert.ok(autumn.className.includes('theme-autumn'));
+  assert.match(autumn.querySelector('.cubby__quote').textContent, /가을은 모든 잎이/);
+});
+
+test('테마: 이상한 theme 값은 클래스로 새지 않는다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedThemedSeason(a, { theme: 'autumn" onload="x' });
+  a.w.enterMeeting('mAutumn');
+  await tick();
+  const el = a.d.getElementById('page-season');
+  /* 따옴표·공백이 걸러져 속성으로 새지 않는다 — 남는 건 글자뿐인 클래스 한 덩어리 */
+  assert.doesNotMatch(el.innerHTML, /onload=/);
+  const cls = el.querySelector('.season-page').className.trim().split(/\s+/);
+  assert.equal(cls.length, 2, 'season-page + theme-* 두 클래스뿐');
+  assert.match(cls[1], /^theme-[a-z-]+$/);
+});
