@@ -635,3 +635,44 @@ test('회차: 회차 정보가 없는 옛 후보는 1회차로 본다', async (t
   assert.equal(a.w.seasonCandidates('m1').length, 1);
   assert.equal(a.w.pastCandRounds('m1').length, 0);
 });
+
+/* ── 다음 시즌을 새로 만들면 추천은 그 시즌으로 (2026-08-27) ── */
+
+test('책꽂이: 다음 책 추천은 마지막 칸(가장 최근 시즌)으로 모인다', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  /* 새 시즌 하나 더 꽂기 */
+  a.w.STATE.clubId = 'c1';
+  a.w.BUILD = { name: '', stitle: '가을 시즌', ssub: '선선함 → 사색' };
+  await a.w.issueMeeting();
+  await tick();
+  const el = a.d.getElementById('page-meetings');
+  const cubbies = [...el.querySelectorAll('.cubby')];
+  assert.equal(cubbies.length, 3, '시즌 2칸 + 다음 칸');
+  assert.match(cubbies[1].querySelector('.cubby__title').textContent, /가을 시즌/);
+  /* 다음 칸의 투표 버튼엔 대상 시즌 이름이 붙고, 누르면 그 시즌으로 들어간다 */
+  const btn = el.querySelector('.cubby--next .cubby__btn--vote');
+  assert.match(btn.querySelector('.cubby__btn-sub').textContent, /가을 시즌/);
+  btn.dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
+  await tick();
+  assert.equal(a.page(), 'vote');
+  const newId = a.w.STATE.meetingId;
+  assert.notEqual(newId, 'm1', '읽는 중인 시즌이 아니라 새 시즌이 대상');
+  assert.match(a.d.getElementById('page-vote').querySelector('.eyebrow').textContent, /가을 시즌/);
+  /* 추천도 새 시즌에 쌓인다 */
+  await propose(a, '가을의 소리');
+  assert.equal(a.w.seasonCandidates(newId).length, 1);
+  assert.equal(a.w.seasonCandidates('m1').length, 0, '이전 시즌엔 안 쌓인다');
+});
+
+test('책꽂이: 책이 없는 시즌 칸은 다음 책 투표로 채우라고 안내한다', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  a.w.STATE.clubId = 'c1';
+  a.w.BUILD = { name: '', stitle: '가을 시즌', ssub: '' };
+  await a.w.issueMeeting();
+  await tick();
+  const cubby = [...a.d.getElementById('page-meetings').querySelectorAll('.cubby')][1];
+  assert.equal(cubby.querySelectorAll('.spine-book').length, 0);
+  assert.match(cubby.querySelector('.cubby-empty').textContent, /다음 책 투표로/);
+});

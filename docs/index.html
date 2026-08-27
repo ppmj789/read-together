@@ -291,6 +291,8 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 .cubby__btn--vote{background:var(--accent);border-color:var(--accent-soft);color:#fff;padding:13px 6px}
 .cubby__btn--vote:hover{background:var(--accent-soft);border-color:var(--accent-soft)}
 .cubby__btn .n{font-family:var(--display);font-size:11px;font-weight:800;background:rgba(255,255,255,.2);border-radius:var(--radius-pill);padding:1px 8px}
+.cubby__btn-sub{font-size:10.5px;font-weight:700;opacity:.88;letter-spacing:-.01em;line-height:1.25;word-break:keep-all}
+.cubby-empty__hint{display:block;margin-top:6px;font-size:11px;font-weight:700;color:var(--accent)}
 /* 칸에 꽂힌 책등 — 칸 폭(3권 기준)에 맞춰 조금 좁게 */
 .spine-book{position:relative;flex:1 1 0;min-width:28px;max-width:72px;height:var(--sp-h,148px);background:var(--sp-bg,var(--accent));border-radius:1px 4px 4px 1px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:10px 0 8px;cursor:pointer;box-shadow:2px 0 5px rgba(26,22,18,.24),inset 4px 0 7px rgba(255,255,255,.14),inset -3px 0 6px rgba(0,0,0,.24);transition:transform .18s ease,box-shadow .18s ease}
 .spine-book:hover{transform:translateY(-6px);box-shadow:2px 9px 16px rgba(26,22,18,.3),inset 4px 0 7px rgba(255,255,255,.14),inset -3px 0 6px rgba(0,0,0,.24)}
@@ -1292,12 +1294,12 @@ var RT={
   async loadMeetings(){
     /* v18: meeting → season 테이블 리네임. 시즌 코드/비번 컬럼도 정리됨. */
     var scols='id,club_id,name,season_title,season_sub,is_open,cand_round,book(id,ord,title,author,intro,author_bio,yearmonth,questions,author_facts,links,opened_at,closed_at,report)';
-    var r=await sb.from('season').select(scols);
+    var r=await sb.from('season').select(scols).order('created_at');
     /* 추천 회차(v24 cand_round) 미적용 환경 폴백 — 컬럼 없으면 빼고 재조회(전부 1회차).
        season 은 컬럼 단위 grant(v16) 테이블이라 grant 누락 시 컬럼명 없는
        'permission denied for table season'(42501) 로 떨어진다 — 그것도 같이 받는다. */
     if(r.error&&(/cand_round/.test((r.error.message||'')+(r.error.details||''))||r.error.code==='42501'||/permission denied/.test(r.error.message||''))){
-      scols=scols.replace('cand_round,',''); r=await sb.from('season').select(scols);
+      scols=scols.replace('cand_round,',''); r=await sb.from('season').select(scols).order('created_at');
     }
     if(r.error){rtErr(r.error);return;}
     MEET_CACHE=(r.data||[]).map(function(m){
@@ -1891,23 +1893,24 @@ function renderMeetings(){
        '</div>'+
        '<div class="cubby__books" onclick="enterMeeting(\''+m.id+'\')">'+
          (books.length?books.map(function(b,i){return shelfSpineHtml(m.id,b,i);}).join('')
-                      :'<div class="cubby-empty">아직 꽂힌 책이 없어요.</div>')+
+                      :'<div class="cubby-empty">아직 꽂힌 책이<br>없어요.<br><span class="cubby-empty__hint">다음 책 투표로<br>채워요</span></div>')+
        '</div>'+
        '<div class="cubby__floor"></div>'+
      '</div>';
   });
-  /* 마지막 칸 = 다음을 정하는 칸 — (모임장) 새 시즌 꽂기 + 다음 책 투표 */
-  var voteTarget=null;
-  all.forEach(function(m){
-    var sn=(m.kind==='custom'||ONLINE)?m.season:SEASON;
-    if(!voteTarget) voteTarget=m;
-    if(sn&&(sn.books||[]).some(function(b){return bookStatus(b)==='open';})) voteTarget=m;
-  });
+  /* 마지막 칸 = 다음을 정하는 칸 — (모임장) 새 시즌 꽂기 + 다음 책 투표.
+     후보를 받을 시즌은 책꽂이의 '마지막 칸' = 가장 최근에 꽂은 시즌 (2026-08-27).
+     예전엔 '열린 책이 있는 시즌' 으로 잡아서, 다음 시즌을 새로 만들어도 추천이
+     지금 읽는 시즌으로 들어갔다 — 새 시즌을 채우려고 받는 추천인데 엉뚱한 칸에 쌓였다. */
+  var voteTarget=all.length?all[all.length-1]:null;
+  var voteSn=voteTarget?((voteTarget.kind==='custom'||ONLINE)?voteTarget.season:SEASON):null;
   if(STATE.isHost||voteTarget){
     cells+='<div class="cubby cubby--next">'+
        '<div class="cubby__nexthd">다음</div>'+
        (STATE.isHost?'<button class="cubby__btn" onclick="go(\'create\')">+ 새 시즌 꽂기</button>':'')+
-       (voteTarget?'<button class="cubby__btn cubby__btn--vote" onclick="shelfGoVote(\''+voteTarget.id+'\')">🗳️ 다음 책 투표<span class="n">'+seasonCandidates(voteTarget.id).length+'</span></button>':'')+
+       (voteTarget?'<button class="cubby__btn cubby__btn--vote" onclick="shelfGoVote(\''+voteTarget.id+'\')">🗳️ 다음 책 투표'+
+          ((voteSn&&voteSn.title)?'<span class="cubby__btn-sub">'+esc(voteSn.title)+'</span>':'')+
+          '<span class="n">'+seasonCandidates(voteTarget.id).length+'</span></button>':'')+
      '</div>';
   }
   if(!all.length&&!STATE.isHost){
@@ -2563,7 +2566,8 @@ function candidateSectionHtml(seasonId){
   var cands=seasonCandidates(seasonId).slice().sort(function(a,b){return b.voters.length-a.voters.length;});
   var me=STATE.phone4,maxV=cands.reduce(function(mx,c){return Math.max(mx,c.voters.length);},0);
   var round=seasonRound(seasonId),past=pastCandRounds(seasonId);
-  var h='<div class="cand-sec"><div class="eyebrow">다음 책 투표</div>'+
+  var vsn=(function(){var m=meetingById(seasonId);return (m&&((m.kind==='custom'||ONLINE)?m.season:SEASON))||null;})();
+  var h='<div class="cand-sec"><div class="eyebrow">'+((vsn&&vsn.title)?esc(vsn.title)+' · 다음 책 투표':'다음 책 투표')+'</div>'+
     '<h3 class="cand-sec__title">🗳️ 다음엔 어떤 책?</h3>'+
     '<div class="cand-round"><span class="cand-round__badge">'+round+'회차 추천</span>'+
       (STATE.isHost?'<button class="cand-round__new" onclick="startCandRound()">이번 추천 마감하고 새로 받기</button>':'')+
