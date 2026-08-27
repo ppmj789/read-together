@@ -727,12 +727,13 @@ test('시즌 기간: 책이 없으면 시즌에 적어둔 기간을 쓴다', asy
 
 /* ── 책마다 다른 별명 사전 (2026-08-27) ── */
 
-test('별명 사전: 가면산장은 일본 추리 테마, 헤일메리는 우주 테마', async (t) => {
+test('별명 사전: 가면산장은 일본식 이름, 헤일메리는 우주 테마', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   const mask = a.w.nickSetForTitle('가면산장 살인사건');
-  assert.ok(mask.adj.includes('유카타 차림의'), '일본 정경이 형용사에');
-  assert.ok(mask.noun.includes('경부') && mask.noun.includes('명탐정'), '일본 미스터리 배역이 명사에');
+  /* 이 책만 '형용사 + 역할' 이 아니라 일본식 이름 (성 + 이름) */
+  assert.ok(mask.adj.includes('하세가와') && mask.adj.includes('마쓰모토'), '성');
+  assert.ok(mask.noun.includes('다카유키') && mask.noun.includes('사토미'), '이름');
   assert.equal(a.w.nickSetForTitle('프로젝트 헤일메리').noun.includes('우주비행사'), true);
   /* 사전이 없는 책은 서재·독서 기본값 — 우주 이름이 아무 책에나 붙지 않는다 */
   const dflt = a.w.nickSetForTitle('아직 사전 없는 책');
@@ -757,8 +758,8 @@ test('별명 사전: 자동 배정 이름이 그 책 사전에서 나온다', as
   a.w.localStorage.setItem('rt:meetings', JSON.stringify(cs));
   const mask = a.w.nickSetForTitle('가면산장 살인사건');
   const auto = a.w.nickFor('7777', 'bMask');
-  assert.ok(mask.adj.some((x) => auto.startsWith(x)), `${auto} 는 추리 테마여야 함`);
-  assert.ok(mask.noun.some((x) => auto.endsWith(x)), `${auto} 는 추리 테마여야 함`);
+  assert.ok(mask.adj.some((x) => auto.startsWith(x)), `${auto} 는 일본식 이름이어야 함`);
+  assert.ok(mask.noun.some((x) => auto.endsWith(x)), `${auto} 는 일본식 이름이어야 함`);
   /* 같은 사람·같은 책이면 항상 같은 이름 (결정론 유지) */
   assert.equal(a.w.nickFor('7777', 'bMask'), auto);
   /* 픽커가 굴리는 이름도 같은 사전 */
