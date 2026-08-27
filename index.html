@@ -987,10 +987,32 @@ var RATING_AXES=[
   {k:'novelty',label:'참신함',hint:'관점이 새로웠나요?'},
   {k:'overall',label:'총점',hint:'한마디로 이 책은?'}
 ];
-/* 우주 컨셉 별명 (프로젝트 헤일메리 시즌) — '~한 ~' 꼴로 조합.
-   두 배열 길이는 서로소(43·49)로 둔다 — nickFor 해시가 한쪽으로 쏠리지 않게. */
+/* ── 책마다 다른 별명 사전 (2026-08-27) ────────────────────────────────────
+   별명은 그 책을 읽는 동안 쓰는 이름이라 책의 결을 따라간다. 우주 이름이
+   추리소설 토론에 붙어 있으면 남의 옷을 입은 것 같다. 아래 NICK_SETS 에
+   '책 제목' → {adj,noun} 한 줄을 더하면 그 책만 사전이 바뀐다 (BOOK_COVERS 와
+   같은 방식). 등록 안 된 책은 서재·독서 테마(VOTE_ADJ/VOTE_NOUN)를 쓴다.
+   두 배열 길이는 서로소로 둔다 — nickFor 해시가 한쪽으로 쏠리지 않게. */
+/* 우주 컨셉 (프로젝트 헤일메리) — 43·49 */
 var NICK_ADJ=['별을 헤는','궤도를 도는','중력을 거스르는','광년을 건너는','성운을 떠도는','빛보다 빠른','무중력에 뜬','고요히 표류하는','귀환을 앞둔','신호를 보내는','잠들지 않는','홀로 항해하는','별먼지로 빚은','타오르는','얼어붙은','공전하는','자전하는','반짝이는','끝없이 팽창하는','블랙홀을 비껴간','산소를 아끼는','좌표를 잃은','교신 중인','착륙을 준비하는','발사를 기다리는','대기권을 넘은','은하를 가로지르는','시간이 느리게 가는','아득히 먼','이름 없는','최초로 도착한','되돌아오지 않는','유영하는','침묵하는','노래하는','꿈꾸는','오래 잠들었다 깨어난','빛을 모으는','어둠을 지나는','새벽을 여는','궤도를 이탈한','중력에 붙잡힌','먼 우주에서 온'];
 var NICK_NOUN=['항해자','우주비행사','탐사선','인공위성','혜성','유성','소행성','성운','은하','블랙홀','초신성','백색왜성','중성자별','북극성','오리온','안드로메다','토성','목성','해왕성','명왕성','달','태양','우주선','캡슐','로켓','우주정거장','관제탑','망원경','좌표','궤도','광년','개척자','오로라','일식','월식','우주복','산소통','신호','교신','등대','나침반','표류자','승무원','선장','기록자','생존자','목격자','여행자','관측자'];
+/* 가면산장 살인사건 — 폭설에 갇힌 산장 · 밀실 추리 · 그리고 무대 위의 가면. 41·47 */
+var NICK_ADJ_MASK=['가면을 쓴','알리바이가 없는','밀실을 여는','폭설에 갇힌','눈길을 되짚는','발자국을 지우는','시치미 떼는','태연한','한 발 늦은','뒤를 밟는','증언을 뒤집는','시간표를 맞추는','창문을 잠근','열쇠를 쥔','불 꺼진 방의','벽난로 앞의','수첩에 적는','발소리를 죽인','정체를 감춘','두 얼굴의','거짓말이 서툰','끝까지 침착한','의심을 사는','현장에 남은','단서를 줍는','전화를 끊은','다락방에 올라간','지하실로 내려간','커튼 뒤의','조명을 끄는','대사를 외운','리허설 중인','각본을 고친','막을 올리는','마지막에 웃는','아무도 못 본','기억이 또렷한','시계를 되감는','눈사람을 세운','산장을 지키는','가장 늦게 도착한'];
+var NICK_NOUN_MASK=['탐정','조수','목격자','용의자','증인','참고인','수사관','형사','알리바이','밀실','트릭','단서','물증','지문','발자국','열쇠','자물쇠','수첩','증언','가면','복면','산장 손님','관리인','집사','요리사','산지기','배우','대역','연출가','각본가','무대감독','조연','주연','관객','커튼콜','눈사람','폭설','벽난로','촛대','추시계','전보','손전등','비밀통로','다락방','응접실','반전','진범'];
+/* 책 제목 → 별명 사전. 없는 책은 NICK_DEFAULT(서재·독서 테마) */
+var NICK_SETS={
+  '프로젝트 헤일메리':{adj:NICK_ADJ,noun:NICK_NOUN},
+  '가면산장 살인사건':{adj:NICK_ADJ_MASK,noun:NICK_NOUN_MASK}
+};
+/* 사전이 등록되지 않은 책의 기본값 — 투표 화면과 같은 서재·독서 테마.
+   (VOTE_ADJ/VOTE_NOUN 은 아래에서 정의되지만 호출은 로드 후라 문제없다) */
+function nickSetForTitle(title){
+  return NICK_SETS[String(title||'').trim()]||{adj:VOTE_ADJ,noun:VOTE_NOUN};
+}
+function nickSetFor(bookId){
+  var b=bookId?bookById(bookId):null;
+  return nickSetForTitle(b&&b.title);
+}
 
 /* ═══════════ STATE & STORE ═══════════ */
 var STATE={phone4:null,bookId:null,clubId:null,meetingId:null,isHost:false};
@@ -1045,7 +1067,10 @@ function applyLocalDrafts(bookId){
 function nkLoad(){try{return JSON.parse(localStorage.getItem('rt:nick'))||{};}catch(e){return MEM['rt:nick']?JSON.parse(MEM['rt:nick']):{};}}
 function nkSave(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:nick',v);}catch(e){MEM['rt:nick']=v;}}
 function fixedNick(p4,bid){return (nkLoad()[p4+'|'+bid])||null;}
-function randomNick(){return NICK_ADJ[Math.floor(Math.random()*NICK_ADJ.length)]+' '+NICK_NOUN[Math.floor(Math.random()*NICK_NOUN.length)];}
+function randomNick(){
+  var st=nickSetFor(STATE.bookId);
+  return st.adj[Math.floor(Math.random()*st.adj.length)]+' '+st.noun[Math.floor(Math.random()*st.noun.length)];
+}
 /* 닉네임 정규화: 연속 공백 축약 + 앞뒤 trim + 소문자 (중복 판정 기준 · v13 인덱스와 동일) */
 function normNick(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim();}
 /* 같은 책에서 이미 쓰이는 닉네임 집합(본인 phone4 제외). 오프라인이면 항상 비어있음. */
@@ -1178,7 +1203,8 @@ function displayNick(phone4,bookId){
 function nickFor(phone4,bookId){
   var str=String(phone4)+'|'+bookId,h=0;
   for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))>>>0;}
-  return NICK_ADJ[h%NICK_ADJ.length]+' '+NICK_NOUN[Math.floor(h/NICK_ADJ.length)%NICK_NOUN.length];
+  var st=nickSetFor(bookId);
+  return st.adj[h%st.adj.length]+' '+st.noun[Math.floor(h/st.adj.length)%st.noun.length];
 }
 /* ── 책 표지 ──
    표지 파일이 있는 책은 목록에서 첫 글자('프') 대신 표지가 보인다.

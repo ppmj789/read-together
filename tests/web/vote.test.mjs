@@ -724,3 +724,47 @@ test('시즌 기간: 책이 없으면 시즌에 적어둔 기간을 쓴다', asy
     .find((c) => /가을의 문장/.test(c.textContent));
   assert.equal(autumn.querySelector('.cubby__period').textContent, '2026.09~11');
 });
+
+/* ── 책마다 다른 별명 사전 (2026-08-27) ── */
+
+test('별명 사전: 가면산장은 추리·무대 테마, 헤일메리는 우주 테마', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  const mask = a.w.nickSetForTitle('가면산장 살인사건');
+  assert.ok(mask.adj.includes('가면을 쓴'));
+  assert.ok(mask.noun.includes('탐정'));
+  assert.equal(a.w.nickSetForTitle('프로젝트 헤일메리').noun.includes('우주비행사'), true);
+  /* 사전이 없는 책은 서재·독서 기본값 — 우주 이름이 아무 책에나 붙지 않는다 */
+  const dflt = a.w.nickSetForTitle('아직 사전 없는 책');
+  assert.equal(dflt.noun.includes('우주비행사'), false);
+  assert.ok(dflt.noun.includes('독서가'));
+});
+
+test('별명 사전: 자동 배정 이름이 그 책 사전에서 나온다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  /* 오프라인 커스텀 시즌에 가면산장을 한 권 꽂는다 */
+  const cs = JSON.parse(a.w.localStorage.getItem('rt:meetings') || '[]');
+  cs.push({
+    id: 'mMask', clubId: 'c1', name: '未知의 서재', kind: 'custom', isOpen: true,
+    season: { title: '가면 시즌', sub: '', eyebrow: '', meta: '', books: [{
+      id: 'bMask', title: '가면산장 살인사건', author: '히가시노 게이고', spine: '가',
+      yearmonth: '', month: '', angle: '', tagline: '', intro: '', intro_note: '',
+      authorBio: '', bio: [], links: [], questions: [''], others: [[]],
+      opened_at: '2026-08-21T00:00:00Z', closed_at: null, closed: false, report: null,
+    }] },
+  });
+  a.w.localStorage.setItem('rt:meetings', JSON.stringify(cs));
+  const mask = a.w.nickSetForTitle('가면산장 살인사건');
+  const auto = a.w.nickFor('7777', 'bMask');
+  assert.ok(mask.adj.some((x) => auto.startsWith(x)), `${auto} 는 추리 테마여야 함`);
+  assert.ok(mask.noun.some((x) => auto.endsWith(x)), `${auto} 는 추리 테마여야 함`);
+  /* 같은 사람·같은 책이면 항상 같은 이름 (결정론 유지) */
+  assert.equal(a.w.nickFor('7777', 'bMask'), auto);
+  /* 픽커가 굴리는 이름도 같은 사전 */
+  a.w.STATE.meetingId = 'mMask'; a.w.STATE.bookId = 'bMask';
+  for (let i = 0; i < 12; i++) {
+    const r = a.w.randomNick();
+    assert.ok(mask.adj.some((x) => r.startsWith(x)) && mask.noun.some((x) => r.endsWith(x)), r);
+  }
+});
