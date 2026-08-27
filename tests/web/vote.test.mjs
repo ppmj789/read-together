@@ -727,12 +727,12 @@ test('시즌 기간: 책이 없으면 시즌에 적어둔 기간을 쓴다', asy
 
 /* ── 책마다 다른 별명 사전 (2026-08-27) ── */
 
-test('별명 사전: 가면산장은 추리·무대 테마, 헤일메리는 우주 테마', async (t) => {
+test('별명 사전: 가면산장은 일본 추리 테마, 헤일메리는 우주 테마', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   const mask = a.w.nickSetForTitle('가면산장 살인사건');
-  assert.ok(mask.adj.includes('가면을 쓴'));
-  assert.ok(mask.noun.includes('탐정'));
+  assert.ok(mask.adj.includes('유카타 차림의'), '일본 정경이 형용사에');
+  assert.ok(mask.noun.includes('경부') && mask.noun.includes('명탐정'), '일본 미스터리 배역이 명사에');
   assert.equal(a.w.nickSetForTitle('프로젝트 헤일메리').noun.includes('우주비행사'), true);
   /* 사전이 없는 책은 서재·독서 기본값 — 우주 이름이 아무 책에나 붙지 않는다 */
   const dflt = a.w.nickSetForTitle('아직 사전 없는 책');
