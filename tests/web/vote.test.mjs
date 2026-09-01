@@ -729,7 +729,7 @@ test('구할 수 있는 곳: 폼에서 고른 값이 저장되고 배지로 뜬�
   assert.ok(badges[1].className.includes('avail--n'));
 });
 
-test('구할 수 있는 곳: 배지를 누르면 모름→있음→없음→모름 으로 돈다', async (t) => {
+test('구할 수 있는 곳: 스위치처럼 — 처음 누르면 있음, 그다음 있음↔없음', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   a.w.enterMeeting('m1');
@@ -744,7 +744,16 @@ test('구할 수 있는 곳: 배지를 누르면 모름→있음→없음→모�
   await a.w.cycleAvail(cid, 'millie');
   assert.equal(a.w.seasonCandidates('m1')[0].millie, 'n');
   await a.w.cycleAvail(cid, 'millie');
-  assert.equal(a.w.seasonCandidates('m1')[0].millie, '', '한 바퀴 돌면 다시 모름');
+  assert.equal(a.w.seasonCandidates('m1')[0].millie, 'y', '그다음부터는 있음↔없음 토글');
+  /* 확인 전 배지엔 물음표 없이 이름만, 스위치는 꺼진 채 */
+  const fresh = app(t);
+  await fresh.loginAs('1234');
+  fresh.w.enterMeeting('m1');
+  await propose(fresh, '책X');
+  const b = fresh.d.querySelector('#page-vote .cand__avail .avail');
+  assert.doesNotMatch(b.textContent, /\?/);
+  assert.match(b.textContent, /밀리$/);
+  assert.ok(b.querySelector('.avail__sw'), '스위치 모양');
 });
 
 test('구할 수 있는 곳: 남이 추천한 책도 아무나 표시를 바꾼다', async (t) => {

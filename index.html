@@ -430,11 +430,16 @@ body.is-page-season .book-card__cover{width:96px}
 .cand-form{background:var(--paper-warm);border-radius:var(--radius-md);padding:16px;margin-top:14px}
 /* 구할 수 있는 곳 배지 (2026-09-01) — 눌러서 검색까지 */
 .cand__avail{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.avail{display:inline-flex;align-items:center;gap:4px;font-family:inherit;font-size:11px;font-weight:800;letter-spacing:-.01em;padding:3px 9px;border-radius:var(--radius-pill);border:1px solid var(--rule);background:var(--paper);color:var(--ink-soft);cursor:pointer;white-space:nowrap;transition:filter .15s}
+.avail{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:11px;font-weight:800;letter-spacing:-.01em;padding:3px 10px 3px 4px;border-radius:var(--radius-pill);border:1px solid var(--rule);background:var(--paper);color:var(--ink-dim);cursor:pointer;white-space:nowrap;transition:background .18s,border-color .18s,color .18s}
+/* 켜짐/꺼짐이 한눈에 — 작은 스위치 + 색. 확인 전은 점선 테두리에 꺼진 스위치 */
+.avail__sw{position:relative;width:24px;height:14px;border-radius:var(--radius-pill);background:var(--rule);flex-shrink:0;transition:background .18s}
+.avail__knob{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--paper);box-shadow:0 1px 2px rgba(26,22,18,.3);transition:transform .18s}
 .avail--y{color:var(--success);border-color:var(--success);background:var(--success-tint)}
-.avail--n{color:var(--ink-dim);background:var(--paper-warm);opacity:.75}
-.avail--q{color:var(--ink-dim);border-style:dashed}
-.avail:hover{filter:brightness(.96)}
+.avail--y .avail__sw{background:var(--success)}
+.avail--y .avail__knob{transform:translateX(10px)}
+.avail--n{color:var(--ink-dim);background:var(--paper-warm)}
+.avail--q{border-style:dashed}
+.avail:hover{border-color:var(--success)}
 .cand-form__avail{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
 .cand-form__avail label{font-size:12.5px;font-weight:700;color:var(--ink-soft);white-space:nowrap}
 .cand-form__avail select{width:100%;min-width:0}
@@ -1272,12 +1277,15 @@ var AVAIL_LABEL={millie:{ic:'📱',name:'밀리'},library:{ic:'🏛️',name:'�
 function availBadge(kind,state,cid){
   var L=AVAIL_LABEL[kind];
   var cls='avail avail--'+(state==='y'?'y':(state==='n'?'n':'q'));
-  var txt=L.ic+' '+L.name+(state==='y'?' 있음':(state==='n'?' 없음':' ?'));
+  /* 아직 확인 전이면 물음표 없이 이름만 — 점선 테두리와 꺼진 스위치로 이미 '미확인'이 보인다 */
+  var txt=L.ic+' '+L.name+(state==='y'?' 있음':(state==='n'?' 없음':''));
   var tip=(state==='y'?L.name+'에 있어요':(state==='n'?L.name+'엔 없어요':L.name+'에 있는지 아직 몰라요'))+' — 눌러서 바꾸기';
-  return '<button class="'+cls+'" title="'+esc(tip)+'" onclick="cycleAvail(\''+cid+'\',\''+kind+'\')">'+txt+'</button>';
+  return '<button class="'+cls+'" title="'+esc(tip)+'" onclick="cycleAvail(\''+cid+'\',\''+kind+'\')">'+
+    '<span class="avail__sw" aria-hidden="true"><span class="avail__knob"></span></span>'+txt+'</button>';
 }
-/* 다음 상태 한 칸 — '' → y → n → '' */
-function nextAvail(v){ return v==='y'?'n':(v==='n'?'':'y'); }
+/* 스위치처럼 — 처음 누르면 '있음', 그다음부터는 있음 ↔ 없음 토글.
+   '아직 확인 안 함' 은 아무도 안 누른 처음 상태로만 존재한다 (2026-09-01) */
+function nextAvail(v){ return v==='y'?'n':'y'; }
 async function cycleAvail(cid,kind){
   if(!STATE.phone4&&!STATE.isHost){toast('휴대폰 4자리로 입장하면 표시할 수 있어요');return;}
   var c=seasonCandidates(STATE.meetingId).filter(function(x){return x.id===cid;})[0];
