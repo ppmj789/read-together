@@ -769,3 +769,71 @@ test('별명 사전: 자동 배정 이름이 그 책 사전에서 나온다', as
     assert.ok(mask.adj.some((x) => r.startsWith(x)) && mask.noun.some((x) => r.endsWith(x)), r);
   }
 });
+
+/* ── 구할 수 있는 곳: 밀리 · 도서관 (2026-09-01) ── */
+
+async function proposeWithAvail(a, title, millie, library) {
+  a.w.CANDADD.open = true;
+  a.w.renderVote();
+  a.d.getElementById('cand-title').value = title;
+  a.d.getElementById('cand-millie').value = millie;
+  a.d.getElementById('cand-library').value = library;
+  await a.w.proposeCandidate();
+}
+
+test('구할 수 있는 곳: 폼에서 고른 값이 저장되고 배지로 뜬다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await proposeWithAvail(a, '베어타운', 'y', 'n');
+  const c = a.w.seasonCandidates('m1')[0];
+  assert.equal(c.millie, 'y');
+  assert.equal(c.library, 'n');
+  const badges = [...a.d.querySelectorAll('#page-vote .cand__avail .avail')];
+  assert.equal(badges.length, 2);
+  assert.match(badges[0].textContent, /밀리 있음/);
+  assert.ok(badges[0].className.includes('avail--y'));
+  assert.match(badges[1].textContent, /도서관 없음/);
+  assert.ok(badges[1].className.includes('avail--n'));
+});
+
+test('구할 수 있는 곳: 확인 전이면 점선 배지 + 누르면 검색으로 나간다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '베어타운', '프레드릭 배크만');
+  const badges = [...a.d.querySelectorAll('#page-vote .cand__avail .avail')];
+  assert.ok(badges.every((b) => b.className.includes('avail--q')), '기본은 아직 모름');
+  assert.match(badges[0].textContent, /밀리 확인/);
+  assert.match(badges[0].href, /millie\.co\.kr.*%EB%B2%A0/); // 제목이 쿼리에 실린다
+  assert.match(badges[1].href, /nl\.go\.kr/);
+  assert.equal(badges[0].target, '_blank');
+});
+
+test('구할 수 있는 곳: 수정 폼에 기존 값이 그대로 채워진다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await proposeWithAvail(a, '베어타운', 'y', '');
+  const c = a.w.seasonCandidates('m1')[0];
+  a.w.editCandidate(c.id);
+  assert.equal(a.d.getElementById('cand-millie').value, 'y');
+  assert.equal(a.d.getElementById('cand-library').value, '');
+  /* 도서관만 '있음' 으로 고쳐 저장 */
+  a.d.getElementById('cand-library').value = 'y';
+  await a.w.proposeCandidate();
+  const c2 = a.w.seasonCandidates('m1')[0];
+  assert.equal(c2.millie, 'y');
+  assert.equal(c2.library, 'y');
+  assert.equal(c2.voters.length, 0, '표는 그대로');
+});
+
+test('구할 수 있는 곳: 이상한 값은 저장되지 않는다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await proposeWithAvail(a, '베어타운', 'yes', 'ㅇㅇ');
+  const c = a.w.seasonCandidates('m1')[0];
+  assert.equal(c.millie, '');
+  assert.equal(c.library, '');
+});
