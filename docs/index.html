@@ -1426,11 +1426,11 @@ var RT={
   async _loadCandidates(){
     /* 다음 책 투표 후보(v19) — material 과 동일하게 별도 쿼리·graceful fallback.
        마이그레이션 미적용 환경에선 조용히 빈 목록(시즌 로딩 자체는 깨지지 않게). */
-    var cols='id,season_id,round,title,author,reason,alias,publisher,price,cover_url,millie,library,by_phone4,next_book_vote(voter_phone4)';
-    var r=await sb.from('next_book_candidate').select(cols).order('created_at');
+    var cols='id,season_id,round,created_at,title,author,reason,alias,publisher,price,cover_url,millie,library,by_phone4,next_book_vote(voter_phone4)';
+    var r=await sb.from('next_book_candidate').select(cols).order('created_at').order('id');
     /* 구할 수 있는 곳(v28 millie/library) 미적용 환경 폴백 */
     if(r.error&&/millie|library/.test((r.error.message||'')+(r.error.details||''))){
-      cols=cols.replace('millie,library,',''); r=await sb.from('next_book_candidate').select(cols).order('created_at');
+      cols=cols.replace('millie,library,',''); r=await sb.from('next_book_candidate').select(cols).order('created_at').order('id');
     }
     /* 회차(v24 round) 미적용 환경 폴백 — 컬럼 없으면 빼고 재조회(전부 1회차) */
     if(r.error&&/round/.test((r.error.message||'')+(r.error.details||''))){
@@ -1452,7 +1452,7 @@ var RT={
     var bySeason={};
     (r.data||[]).forEach(function(c){
       (bySeason[c.season_id]=bySeason[c.season_id]||[]).push({
-        id:c.id,round:(c.round||1),title:c.title,author:c.author||'',reason:c.reason||'',alias:c.alias||'',
+        id:c.id,round:(c.round||1),at:c.created_at||'',title:c.title,author:c.author||'',reason:c.reason||'',alias:c.alias||'',
         publisher:c.publisher||'',price:c.price||'',cover:c.cover_url||'',
         millie:c.millie||'',library:c.library||'',byPhone:c.by_phone4||'',
         voters:(c.next_book_vote||[]).map(function(v){return v.voter_phone4;})});
@@ -2674,8 +2674,14 @@ function renderVote(){
 }
 function candidateSectionHtml(seasonId){
   /* 순서는 '등록순' 고정 — 표에 따라 재정렬하면 한 표 찍을 때마다 카드가 움직여
-     방금 뭘 눌렀는지 놓친다. 누가 앞서는지는 순서 대신 👑 로만 알린다 (2026-09-01). */
+     방금 뭘 눌렀는지 놓친다. 누가 앞서는지는 순서 대신 👑 로만 알린다 (2026-09-01).
+     한꺼번에 등록된 후보들은 created_at 이 같아(한 트랜잭션 = 같은 now()) 서버가
+     물리적 순서로 돌려준다 — 그래서 밀리 체크 한 번에도 카드가 자리를 옮겼다.
+     id 를 2차 키로 못 박아 어떤 수정에도 순서가 고정되게 한다. */
   var cands=seasonCandidates(seasonId).slice();
+  if(cands.every(function(c){return !!c.at;})){
+    cands.sort(function(a,b){ var x=a.at+'|'+a.id,y=b.at+'|'+b.id; return x<y?-1:(x>y?1:0); });
+  }
   var me=STATE.phone4,maxV=cands.reduce(function(mx,c){return Math.max(mx,c.voters.length);},0);
   var past=pastCandRounds(seasonId);
   var vsn=(function(){var m=meetingById(seasonId);return (m&&((m.kind==='custom'||ONLINE)?m.season:SEASON))||null;})();

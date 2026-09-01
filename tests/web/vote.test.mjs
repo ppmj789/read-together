@@ -817,3 +817,19 @@ test('후보 순서: 투표해도 자리가 바뀌지 않는다 (등록순 고�
   assert.ok(cards[2].className.includes('cand--lead'), '최다 득표는 순서 대신 표시로');
   assert.ok(cards[2].querySelector('.cand__crown'));
 });
+
+test('후보 순서: 밀리·도서관 상태를 바꿔도 자리가 그대로다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '책A');
+  await propose(a, '책B');
+  await propose(a, '책C');
+  const titles = () => [...a.d.querySelectorAll('#page-vote .cand__title')].map((e) => e.textContent);
+  const b = a.w.seasonCandidates('m1').find((x) => x.title === '책B');
+  await a.w.cycleAvail(b.id, 'millie');
+  assert.deepEqual(titles(), ['책A', '책B', '책C'], '체크해도 등록순 유지');
+  await a.w.cycleAvail(b.id, 'library');
+  await a.w.voteCandidate(b.id);
+  assert.deepEqual(titles(), ['책A', '책B', '책C']);
+});
