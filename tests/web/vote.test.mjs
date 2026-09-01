@@ -161,18 +161,22 @@ test('후보 카드에 [수정]·[삭제] 버튼이 분리돼 있다', async (t)
   assert.equal(a.d.querySelectorAll('#page-vote .cand__x').length, 0, '× 버튼은 없어져야 함');
 });
 
-test('투표 버튼은 하트가 아니라 북마크 SVG', async (t) => {
+test('투표 표현: 책갈피가 아니라 기표 도장 — 찍으면 붉게 기울어진다', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   a.w.enterMeeting('m1');
   await propose(a, '클루지');
-  const btn = a.d.querySelector('#page-vote .cand__vote');
-  assert.ok(btn.querySelector('svg'), 'SVG 아이콘이어야 함');
-  assert.doesNotMatch(btn.innerHTML, /💛|🤍/);
-  assert.equal(btn.querySelector('svg').getAttribute('fill'), 'none', '안 찍었으면 외곽선');
+  const btn = () => a.d.querySelector('#page-vote .cand__vote');
+  assert.equal(btn().querySelector('svg'), null, '북마크 SVG 는 걷어냈다');
+  assert.doesNotMatch(btn().innerHTML, /💛|🤍/);
+  const stamp = btn().querySelector('.stamp');
+  assert.equal(stamp.textContent, '卜', '투표용지 기표 문양');
+  assert.equal(stamp.className.includes('stamp--on'), false, '안 찍었으면 빈 도장');
+  assert.match(btn().querySelector('.cand__votelb').textContent, /투표/);
   await a.w.voteCandidate(a.w.seasonCandidates('m1')[0].id);
-  const on = a.d.querySelector('#page-vote .cand__vote svg');
-  assert.equal(on.getAttribute('fill'), 'currentColor', '찍으면 꽉 채움');
+  assert.ok(btn().querySelector('.stamp').className.includes('stamp--on'), '찍으면 인주 자국');
+  assert.ok(btn().className.includes('on'));
+  assert.match(btn().querySelector('.cand__votelb').textContent, /찍음/);
 });
 
 test('책장 진입 카드 → 별도 투표 페이지로 이동 (같은 페이지 아님)', async (t) => {
@@ -354,78 +358,6 @@ test('표지: BOOK_COVERS 에 있는 제목이면 책등 글자 대신 표지 �
   const plain = cards.find((x) => x.querySelector('.cand__title').textContent === '표지없는 미지의 책');
   assert.ok(!plain.querySelector('.cand__cover'), '표지 없으면 이미지 없음');
   assert.equal(plain.querySelector('.cand__spine').textContent.trim().charAt(0), '표');
-});
-
-test('의견: 접힌 토글(💬 의견 0)로 시작, 펼쳐서 등록하면 목록·카운트 갱신', async (t) => {
-  const a = app(t);
-  await a.loginAs('1234');
-  a.w.enterMeeting('m1');
-  await propose(a, '클루지');
-  const cid = a.w.seasonCandidates('m1')[0].id;
-  const tog = a.d.querySelector('#page-vote .cand-cmt__toggle');
-  assert.match(tog.textContent, /의견 0/);
-  assert.ok(!a.d.querySelector('#page-vote .cand-cmt__list'), '접힘 상태에선 목록 없음');
-  a.w.toggleCandCmt(cid);
-  a.d.getElementById('ccmt-in-' + cid).value = '이 책 절판 아닌가요?';
-  await a.w.addCandCmt(cid);
-  const c = a.w.seasonCandidates('m1')[0];
-  assert.equal(c.comments.length, 1);
-  assert.equal(c.comments[0].body, '이 책 절판 아닌가요?');
-  assert.equal(c.comments[0].byPhone, '1234');
-  const txt = a.d.getElementById('page-vote').textContent;
-  assert.match(txt, /이 책 절판 아닌가요\?/);
-  assert.match(a.d.querySelector('#page-vote .cand-cmt__toggle').textContent, /의견 1/);
-});
-
-test('의견: 작성자 이름은 번호가 아니라 서재 닉네임(모임장은 모임장)', async (t) => {
-  const a = app(t);
-  await a.loginAs('7220');
-  a.w.enterMeeting('m1');
-  await propose(a, '클루지');
-  const cid = a.w.seasonCandidates('m1')[0].id;
-  a.w.toggleCandCmt(cid);
-  a.d.getElementById('ccmt-in-' + cid).value = '재밌어 보여요';
-  await a.w.addCandCmt(cid);
-  const item = a.d.querySelector('#page-vote .cand-cmt__item');
-  assert.match(item.textContent, new RegExp(a.w.candNick('7220', 'm1')));
-  assert.doesNotMatch(item.textContent, /7220/);
-});
-
-test('의견 삭제: 내 의견만 × 가 보이고, 삭제하면 목록에서 빠진다', async (t) => {
-  const a = app(t);
-  await a.loginAs('1234');
-  a.w.enterMeeting('m1');
-  await propose(a, '클루지');
-  const cid = a.w.seasonCandidates('m1')[0].id;
-  a.w.toggleCandCmt(cid);
-  a.d.getElementById('ccmt-in-' + cid).value = '첫 의견';
-  await a.w.addCandCmt(cid);
-  // 남의 의견엔 × 없음
-  a.w.STATE.phone4 = '9999';
-  a.w.renderVote();
-  assert.ok(!a.d.querySelector('#page-vote .cand-cmt__item .cmt-x'), '남의 의견엔 삭제 버튼 없음');
-  // 본인은 삭제 가능
-  a.w.STATE.phone4 = '1234';
-  a.w.renderVote();
-  const x = a.d.querySelector('#page-vote .cand-cmt__item .cmt-x');
-  assert.ok(x, '내 의견엔 삭제 버튼');
-  const cmtId = a.w.seasonCandidates('m1')[0].comments[0].id;
-  await a.w.delCandCmt(cmtId, cid);
-  assert.equal(a.w.seasonCandidates('m1')[0].comments.length, 0);
-});
-
-test('의견: 로그인 없이 등록하면 막힌다', async (t) => {
-  const a = app(t);
-  await a.loginAs('1234');
-  a.w.enterMeeting('m1');
-  await propose(a, '클루지');
-  const cid = a.w.seasonCandidates('m1')[0].id;
-  a.w.toggleCandCmt(cid);
-  a.d.getElementById('ccmt-in-' + cid).value = '몰래 쓰기';
-  a.w.STATE.phone4 = null;
-  await a.w.addCandCmt(cid);
-  assert.equal((a.w.seasonCandidates('m1')[0].comments || []).length, 0);
-  assert.match(a.lastToast() || '', /입장/);
 });
 
 /* ── 메인 책꽂이 개편(2026-08-21): 칸 나눠진 책꽂이, 한 칸 = 시즌 ── */
@@ -797,17 +729,47 @@ test('구할 수 있는 곳: 폼에서 고른 값이 저장되고 배지로 뜬�
   assert.ok(badges[1].className.includes('avail--n'));
 });
 
-test('구할 수 있는 곳: 확인 전이면 점선 배지 + 누르면 검색으로 나간다', async (t) => {
+test('구할 수 있는 곳: 배지를 누르면 모름→있음→없음→모름 으로 돈다', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   a.w.enterMeeting('m1');
   await propose(a, '베어타운', '프레드릭 배크만');
-  const badges = [...a.d.querySelectorAll('#page-vote .cand__avail .avail')];
-  assert.ok(badges.every((b) => b.className.includes('avail--q')), '기본은 아직 모름');
-  assert.match(badges[0].textContent, /밀리 확인/);
-  assert.match(badges[0].href, /millie\.co\.kr.*%EB%B2%A0/); // 제목이 쿼리에 실린다
-  assert.match(badges[1].href, /nl\.go\.kr/);
-  assert.equal(badges[0].target, '_blank');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  const badge = () => a.d.querySelector('#page-vote .cand__avail .avail');
+  assert.ok(badge().className.includes('avail--q'), '기본은 아직 모름');
+  assert.equal(badge().tagName, 'BUTTON', '링크가 아니라 누르는 상태 표시');
+  await a.w.cycleAvail(cid, 'millie');
+  assert.equal(a.w.seasonCandidates('m1')[0].millie, 'y');
+  assert.match(badge().textContent, /밀리 있음/);
+  await a.w.cycleAvail(cid, 'millie');
+  assert.equal(a.w.seasonCandidates('m1')[0].millie, 'n');
+  await a.w.cycleAvail(cid, 'millie');
+  assert.equal(a.w.seasonCandidates('m1')[0].millie, '', '한 바퀴 돌면 다시 모름');
+});
+
+test('구할 수 있는 곳: 남이 추천한 책도 아무나 표시를 바꾼다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '베어타운', '프레드릭 배크만');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  /* 다른 회원으로 갈아타도 (수정·삭제와 달리) 상태 표시는 막히지 않는다 */
+  a.w.STATE.phone4 = '5678';
+  await a.w.cycleAvail(cid, 'library');
+  assert.equal(a.w.seasonCandidates('m1')[0].library, 'y');
+  assert.match(a.lastToast() || '', /도서관에 있음/);
+});
+
+test('구할 수 있는 곳: 로그인 안 했으면 못 바꾼다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '베어타운', '프레드릭 배크만');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  a.w.STATE.phone4 = null; a.w.STATE.isHost = false;
+  await a.w.cycleAvail(cid, 'millie');
+  assert.equal(a.w.seasonCandidates('m1')[0].millie, '');
+  assert.match(a.lastToast() || '', /입장/);
 });
 
 test('구할 수 있는 곳: 수정 폼에 기존 값이 그대로 채워진다', async (t) => {
