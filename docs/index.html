@@ -1237,7 +1237,10 @@ var BOOK_COVERS={
   '호밀밭의 파수꾼':'assets/covers/catcher.jpg',
   '여름은 오래 그곳에 남아':'assets/covers/natsu.jpg',
   '우리는 가장 밝은 밤에 헤어졌다(원제:백야)':'assets/covers/baekya.jpg',
-  '우리는 가장 밝은 밤에 헤어졌다':'assets/covers/baekya.jpg'
+  '우리는 가장 밝은 밤에 헤어졌다':'assets/covers/baekya.jpg',
+  '사피엔스':'assets/covers/sapiens.jpg',
+  '내가 죽였다':'assets/covers/naega-jugyeotda.jpg',
+  '내가 죽이지 않았다':'assets/covers/naega-jugiji.jpg'
 };
 function coverFor(title){ return BOOK_COVERS[String(title||'').replace(/\s+/g,' ').trim()]||null; }
 /* 서점(알라딘) 상품 페이지 — 표지와 같은 정적 맵 방식(ItemId). 새 책은 여기 한 줄 추가.
@@ -1253,7 +1256,10 @@ var BOOK_STORE_IDS={
   '호밀밭의 파수꾼':'308822243',
   '여름은 오래 그곳에 남아':'74920956',
   '우리는 가장 밝은 밤에 헤어졌다(원제:백야)':'395813767',
-  '우리는 가장 밝은 밤에 헤어졌다':'395813767'
+  '우리는 가장 밝은 밤에 헤어졌다':'395813767',
+  '사피엔스':'314240466',
+  '내가 죽였다':'395976482',
+  '내가 죽이지 않았다':'395964663'
 };
 /* 어디서 구할 수 있나 — 밀리의 서재 · 도서관 (2026-09-01)
    밀리도 공공도서관도 공개 API 가 없어 자동 조회는 안 된다. 대신 '상태 표시' 로 두고
@@ -1419,10 +1425,10 @@ var RT={
     /* 다음 책 투표 후보(v19) — material 과 동일하게 별도 쿼리·graceful fallback.
        마이그레이션 미적용 환경에선 조용히 빈 목록(시즌 로딩 자체는 깨지지 않게). */
     var cols='id,season_id,round,title,author,reason,alias,publisher,price,cover_url,millie,library,by_phone4,next_book_vote(voter_phone4)';
-    var r=await sb.from('next_book_candidate').select(cols);
+    var r=await sb.from('next_book_candidate').select(cols).order('created_at');
     /* 구할 수 있는 곳(v28 millie/library) 미적용 환경 폴백 */
     if(r.error&&/millie|library/.test((r.error.message||'')+(r.error.details||''))){
-      cols=cols.replace('millie,library,',''); r=await sb.from('next_book_candidate').select(cols);
+      cols=cols.replace('millie,library,',''); r=await sb.from('next_book_candidate').select(cols).order('created_at');
     }
     /* 회차(v24 round) 미적용 환경 폴백 — 컬럼 없으면 빼고 재조회(전부 1회차) */
     if(r.error&&/round/.test((r.error.message||'')+(r.error.details||''))){
@@ -2557,6 +2563,7 @@ function pastCandRounds(seasonId){
   var cur=seasonRound(seasonId),by={};
   allSeasonCandidates(seasonId).forEach(function(c){var r=candRound(c);if(r<cur)(by[r]=by[r]||[]).push(c);});
   return Object.keys(by).map(Number).sort(function(a,b){return b-a;}).map(function(r){
+    /* 지난 추천은 이미 끝난 목록이라 표 많은 순으로 봐도 헷갈리지 않는다 */
     return {round:r,cands:by[r].slice().sort(function(a,b){return b.voters.length-a.voters.length;})};
   });
 }
@@ -2664,7 +2671,9 @@ function renderVote(){
   document.getElementById('page-vote').innerHTML=h;
 }
 function candidateSectionHtml(seasonId){
-  var cands=seasonCandidates(seasonId).slice().sort(function(a,b){return b.voters.length-a.voters.length;});
+  /* 순서는 '등록순' 고정 — 표에 따라 재정렬하면 한 표 찍을 때마다 카드가 움직여
+     방금 뭘 눌렀는지 놓친다. 누가 앞서는지는 순서 대신 👑 로만 알린다 (2026-09-01). */
+  var cands=seasonCandidates(seasonId).slice();
   var me=STATE.phone4,maxV=cands.reduce(function(mx,c){return Math.max(mx,c.voters.length);},0);
   var past=pastCandRounds(seasonId);
   var vsn=(function(){var m=meetingById(seasonId);return (m&&((m.kind==='custom'||ONLINE)?m.season:SEASON))||null;})();

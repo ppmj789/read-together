@@ -799,3 +799,21 @@ test('구할 수 있는 곳: 이상한 값은 저장되지 않는다', async (t)
   assert.equal(c.millie, '');
   assert.equal(c.library, '');
 });
+
+test('후보 순서: 투표해도 자리가 바뀌지 않는다 (등록순 고정)', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '책A');
+  await propose(a, '책B');
+  await propose(a, '책C');
+  const titles = () => [...a.d.querySelectorAll('#page-vote .cand__title')].map((e) => e.textContent);
+  assert.deepEqual(titles(), ['책A', '책B', '책C']);
+  /* 마지막 후보에 표를 몰아줘도 순서는 그대로, 대신 👑 가 붙는다 */
+  const c = a.w.seasonCandidates('m1').find((x) => x.title === '책C');
+  await a.w.voteCandidate(c.id);
+  assert.deepEqual(titles(), ['책A', '책B', '책C'], '투표해도 등록순 유지');
+  const cards = [...a.d.querySelectorAll('#page-vote .cand')];
+  assert.ok(cards[2].className.includes('cand--lead'), '최다 득표는 순서 대신 표시로');
+  assert.ok(cards[2].querySelector('.cand__crown'));
+});
