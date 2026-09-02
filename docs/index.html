@@ -1252,7 +1252,10 @@ var BOOK_COVERS={
   '빵충 사육 준수사':'assets/covers/bbangchung.jpg',
   '하루키를 읽다가 술집으로':'assets/covers/haruki-sul.jpg',
   '아무튼, 술':'assets/covers/amuteun-sul.jpg',
-  '칵테일, 러브, 좀비':'assets/covers/cocktail.jpg'
+  '칵테일, 러브, 좀비':'assets/covers/cocktail.jpg',
+  '꾸뻬 씨의 행복 여행':'assets/covers/kkube.jpg',
+  '베를린에는 육개장이 없어서':'assets/covers/berlin.jpg',
+  '독서의 기쁨':'assets/covers/dokseo.jpg'
 };
 function coverFor(title){ return BOOK_COVERS[String(title||'').replace(/\s+/g,' ').trim()]||null; }
 /* 서점(알라딘) 상품 페이지 — 표지와 같은 정적 맵 방식(ItemId). 새 책은 여기 한 줄 추가.
@@ -1280,7 +1283,10 @@ var BOOK_STORE_IDS={
   '칵테일, 러브, 좀비':'295437240',
   /* 지금 읽는 책들도 상품 페이지로 (검색 폴백 대신) */
   '이향인':'387930371',
-  '프로젝트 헤일메리':'396798366'
+  '프로젝트 헤일메리':'396798366',
+  '꾸뻬 씨의 행복 여행':'508047',
+  '베를린에는 육개장이 없어서':'350528516',
+  '독서의 기쁨':'340306987'
 };
 /* 어디서 구할 수 있나 — 밀리의 서재 · 도서관 (2026-09-01)
    밀리도 공공도서관도 공개 API 가 없어 자동 조회는 안 된다. 대신 '상태 표시' 로 두고
