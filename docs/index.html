@@ -1249,7 +1249,9 @@ var BOOK_COVERS={
   '내가 죽였다 + 내가 죽이지 않았다 (전2권)':'assets/covers/naega-set.jpg',
   /* 회원이 올린 후보 — 제목을 적은 그대로도 표지가 붙게 두 표기 다 등록 */
   '빵충 사육 준수 사항':'assets/covers/bbangchung.jpg',
-  '빵충 사육 준수사':'assets/covers/bbangchung.jpg'
+  '빵충 사육 준수사':'assets/covers/bbangchung.jpg',
+  '하루키를 읽다가 술집으로':'assets/covers/haruki-sul.jpg',
+  '아무튼, 술':'assets/covers/amuteun-sul.jpg'
 };
 function coverFor(title){ return BOOK_COVERS[String(title||'').replace(/\s+/g,' ').trim()]||null; }
 /* 서점(알라딘) 상품 페이지 — 표지와 같은 정적 맵 방식(ItemId). 새 책은 여기 한 줄 추가.
@@ -1271,7 +1273,9 @@ var BOOK_STORE_IDS={
   '내가 죽이지 않았다':'395964663',
   '내가 죽였다 + 내가 죽이지 않았다 (전2권)':'396050307',
   '빵충 사육 준수 사항':'398726639',
-  '빵충 사육 준수사':'398726639'
+  '빵충 사육 준수사':'398726639',
+  '하루키를 읽다가 술집으로':'367534350',
+  '아무튼, 술':'190025231'
 };
 /* 어디서 구할 수 있나 — 밀리의 서재 · 도서관 (2026-09-01)
    밀리도 공공도서관도 공개 API 가 없어 자동 조회는 안 된다. 대신 '상태 표시' 로 두고
