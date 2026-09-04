@@ -885,3 +885,20 @@ test('추천 이유: 입력칸에 maxlength 와 글자 수 표시가 있다', as
   a.w.candReasonCount();
   assert.match(a.d.getElementById('cand-reason-n').textContent, /450 \/ 500자/);
 });
+
+test('추천 이유: 줄바꿈이 화면에서도 살아 있다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  a.w.CANDADD.open = true;
+  a.w.renderVote();
+  a.d.getElementById('cand-title').value = '혼모노';
+  a.d.getElementById('cand-reason').value = '첫 줄\n둘째 줄';
+  await a.w.proposeCandidate();
+  assert.equal(a.w.seasonCandidates('m1')[0].reason, '첫 줄\n둘째 줄', '저장은 그대로');
+  const el = a.d.querySelector('#page-vote .cand__reason');
+  assert.match(el.textContent, /첫 줄\n둘째 줄/, '화면 텍스트에도 줄바꿈이 남는다');
+  /* 답변 화면과 같은 규칙(pre-line)으로 렌더 — HTML 이 줄바꿈을 삼키지 않게 */
+  const css = a.d.querySelector('style').textContent;
+  assert.match(css, /\.cand__reason\{[^}]*white-space:pre-line/);
+});

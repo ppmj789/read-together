@@ -404,7 +404,7 @@ body.is-page-season .book-card__cover{width:96px}
 .cand__storelink:hover{text-decoration:underline;text-underline-offset:2px}
 /* 후보 의견(댓글) — 카드 하단 접이식 패널 (v23) */
 /* 추천 이유는 후보 카드의 설득 포인트 — 제목 다음으로 크게 (2026-07-28) */
-.cand__reason{font-size:15px;color:var(--ink);line-height:1.6;margin-top:11px;padding:10px 12px;background:var(--paper-warm);border-left:3px solid var(--accent);border-radius:0 var(--radius-sm) var(--radius-sm) 0;word-break:keep-all}
+.cand__reason{font-size:15px;color:var(--ink);line-height:1.6;margin-top:11px;padding:10px 12px;background:var(--paper-warm);border-left:3px solid var(--accent);border-radius:0 var(--radius-sm) var(--radius-sm) 0;word-break:keep-all;white-space:pre-line}
 .cand--mine .cand__reason{background:var(--paper)}
 .cand__by{font-size:11px;color:var(--ink-dim);margin-top:10px}
 .cand__bynick{display:inline-block;background:var(--highlight);border-radius:var(--radius-pill);padding:3px 9px;margin-right:3px;font-weight:700;color:var(--ink-soft)}
@@ -1255,7 +1255,8 @@ var BOOK_COVERS={
   '칵테일, 러브, 좀비':'assets/covers/cocktail.jpg',
   '꾸뻬 씨의 행복 여행':'assets/covers/kkube.jpg',
   '베를린에는 육개장이 없어서':'assets/covers/berlin.jpg',
-  '독서의 기쁨':'assets/covers/dokseo.jpg'
+  '독서의 기쁨':'assets/covers/dokseo.jpg',
+  '혼모노':'assets/covers/honmono.jpg'
 };
 function coverFor(title){ return BOOK_COVERS[String(title||'').replace(/\s+/g,' ').trim()]||null; }
 /* 서점(알라딘) 상품 페이지 — 표지와 같은 정적 맵 방식(ItemId). 새 책은 여기 한 줄 추가.
@@ -1286,7 +1287,8 @@ var BOOK_STORE_IDS={
   '프로젝트 헤일메리':'396798366',
   '꾸뻬 씨의 행복 여행':'508047',
   '베를린에는 육개장이 없어서':'350528516',
-  '독서의 기쁨':'340306987'
+  '독서의 기쁨':'340306987',
+  '혼모노':'390784779'
 };
 /* 어디서 구할 수 있나 — 밀리의 서재 · 도서관 (2026-09-01)
    밀리도 공공도서관도 공개 API 가 없어 자동 조회는 안 된다. 대신 '상태 표시' 로 두고
