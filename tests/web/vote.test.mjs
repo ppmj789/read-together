@@ -902,3 +902,175 @@ test('추천 이유: 줄바꿈이 화면에서도 살아 있다', async (t) => {
   const css = a.d.querySelector('style').textContent;
   assert.match(css, /\.cand__reason\{[^}]*white-space:pre-line/);
 });
+
+/* ── 투표 마감 · 투표함 (v29, 2026-09-04) ── */
+
+/* 책이 꽂힌 가을 시즌 + 후보 3권(코스모스 3표 · 사피엔스 2표 · 클루지 1표). 마감 여부는 인자로. */
+function seedClosedAutumn(a, closed = true) {
+  const book = (id, title, author) => ({
+    id, title, author, spine: title.charAt(0), yearmonth: '202609', month: '', angle: '', tagline: title,
+    intro: '', intro_note: '', authorBio: '', bio: [], links: [], questions: [''], others: [[]],
+    closed: false, closed_at: null, report: null,
+  });
+  seedThemedSeason(a, { books: [book('bA', '코스모스', '칼 세이건')] });
+  const c = (id, title, voters) => ({ id, round: 1, title, author: '', reason: '', alias: '', byPhone: '1234', voters, comments: [] });
+  a.w.localStorage.setItem('rt:cands', JSON.stringify({
+    mAutumn: [c('cK', '클루지', ['1234']), c('cC', '코스모스', ['1234', '5678', '9012']), c('cS', '사피엔스', ['5678', '9012'])],
+  }));
+  if (closed) a.w.localStorage.setItem('rt:voteclosed', JSON.stringify({ mAutumn: true }));
+}
+
+test('투표 마감: 회원은 추천·투표·수정을 못 하고 버튼 자체가 없다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await propose(a, '코스모스', '칼 세이건');
+  const cid = a.w.seasonCandidates('m1')[0].id;
+  await a.w.voteCandidate(cid);
+  assert.equal(a.w.seasonCandidates('m1')[0].voters.length, 1);
+  a.w.localStorage.setItem('rt:voteclosed', JSON.stringify({ m1: true }));
+  a.w.shelfGoVote('m1');
+  await tick();
+  const el = a.d.getElementById('page-vote');
+  assert.match(el.textContent, /투표가 끝났어요/);
+  assert.match(el.querySelector('.vote-closed').textContent, /후보 1권에 1표/);
+  assert.equal(el.querySelector('button.cand__vote'), null, '투표 버튼 없음');
+  assert.ok(el.querySelector('.cand__vote--ro.on'), '내가 찍은 도장은 읽기 전용으로 남는다');
+  assert.equal(el.querySelector('.cand-add'), null, '추천 버튼 없음');
+  assert.equal(el.querySelector('.cand__act'), null, '수정·삭제 없음');
+  assert.equal(el.querySelector('button.avail'), null, '구할 수 있는 곳 배지도 못 누른다');
+  assert.equal(el.querySelector('.vote-host__btn'), null, '회원에겐 마감 토글이 없다');
+  /* 함수를 직접 불러도 막힌다 */
+  await a.w.voteCandidate(cid);
+  assert.match(a.lastToast(), /투표가 마감됐어요/);
+  assert.equal(a.w.seasonCandidates('m1')[0].voters.length, 1);
+  a.w.CANDADD.open = true; a.w.renderVote();
+  assert.equal(a.d.getElementById('cand-title'), null, '마감이면 폼이 열리지 않는다');
+  a.w.editCandidate(cid);
+  assert.match(a.lastToast(), /투표가 마감됐어요/);
+  await a.w.cycleAvail(cid, 'millie');
+  assert.match(a.lastToast(), /투표가 마감됐어요/);
+  assert.equal(a.w.seasonCandidates('m1')[0].millie || '', '');
+});
+
+test('투표 마감: 표 많은 순으로 순위가 붙고, 시즌에 꽂힌 책엔 선정 표시', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedClosedAutumn(a);
+  a.w.shelfGoVote('mAutumn');
+  await tick();
+  const el = a.d.getElementById('page-vote');
+  const titles = [...el.querySelectorAll('.cand .cand__title')].map((x) => x.textContent);
+  assert.deepEqual(titles, ['코스모스', '사피엔스', '클루지'], '등록순이 아니라 표 순');
+  assert.deepEqual([...el.querySelectorAll('.cand__rank')].map((x) => x.textContent), ['1위', '2위', '3위']);
+  const picked = [...el.querySelectorAll('.cand--picked')];
+  assert.equal(picked.length, 1);
+  assert.match(picked[0].querySelector('.cand__title').textContent, /코스모스/);
+  assert.match(picked[0].querySelector('.cand__picked').textContent, /이번 시즌 책/);
+  assert.match(el.querySelector('.vote-closed').textContent, /후보 3권에 6표.*1권이 이번 시즌 책/);
+  assert.match(a.d.getElementById('subbar-crumb').textContent, /투표함/);
+});
+
+test('투표 마감: 같은 표는 같은 순위', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedClosedAutumn(a);
+  const s = JSON.parse(a.w.localStorage.getItem('rt:cands'));
+  s.mAutumn.find((c) => c.id === 'cS').voters = ['1234', '5678', '9012'];
+  a.w.localStorage.setItem('rt:cands', JSON.stringify(s));
+  a.w.shelfGoVote('mAutumn');
+  await tick();
+  const ranks = [...a.d.querySelectorAll('#page-vote .cand__rank')].map((x) => x.textContent);
+  assert.deepEqual(ranks, ['1위', '1위', '3위']);
+});
+
+test('책꽂이: 책이 꽂힌 시즌 옆에 투표함 칸 — 마감 도장·표수, 누르면 결과로', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedClosedAutumn(a);
+  a.w.go('meetings');
+  await tick();
+  const el = a.d.getElementById('page-meetings');
+  const ballots = [...el.querySelectorAll('.cubby--ballot')];
+  assert.equal(ballots.length, 1, '후보 없는 시즌(m1)엔 투표함이 없다');
+  const cubbies = [...el.querySelectorAll('.cubby')];
+  const autumnIdx = cubbies.findIndex((c) => /가을의 문장/.test(c.querySelector('.cubby__title').textContent));
+  assert.equal(cubbies[autumnIdx + 1], ballots[0], '투표함은 가을의 문장 바로 옆 칸');
+  assert.equal(ballots[0].querySelector('.cubby__title').textContent, '투표함');
+  assert.match(ballots[0].querySelector('.cubby__meta').textContent, /가을의 문장 · 마감/);
+  assert.ok(ballots[0].querySelector('.closed-stamp'));
+  assert.match(ballots[0].querySelector('.cubby__ballot .n').textContent, /후보 3권 · 6표/);
+  assert.equal(ballots[0].querySelector('.cubby__votebtn'), null);
+  assert.doesNotMatch(el.textContent, /사피엔스|클루지/, '후보 제목은 책꽂이에 안 새어 나온다');
+  ballots[0].querySelector('.cubby__ballot').dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
+  await tick();
+  assert.equal(a.page(), 'vote');
+  assert.equal(a.w.STATE.meetingId, 'mAutumn');
+  assert.match(a.d.getElementById('page-vote').textContent, /투표가 끝났어요/);
+});
+
+test('책꽂이: 투표가 아직 열려 있어도 책이 꽂힌 시즌에 후보가 있으면 투표함(투표 중)', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedClosedAutumn(a, false);
+  a.w.go('meetings');
+  await tick();
+  const b = a.d.querySelector('#page-meetings .cubby--ballot');
+  assert.ok(b);
+  assert.match(b.querySelector('.cubby__meta').textContent, /투표 중/);
+  assert.equal(b.querySelector('.closed-stamp'), null);
+});
+
+test('책꽂이: 책 없는 시즌이 마감되면 칸 버튼이 「투표함 결과 보기」로', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedThemedSeason(a);
+  a.w.localStorage.setItem('rt:voteclosed', JSON.stringify({ mAutumn: true }));
+  a.w.go('meetings');
+  await tick();
+  const el = a.d.getElementById('page-meetings');
+  assert.equal(el.querySelector('.cubby--ballot'), null, '빈 칸엔 별도 투표함 칸을 붙이지 않는다');
+  assert.match(el.querySelector('.cubby__votebtn').textContent, /투표함결과 보기/);
+});
+
+test('시즌 페이지: 마감되면 진입 카드가 투표함·마감으로 바뀐다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedClosedAutumn(a);
+  a.w.enterMeeting('mAutumn');
+  await tick();
+  const card = a.d.querySelector('#page-season .vote-entry');
+  assert.match(card.textContent, /투표함 · 마감/);
+  assert.match(card.textContent, /후보 3권/);
+  assert.equal(card.querySelector('.book-card__badge').textContent, '마감');
+});
+
+test('모임장: 투표를 마감하고 다시 열 수 있다', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  a.w.shelfGoVote('m1');
+  await tick();
+  let btn = a.d.querySelector('#page-vote .vote-host__btn');
+  assert.match(btn.textContent, /투표 마감하기/);
+  assert.equal(a.w.voteClosed('m1'), false);
+  await a.w.toggleVoteClosed();
+  assert.equal(a.w.voteClosed('m1'), true);
+  assert.match(a.lastToast(), /투표를 마감했어요/);
+  btn = a.d.querySelector('#page-vote .vote-host__btn');
+  assert.match(btn.textContent, /다시 열기/);
+  assert.equal(a.d.querySelector('#page-vote .cand-add'), null, '모임장도 마감 중엔 추천 못 한다');
+  await a.w.toggleVoteClosed();
+  assert.equal(a.w.voteClosed('m1'), false);
+  assert.match(a.lastToast(), /다시 열었어요/);
+  assert.ok(a.d.querySelector('#page-vote .cand-add'));
+});
+
+test('모임장: 확인을 취소하면 마감되지 않는다', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  a.w.shelfGoVote('m1');
+  await tick();
+  a.w.uiConfirm = async () => false;
+  await a.w.toggleVoteClosed();
+  assert.equal(a.w.voteClosed('m1'), false);
+});
