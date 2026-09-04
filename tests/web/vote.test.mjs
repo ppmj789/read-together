@@ -998,16 +998,110 @@ test('책꽂이: 책 없는 시즌이 마감되면 칸 버튼이 「투표함 �
   assert.match(el.querySelector('.cubby__votebtn').textContent, /투표함결과 보기/);
 });
 
-test('시즌 페이지: 마감되면 진입 카드가 투표함·마감으로 바뀐다', async (t) => {
+test('시즌 페이지: 마감되면 진입 카드 대신 「어떻게 골랐나」가 투표함으로 잇는다', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   seedClosedAutumn(a);
   a.w.enterMeeting('mAutumn');
   await tick();
-  const card = a.d.querySelector('#page-season .vote-entry');
-  assert.match(card.textContent, /투표함 · 마감/);
-  assert.match(card.textContent, /후보 3권/);
-  assert.equal(card.querySelector('.book-card__badge').textContent, '마감');
+  const el = a.d.getElementById('page-season');
+  assert.equal(el.querySelector('.vote-entry'), null, '마감이면 다음 책 정하기 카드는 없다');
+  const how = el.querySelector('.season-how');
+  assert.match(how.textContent, /후보 3권에 6표 — 투표로 1권을 골랐어요/);
+  how.querySelector('button').dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
+  await tick();
+  assert.equal(a.page(), 'vote');
+});
+
+/* ── 시즌 소개 — 서문 · 세 권의 흐름 (2026-09-04) ── */
+
+function seedIntroAutumn(a) {
+  seedClosedAutumn(a);
+  const cs = JSON.parse(a.w.localStorage.getItem('rt:meetings'));
+  const m = cs.find((x) => x.id === 'mAutumn');
+  m.season.intro = '잎이 지는 것을 끝이 아니라 한 번 더 피는 일로 읽는 계절.\n그래서 세 권을 이 순서로 골랐습니다.';
+  m.season.books[0].motif = '잎이 진다';
+  m.season.books[0].angle = '한 해가 기울기 시작할 때 읽는 책';
+  a.w.localStorage.setItem('rt:meetings', JSON.stringify(cs));
+  const s = JSON.parse(a.w.localStorage.getItem('rt:cands'));
+  s.mAutumn.find((c) => c.id === 'cC').reason = '가을은 거두는 계절이죠.';
+  s.mAutumn.find((c) => c.id === 'cC').alias = '밑줄 긋는 사서';
+  a.w.localStorage.setItem('rt:cands', JSON.stringify(s));
+}
+
+test('시즌 소개: 서문·토막·엮는 말·추천 이유가 시즌 페이지 상단에 뜬다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedIntroAutumn(a);
+  a.w.enterMeeting('mAutumn');
+  await tick();
+  const el = a.d.getElementById('page-season');
+  const intro = el.querySelector('.season-intro');
+  assert.match(intro.textContent, /한 번 더 피는 일로 읽는 계절/);
+  assert.match(intro.innerHTML, /\n/, '줄바꿈이 보존된다(pre-line)');
+  const item = el.querySelector('.flow-item');
+  assert.match(item.querySelector('.flow-item__motif').textContent, /잎이 진다/);
+  assert.match(item.querySelector('.flow-item__angle').textContent, /한 해가 기울기 시작할 때/);
+  assert.match(item.querySelector('.flow-item__reason').textContent, /가을은 거두는 계절이죠.*밑줄 긋는 사서님의 추천 이유/s);
+  /* 순서: 여는 문장 → 서문 → 흐름 → 어떻게 골랐나 → 책 카드 */
+  const order = [...el.querySelectorAll('.epigraph, .season-intro, .season-flow, .season-how, .book-card')].map((x) => x.className.split(' ')[0]);
+  assert.deepEqual(order.slice(0, 5), ['epigraph', 'season-intro', 'season-flow', 'season-how', 'book-card']);
+  assert.equal(el.querySelector('.season-intro__edit'), null, '회원에겐 편집 버튼이 없다');
+  item.dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
+  await tick();
+  assert.equal(a.page(), 'book');
+});
+
+test('시즌 소개: 서문도 토막도 없고 투표도 열려 있으면 예전 화면 그대로', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedClosedAutumn(a, false);
+  a.w.enterMeeting('mAutumn');
+  await tick();
+  const el = a.d.getElementById('page-season');
+  assert.equal(el.querySelector('.season-intro'), null);
+  assert.equal(el.querySelector('.season-flow'), null);
+  assert.equal(el.querySelector('.season-how'), null);
+  assert.ok(el.querySelector('.vote-entry'));
+});
+
+test('시즌 소개: 모임장이 서문을 쓰고 고친다', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  seedClosedAutumn(a);
+  a.w.enterMeeting('mAutumn');
+  await tick();
+  let el = a.d.getElementById('page-season');
+  assert.equal(el.querySelector('.season-intro'), null);
+  const add = [...el.querySelectorAll('button')].find((b) => /시즌 서문 쓰기/.test(b.textContent));
+  add.dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
+  await tick();
+  a.d.getElementById('sintro').value = '  첫 서문입니다.  ';
+  await a.w.saveSeasonIntro();
+  el = a.d.getElementById('page-season');
+  assert.equal(el.querySelector('.season-intro').textContent, '첫 서문입니다.');
+  assert.match(a.lastToast(), /서문을 저장했어요/);
+  assert.ok([...el.querySelectorAll('button')].find((b) => /서문 고치기/.test(b.textContent)));
+  const m = JSON.parse(a.w.localStorage.getItem('rt:meetings')).find((x) => x.id === 'mAutumn');
+  assert.equal(m.season.intro, '첫 서문입니다.');
+});
+
+test('책 정보 편집: 토막·엮는 말이 저장되고 시즌 소개에 반영된다', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  seedClosedAutumn(a);
+  a.w.enterMeeting('mAutumn');
+  await tick();
+  await a.w.openBook('bA');
+  a.w.editBookInfo();
+  a.d.getElementById('bi-motif').value = '두 번째 봄';
+  a.d.getElementById('bi-angle').value = '인류 전체의 시간에서 다시 보는 우리';
+  await a.w.saveBookInfo();
+  a.w.go('season');
+  await tick();
+  const item = a.d.querySelector('#page-season .flow-item');
+  assert.match(item.querySelector('.flow-item__motif').textContent, /두 번째 봄/);
+  assert.match(item.querySelector('.flow-item__angle').textContent, /인류 전체의 시간/);
 });
 
 test('모임장: 투표를 마감하고 다시 열 수 있다', async (t) => {
