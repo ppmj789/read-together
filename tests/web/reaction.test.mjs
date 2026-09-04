@@ -141,3 +141,40 @@ test('[AI 분석] 탭에는 반응 카드가 없다 — 반응은 진행탭·발
   assert.equal(a.d.getElementById('analysis-rx-card'), null, '분석 탭 반응 카드는 삭제됨');
   assert.equal(a.d.getElementById('analysis-star-pick'), null, '별점으로 발언자 뽑기도 삭제됨');
 });
+
+/* ── 댓글 전부 공개 (2026-09-04) — 남의 답변에 달린 남의 댓글도 보인다 ── */
+test('댓글 공개: 다른 사람이 단 댓글이 답변 밑에 닉네임과 함께 보인다', async (t) => {
+  const a = app(t);
+  const b = await othersView(a); // 1234 가 5555 의 답변을 보는 중
+  a.d.getElementById('cm-0-0').value = '저도 그렇게 읽었어요';
+  await a.w.addComment(0, 0);
+  /* 내 화면: '나' + 삭제 버튼 */
+  let box = a.d.querySelector('#page-discussion .answer:not(.mine) .comment-box');
+  assert.match(box.textContent, /댓글 1개/);
+  assert.match(box.querySelector('.comment').textContent, /^나 저도 그렇게 읽었어요/);
+  assert.ok(box.querySelector('.cmt-x'));
+  const nick1234 = a.w.displayNick('1234', 'ihyangin');
+  /* 제3자(5678) 로 들어가 같은 답변을 보면 — 1234 의 댓글이 닉네임으로 보인다 */
+  await a.loginAs('5678');
+  a.w.enterMeeting('m1');
+  await a.w.openBook('ihyangin');
+  a.w.go('discussion');
+  for (const ax of a.w.RATING_AXES) await a.w.setRating(ax.k, 3);
+  b.questions.forEach((q, i) => { a.d.getElementById('ans-' + i).value = '5678 답변 ' + (i + 1); });
+  await a.w.submitAnswers();
+  a.w.DISC.view = 'others';
+  a.w.renderDiscussion();
+  box = a.d.querySelector('#page-discussion .answer:not(.mine) .comment-box');
+  assert.match(box.textContent, /댓글 1개/);
+  const c = box.querySelector('.comment');
+  assert.match(c.textContent, /저도 그렇게 읽었어요/);
+  assert.equal(c.querySelector('b').textContent, nick1234, '작성자 닉네임으로 표시');
+  assert.doesNotMatch(c.textContent, /^나 /);
+  assert.equal(box.querySelector('.cmt-x'), null, '남의 댓글엔 삭제 버튼이 없다');
+  /* 5678 이 댓글을 하나 더 달면 둘 다 보인다 */
+  a.d.getElementById('cm-0-0').value = '토론 때 얘기해요';
+  await a.w.addComment(0, 0);
+  box = a.d.querySelector('#page-discussion .answer:not(.mine) .comment-box');
+  assert.match(box.textContent, /댓글 2개/);
+  assert.equal(box.querySelectorAll('.comment').length, 2);
+});
