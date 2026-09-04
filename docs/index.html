@@ -507,16 +507,27 @@ body.is-page-season .book-card__cover{width:96px}
 .shelf-ballot__seal{position:absolute;left:50%;top:9px;transform:translateX(-50%) rotate(-7deg);font-size:7.5px;font-weight:900;letter-spacing:.08em;color:#fff;background:var(--stamp);padding:1px 4px;border-radius:2px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .shelf-ballot__n{position:absolute;left:0;right:0;bottom:4px;font-family:var(--display);font-size:9.5px;font-weight:800;color:#3A2E22;text-align:center;line-height:1;letter-spacing:.02em}
 
-/* 접은 신문 — 시즌 결산호 (2026-09-04, v31). 시즌의 책이 전부 마감되고 season.report 가
-   있을 때만 책들 옆 바닥에 놓인다. 투표함과 같은 문법의 '책이 아닌 물건'. 누르면 결산 페이지. */
-.shelf-paper{position:relative;flex:0 0 auto;width:46px;height:40px;margin-left:6px;align-self:flex-end;border:0;padding:0;background:none;cursor:pointer;font-family:inherit;transition:transform .18s ease}
-.shelf-paper:hover{transform:translateY(-4px) rotate(-2deg)}
-.shelf-paper__sheet{position:absolute;left:0;right:0;bottom:0;height:34px;background:linear-gradient(180deg,#FBF7EC 0%,#EDE6D3 100%);border:1px solid rgba(26,22,18,.35);border-radius:2px 2px 1px 1px;box-shadow:2px 0 5px rgba(26,22,18,.24),inset 0 -9px 0 rgba(26,22,18,.05);overflow:hidden}
-.shelf-paper__sheet::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(26,22,18,.28)}
-.shelf-paper__head{position:absolute;left:0;right:0;top:3px;font-family:var(--serif);font-size:7px;font-weight:700;letter-spacing:.02em;color:#1A1612;text-align:center;line-height:1.1;white-space:nowrap}
-.shelf-paper__lines{position:absolute;left:5px;right:5px;top:14px;height:3px;border-top:1px solid rgba(26,22,18,.45);border-bottom:1px solid rgba(26,22,18,.45)}
-.shelf-paper__body{position:absolute;left:5px;right:5px;bottom:5px;height:9px;background:repeating-linear-gradient(180deg,rgba(26,22,18,.32) 0 1px,transparent 1px 3px)}
-.shelf-paper__tag{position:absolute;right:-4px;top:-6px;font-size:7px;font-weight:900;letter-spacing:.06em;color:#fff;background:var(--stamp);padding:1px 4px;border-radius:2px;transform:rotate(6deg);box-shadow:0 1px 2px rgba(0,0,0,.25)}
+/* 말린 신문 — 시즌 결산호 (2026-09-04, v31). 시즌의 책이 전부 마감되고 season.report 가
+   있을 때만 책들 옆에 세워 둔다. 길게 말아 세운 두루마리, 허리에 리본 하나.
+   투표함과 같은 문법의 '책이 아닌 물건'. 누르면 결산 페이지. */
+.shelf-paper{position:relative;flex:0 0 auto;width:30px;height:134px;margin-left:7px;align-self:flex-end;border:0;padding:0;background:none;cursor:pointer;font-family:inherit;transition:transform .18s ease}
+.shelf-paper:hover{transform:translateY(-6px) rotate(-2deg)}
+/* 원통 — 좌에서 우로 빛이 도는 종이 결 + 글줄 */
+.shelf-paper__roll{position:absolute;left:3px;right:3px;top:8px;bottom:0;border-radius:12px 12px 10px 10px/7px 7px 6px 6px;
+  background:
+    repeating-linear-gradient(180deg,rgba(26,22,18,.13) 0 1px,transparent 1px 4px),
+    linear-gradient(90deg,#B9AB8A 0%,#E9E1CC 22%,#FBF7EC 42%,#F1EAD8 60%,#CFC3A4 86%,#A99B7A 100%);
+  box-shadow:2px 0 5px rgba(26,22,18,.26),inset 0 -2px 0 rgba(0,0,0,.12)}
+/* 위쪽 끝 — 말린 소용돌이 단면 */
+.shelf-paper__end{position:absolute;left:3px;right:3px;top:3px;height:11px;border-radius:50%;
+  background:repeating-radial-gradient(circle at 46% 50%,#F5EFDF 0 1.4px,#8F8264 1.4px 2.4px);
+  border:1px solid rgba(26,22,18,.4);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+/* 제호 — 두루마리 결을 따라 세로로 */
+.shelf-paper__head{position:absolute;left:0;right:0;top:20px;writing-mode:vertical-rl;text-orientation:upright;margin:0 auto;width:12px;font-family:var(--serif);font-size:8px;font-weight:700;letter-spacing:.06em;color:#2B241C;line-height:1;text-shadow:0 0 2px rgba(251,247,236,.9)}
+/* 허리 리본 — 띠 + 작은 매듭 + 늘어진 꼬리 */
+.shelf-paper__ribbon{position:absolute;left:1px;right:1px;top:58%;height:8px;background:linear-gradient(180deg,#D9524A 0%,var(--stamp) 55%,#8E2A1F 100%);border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.shelf-paper__ribbon::before{content:"";position:absolute;right:6px;top:-2px;width:8px;height:12px;border:2px solid #B33A2E;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:#E0645A;box-sizing:border-box}
+.shelf-paper__ribbon::after{content:"";position:absolute;right:5px;top:9px;width:3px;height:16px;background:linear-gradient(180deg,#B33A2E,#E0645A);border-radius:0 0 2px 2px;transform:rotate(-8deg);transform-origin:top}
 /* 시즌 페이지 진입 줄 */
 .season-report-entry{display:flex;align-items:center;gap:12px;margin:14px 0 6px;padding:12px 14px;border:1px solid var(--rule);border-left:3px solid var(--stamp);border-radius:var(--radius-md);background:var(--paper);cursor:pointer;transition:transform .18s,box-shadow .18s}
 .season-report-entry:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
@@ -588,6 +599,39 @@ body.is-page-season .book-card__cover{width:96px}
 .srp-matrix td.z{color:var(--ink-dim);opacity:.45;font-weight:400}
 .srp-matrix td.self{background:repeating-linear-gradient(45deg,transparent 0 4px,var(--rule-soft) 4px 5px)}
 .srp-matrix td.t{color:var(--ink-soft);background:var(--paper)}
+/* 발표 덱 — 한 장이 화면을 채우고, 아래 줄에 이전/다음 */
+.srp-deck{min-height:calc(100vh - 170px);display:flex;flex-direction:column;padding-bottom:0}
+.srp-deck__slide{flex:1;display:flex;flex-direction:column;justify-content:center;animation:pageIn .3s ease}
+.srp-deck .srp-sec{padding-top:0}
+.srp-deck .srp-mast{border-bottom:0;padding-bottom:0}
+.srp-deck .srp-mast__title{font-size:56px}
+.srp-deck .srp-mast__thesis{font-size:26px;max-width:34ch}
+.srp-deck .srp-spine{min-height:96px}.srp-deck .srp-spine b{font-size:18px}
+.srp-deck .srp-sec__hd h2{font-size:30px}
+.srp-deck .srp-lede{font-size:18px;max-width:70ch}
+.srp-deck .srp-totals b{font-size:34px}.srp-deck .srp-totals span{font-size:13.5px}
+.srp-deck .srp-axis h4{font-size:15px}.srp-deck .srp-axis .read{font-size:13.5px}
+.srp-deck .srp-note{font-size:17px;max-width:70ch}
+.srp-deck .srp-thread{margin-top:10px}
+.srp-deck .srp-thread__q{font-size:30px}.srp-deck .srp-thread__q em{font-size:14px}
+.srp-deck .srp-thread__body{font-size:19px;max-width:70ch}
+.srp-deck .srp-q{font-size:20px;padding:14px 20px}.srp-deck .srp-q cite{font-size:13px}
+.srp-sec--verdict .srp-verdict{margin-top:14px}
+.srp-deck .srp-sec--verdict{align-items:center;text-align:center;display:flex;flex-direction:column}
+.srp-deck .srp-verdict{font-size:28px;line-height:1.6;padding:34px 40px;max-width:30ch;text-align:left}
+.srp-deck .srp-roster{font-size:17px}.srp-deck .srp-roster th,.srp-deck .srp-roster td{padding:12px 16px}
+.srp-members--one{grid-template-columns:1fr;max-width:820px}
+.srp-deck .srp-members--one{margin-top:14px}
+.srp-deck .srp-card{padding:26px 28px 22px;gap:16px}
+.srp-deck .srp-card__title{font-size:26px}.srp-deck .srp-card__award{font-size:13px;padding:4px 12px}
+.srp-deck .srp-card__desc{font-size:17.5px}
+.srp-deck .srp-card .srp-q{font-size:17px;padding:10px 16px}
+.srp-deck .srp-reveal{font-size:16px;padding:12px 16px}.srp-deck .srp-reveal .num{font-size:34px}
+.srp-deck .srp-matrix{font-size:15px}.srp-deck .srp-matrix td{height:48px}.srp-deck .srp-matrix th{font-size:14px}
+.srp-deck__nav{display:flex;justify-content:center;align-items:center;gap:18px;padding:18px 0 4px;border-top:1px solid var(--rule);margin-top:20px}
+.srp-deck__pos{font-size:14px;color:var(--ink-dim);min-width:160px;text-align:center}
+.srp-deck__pos b{color:var(--ink);font-size:16px}
+.srp-deck__btn[disabled]{opacity:.35;cursor:default}
 .srp-foot{margin-top:36px;font-size:11px;color:var(--ink-dim);letter-spacing:.04em;border-top:1px solid var(--rule);padding-top:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
 @media (max-width:640px){
   .srp-mast__title{font-size:28px}
@@ -2336,12 +2380,10 @@ function shelfPaperHtml(m,sn){
   if(!seasonReportOf(m)) return '';
   return '<button class="shelf-paper" onclick="event.stopPropagation();shelfGoReport(\''+m.id+'\')"'+
     ' title="시즌 결산호 — '+esc(sn.title)+'" aria-label="시즌 '+esc(sn.title)+' 결산호 읽기">'+
-    '<span class="shelf-paper__sheet" aria-hidden="true">'+
-      '<span class="shelf-paper__head">결산호</span>'+
-      '<span class="shelf-paper__lines"></span>'+
-      '<span class="shelf-paper__body"></span>'+
-    '</span>'+
-    '<span class="shelf-paper__tag" aria-hidden="true">📰</span>'+
+    '<span class="shelf-paper__roll" aria-hidden="true"></span>'+
+    '<span class="shelf-paper__end" aria-hidden="true"></span>'+
+    '<span class="shelf-paper__head" aria-hidden="true">결산호</span>'+
+    '<span class="shelf-paper__ribbon" aria-hidden="true"></span>'+
   '</button>';
 }
 function shelfGoReport(mid){ STATE.meetingId=mid;STATE.bookId=null;setNick();go('season-report'); }
@@ -2362,32 +2404,61 @@ function renderSeasonReport(){
   else h=seasonReportHtml(sn,rep,false);
   document.getElementById('page-season-report').innerHTML=h;
 }
-/* 발표모드 [시즌 결산] 씬 — 같은 지면을 넓게 */
+/* 발표모드 [시즌 결산] 씬 — 같은 지면을 한 장씩 넘기는 덱 (2026-09-04 사용자 요청: "발표할거라 한장씩") */
+var SRPDECK={i:0,n:0};
 function renderStageSeason(){
   var m=meetingOfBook(STAGE.bookId||currentBookId()),rep=seasonReportOf(m);
   var sn=m?((m.kind==='custom'||ONLINE)?m.season:SEASON):SEASON;
   var el=document.getElementById('stage-season'); if(!el) return;
-  el.innerHTML=rep?seasonReportHtml(sn,rep,true):'<div class="center dim" style="padding:40px">시즌 결산호가 아직 없어요.</div>';
+  if(!rep){ el.innerHTML='<div class="center dim" style="padding:40px">시즌 결산호가 아직 없어요.</div>'; SRPDECK.n=0; return; }
+  var slides=seasonReportSlides(sn,rep);
+  SRPDECK.n=slides.length; if(SRPDECK.i>=slides.length) SRPDECK.i=0;
+  var cur=slides[SRPDECK.i];
+  el.innerHTML='<div class="srp srp--stage srp-deck">'+
+    '<div class="srp-deck__slide" data-slide="'+esc(cur.key)+'">'+cur.html+'</div>'+
+    '<div class="srp-deck__nav">'+
+      '<button class="btn btn-ghost btn-pill srp-deck__btn" style="width:auto" onclick="srpDeckNav(-1)"'+(SRPDECK.i===0?' disabled':'')+'>‹ 이전</button>'+
+      '<span class="srp-deck__pos"><b>'+(SRPDECK.i+1)+'</b> / '+slides.length+' · '+esc(cur.label)+'</span>'+
+      '<button class="btn btn-primary btn-pill srp-deck__btn" style="width:auto" onclick="srpDeckNav(1)"'+(SRPDECK.i===slides.length-1?' disabled':'')+'>다음 ›</button>'+
+    '</div>'+
+  '</div>';
 }
+function srpDeckNav(d){
+  if(!SRPDECK.n) return;
+  var i=SRPDECK.i+d; if(i<0||i>=SRPDECK.n) return;
+  SRPDECK.i=i; renderStageSeason();
+  var w=document.getElementById('stage-wrap'); if(w) w.scrollTop=0;
+}
+/* 방향키 — 발표모드 [시즌 결산] 씬에서만, 확대 오버레이가 없을 때 */
+document.addEventListener('keydown',function(e){
+  if(!isStage) return;
+  var sc=document.getElementById('scene-season'); if(!sc||!sc.classList.contains('active')) return;
+  var ov=document.getElementById('zoom-ov'); if(ov&&ov.classList.contains('show')) return;
+  var t=e.target; if(t&&/INPUT|TEXTAREA|SELECT/.test(t.tagName)) return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){ e.preventDefault(); srpDeckNav(1); }
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); srpDeckNav(-1); }
+});
 function srpRevealPhone(btn){ btn.classList.add('on'); btn.setAttribute('aria-expanded','true'); }
 /* **굵게** 만 허용하는 최소 마크업 (verdict 용) */
 function srpMark(t){ return esc(t||'').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>'); }
-function seasonReportHtml(sn,rep,stage){
-  var books=rep.books||[],n=books.length||1;
+/* 지면의 조각들 — 스크롤 페이지는 전부 이어 붙이고, 발표 덱은 한 조각이 한 장 */
+function srpParts(sn,rep){
+  var books=rep.books||[],n=books.length||1,P=[];
   var bookName=function(i){var b=books[i]; return b?b.title:'';};
-  var h='<div class="srp'+(stage?' srp--stage':'')+'">';
+  var ym=function(b){return b&&b.ym?fmtYM(b.ym).slice(5)+' · ':'';};
+  var hd=function(eye,title){return '<div class="srp-sec__hd"><span class="srp-eyebrow">'+esc(eye)+'</span><h2>'+esc(title)+'</h2></div>';};
   /* 제호 */
-  h+='<div class="srp-mast">'+
+  P.push({key:'mast',label:'표지',html:'<div class="srp-mast">'+
     '<div class="srp-mast__brand"><span>'+esc(activeClubName())+' · 시즌 결산</span><span>'+esc(rep.period||seasonPeriod(sn)||'')+'</span></div>'+
     '<div class="srp-eyebrow">'+esc(rep.eyebrow||'SEASON')+'</div>'+
     '<div class="srp-mast__title">'+esc(sn.title)+'</div>'+
     (rep.thesis?'<div class="srp-mast__thesis">'+esc(rep.thesis)+'</div>':'')+
-    '<div class="srp-spines">'+books.map(function(b,i){return '<div class="srp-spine" style="background:'+srpColor(i)+'"><b>'+esc(b.title)+'</b><span>'+esc((b.ym?fmtYM(b.ym).slice(5)+' · ':'')+(b.author||''))+'</span></div>';}).join('')+'</div>'+
-  '</div>';
+    '<div class="srp-spines">'+books.map(function(b,i){return '<div class="srp-spine" style="background:'+srpColor(i)+'"><b>'+esc(b.title)+'</b><span>'+esc(ym(b)+(b.author||''))+'</span></div>';}).join('')+'</div>'+
+  '</div>'});
   /* 01 스코어보드 */
   var T=rep.totals||{},sum=function(a){return (a||[]).reduce(function(x,y){return x+(+y||0);},0);},per=function(a){return (a||[]).join(' · ');};
   if(rep.totals||rep.ratings){
-    h+='<section class="srp-sec"><div class="srp-sec__hd"><span class="srp-eyebrow">01 · 스코어보드</span><h2>'+esc(rep.score_title||(T.participants+'명 개근, 답변 '+sum(T.answers)+'개'))+'</h2></div>';
+    var h='<section class="srp-sec">'+hd('01 · 스코어보드',rep.score_title||(T.participants+'명 개근, 답변 '+sum(T.answers)+'개'));
     if(rep.totals) h+='<div class="srp-totals">'+
       '<div><b>'+sum(T.answers)+'</b><span>답변 ('+per(T.answers)+')</span></div>'+
       '<div><b>'+sum(T.comments)+'</b><span>댓글 ('+per(T.comments)+')</span></div>'+
@@ -2401,72 +2472,88 @@ function seasonReportHtml(sn,rep,stage){
         var ys=vals.map(function(v){return Math.round((60-10*(+v||0))*10)/10;});
         var svg='<svg viewBox="0 0 120 64" aria-label="'+ax[1]+' '+vals.join(', ')+'"><line x1="12" y1="54" x2="108" y2="54" stroke="var(--rule)" stroke-width="1"/>'+
           '<polyline points="'+xs.map(function(x,i){return x+','+ys[i];}).join(' ')+'" fill="none" stroke="var(--ink)" stroke-width="1.5"/>'+
-          xs.map(function(x,i){return '<circle cx="'+x+'" cy="'+ys[i]+'" r="3" fill="'+srpColor(i)+'"/><text x="'+x+'" y="62" font-size="8" text-anchor="middle" fill="var(--ink)" font-family="JetBrains Mono,monospace">'+esc(String(vals[i]))+'</text>';}).join('')+'</svg>';
+          xs.map(function(x,i){return '<circle cx="'+x+'" cy="'+ys[i]+'" r="3" fill="'+srpColor(i)+'"/><text x="'+x+'" y="62" font-size="8" text-anchor="middle" fill="var(--ink)" font-family="JetBrains Mono,monospace">'+esc((+vals[i]).toFixed(1))+'</text>';}).join('')+'</svg>';
         return '<div class="srp-axis"><h4>'+ax[1]+'</h4>'+svg+(reads[ax[0]]?'<p class="read">'+esc(reads[ax[0]])+'</p>':'')+'</div>';
       }).join('')+'</div>';
       h+='<div class="srp-legend">'+books.map(function(b,i){return '<span><i style="background:'+srpColor(i)+'"></i>'+esc(b.title)+'</span>';}).join('')+'<span style="margin-left:auto">5점 만점 · 평균 · 난이도는 적절할수록 높음</span></div>';
     }
     if(rep.ratings_note) h+='<p class="srp-note">'+esc(rep.ratings_note)+'</p>';
-    h+='</section>';
+    P.push({key:'score',label:'스코어보드',html:h+'</section>'});
   }
-  /* 02 관통한 질문 */
+  /* 02 관통한 질문 — 책마다 한 조각, 결론은 따로 한 조각 */
   if(rep.thread&&rep.thread.length){
-    h+='<section class="srp-sec"><div class="srp-sec__hd"><span class="srp-eyebrow">02 · 관통한 질문</span><h2>'+esc(rep.thread_title||'세 권이 우리에게 물은 것')+'</h2></div>'+
-      (rep.thread_lede?'<p class="srp-lede">'+esc(rep.thread_lede)+'</p>':'')+'<div class="srp-thread">';
-    rep.thread.forEach(function(t){
+    rep.thread.forEach(function(t,ti){
       var bi=(+t.book||0),b=books[bi]||{};
-      h+='<div class="srp-thread__book" style="--bc:'+srpColor(bi)+'">'+
-        '<div class="srp-thread__q"><em>'+esc((b.ym?fmtYM(b.ym).slice(5)+' · ':'')+(b.title||''))+'</em>'+esc(t.q||'')+'</div>'+
+      P.push({key:'thread'+ti,label:'관통한 질문 · '+(b.title||''),group:'thread',html:'<section class="srp-sec">'+
+        (ti===0?hd('02 · 관통한 질문',rep.thread_title||'세 권이 우리에게 물은 것')+(rep.thread_lede?'<p class="srp-lede">'+esc(rep.thread_lede)+'</p>':''):'')+
+        '<div class="srp-thread"><div class="srp-thread__book" style="--bc:'+srpColor(bi)+'">'+
+        '<div class="srp-thread__q"><em>'+esc(ym(b)+(b.title||''))+'</em>'+esc(t.q||'')+'</div>'+
         (t.body?'<p class="srp-thread__body">'+esc(t.body)+'</p>':'')+
         (t.quote&&t.quote.text?'<blockquote class="srp-q">'+esc(t.quote.text)+'<cite>'+esc((t.quote.by||'')+(t.quote.src?' · '+t.quote.src:''))+'</cite></blockquote>':'')+
-      '</div>';
+        '</div></div></section>'});
     });
-    h+='</div>'+(rep.verdict?'<div class="srp-verdict">'+srpMark(rep.verdict)+'</div>':'')+'</section>';
+    if(rep.verdict) P.push({key:'verdict',label:'시즌의 결론',group:'thread',html:'<section class="srp-sec srp-sec--verdict"><span class="srp-eyebrow">시즌의 결론</span><div class="srp-verdict">'+srpMark(rep.verdict)+'</div></section>'});
   }
   /* 03 닉네임 명부 */
   if(rep.roster&&rep.roster.length){
-    h+='<section class="srp-sec"><div class="srp-sec__hd"><span class="srp-eyebrow">03 · 닉네임 명부</span><h2>시즌 동안 쓴 이름들</h2></div>'+
+    P.push({key:'roster',label:'닉네임 명부',html:'<section class="srp-sec">'+hd('03 · 닉네임 명부','시즌 동안 쓴 이름들')+
       '<p class="srp-lede">책마다 새 닉네임을 받았다. 번호 하나에 이름 '+n+'개.</p>'+
       '<div class="srp-table-wrap"><table class="srp-roster"><thead><tr><th>뒷자리</th>'+books.map(function(b,i){return '<th style="--bc:'+srpColor(i)+'">'+esc(b.title)+'</th>';}).join('')+'</tr></thead><tbody>'+
       rep.roster.map(function(r){return '<tr><td class="ph">'+esc(r.phone4)+'</td>'+books.map(function(b,i){return '<td>'+esc((r.nicks||[])[i]||'')+'</td>';}).join('')+'</tr>';}).join('')+
-      '</tbody></table></div></section>';
+      '</tbody></table></div></section>'});
   }
-  /* 04 멤버 여정 */
+  /* 04 멤버 여정 — 카드 하나가 한 조각 */
   if(rep.members&&rep.members.length){
-    h+='<section class="srp-sec"><div class="srp-sec__hd"><span class="srp-eyebrow">04 · 멤버 여정</span><h2>'+esc(rep.members_title||'일곱 사람의 세 권')+'</h2></div>'+
-      '<p class="srp-lede">'+esc(rep.members_lede||'한 사람이 세 권에서 한 말을 이어 붙이고 시즌 칭호를 하나씩 붙였다. 카드를 눌러 번호를 확인하기 전에 누구인지 먼저 맞혀 보자. 별점은 익명이라 어디에도 연결하지 않았다.')+'</p>'+
-      '<div class="srp-members">';
-    rep.members.forEach(function(mb){
-      h+='<article class="srp-card">'+
+    var lede=rep.members_lede||'한 사람이 세 권에서 한 말을 이어 붙이고 시즌 칭호를 하나씩 붙였다. 카드를 눌러 번호를 확인하기 전에 누구인지 먼저 맞혀 보자. 별점은 익명이라 어디에도 연결하지 않았다.';
+    rep.members.forEach(function(mb,mi){
+      var card='<article class="srp-card">'+
         '<div class="srp-card__hd"><div class="srp-card__title">'+esc(mb.title||'')+'</div>'+(mb.award?'<span class="srp-card__award">'+esc(mb.award)+'</span>':'')+'</div>'+
         (mb.desc?'<p class="srp-card__desc">'+esc(mb.desc)+'</p>':'')+
         '<div class="srp-card__quotes">'+(mb.quotes||[]).map(function(q){var bi=(+q.book||0);return '<blockquote class="srp-q" style="--bc:'+srpColor(bi)+'">'+esc(q.text||'')+'<cite>'+esc(bookName(bi)+(q.src?' · '+q.src:''))+'</cite></blockquote>';}).join('')+'</div>'+
         '<button class="srp-reveal" type="button" aria-expanded="false" onclick="srpRevealPhone(this)"><span class="ask">누구일까요? 눌러서 번호 확인</span><span class="num">'+esc(mb.phone4||'')+'</span></button>'+
       '</article>';
+      P.push({key:'member'+mi,label:'멤버 여정 '+(mi+1)+'/'+rep.members.length,group:'members',card:card,html:'<section class="srp-sec">'+
+        (mi===0?hd('04 · 멤버 여정',rep.members_title||'일곱 사람의 세 권')+'<p class="srp-lede">'+esc(lede)+'</p>':'<span class="srp-eyebrow">04 · 멤버 여정 · '+(mi+1)+' / '+rep.members.length+'</span>')+
+        '<div class="srp-members srp-members--one">'+card+'</div></section>'});
     });
-    h+='</div></section>';
   }
   /* 05 대화 지도 */
   if(rep.graph&&rep.graph.order&&rep.graph.order.length){
     var ord=rep.graph.order,C=rep.graph.counts||{},max=1,colT={},tot=0;
     ord.forEach(function(a){ord.forEach(function(b){var v=(C[a]||{})[b]||0; if(v>max)max=v;});});
-    h+='<section class="srp-sec"><div class="srp-sec__hd"><span class="srp-eyebrow">05 · 대화 지도</span><h2>누가 누구에게 말을 걸었나</h2></div>'+
+    var g='<section class="srp-sec">'+hd('05 · 대화 지도','누가 누구에게 말을 걸었나')+
       (rep.graph_lede?'<p class="srp-lede">'+esc(rep.graph_lede)+'</p>':'')+
       '<div class="srp-table-wrap"><table class="srp-matrix"><thead><tr><th class="row">쓴 사람 ↓ 받은 사람 →</th>'+ord.map(function(b){return '<th>'+esc(b)+'</th>';}).join('')+'<th>합계</th></tr></thead><tbody>';
     ord.forEach(function(a){
       var row=0;
-      h+='<tr><th class="row">'+esc(a)+'</th>'+ord.map(function(b){
+      g+='<tr><th class="row">'+esc(a)+'</th>'+ord.map(function(b){
         if(a===b) return '<td class="self"></td>';
         var v=(C[a]||{})[b]||0; row+=v; colT[b]=(colT[b]||0)+v;
         return v?'<td style="background:rgba(59,89,152,'+(0.04+0.26*v/max).toFixed(2)+')">'+v+'</td>':'<td class="z">·</td>';
       }).join('')+'<td class="t">'+row+'</td></tr>'; tot+=row;
     });
-    h+='<tr><th class="row">받은 합계</th>'+ord.map(function(b){return '<td class="t">'+(colT[b]||0)+'</td>';}).join('')+'<td class="t">'+tot+'</td></tr></tbody></table></div>'+
+    g+='<tr><th class="row">받은 합계</th>'+ord.map(function(b){return '<td class="t">'+(colT[b]||0)+'</td>';}).join('')+'<td class="t">'+tot+'</td></tr></tbody></table></div>'+
       (rep.graph_note?'<p class="srp-note">'+esc(rep.graph_note)+'</p>':'')+'</section>';
+    P.push({key:'graph',label:'대화 지도',html:g});
   }
-  h+='<div class="srp-foot"><span>'+esc(activeClubName())+' · '+esc(sn.title)+' 결산호</span><span>'+(rep.generated_at?'자료 기준 '+esc(String(rep.generated_at).slice(0,10))+' · ':'')+'인용은 답변·댓글 원문 그대로</span></div>';
-  return h+'</div>';
+  P.foot='<div class="srp-foot"><span>'+esc(activeClubName())+' · '+esc(sn.title)+' 결산호</span><span>'+(rep.generated_at?'자료 기준 '+esc(String(rep.generated_at).slice(0,10))+' · ':'')+'인용은 답변·댓글 원문 그대로</span></div>';
+  return P;
 }
+/* 스크롤 지면 — 멤버 카드는 격자로 모아 한 절 */
+function seasonReportHtml(sn,rep,stage){
+  var P=srpParts(sn,rep),h='<div class="srp'+(stage?' srp--stage':'')+'">',cards=[];
+  P.forEach(function(p){
+    if(p.group==='members'){ cards.push(p.card); return; }
+    h+=p.html;
+  });
+  if(cards.length){
+    var mi=P.filter(function(p){return p.group==='members';})[0];
+    h+=mi.html.replace(/<div class="srp-members srp-members--one">[\s\S]*<\/section>$/,'<div class="srp-members">'+cards.join('')+'</div></section>');
+  }
+  return h+P.foot+'</div>';
+}
+/* 발표 덱 — 조각 그대로 한 장씩 */
+function seasonReportSlides(sn,rep){ return srpParts(sn,rep); }
 /* 작은 투표함 — 책이 꽂힌 시즌 칸 안, 책들 옆. 지금 판에 후보가 있거나 마감된 시즌에만 놓인다.
    지난 판 추천만 남은 옛 시즌(인간 본성 탐구)엔 두지 않는다 — 사용자 결정 (2026-09-04).
    누르면 그 시즌의 투표 페이지(마감이면 순위·선정 결과)로 간다 */

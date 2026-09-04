@@ -120,3 +120,47 @@ test('발표모드: 시즌 리포트가 없으면 [시즌 결산] 탭을 숨긴�
   await a.w.startShare('ihyangin');
   assert.equal(a.d.getElementById('stage-nav-season').style.display, 'none');
 });
+
+test('발표 덱: 표지부터 한 장씩 — 다음/이전 버튼과 방향키로 넘기고 멤버 카드는 장마다 하나', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedSeason(a);
+  a.w.enterMeeting('m1');
+  a.w.bookById('ihyangin').report = { source: 't', generated_at: 'x', keywords: [], ratings: {}, stats: {}, summary: 's' };
+  await a.w.startShare('ihyangin');
+  a.w.showStageScene('season');
+  const st = a.d.getElementById('stage-season');
+  const slide = () => st.querySelector('.srp-deck__slide').dataset.slide;
+  const pos = () => st.querySelector('.srp-deck__pos').textContent;
+  assert.equal(slide(), 'mast');
+  assert.match(pos(), /^1 \/ 7/, '표지·스코어보드·질문1·결론·명부·멤버1·대화지도 = 7장');
+  assert.equal(st.querySelector('.srp-deck__btn').disabled, true, '첫 장에서 이전은 비활성');
+  a.w.srpDeckNav(1);
+  assert.equal(slide(), 'score');
+  a.d.dispatchEvent(new a.w.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  assert.equal(slide(), 'thread0');
+  a.d.dispatchEvent(new a.w.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+  assert.equal(slide(), 'score');
+  for (let i = 0; i < 4; i++) a.w.srpDeckNav(1);
+  assert.equal(slide(), 'member0');
+  assert.equal(st.querySelectorAll('.srp-card').length, 1, '멤버 장은 카드 하나');
+  const btn = st.querySelector('.srp-reveal');
+  btn.click();
+  assert.equal(btn.querySelector('.num').textContent, '9353');
+  a.w.srpDeckNav(1);
+  assert.equal(slide(), 'graph');
+  assert.match(pos(), /^7 \/ 7/);
+  a.w.srpDeckNav(1);
+  assert.equal(slide(), 'graph', '마지막 장에서 더 안 넘어간다');
+});
+
+test('발표 덱: 발표모드가 아니면 방향키가 덱을 건드리지 않는다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedSeason(a);
+  a.w.go('meetings');
+  a.d.querySelector('#page-meetings .shelf-paper').click();
+  a.d.dispatchEvent(new a.w.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  assert.equal(a.page(), 'season-report');
+  assert.equal(a.d.querySelectorAll('#page-season-report .srp-card').length, 1, '스크롤 지면은 카드 전부(테스트 데이터 1명)');
+});
