@@ -984,42 +984,7 @@ test('투표 마감: 같은 표는 같은 순위', async (t) => {
   assert.deepEqual(ranks, ['1위', '1위', '3위']);
 });
 
-test('책꽂이: 책이 꽂힌 시즌 옆에 투표함 칸 — 마감 도장·표수, 누르면 결과로', async (t) => {
-  const a = app(t);
-  await a.loginAs('1234');
-  seedClosedAutumn(a);
-  a.w.go('meetings');
-  await tick();
-  const el = a.d.getElementById('page-meetings');
-  const ballots = [...el.querySelectorAll('.cubby--ballot')];
-  assert.equal(ballots.length, 1, '후보 없는 시즌(m1)엔 투표함이 없다');
-  const cubbies = [...el.querySelectorAll('.cubby')];
-  const autumnIdx = cubbies.findIndex((c) => /가을의 문장/.test(c.querySelector('.cubby__title').textContent));
-  assert.equal(cubbies[autumnIdx + 1], ballots[0], '투표함은 가을의 문장 바로 옆 칸');
-  assert.equal(ballots[0].querySelector('.cubby__title').textContent, '투표함');
-  assert.match(ballots[0].querySelector('.cubby__meta').textContent, /가을의 문장 · 마감/);
-  assert.ok(ballots[0].querySelector('.closed-stamp'));
-  assert.match(ballots[0].querySelector('.cubby__ballot .n').textContent, /후보 3권 · 6표/);
-  assert.equal(ballots[0].querySelector('.cubby__votebtn'), null);
-  assert.doesNotMatch(el.textContent, /사피엔스|클루지/, '후보 제목은 책꽂이에 안 새어 나온다');
-  ballots[0].querySelector('.cubby__ballot').dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
-  await tick();
-  assert.equal(a.page(), 'vote');
-  assert.equal(a.w.STATE.meetingId, 'mAutumn');
-  assert.match(a.d.getElementById('page-vote').textContent, /투표가 끝났어요/);
-});
 
-test('책꽂이: 투표가 아직 열려 있어도 책이 꽂힌 시즌에 후보가 있으면 투표함(투표 중)', async (t) => {
-  const a = app(t);
-  await a.loginAs('1234');
-  seedClosedAutumn(a, false);
-  a.w.go('meetings');
-  await tick();
-  const b = a.d.querySelector('#page-meetings .cubby--ballot');
-  assert.ok(b);
-  assert.match(b.querySelector('.cubby__meta').textContent, /투표 중/);
-  assert.equal(b.querySelector('.closed-stamp'), null);
-});
 
 test('책꽂이: 책 없는 시즌이 마감되면 칸 버튼이 「투표함 결과 보기」로', async (t) => {
   const a = app(t);
@@ -1073,4 +1038,70 @@ test('모임장: 확인을 취소하면 마감되지 않는다', async (t) => {
   a.w.uiConfirm = async () => false;
   await a.w.toggleVoteClosed();
   assert.equal(a.w.voteClosed('m1'), false);
+});
+
+test('책꽂이: 책이 꽂힌 시즌 칸 안, 책 옆에 작은 투표함 — 마감 봉인·후보 수, 누르면 결과로', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedClosedAutumn(a);
+  a.w.go('meetings');
+  await tick();
+  const el = a.d.getElementById('page-meetings');
+  const cubbies = [...el.querySelectorAll('.cubby')];
+  assert.equal(cubbies.length, 2, '별도 투표함 칸은 없다 — 시즌 두 칸뿐');
+  const autumn = cubbies.find((c) => /가을의 문장/.test(c.querySelector('.cubby__title').textContent));
+  const box = autumn.querySelector('.cubby__books .shelf-ballot');
+  assert.ok(box, '가을의 문장 칸 안에 투표함');
+  assert.ok(box.classList.contains('shelf-ballot--closed'));
+  assert.equal(box.querySelector('.shelf-ballot__seal').textContent, '마감');
+  assert.equal(box.querySelector('.shelf-ballot__paper'), null, '마감이면 투표지가 꽂혀 있지 않다');
+  assert.equal(box.querySelector('.shelf-ballot__n').textContent, '3');
+  assert.equal(cubbies[0].querySelector('.shelf-ballot'), null, '추천이 없던 시즌(m1)엔 투표함이 없다');
+  assert.doesNotMatch(el.textContent, /사피엔스|클루지/, '후보 제목은 책꽂이에 안 새어 나온다');
+  box.dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
+  await tick();
+  assert.equal(a.page(), 'vote', '칸 클릭(시즌 입장)에 먹히지 않고 투표함으로');
+  assert.equal(a.w.STATE.meetingId, 'mAutumn');
+  assert.match(a.d.getElementById('page-vote').textContent, /투표가 끝났어요/);
+});
+
+test('책꽂이: 투표가 열려 있으면 투표함에 투표지가 꽂혀 있고 봉인은 없다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedClosedAutumn(a, false);
+  a.w.go('meetings');
+  await tick();
+  const box = a.d.querySelector('#page-meetings .shelf-ballot');
+  assert.ok(box);
+  assert.ok(box.querySelector('.shelf-ballot__paper'));
+  assert.equal(box.querySelector('.shelf-ballot__seal'), null);
+  assert.match(box.title, /투표 중/);
+});
+
+test('책꽂이: 지난 회차 추천만 있는 시즌에도 투표함이 남는다 (과거에 어떤 책을 봤는지)', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.localStorage.setItem('rt:cands', JSON.stringify({
+    m1: [{ id: 'old1', round: 1, title: '코스모스', author: '', reason: '', alias: '', byPhone: '1234', voters: ['1234'], comments: [] }],
+  }));
+  a.w.localStorage.setItem('rt:candround', JSON.stringify({ m1: 2 }));
+  a.w.go('meetings');
+  await tick();
+  const box = a.d.querySelector('#page-meetings .shelf-ballot');
+  assert.ok(box);
+  assert.equal(box.querySelector('.shelf-ballot__n').textContent, '1');
+});
+
+test('책등 제목은 명조(--serif) 로 찍힌다', async (t) => {
+  const a = app(t);
+  const css = [...a.d.querySelectorAll('style')].map((s) => s.textContent).join('');
+  assert.match(css, /--serif:'Noto Serif KR'/);
+  assert.match(css, /\.spine-book__title\{[^}]*font-family:var\(--serif\)/);
+  assert.ok(a.d.querySelector('link[href*="Noto+Serif+KR"]'));
+});
+
+test('백야: 짧은 제목으로도 표지와 서점 링크가 잡힌다', async (t) => {
+  const a = app(t);
+  assert.equal(a.w.coverFor('백야'), 'assets/covers/baekya.jpg');
+  assert.match(a.w.bookStoreUrl('백야', '표도르 도스토옙스키'), /395813767/);
 });
