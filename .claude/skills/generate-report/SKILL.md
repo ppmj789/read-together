@@ -136,3 +136,27 @@ keyword 의 `w`/`size` 를 검증한 뒤 PATCH 한다.
 - 인용문 `q` 는 답변 원문을 **변형 없이** 발췌(따옴표는 렌더러가 붙임).
 - 별점 축 키: `length·difficulty·fun·novelty·overall`. 난이도는 '적절할수록 높음'.
 - 개인정보(phone4)는 report 에 넣지 않는다. 표시는 익명 닉네임 기준.
+
+## 시즌 결산 리포트 (season.report, v31 · 2026-09-04)
+
+시즌의 책이 **전부 마감**된 뒤 한 번, 3권을 관통하는 결산호를 만들어 `season.report`
+(jsonb)에 저장한다. 책장 칸의 책들 옆에 접은 신문(📰 결산호)이 놓이고, 누르면
+시즌 결산 페이지(`renderSeasonReport`)가 열린다. 발표모드에서는 마지막 탭
+[📰 시즌 결산] 으로도 같은 지면이 뜬다.
+
+절차: 시즌의 책마다 `report_fetch.py` 로 원천을 모은 뒤(`member_book.phone4` 로
+같은 사람을 책 사이에서 잇는다) 아래 스키마로 저작 → `python3 season_put.py "<시즌 제목>" season_report.json`.
+
+스키마 (프론트 `seasonReportHtml` 이 읽는 키):
+- `thesis` 시즌 한 줄 · `eyebrow`(`SEASON 1`) · `period`
+- `books:[{title,author,ym}]` 순서대로 — 나머지 필드의 `book` 은 이 배열 인덱스
+- `totals:{answers:[권별],comments:[],reactions:[],participants,participants_note}` · `score_title`
+- `ratings:{overall|fun|novelty|length|difficulty:[권별 평균]}` · `ratings_reads:{축:'한 줄'}` · `ratings_note`
+- `thread:[{book,q,body,quote:{text,by:phone4,src}}]` · `thread_lede` · `verdict`(`**굵게**` 허용)
+- `roster:[{phone4,nicks:[권별 닉네임]}]` — 닉네임은 이 칸에서만 보여 준다
+- `members:[{phone4,title(칭호 문장),award(짧은 상 이름),desc,quotes:[{book,text,src}]}]` · `members_title` · `members_lede`
+- `graph:{order:[phone4],counts:{쓴:{받은:n}}}` · `graph_lede` · `graph_note`
+
+규칙 (사용자 결정 2026-09-04): **사람은 전화번호 뒷자리(phone4)로만 식별** — 카드는
+번호를 숨기고 눌러야 보인다(맞히기용). **별점은 익명이라 어떤 카드·번호와도 연결 금지.**
+동료 실명이 들어간 답변은 인용하지 않는다. 인용은 book.report 와 같이 원문 연속 발췌.
