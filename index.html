@@ -535,7 +535,7 @@ body.is-page-season .book-card__cover{width:96px}
 .season-report-entry__t{font-family:var(--serif);font-weight:700;font-size:15px;color:var(--ink)}
 .season-report-entry__s{font-size:12px;color:var(--ink-dim);margin-top:2px}
 /* ── 시즌 결산 페이지 (srp) — 결산호 지면. 앱 토큰 위에 세 권 색만 더한다 ── */
-.srp{--b1:#5B7F5A;--b2:#3B5998;--b3:#8E2E2E;max-width:760px;margin:0 auto;padding-bottom:40px;line-height:1.7}
+.srp{--b1:#5B7F5A;--b2:#3B5998;--b3:#8E2E2E;max-width:760px;margin:0 auto;padding-bottom:40px;line-height:1.7;word-break:keep-all;overflow-wrap:break-word}
 .srp--stage{max-width:1040px}
 .srp .srp-eyebrow{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);font-weight:700}
 .srp-mast{padding:6px 0 26px;border-bottom:2px solid var(--ink);margin-bottom:8px}
@@ -556,10 +556,10 @@ body.is-page-season .book-card__cover{width:96px}
 .srp-totals b{display:block;font-family:var(--display);font-size:24px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
 .srp-totals span{font-size:11.5px;color:var(--ink-dim)}
 .srp-axes{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px}
-.srp-axis{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:10px 10px 6px}
+.srp-axis{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:10px 10px 10px;display:flex;flex-direction:column}
 .srp-axis h4{margin:0 0 2px;font-size:12.5px;font-weight:700}
 .srp-axis svg{width:100%;height:auto;display:block}
-.srp-axis .read{font-size:11.5px;color:var(--ink-dim);line-height:1.4;word-break:keep-all}
+.srp-axis .read{margin:10px 0 0;padding-top:9px;border-top:1px dashed var(--rule);font-size:12.5px;font-weight:500;color:var(--ink);line-height:1.5;text-align:center}
 .srp-legend{display:flex;gap:14px;font-size:11.5px;color:var(--ink-soft);margin-top:10px;flex-wrap:wrap}
 .srp-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .srp-note{margin-top:14px;font-size:14px;color:var(--ink-soft);max-width:66ch;word-break:keep-all}
@@ -610,7 +610,7 @@ body.is-page-season .book-card__cover{width:96px}
 .srp-deck .srp-sec__hd h2{font-size:30px}
 .srp-deck .srp-lede{font-size:18px;max-width:70ch}
 .srp-deck .srp-totals b{font-size:34px}.srp-deck .srp-totals span{font-size:13.5px}
-.srp-deck .srp-axis h4{font-size:15px}.srp-deck .srp-axis .read{font-size:13.5px}
+.srp-deck .srp-axis h4{font-size:15px}.srp-deck .srp-axis .read{font-size:15px;line-height:1.55;margin-top:12px;padding-top:11px}
 .srp-deck .srp-note{font-size:17px;max-width:70ch}
 .srp-deck .srp-thread{margin-top:10px}
 .srp-deck .srp-thread__q{font-size:30px}.srp-deck .srp-thread__q em{font-size:14px}
