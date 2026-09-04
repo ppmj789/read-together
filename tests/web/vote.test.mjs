@@ -842,3 +842,46 @@ test('후보 순서: 밀리·도서관 상태를 바꿔도 자리가 그대로�
   await a.w.voteCandidate(b.id);
   assert.deepEqual(titles(), ['책A', '책B', '책C']);
 });
+
+/* ── 추천 이유 길이 (2026-09-04 저장 실패 신고) ── */
+
+test('추천 이유: 500자를 넘으면 저장 대신 몇 자인지 알려준다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  a.w.CANDADD.open = true;
+  a.w.renderVote();
+  a.d.getElementById('cand-title').value = '베어타운';
+  a.d.getElementById('cand-reason').value = '가'.repeat(501);
+  await a.w.proposeCandidate();
+  assert.equal(a.w.seasonCandidates('m1').length, 0, '저장되지 않는다');
+  assert.match(a.lastToast() || '', /500자까지.*501자/);
+  /* 폼은 닫히지 않아 쓰던 글이 살아 있다 */
+  assert.equal(a.d.getElementById('cand-reason').value.length, 501);
+});
+
+test('추천 이유: 500자까지는 그대로 저장된다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  a.w.CANDADD.open = true;
+  a.w.renderVote();
+  a.d.getElementById('cand-title').value = '베어타운';
+  a.d.getElementById('cand-reason').value = '가'.repeat(500);
+  await a.w.proposeCandidate();
+  assert.equal(a.w.seasonCandidates('m1')[0].reason.length, 500);
+});
+
+test('추천 이유: 입력칸에 maxlength 와 글자 수 표시가 있다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  a.w.CANDADD.open = true;
+  a.w.renderVote();
+  const ta = a.d.getElementById('cand-reason');
+  assert.equal(ta.getAttribute('maxlength'), '500');
+  assert.equal(a.d.getElementById('cand-title').getAttribute('maxlength'), '200');
+  ta.value = '가'.repeat(450);
+  a.w.candReasonCount();
+  assert.match(a.d.getElementById('cand-reason-n').textContent, /450 \/ 500자/);
+});
