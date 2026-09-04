@@ -1197,3 +1197,34 @@ test('백야: 짧은 제목으로도 표지와 서점 링크가 잡힌다', asyn
   assert.equal(a.w.coverFor('백야'), 'assets/covers/baekya.jpg');
   assert.match(a.w.bookStoreUrl('백야', '표도르 도스토옙스키'), /395813767/);
 });
+
+test('시즌 소개: 토막이 제목처럼 크게 — 흐름 줄과 항목 머리에 뜨고, 서문 ## 줄은 소제목', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedIntroAutumn(a);
+  const cs = JSON.parse(a.w.localStorage.getItem('rt:meetings'));
+  const m = cs.find((x) => x.id === 'mAutumn');
+  m.season.books.push({ ...m.season.books[0], id: 'bB', title: '빵충 사육 준수 사항', motif: '드러난 것을 탐한다', angle: '' });
+  m.season.intro = '첫 줄.\n## 9월 · 가려진 것이 드러난다\n본문 <b>줄</b>.';
+  a.w.localStorage.setItem('rt:meetings', JSON.stringify(cs));
+  a.w.enterMeeting('mAutumn');
+  await tick();
+  const el = a.d.getElementById('page-season');
+  const thread = el.querySelector('.season-thread');
+  assert.deepEqual([...thread.querySelectorAll('.season-thread__step')].map((x) => x.lastChild.textContent), ['잎이 진다', '드러난 것을 탐한다']);
+  assert.equal(thread.querySelectorAll('.season-thread__arrow').length, 1);
+  const hd = el.querySelector('.flow-item .flow-item__hd');
+  assert.match(hd.querySelector('.flow-item__motif').textContent, /잎이 진다/);
+  const h = el.querySelector('.season-intro__h');
+  assert.equal(h.textContent, '9월 · 가려진 것이 드러난다');
+  assert.match(el.querySelector('.season-intro').innerHTML, /&lt;b&gt;줄&lt;\/b&gt;/, '본문은 이스케이프');
+});
+
+test('시즌 소개: 토막이 한 권뿐이면 흐름 줄은 안 붙는다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  seedIntroAutumn(a);
+  a.w.enterMeeting('mAutumn');
+  await tick();
+  assert.equal(a.d.querySelector('#page-season .season-thread'), null);
+});
