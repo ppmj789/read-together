@@ -791,7 +791,7 @@ body.is-page-season .book-card__cover{width:96px}
 .member-card__nick{font-family:var(--display);font-weight:900;font-size:20px;font-style:italic;color:var(--accent);letter-spacing:-.02em}
 .member-card__title{font-weight:700;font-size:15px;color:var(--ink)}
 .member-card__desc{font-size:13.5px;line-height:1.65;color:var(--ink-soft);word-break:keep-all}
-.member-card__quote{font-size:13px;font-style:italic;color:var(--ink-dim);border-left:3px solid var(--rule);padding-left:10px;line-height:1.55}
+.member-card__quote{font-size:13px;font-style:italic;color:var(--ink-dim);border-left:3px solid var(--rule);padding-left:10px;line-height:1.55;white-space:pre-line}
 /* 닉네임 구분 (2026-07-31 사용자 피드백) — 본문 속 닉네임은 이탤릭+강조색 */
 .nick{font-style:italic;color:var(--accent);font-weight:600}
 /* 카드 확대 오버레이 (2026-07-31 사용자 피드백) — 발표모드에서 카드를 누르면 그 카드만 크게 */
@@ -920,10 +920,10 @@ body.is-page-season .book-card__cover{width:96px}
 .sl-pick-card__chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
 .sl-chip{font-size:12px;font-weight:700;padding:4px 11px;border-radius:var(--radius-pill);background:var(--highlight);color:var(--ink-soft)}
 .sl-chip.hot{background:var(--accent);color:#fff}
-.sl-pick-card__ans{font-size:19px;line-height:1.7;font-weight:500;color:var(--ink);border-left:3px solid var(--accent);padding-left:16px}
+.sl-pick-card__ans{font-size:19px;line-height:1.7;font-weight:500;color:var(--ink);border-left:3px solid var(--accent);padding-left:16px;white-space:pre-line;word-break:keep-all;overflow-wrap:anywhere} /* 답변 줄바꿈 보존 (2026-09-04) */
 .sl-cmts{margin-top:16px;padding-top:14px;border-top:1px dashed var(--rule)}
 .sl-cmts__hd{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-dim);margin-bottom:8px}
-.sl-cmt{background:var(--highlight);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;line-height:1.55;margin-bottom:6px}
+.sl-cmt{background:var(--highlight);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;line-height:1.55;margin-bottom:6px;white-space:pre-line;overflow-wrap:anywhere}
 .sl-cmt b{color:var(--accent);font-weight:700}
 .sl-empty{font-size:14px;color:var(--ink-dim);text-align:center;padding:28px 8px}
 .sl-qa{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule-soft)}

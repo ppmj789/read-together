@@ -271,3 +271,11 @@ test('로드맵 카드에 표지 맵의 실제 표지 이미지가 뜬다', asyn
   assert.ok(a.d.querySelectorAll('#stage-roadmap .sr-book__cover').length >= 1,
     'coverFor 맵에 있는 책은 책등 글자 대신 표지 이미지');
 });
+
+/* 발표모드 진행탭 답변·댓글은 줄바꿈을 보존한다 (2026-09-04) */
+test('발표모드 진행탭: 답변 본문과 댓글이 pre-line 으로 줄바꿈을 살린다', async (t) => {
+  const a = app(t);
+  const css = [...a.d.querySelectorAll('style')].map((s) => s.textContent).join('');
+  assert.match(css, /\.sl-pick-card__ans\{[^}]*white-space:pre-line/);
+  assert.match(css, /\.sl-cmt\{[^}]*white-space:pre-line/);
+});
