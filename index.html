@@ -2148,10 +2148,11 @@ function renderMeetings(){
   }
   document.getElementById('page-meetings').innerHTML=h;
 }
-/* 작은 투표함 — 책이 꽂힌 시즌 칸 안, 책들 옆. 추천이 한 번이라도 있었던 시즌에만 놓인다.
-   누르면 그 시즌의 투표 페이지(마감이면 순위·선정 결과, 지난 추천 포함)로 간다 (2026-09-04) */
+/* 작은 투표함 — 책이 꽂힌 시즌 칸 안, 책들 옆. 지금 판에 후보가 있거나 마감된 시즌에만 놓인다.
+   지난 판 추천만 남은 옛 시즌(인간 본성 탐구)엔 두지 않는다 — 사용자 결정 (2026-09-04).
+   누르면 그 시즌의 투표 페이지(마감이면 순위·선정 결과)로 간다 */
 function shelfBallotHtml(m,sn){
-  var all=allSeasonCandidates(m.id),closed=voteClosed(m.id);
+  var all=seasonCandidates(m.id),closed=voteClosed(m.id);
   if(!all.length&&!closed) return '';
   return '<button class="shelf-ballot'+(closed?' shelf-ballot--closed':'')+'" onclick="event.stopPropagation();shelfGoVote(\''+m.id+'\')"'+
     ' title="투표함 — '+esc(sn.title)+' 후보 '+all.length+'권'+(closed?' · 마감':' · 투표 중')+'" aria-label="시즌 '+esc(sn.title)+' 투표함, 후보 '+all.length+'권'+(closed?', 마감':'')+'">'+

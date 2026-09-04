@@ -1078,7 +1078,7 @@ test('책꽂이: 투표가 열려 있으면 투표함에 투표지가 꽂혀 있
   assert.match(box.title, /투표 중/);
 });
 
-test('책꽂이: 지난 회차 추천만 있는 시즌에도 투표함이 남는다 (과거에 어떤 책을 봤는지)', async (t) => {
+test('책꽂이: 지난 판 추천만 남은 옛 시즌엔 투표함을 두지 않는다', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   a.w.localStorage.setItem('rt:cands', JSON.stringify({
@@ -1087,9 +1087,7 @@ test('책꽂이: 지난 회차 추천만 있는 시즌에도 투표함이 남는
   a.w.localStorage.setItem('rt:candround', JSON.stringify({ m1: 2 }));
   a.w.go('meetings');
   await tick();
-  const box = a.d.querySelector('#page-meetings .shelf-ballot');
-  assert.ok(box);
-  assert.equal(box.querySelector('.shelf-ballot__n').textContent, '1');
+  assert.equal(a.d.querySelector('#page-meetings .shelf-ballot'), null);
 });
 
 test('책등 제목은 명조(--serif) 로 찍힌다', async (t) => {
