@@ -339,11 +339,7 @@ textarea.input{padding:14px 16px;resize:vertical;min-height:90px;line-height:1.6
 /* 시즌 기간 — 제목 옆 줄에 '2026.06~08' */
 .cubby__period{font-weight:800;color:var(--season-accent,var(--ink-soft))}
 /* 아직 책이 없는 칸 = 추천 받는 중. 안내문 대신 투표 버튼 하나만 (2026-08-27) */
-.cubby--empty .cubby__books{align-items:stretch;padding:12px 10px 12px}
-.cubby__votebtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;width:100%;padding:14px 8px;border:0;border-radius:var(--radius-sm);background:var(--season-accent,var(--accent));color:#fff;font-family:inherit;font-size:13px;font-weight:800;line-height:1.3;letter-spacing:-.01em;cursor:pointer;box-shadow:0 3px 9px rgba(26,22,18,.2);transition:filter .18s,transform .18s}
-.cubby__votebtn:hover{filter:brightness(1.08);transform:translateY(-2px)}
-.cubby__votebtn span{word-break:keep-all}
-.cubby__votebtn .n{font-family:var(--display);font-size:11px;font-weight:800;background:rgba(255,255,255,.22);border-radius:var(--radius-pill);padding:1px 9px}
+.cubby--empty .cubby__books{justify-content:center}
 .cubby-empty__hint{display:block;margin-top:6px;font-size:11px;font-weight:700;color:var(--accent)}
 .cubby__quote{display:block;margin-top:5px;font-size:10.5px;font-weight:700;color:var(--season-accent,var(--ink-dim));line-height:1.4;word-break:keep-all;opacity:.9}
 /* 칸에 꽂힌 책등 — 칸 폭(3권 기준)에 맞춰 조금 좁게 */
@@ -506,6 +502,10 @@ body.is-page-season .book-card__cover{width:96px}
 .shelf-ballot__paper::after{content:"卜";position:absolute;left:1px;top:0;font-size:8px;line-height:1.4;color:var(--stamp);font-weight:900}
 .shelf-ballot__seal{position:absolute;left:50%;top:9px;transform:translateX(-50%) rotate(-7deg);font-size:7.5px;font-weight:900;letter-spacing:.08em;color:#fff;background:var(--stamp);padding:1px 4px;border-radius:2px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .shelf-ballot__n{position:absolute;left:0;right:0;bottom:4px;font-family:var(--display);font-size:9.5px;font-weight:800;color:#3A2E22;text-align:center;line-height:1;letter-spacing:.02em}
+/* 빈 칸의 투표함 — 책 옆 작은 투표함(.shelf-ballot)을 그대로 두 배로 키워 칸 바닥 가운데에.
+   예전 색 버튼은 책꽂이에 안 어울려서 교체 (2026-09-15, 사용자 결정) */
+.shelf-ballot--big{margin:0 0 2px;transform:scale(2);transform-origin:50% 100%}
+.shelf-ballot--big:hover{transform:scale(2) translateY(-3px)}
 
 /* 말린 신문 — 시즌 결산호 (2026-09-04, v31). 시즌의 책이 전부 마감되고 season.report 가
    있을 때만 책들 옆에 세워 둔다. 길게 말아 세운 두루마리, 허리에 리본 하나.
@@ -2328,10 +2328,9 @@ function renderMeetings(){
          '<div class="cubby__meta">'+(period?'<span class="cubby__period">'+esc(period)+'</span> · ':'')+
            (openBk?'🟢 읽는 중 · ':'')+books.length+'권</div>'+
        '</div>'+
-       '<div class="cubby__books"'+(empty?'':' onclick="enterMeeting(\''+m.id+'\')"')+'>'+
+       '<div class="cubby__books" onclick="'+goFn+'(\''+m.id+'\')">'+
          (books.length?books.map(function(b,i){return shelfSpineHtml(m.id,b,i);}).join('')+shelfPaperHtml(m,sn)+shelfBallotHtml(m,sn)
-                      :'<button class="cubby__votebtn" onclick="shelfGoVote(\''+m.id+'\')">🗳️<span>'+(voteClosed(m.id)?'투표함<br>결과 보기':'다음 책<br>투표하기')+'</span>'+
-                        '<span class="n">'+seasonCandidates(m.id).length+'</span></button>')+
+                      :shelfBallotHtml(m,sn,true))+
        '</div>'+
        '<div class="cubby__floor"></div>'+
      '</div>';
@@ -2556,11 +2555,12 @@ function seasonReportHtml(sn,rep,stage){
 function seasonReportSlides(sn,rep){ return srpParts(sn,rep); }
 /* 작은 투표함 — 책이 꽂힌 시즌 칸 안, 책들 옆. 지금 판에 후보가 있거나 마감된 시즌에만 놓인다.
    지난 판 추천만 남은 옛 시즌(인간 본성 탐구)엔 두지 않는다 — 사용자 결정 (2026-09-04).
-   누르면 그 시즌의 투표 페이지(마감이면 순위·선정 결과)로 간다 */
-function shelfBallotHtml(m,sn){
+   누르면 그 시즌의 투표 페이지(마감이면 순위·선정 결과)로 간다.
+   big = 책이 아직 없는 칸 — 후보가 0권이어도 늘 두 배 크기로 놓는다 (2026-09-15) */
+function shelfBallotHtml(m,sn,big){
   var all=seasonCandidates(m.id),closed=voteClosed(m.id);
-  if(!all.length&&!closed) return '';
-  return '<button class="shelf-ballot'+(closed?' shelf-ballot--closed':'')+'" onclick="event.stopPropagation();shelfGoVote(\''+m.id+'\')"'+
+  if(!big&&!all.length&&!closed) return '';
+  return '<button class="shelf-ballot'+(big?' shelf-ballot--big':'')+(closed?' shelf-ballot--closed':'')+'" onclick="event.stopPropagation();shelfGoVote(\''+m.id+'\')"'+
     ' title="투표함 — '+esc(sn.title)+' 후보 '+all.length+'권'+(closed?' · 마감':' · 투표 중')+'" aria-label="시즌 '+esc(sn.title)+' 투표함, 후보 '+all.length+'권'+(closed?', 마감':'')+'">'+
     '<span class="shelf-ballot__box" aria-hidden="true">'+
       '<span class="shelf-ballot__slot"></span>'+

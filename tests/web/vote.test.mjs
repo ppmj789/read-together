@@ -411,7 +411,7 @@ test('메인 책꽂이: 책이 있는 칸엔 투표 UI 가 없고, 누르면 시
   /* 후보 제목·투표 UI 는 메인에 노출되지 않는다 */
   assert.doesNotMatch(el.textContent, /코스모스/);
   assert.equal(el.querySelector('.cand__vote'), null);
-  assert.equal(el.querySelector('.cubby__votebtn'), null, '책이 있는 칸엔 투표 버튼이 없다');
+  assert.equal(el.querySelector('.shelf-ballot--big'), null, '책이 있는 칸엔 큰 투표함이 없다');
   el.querySelector('.cubby__label').dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
   await tick();
   assert.equal(a.page(), 'season');
@@ -536,7 +536,7 @@ test('책꽂이: 책이 없는 시즌 칸은 눌러서 곧장 그 시즌 투표�
   assert.equal(a.w.seasonCandidates('m1').length, 0, '이전 시즌엔 안 쌓인다');
 });
 
-test('책꽂이: 책이 없는 칸엔 안내문 대신 투표 버튼 하나만 (가독성)', async (t) => {
+test('책꽂이: 책이 없는 칸엔 안내문 대신 큰 투표함 하나만 (책 옆 투표함과 같은 디자인)', async (t) => {
   const a = app(t);
   await hostLogin(a);
   a.w.STATE.clubId = 'c1';
@@ -546,9 +546,11 @@ test('책꽂이: 책이 없는 칸엔 안내문 대신 투표 버튼 하나만 (
   const cubby = [...a.d.getElementById('page-meetings').querySelectorAll('.cubby')][1];
   assert.equal(cubby.querySelectorAll('.spine-book').length, 0);
   assert.equal(cubby.querySelector('.cubby-empty'), null, '안내문 블록은 없다');
-  const btn = cubby.querySelector('.cubby__votebtn');
-  assert.match(btn.textContent, /다음 책투표하기/);
-  assert.equal(btn.querySelector('.n').textContent, '0');
+  assert.equal(cubby.querySelector('.cubby__votebtn'), null, '예전 색 버튼은 없다');
+  const btn = cubby.querySelector('.cubby__books .shelf-ballot');
+  assert.ok(btn.classList.contains('shelf-ballot--big'), '후보 0권이어도 큰 투표함');
+  assert.ok(btn.querySelector('.shelf-ballot__paper'), '열린 투표함엔 투표지가 꽂혀 있다');
+  assert.equal(btn.querySelector('.shelf-ballot__n').textContent, '0');
   btn.dispatchEvent(new a.w.MouseEvent('click', { bubbles: true }));
   await tick();
   assert.equal(a.page(), 'vote');
@@ -986,7 +988,7 @@ test('투표 마감: 같은 표는 같은 순위', async (t) => {
 
 
 
-test('책꽂이: 책 없는 시즌이 마감되면 칸 버튼이 「투표함 결과 보기」로', async (t) => {
+test('책꽂이: 책 없는 시즌이 마감되면 큰 투표함에 마감 봉인', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
   seedThemedSeason(a);
@@ -995,7 +997,10 @@ test('책꽂이: 책 없는 시즌이 마감되면 칸 버튼이 「투표함 �
   await tick();
   const el = a.d.getElementById('page-meetings');
   assert.equal(el.querySelector('.cubby--ballot'), null, '빈 칸엔 별도 투표함 칸을 붙이지 않는다');
-  assert.match(el.querySelector('.cubby__votebtn').textContent, /투표함결과 보기/);
+  const box = el.querySelector('.shelf-ballot--big');
+  assert.ok(box.classList.contains('shelf-ballot--closed'));
+  assert.equal(box.querySelector('.shelf-ballot__seal').textContent, '마감');
+  assert.equal(box.querySelector('.shelf-ballot__paper'), null);
 });
 
 test('시즌 페이지: 마감되면 진입 카드 대신 「어떻게 골랐나」가 투표함으로 잇는다', async (t) => {
