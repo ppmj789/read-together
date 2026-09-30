@@ -231,7 +231,8 @@ test('진행탭 — 발언자 뽑기가 질문선택 오른쪽 상단바에 있�
   assert.equal(a.d.querySelector('#scene-live .scene-live__left'), null, '왼쪽 패널 제거');
   const bar = a.d.querySelector('#scene-live .sl-topbar .sl-pickbar');
   assert.ok(bar, '뽑기 바가 상단바 오른쪽에');
-  assert.match(bar.textContent, /무작위/);
+  assert.match(bar.textContent, /지정 발언자/);
+  assert.doesNotMatch(bar.textContent, /무작위/, '무작위 뽑기는 없앴다 (2026-09-30)');
   assert.ok(a.d.getElementById('stage-speaker-name'), '발언자 이름 표시는 유지');
 });
 
@@ -278,4 +279,30 @@ test('발표모드 진행탭: 답변 본문과 댓글이 pre-line 으로 줄바�
   const css = [...a.d.querySelectorAll('style')].map((s) => s.textContent).join('');
   assert.match(css, /\.sl-pick-card__ans\{[^}]*white-space:pre-line/);
   assert.match(css, /\.sl-cmt\{[^}]*white-space:pre-line/);
+});
+
+test('지정 발언자 — report.speaker_picks 의 그 질문 지정자가 뽑힌다', async (t) => {
+  const a = app(t);
+  const b = await withReport(a, { speaker_picks: [
+    { q_index: 0, nick: '꿈꾸는 표류자' }, { q_index: 1, nick: '타오르는 로켓' }] });
+  b.others = b.questions.map(() => [{ n: '꿈꾸는 표류자', a: '답' }, { n: '타오르는 로켓', a: '답' }]);
+  a.w.STAGE.bookId = 'ihyangin';
+  a.w.showStageScene('live');
+  a.w.STAGE.q = 1;
+  a.w.stagePick({ type: 'assigned' });
+  await new Promise((r) => setTimeout(r, 1200));
+  assert.equal(a.w.STAGE.pickedName, '타오르는 로켓');
+  assert.equal(a.w.STAGE.critText, '지정 발언자');
+});
+
+test('지정 발언자가 없는 질문이면 아무도 뽑지 않는다', async (t) => {
+  const a = app(t);
+  const b = await withReport(a, { speaker_picks: [{ q_index: 0, nick: '꿈꾸는 표류자' }] });
+  b.others = b.questions.map(() => [{ n: '꿈꾸는 표류자', a: '답' }]);
+  a.w.STAGE.bookId = 'ihyangin';
+  a.w.showStageScene('live');
+  a.w.STAGE.q = 2;
+  a.w.stagePick({ type: 'assigned' });
+  await new Promise((r) => setTimeout(r, 1200));
+  assert.equal(a.w.STAGE.pickedName, null);
 });

@@ -1096,7 +1096,7 @@ body.is-page-season .book-card__cover{width:96px}
       <div class="sl-pickbar">
         <div class="scene-live__speaker-label" style="margin:0 0 8px;text-align:right">발언자 뽑기</div>
         <div class="sl-crit-row" style="justify-content:flex-end">
-          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'random'})">🎲 무작위</button>
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'assigned'})">🎯 지정 발언자</button>
           <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'empathy'})">🙌 반응 최다</button>
           <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'comments'})">💬 댓글 최다</button>
         </div>
@@ -4937,7 +4937,15 @@ function renderPickCard(){
 function stagePick(opt){
   var ps=stageParts(),picked,crit;
   if(!ps.length){toast('회원 답변 표본이 없어요 (기본 데모 모임에서 시연)');return;}
-  if(opt.type==='random'){picked=ps[Math.floor(Math.random()*ps.length)];crit='무작위 선정';}
+  /* 무작위 대신 발표자료가 지정한 발언자 (2026-09-30 사용자 피드백: 무작위는 성의 없는 답변이 걸려 재미가 없다).
+     report.speaker_picks:[{q_index,nick}] — AI 추천 후 방장이 검수해 확정한 1명 */
+  if(opt.type==='assigned'){
+    var rp=(bookById(STAGE.bookId)||{}).report,sp=null;
+    ((rp&&rp.speaker_picks)||[]).forEach(function(x){if(x&&x.q_index===STAGE.q)sp=x;});
+    ps.forEach(function(x){if(sp&&x.name===sp.nick)picked=x;});
+    if(!picked){toast('이 질문엔 지정 발언자가 없어요');return;}
+    crit='지정 발언자';
+  }
   else if(opt.type==='empathy'){picked=ps.reduce(function(a,b){return b.r.empathy>a.r.empathy?b:a;});crit='반응 최다 · '+picked.r.empathy+'개';}
   else if(opt.type==='comments'){picked=ps.reduce(function(a,b){return cmtCount(b,STAGE.q)>cmtCount(a,STAGE.q)?b:a;});crit='댓글 최다 · '+cmtCount(picked,STAGE.q)+'개';}
   else{var k=STAGE.axis;

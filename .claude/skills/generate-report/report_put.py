@@ -42,6 +42,19 @@ def main():
     for k in rep.get('keywords', []):
         if 'w' not in k or 'size' not in k:
             print('keyword 항목에 w/size 필요: ' + json.dumps(k, ensure_ascii=False), file=sys.stderr); sys.exit(2)
+    # 분량 상한 (2026-09-30 사용자 피드백: AI 요약이 너무 많다 — 카드 5장·키워드 5개)
+    if len(rep.get('keywords', [])) > 5:
+        print('keywords 는 5개 이하 (현재 %d)' % len(rep['keywords']), file=sys.stderr); sys.exit(2)
+    if len(rep.get('summary_slides', [])) > 5:
+        print('summary_slides 는 5장 이하 (현재 %d)' % len(rep['summary_slides']), file=sys.stderr); sys.exit(2)
+    # 질문별 지정 발언자 (2026-09-30) — 무작위 뽑기 대체, 사용자 검수 후 확정한 값만
+    sp = rep.get('speaker_picks')
+    if not isinstance(sp, list) or not sp or \
+       any(not isinstance(x, dict) or 'q_index' not in x or not x.get('nick') for x in sp):
+        print('speaker_picks 필요: [{q_index, nick, why}] — 질문별 1명, 사용자 검수 후 확정',
+              file=sys.stderr); sys.exit(2)
+    if len({x['q_index'] for x in sp}) != len(sp):
+        print('speaker_picks 는 질문당 1명', file=sys.stderr); sys.exit(2)
     rx = rep.get('reactions')  # 선택 필드(v22) — 있으면 형태만 검사
     if rx is not None and not isinstance(rx.get('by_kind'), dict):
         print('reactions.by_kind 는 {종류키: 개수} 여야 함', file=sys.stderr); sys.exit(2)
@@ -91,6 +104,9 @@ def main():
     if rr.get('summary_slides'):
         print('  요약 슬라이드 %d장 · 하이라이트 %d개' % (
             len(rr['summary_slides']), len(rr.get('highlights', []))))
+    if rr.get('speaker_picks'):
+        print('  지정 발언자 — ' + ' · '.join('Q%d %s' % (x['q_index'] + 1, x['nick'])
+                                             for x in rr['speaker_picks']))
     if rr.get('member_profiles'):
         print('  멤버 프로필 %d명 · 별점 코멘트 %s' % (
             len(rr['member_profiles']), '있음' if rr.get('ratings_comment') else '없음'))
