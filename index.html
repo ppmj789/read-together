@@ -690,6 +690,13 @@ body.is-page-season .book-card__cover{width:96px}
 .star{font-size:24px;line-height:1;color:var(--rule);cursor:pointer;background:none;border:none;padding:10px 7px;margin:-6px 0;transition:transform .12s,color .15s}
 .star:hover{transform:scale(1.18)}
 .star.on{color:var(--star)}
+/* 반 별 (2026-09-30) — 별 한 개를 좌/우 두 터치 영역으로 나눠 0.5 단위 입력 */
+.star{position:relative}
+.star.half{background:linear-gradient(90deg,var(--star) 50%,var(--rule) 50%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.star__hit{position:absolute;top:0;bottom:0;width:50%;background:none;border:none;padding:0;margin:0;cursor:pointer}
+.star__hit--l{left:0}.star__hit--r{right:0}
+.rating-row__val{min-width:30px;align-self:center;text-align:right;font-size:13px;font-weight:700;color:var(--ink-soft)}
+.rt-stars .half{background:linear-gradient(90deg,var(--star) 50%,var(--rule) 50%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .rating-row--total{border-top:2px solid var(--rule);border-bottom:none;margin-top:4px;padding-top:14px}
 .rating-row--total .rating-row__label{font-weight:800;font-size:15px}
 .rating-row--total .star{font-size:28px}
@@ -758,8 +765,6 @@ body.is-page-season .book-card__cover{width:96px}
 .sl-qtab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .sl-qtext{font-size:21px;font-weight:800;line-height:1.5;color:var(--ink);margin:0 0 14px;word-break:keep-all}
 /* 발언 순서 — 이름 클릭 가능 */
-.sl-order li{cursor:pointer}
-.sl-order li:hover{border-color:var(--accent);background:var(--accent-tint)}
 .scene-q__eye{font-size:13px;font-weight:600;color:var(--ink-dim);margin-bottom:14px;letter-spacing:.04em;text-transform:uppercase}
 
 .scene-analysis__layout{display:flex;flex-direction:column;gap:24px}
@@ -783,6 +788,22 @@ body.is-page-season .book-card__cover{width:96px}
 .kw-detail__why{font-weight:600;color:var(--ink);margin-bottom:6px}
 .kw-detail__q{color:var(--ink-soft);font-style:italic}
 /* 별점 요약 코멘트 (2026-07-31) — '팀원들은 이렇게 생각했다' 한 문단 */
+/* 별점 흩어짐 (2026-09-30) — 축마다 1~5 트랙 위에 점수별 동그라미(크기=인원), 회색 선=최저~최고, 아래 ▲=평균 */
+.rt-spread{margin-top:16px;padding-top:14px;border-top:1px dashed var(--rule)}
+.rt-spread__hd{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;word-break:keep-all}
+.rt-spread__hd span{font-weight:400;color:var(--ink-dim)}
+.rt-spread__row{display:grid;grid-template-columns:64px 1fr 34px;align-items:center;gap:10px;height:46px}
+.rt-spread__lab{font-size:13px;font-weight:600;color:var(--ink);word-break:keep-all}
+.rt-spread__track{position:relative;height:100%;margin:0 12px}
+.rt-spread__base{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--rule-soft)}
+.rt-spread__range{position:absolute;top:50%;height:3px;margin-top:-1px;border-radius:2px;background:var(--rule)}
+.rt-spread__dot{position:absolute;top:50%;transform:translate(-50%,-50%);border-radius:50%;background:var(--star);box-shadow:0 0 0 2px var(--paper);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--ink)}
+.rt-spread__avg{position:absolute;bottom:0;width:0;height:0;margin-left:-5px;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid var(--ink)}
+.rt-spread__num{font-size:13px;font-weight:700;color:var(--ink-soft);text-align:right}
+.rt-spread__axis{display:grid;grid-template-columns:64px 1fr 34px;gap:10px;font-size:11px;color:var(--ink-dim)}
+.rt-spread__ticks{position:relative;height:14px;margin:0 12px}
+.rt-spread__ticks span{position:absolute;transform:translateX(-50%)}
+.sl-pick-why{margin:10px 0 2px;padding:9px 12px;background:var(--accent-tint);border-radius:var(--radius-sm);font-size:13.5px;line-height:1.55;color:var(--ink);word-break:keep-all}
 .rt-comment{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--rule);font-size:13.5px;line-height:1.65;color:var(--ink-soft)}
 .rt-comment.show{display:block}
 /* 멤버 추리 씬 (2026-07-31) — 닉네임 프로필 카드, 누구인지 맞히기 */
@@ -909,11 +930,6 @@ body.is-page-season .book-card__cover{width:96px}
 .sl-axis{padding:6px 12px;border:1px solid var(--rule);background:var(--paper);border-radius:var(--radius-pill);font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-soft);transition:all .2s}
 .sl-axis.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 /* 발언 순서 — 세로 리스트 대신 3열 그리드로 압축, 답변 카드가 한 화면에 들어오게 (2026-07-31) */
-.sl-order{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 16px}
-.sl-order li{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-sm);padding:7px 10px;font-size:13px;transition:all .2s;min-width:0}
-.sl-order li>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sl-order li.is-picked{border-color:var(--accent);background:var(--accent-tint);font-weight:700}
-.sl-order__n{font-family:var(--display);font-weight:900;font-size:16px;color:var(--accent);width:18px;text-align:center;flex-shrink:0}
 .sl-pick-card{padding:22px;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper)}
 .sl-pick-card__top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .sl-pick-card__av{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0}
@@ -1068,7 +1084,7 @@ body.is-page-season .book-card__cover{width:96px}
   <div class="scene-analysis__layout">
     <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요 &middot; 사람은 반응만, 분석은 AI</p></div>
     <div class="scene-analysis__grid">
-      <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드 <span style="color:var(--ink-dim);font-weight:400;text-transform:none">— 누르면 아래에 선정 이유가 고정돼요</span></div><div class="analysis-keywords"><span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span></div><div class="kw-detail" id="analysis-kw-detail"></div></div>
+      <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드 <span style="color:var(--ink-dim);font-weight:400;text-transform:none">— 누르면 아래에 선정 이유가 고정돼요</span></div><div class="analysis-keywords"><span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span></div><div class="kw-detail" id="analysis-kw-detail"></div><div class="rt-spread" id="analysis-rating-spread" style="display:none"></div></div>
       <div class="analysis-card"><div class="analysis-card__label">책 별점 분포 (익명 · 5점 만점)</div><div id="stage-rating-rows"></div>
         <div class="rt-comment" id="analysis-rating-comment"></div>
       </div>
@@ -1105,11 +1121,6 @@ body.is-page-season .book-card__cover{width:96px}
     </div>
     <div id="sl-qtext" class="sl-qtext"></div>
     <div class="grp-wrap" id="sl-groups" style="display:none"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-      <span class="scene-live__speaker-label" style="margin:0">발언 순서 · <span style="color:var(--accent)">이름을 누르면 답변이 열려요</span></span>
-      <button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="stageReshuffle()">순서 섞기</button>
-    </div>
-    <ol class="sl-order" id="sl-order"></ol>
     <div id="sl-pickcard"></div>
   </div>
 </div>
@@ -2774,7 +2785,7 @@ function setStage(on){
 async function startShare(bookId){
   var b=bookById(bookId);
   if(!b||!b.report){toast('🔒 먼저 책을 닫고(마감) 발표자료를 생성해 주세요');return;}
-  STAGE.bookId=bookId;STAGE.order=[];STAGE.pickedName=null;
+  STAGE.bookId=bookId;STAGE.pickedName=null;
   if(ONLINE){try{await RT.loadBook(bookId);}catch(e){rtErr(e);}}
   setStage(true);
   wireCardZoom();renderStageRoadmap();renderStageRating();renderStageMembers();renderStageLive();renderStageHighlights();
@@ -2833,7 +2844,7 @@ function wireCardZoom(){
   var wrap=document.getElementById('stage-wrap');
   if(!wrap||wrap._zoomWired)return; wrap._zoomWired=true;
   wrap.addEventListener('click',function(e){
-    if(e.target.closest('button,a,input,textarea,.kw,.sl-qtab,.sl-order,.rxa,.sl-pick-card'))return;
+    if(e.target.closest('button,a,input,textarea,.kw,.sl-qtab,.rxa,.sl-pick-card'))return;
     var card=e.target.closest('.sum-slide,.member-card,.highlight-card')||e.target.closest('.analysis-card');
     if(!card)return;
     var base=['sum-slide','member-card','highlight-card'].filter(function(cl){return card.classList.contains(cl);})[0];
@@ -3727,7 +3738,7 @@ function renderResults(){
   RATING_AXES.forEach(function(ax){
     var rr=(rep.ratings||{})[ax.k]||{avg:0,n:0};
     h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'</div>'+
-      '<div><span class="rt-stars">'+starStr(Math.round(rr.avg||0))+'</span><span class="rt-stars__num">'+(rr.avg||0).toFixed(1)+' · '+(rr.n||0)+'명</span></div></div>';
+      '<div><span class="rt-stars">'+starStr(halfRound(rr.avg))+'</span><span class="rt-stars__num">'+(rr.avg||0).toFixed(1)+' · '+(rr.n||0)+'명</span></div></div>';
   });
   if(rep.ratings_comment) h+='<div class="rt-comment show">'+markNicks(rep.ratings_comment,repNickList)+'</div>';
   h+='</div>';
@@ -4136,7 +4147,7 @@ function allRatingsHtml(b){
   var h='<div class="sheet sheet--warm mt-16"><div class="sheet__hd"><div><div class="eyebrow">모두의 별점</div><h3 class="h-3 mt-4">익명 분포 (평균)</h3></div></div>';
   h+='<div>';
   RATING_AXES.forEach(function(ax){
-    var n=cnts[ax.k]||0, avg=n?(sums[ax.k]/n):0, rounded=Math.round(avg);
+    var n=cnts[ax.k]||0, avg=n?(sums[ax.k]/n):0, rounded=halfRound(avg);
     h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'<span style="display:block;font-size:11px;color:var(--ink-dim);font-weight:400">'+esc(ax.hint)+'</span></div>'+
       '<div><span class="rt-stars">'+starStr(rounded)+'</span><span class="rt-stars__num">'+(n?avg.toFixed(1):'-')+' · '+n+'명</span></div></div>';
   });
@@ -4153,7 +4164,11 @@ function ratingHtml(b,bs){
     var val=bs.ratings[ax.k]||0;
     h+='<div class="rating-row'+(ax.k==='overall'?' rating-row--total':'')+'">'+
       '<div class="rating-row__label">'+esc(ax.label)+'<span>'+esc(ax.hint)+'</span></div><div class="stars">';
-    for(var n=1;n<=5;n++) h+='<button class="star'+(n<=val?' on':'')+'" '+(locked?'disabled':'onclick="setRating(\''+ax.k+'\','+n+')"')+'>★</button>';
+    /* 별 하나 = 왼쪽 절반(n-0.5점) + 오른쪽 절반(n점) 두 터치 영역 (2026-09-30 반 별 입력) */
+    for(var n=1;n<=5;n++) h+='<span class="star'+(n<=val?' on':(n-0.5===val?' half':''))+'">★'+
+      (locked?'':'<button class="star__hit star__hit--l" aria-label="'+esc(ax.label)+' '+(n-0.5)+'점" onclick="setRating(\''+ax.k+'\','+(n-0.5)+')"></button>'+
+        '<button class="star__hit star__hit--r" aria-label="'+esc(ax.label)+' '+n+'점" onclick="setRating(\''+ax.k+'\','+n+')"></button>')+'</span>';
+    h+='<span class="rating-row__val">'+(val?val.toFixed(1):'')+'</span>';
     h+='</div></div>';
   });
   h+='</div>'+(locked?'':'<p class="body-2 dim mt-12" style="font-size:12px;text-align:center">★ 별을 누르면 자동으로 저장돼요. 모두 채우면 다음 탭이 열려요.</p>')+'</div>';
@@ -4600,7 +4615,7 @@ function _done(k){ delete BUSY[k]; for(var x in BUSY){ if(BUSY.hasOwnProperty(x)
 /* ═══════════ STAGE (발표·모임장 전용) ═══════════
    (2026-07-21) 타이머 코드 삭제 — UI 진입점이 없는 죽은 기능이었음 (7차 개편 잔재) */
 var scrambleInt=null;
-var STAGE={bookId:'ihyangin',q:0,axis:'fun',order:[],pickedName:null,critText:''};
+var STAGE={bookId:'ihyangin',q:0,axis:'fun',pickedName:null,critText:''};
 function cmtCount(p,qi){
   var c=(STAGE_COMMENTS['q'+qi+'|'+p.name]||[]).length;
   if(STATE.phone4){var bs=bookState(STAGE.bookId),uk='q'+qi+'a'+p.idx;c+=((bs.comments&&bs.comments[uk])||[]).length;}
@@ -4610,8 +4625,36 @@ function cmtCount(p,qi){
 var STAGE_RATINGS={};
 var STAGE_COMMENTS={};
 function axisLabel(k){for(var i=0;i<RATING_AXES.length;i++){if(RATING_AXES[i].k===k)return RATING_AXES[i].label;}return k;}
-function starStr(v){var s='';for(var i=1;i<=5;i++)s+=(i<=v?'★':'<span class="off">★</span>');return s;}
-function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function starStr(v){var s='';for(var i=1;i<=5;i++)s+=(i<=v?'★':(i-0.5===v?'<span class="half">★</span>':'<span class="off">★</span>'));return s;}
+/* 0.5 단위로 반올림 — 반 별 표시용 (2026-09-30) */
+function halfRound(v){return Math.round((v||0)*2)/2;}
+/* 별점 흩어짐 그래프 (2026-09-30 사용자 요청) — 평균만으론 안 보이는 '갈림'을 보여 준다.
+   b.allRatings(member_book 전체)에서 축별 점수 목록만 꺼내 인원수로 묶는다 — 누가 줬는지는 쓰지 않음(익명) */
+function ratingSpreadHtml(b){
+  var rows=(b&&b.allRatings)||[];
+  if(!rows.some(function(r){return RATING_AXES.some(function(ax){return r[ax.k]>0;});}))return '';
+  function pos(v){return ((v-1)/4*100).toFixed(2)+'%';}
+  var h='<div class="rt-spread__hd">별점 흩어짐 <span>— 동그라미 숫자 = 인원 · 회색 선 = 최저~최고 · ▲ = 평균</span></div>';
+  RATING_AXES.forEach(function(ax){
+    var vals=rows.map(function(r){return r[ax.k]||0;}).filter(function(v){return v>0;});
+    h+='<div class="rt-spread__row"><div class="rt-spread__lab">'+esc(ax.label)+'</div><div class="rt-spread__track"><div class="rt-spread__base"></div>';
+    if(vals.length){
+      var cnt={},mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals),avg=vals.reduce(function(a,c){return a+c;},0)/vals.length;
+      vals.forEach(function(v){cnt[v]=(cnt[v]||0)+1;});
+      h+='<div class="rt-spread__range" style="left:'+pos(mn)+';width:'+((mx-mn)/4*100).toFixed(2)+'%"></div>';
+      Object.keys(cnt).forEach(function(k){
+        var v=+k,c=cnt[k],d=Math.min(12+(c-1)*4,30);
+        h+='<div class="rt-spread__dot" style="left:'+pos(v)+';width:'+d+'px;height:'+d+'px" title="'+v+'점 · '+c+'명">'+(c>1?c:'')+'</div>';
+      });
+      h+='<div class="rt-spread__avg" style="left:'+pos(avg)+'" title="평균 '+avg.toFixed(1)+'"></div>';
+      h+='</div><div class="rt-spread__num">'+avg.toFixed(1)+'</div></div>';
+    } else h+='</div><div class="rt-spread__num">-</div></div>';
+  });
+  h+='<div class="rt-spread__axis"><div></div><div class="rt-spread__ticks">';
+  for(var i=1;i<=5;i++)h+='<span style="left:'+pos(i)+'">'+i+'</span>';
+  h+='</div><div></div></div>';
+  return h;
+}
 function stageParts(){
   var b=bookById(STAGE.bookId),base=(b.others[0]||[]);
   return base.map(function(o,idx){
@@ -4656,6 +4699,8 @@ function renderStageRoadmap(){
 function renderStageRating(){
   var host=document.getElementById('stage-rating-rows');if(!host)return;
   var b=bookById(STAGE.bookId);
+  var spEl=document.getElementById('analysis-rating-spread');
+  if(spEl){ var sph=ratingSpreadHtml(b); spEl.innerHTML=sph; spEl.style.display=sph?'':'none'; }
   var sub=document.querySelector('.scene-analysis__sub');
   var kwHost=document.querySelector('#scene-analysis .analysis-keywords');
   var smHost=document.querySelector('#scene-analysis .analysis-summary');
@@ -4665,7 +4710,7 @@ function renderStageRating(){
     RATING_AXES.forEach(function(ax){
       var rr=(rep.ratings||{})[ax.k]||{avg:0,n:0};
       h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'</div>'+
-        '<div><span class="rt-stars">'+starStr(Math.round(rr.avg||0))+'</span><span class="rt-stars__num">'+(rr.avg||0).toFixed(1)+' · '+rr.n+'명</span></div></div>';
+        '<div><span class="rt-stars">'+starStr(halfRound(rr.avg))+'</span><span class="rt-stars__num">'+(rr.avg||0).toFixed(1)+' · '+rr.n+'명</span></div></div>';
     });
     host.innerHTML=h;
     /* 별점 요약 코멘트 — '팀원들은 이렇게 생각했다' (2026-07-31) */
@@ -4703,7 +4748,7 @@ function renderStageRating(){
     if(STATE.phone4){var bs=bookState(STAGE.bookId);if(bs.ratings&&bs.ratings[ax.k]){sum+=bs.ratings[ax.k];cnt++;}}
     var avg=cnt?sum/cnt:0;
     h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'</div>'+
-      '<div><span class="rt-stars">'+starStr(Math.round(avg))+'</span><span class="rt-stars__num">'+avg.toFixed(1)+'</span></div></div>';
+      '<div><span class="rt-stars">'+starStr(halfRound(avg))+'</span><span class="rt-stars__num">'+avg.toFixed(1)+'</span></div></div>';
   });
   host.innerHTML=h;
 }
@@ -4765,7 +4810,7 @@ function renderStageGroups(){
   groups.forEach(function(g,gi){
     var zone=document.createElement('div');
     zone.className='grp-zone';zone.style.left=Math.round(W*gi/n)+'px';zone.style.width=Math.round(W/n)+'px';
-    zone.innerHTML=esc((g.emoji?g.emoji+' ':'')+(g.name||''))+' <b>'+(g.members||[]).length+'</b>';
+    zone.innerHTML=esc((g.emoji?g.emoji+' ':'')+(g.name||''))+' <b>'+(g.members||[]).length+'명</b>';
     host.appendChild(zone);
     var cx=W*(gi+0.5)/n,zw=W/n;
     (g.members||[]).forEach(function(nick){
@@ -4822,10 +4867,9 @@ function stagePickNick(nick){
 }
 function renderStageLive(){
   var ps=stageParts();
-  var orderEl=document.getElementById('sl-order');if(!orderEl)return;
-  var pc=document.getElementById('sl-pickcard');
+  /* 발언 순서 목록은 없앴다 (2026-09-30 사용자 피드백: 무리 지도 조약돌로 충분, 스크롤만 늘림) */
+  var pc=document.getElementById('sl-pickcard');if(!pc)return;
   if(!ps.length){
-    orderEl.innerHTML='';
     if(pc)pc.innerHTML='<div class="sl-empty">서버 연동 전이라 회원 답변·별점·댓글 표본이 없습니다.<br>기본 데모 모임(인간 본성 탐구)에서 진행을 시연하세요.</div>';
     return;
   }
@@ -4836,19 +4880,7 @@ function renderStageLive(){
   var qx=document.getElementById('sl-qtext');
   if(qx)qx.textContent=bk.questions.length?('Q'+(STAGE.q+1)+'. '+bk.questions[STAGE.q]):'';
   renderStageGroups(); /* 질문이 바뀌면 조약돌이 새 무리로 이동 (2026-07-31) */
-  if(!STAGE.order.length)STAGE.order=shuffle(ps.map(function(p){return p.name;}));
-  var ol='';STAGE.order.forEach(function(nm,i){ol+='<li'+(nm===STAGE.pickedName?' class="is-picked"':'')+' onclick="stagePickOrder('+i+')" title="답변 보기"><span class="sl-order__n">'+(i+1)+'</span><span>'+esc(nm)+'</span></li>';});
-  orderEl.innerHTML=ol;
   renderPickCard();
-}
-/* 발언 순서에서 이름 클릭 → 그 사람 지목(스크램블 없이 바로 답변 카드) */
-function stagePickOrder(i){
-  var nm=STAGE.order[i];if(!nm)return;
-  STAGE.pickedName=nm;STAGE.critText='직접 선택';
-  var nameEl=document.getElementById('stage-speaker-name'),promptEl=document.getElementById('speaker-prompt');
-  if(nameEl){nameEl.textContent=nm;nameEl.style.color='var(--accent)';}
-  if(promptEl)promptEl.textContent='직접 선택';
-  renderStageLive();
 }
 function renderStageHighlights(){
   var grid=document.getElementById('stage-highlights-grid');
@@ -4907,13 +4939,15 @@ function renderStageHighlights(){
   grid.innerHTML=cards.join('');
 }
 function stageSetQ(i){STAGE.q=i;STAGE.pickedName=null;renderStageLive();}
-function stageReshuffle(){STAGE.order=shuffle(stageParts().map(function(p){return p.name;}));STAGE.pickedName=null;renderStageLive();toast('발언 순서를 새로 섞었어요');}
 function renderPickCard(){
   var host=document.getElementById('sl-pickcard');if(!host)return;
   if(!STAGE.pickedName){host.innerHTML='<div class="sl-empty">질문을 고르고 왼쪽 선정 기준을 누르면,<br>그 질문의 발표자와 답변·댓글이 표시됩니다.</div>';return;}
   var b=bookById(STAGE.bookId),p=null;stageParts().forEach(function(x){if(x.name===STAGE.pickedName)p=x;});
   if(!p){host.innerHTML='';return;}
   var crit=STAGE.critText||'',qi=STAGE.q;
+  /* 지정 발언자면 지정 이유를 한 줄로 (2026-09-30 사용자 피드백) */
+  var why='';
+  if(crit==='지정 발언자'){((b.report&&b.report.speaker_picks)||[]).forEach(function(x){if(x&&x.q_index===qi&&x.nick===p.name)why=x.why||'';});}
   var cmts=(STAGE_COMMENTS['q'+qi+'|'+p.name]||[]).slice();
   if(STATE.phone4){var bs=bookState(STAGE.bookId),uk='q'+qi+'a'+p.idx;((bs.comments&&bs.comments[uk])||[]).forEach(function(t){cmts.push({by:'나 (개인모드)',t:t});});}
   var ch=cmts.map(function(c){return '<div class="sl-cmt"><b>'+esc(c.by)+'</b> '+esc(c.t)+'</div>';}).join('');
@@ -4928,6 +4962,7 @@ function renderPickCard(){
     /* 이향인 점수는 발표 모드에서만 공개 */
     ((p.r.ihyangScore!=null)?('<span class="sl-chip'+(p.r.ihyangIs?' hot':'')+'">'+(p.r.ihyangIs?'🌙 이향인 ':'내향성 ')+esc(String(p.r.ihyangScore))+'점·'+esc(String(p.r.ihyangPct))+'%</span>'):'')+
     '</div>'+
+    (why?'<div class="sl-pick-why">🎯 지정 이유 · '+esc(why)+'</div>':'')+
     '<div class="sl-qa"><div class="scene-q__eye" style="margin:0 0 8px">Q'+(qi+1)+' · '+esc((b.questions||[])[qi]||'')+'</div>'+
     '<div class="sl-pick-card__ans">'+esc(p.answers[qi]||'(답변 없음)')+'</div>'+
     '<div class="sl-cmts"><div class="sl-cmts__hd">이 답변에 달린 댓글 · 모임 토론거리</div>'+
@@ -4968,7 +5003,7 @@ function stagePick(opt){
     }
   },60);
 }
-function renderStageAll(){STAGE.bookId=currentBookId();STAGE.q=0;STAGE.order=[];STAGE.pickedName=null;wireCardZoom();renderStageRoadmap();renderStageRating();renderStageMembers();renderStageLive();renderStageHighlights();}
+function renderStageAll(){STAGE.bookId=currentBookId();STAGE.q=0;STAGE.pickedName=null;wireCardZoom();renderStageRoadmap();renderStageRating();renderStageMembers();renderStageLive();renderStageHighlights();}
 
 /* ── 브라우저 뒤로가기 = 앱 내 이전 화면 ── */
 async function onPop(ev){

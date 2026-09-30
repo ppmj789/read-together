@@ -234,6 +234,7 @@ test('진행탭 — 발언자 뽑기가 질문선택 오른쪽 상단바에 있�
   assert.match(bar.textContent, /지정 발언자/);
   assert.doesNotMatch(bar.textContent, /무작위/, '무작위 뽑기는 없앴다 (2026-09-30)');
   assert.ok(a.d.getElementById('stage-speaker-name'), '발언자 이름 표시는 유지');
+  assert.equal(a.d.getElementById('sl-order'), null, '발언 순서 목록은 없앴다 (2026-09-30)');
 });
 
 test('조약돌 클릭 → 그 사람이 발언자로 지목되고 강조된다', async (t) => {
@@ -284,7 +285,7 @@ test('발표모드 진행탭: 답변 본문과 댓글이 pre-line 으로 줄바�
 test('지정 발언자 — report.speaker_picks 의 그 질문 지정자가 뽑힌다', async (t) => {
   const a = app(t);
   const b = await withReport(a, { speaker_picks: [
-    { q_index: 0, nick: '꿈꾸는 표류자' }, { q_index: 1, nick: '타오르는 로켓' }] });
+    { q_index: 0, nick: '꿈꾸는 표류자' }, { q_index: 1, nick: '타오르는 로켓', why: '반응 최다' }] });
   b.others = b.questions.map(() => [{ n: '꿈꾸는 표류자', a: '답' }, { n: '타오르는 로켓', a: '답' }]);
   a.w.STAGE.bookId = 'ihyangin';
   a.w.showStageScene('live');
@@ -293,6 +294,7 @@ test('지정 발언자 — report.speaker_picks 의 그 질문 지정자가 뽑�
   await new Promise((r) => setTimeout(r, 1200));
   assert.equal(a.w.STAGE.pickedName, '타오르는 로켓');
   assert.equal(a.w.STAGE.critText, '지정 발언자');
+  assert.match(a.d.getElementById('sl-pickcard').textContent, /지정 이유 · 반응 최다/, '지정 이유 표시');
 });
 
 test('지정 발언자가 없는 질문이면 아무도 뽑지 않는다', async (t) => {
@@ -305,4 +307,43 @@ test('지정 발언자가 없는 질문이면 아무도 뽑지 않는다', async
   a.w.stagePick({ type: 'assigned' });
   await new Promise((r) => setTimeout(r, 1200));
   assert.equal(a.w.STAGE.pickedName, null);
+});
+
+test('반 별 입력 — 왼쪽 절반을 누르면 0.5점으로 저장되고 반 별로 그려진다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await a.w.openBook('ihyangin');
+  a.w.go('discussion');
+  a.w.setDiscView('rating');
+  const hit = a.d.querySelector('.rating-row .star__hit--l[aria-label$=" 3.5점"]');
+  assert.ok(hit, '4번째 별 왼쪽 절반 = 3.5점');
+  hit.click();
+  await new Promise((r) => setTimeout(r, 50));
+  assert.equal(a.w.bookState('ihyangin').ratings.length, 3.5);
+  const row = a.d.querySelector('.rating-row');
+  assert.equal(row.querySelectorAll('.star.on').length, 3);
+  assert.equal(row.querySelectorAll('.star.half').length, 1);
+  assert.match(row.textContent, /3\.5/);
+});
+
+test('별점 흩어짐 — 키워드 카드 아래에 점수별 인원 동그라미로 그린다', async (t) => {
+  const a = app(t);
+  const b = await withReport(a, {});
+  b.allRatings = [
+    { phone4: '9876', length: 5, difficulty: 4.5, fun: 4, novelty: 3, overall: 4 },
+    { phone4: '8765', length: 5, difficulty: 4, fun: 3.5, novelty: 5, overall: 4 },
+    { phone4: '7654', length: 5, difficulty: 0, fun: 4, novelty: 4, overall: 3.5 }];
+  a.w.STAGE.bookId = 'ihyangin';
+  a.w.showStageScene('analysis');
+  const sp = a.d.getElementById('analysis-rating-spread');
+  assert.ok(sp.closest('.analysis-card').querySelector('.analysis-keywords'), '키워드 카드 안');
+  assert.notEqual(sp.style.display, 'none');
+  const rows = sp.querySelectorAll('.rt-spread__row');
+  assert.equal(rows.length, 5);
+  const lenDots = rows[0].querySelectorAll('.rt-spread__dot');
+  assert.equal(lenDots.length, 1, '분량은 전원 5점 → 동그라미 1개');
+  assert.equal(lenDots[0].textContent, '3');
+  assert.equal(rows[1].querySelectorAll('.rt-spread__dot').length, 2, '0점(미입력)은 빼고 4.5·4');
+  assert.doesNotMatch(sp.innerHTML, /9876|8765|7654/, '번호는 절대 싣지 않는다(익명)');
 });
