@@ -260,3 +260,16 @@ test('질문 속 주소는 링크로, 나머지는 그대로 이스케이프', a
   assert.ok(h.includes('&lt;b&gt;'), '주소 밖 글자는 이스케이프 유지');
   assert.equal(a.w.qHtml('주소 없는 질문'), '주소 없는 질문');
 });
+
+test('질문의 줄바꿈이 답변 화면에 그대로 보인다', async (t) => {
+  const a = app(t);
+  await enterBook(a);
+  const b = a.w.bookById('ihyangin');
+  b.questions[0] = '첫 줄\n둘째 줄';
+  a.w.go('discussion');
+  for (const ax of ['length', 'difficulty', 'fun', 'novelty', 'overall']) await a.w.setRating(ax, 4);
+  const h3 = [...a.d.querySelectorAll('#page-discussion h3.h-3')].find((x) => x.textContent.includes('첫 줄'));
+  assert.ok(h3, '질문 제목이 있어야 함');
+  assert.equal(h3.textContent, '첫 줄\n둘째 줄');
+  assert.equal(h3.style.whiteSpace, 'pre-line');
+});

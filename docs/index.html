@@ -664,7 +664,7 @@ body.is-page-season .book-card__cover{width:96px}
 .bi-del:hover{color:#D44}
 .bi-cap{font-size:12px;color:var(--ink-dim);margin:0 0 8px;line-height:1.5}
 .qfix{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--radius-sm);margin-bottom:8px}
-.qfix__t{flex:1;font-size:14px;font-weight:600;color:var(--ink);line-height:1.45}
+.qfix__t{flex:1;font-size:14px;font-weight:600;color:var(--ink);line-height:1.45;white-space:pre-line}
 .qfix__btn{flex:0 0 auto;background:none;border:1px solid var(--rule);color:var(--ink-soft);font-size:12px;font-weight:700;padding:5px 12px;border-radius:var(--radius-pill);cursor:pointer;transition:border-color .15s,color .15s}
 .qfix__btn:hover{border-color:var(--accent);color:var(--accent)}
 
@@ -763,7 +763,7 @@ body.is-page-season .book-card__cover{width:96px}
 .sl-qtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .sl-qtab{padding:9px 18px;border:1px solid var(--rule);background:var(--paper);border-radius:var(--radius-pill);font-size:16px;font-weight:700;cursor:pointer;color:var(--ink-soft);transition:all .2s}
 .sl-qtab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.sl-qtext{font-size:21px;font-weight:800;line-height:1.5;color:var(--ink);margin:0 0 14px;word-break:keep-all}
+.sl-qtext{font-size:21px;font-weight:800;line-height:1.5;color:var(--ink);margin:0 0 14px;word-break:keep-all;white-space:pre-line}
 /* 발언 순서 — 이름 클릭 가능 */
 .scene-q__eye{font-size:13px;font-weight:600;color:var(--ink-dim);margin-bottom:14px;letter-spacing:.04em;text-transform:uppercase}
 
@@ -837,7 +837,7 @@ body.is-page-season .book-card__cover{width:96px}
 @keyframes peb-wob{0%{transform:translate(0,0) rotate(-1deg)}33%{transform:translate(2px,-2px) rotate(1deg)}66%{transform:translate(-2px,1px) rotate(-.6deg)}100%{transform:translate(1px,2px) rotate(.8deg)}}
 /* 하이라이트 카드 — 선정 이유(label)가 큰 제목 (2026-07-31 사용자 피드백) */
 .highlight-card__crit{font-family:var(--display);font-weight:800;font-size:19px;line-height:1.35;color:var(--accent);margin-bottom:6px;word-break:keep-all}
-.highlight-card__q{font-size:12.5px;font-weight:600;color:var(--ink-dim);margin-bottom:8px}
+.highlight-card__q{font-size:12.5px;font-weight:600;color:var(--ink-dim);margin-bottom:8px;white-space:pre-line}
 .highlight-card__body{font-size:14.5px;line-height:1.65;color:var(--ink);white-space:pre-line;word-break:keep-all}
 .analysis-bars{display:flex;flex-direction:column;gap:14px}
 .analysis-bar__label{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px}
@@ -4052,7 +4052,7 @@ function renderDiscussion(){
           var __sq=(i===ihyangScoreQIndex(b));
           h+='<div class="sheet">'+
             '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
-            '<h3 class="h-3" style="margin-bottom:14px">'+qHtml(q)+'</h3>'+
+            '<h3 class="h-3" style="margin-bottom:14px;white-space:pre-line">'+qHtml(q)+'</h3>'+
             (__sq?ihyangBlockHtml(b,bs):'')+
             '<textarea class="input" id="ans-'+i+'" rows="3" enterkeyhint="enter" placeholder="'+(__sq?'이 점수에 동의하나요? 어떻게 생각하세요?':'내 생각을 적어주세요')+'">'+esc(bs.answers[i]||'')+'</textarea>'+
           '</div>';
@@ -4068,7 +4068,7 @@ function renderDiscussion(){
         var isEmpty=!ansBody;
         h+='<div class="sheet">'+
           '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
-          '<h3 class="h-3" style="margin-bottom:14px">'+qHtml(q)+'</h3>'+
+          '<h3 class="h-3" style="margin-bottom:14px;white-space:pre-line">'+qHtml(q)+'</h3>'+
           (i===ihyangScoreQIndex(b)?ihyangBlockHtml(b,bs):'');
         if(isEmpty && !editing){
           /* 삭제됐거나 미작성 — 마감 무관 다시 작성 허용 (마감일 땐 안내만) */
@@ -4098,7 +4098,7 @@ function renderDiscussion(){
     b.questions.forEach(function(q,i){
       var oas=(b.others[i]||[]);if(oas.length)hasOthers=true;
       h+='<div class="sheet"><div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
-        '<h3 class="h-3" style="margin-bottom:14px">'+qHtml(q)+'</h3>';
+        '<h3 class="h-3" style="margin-bottom:14px;white-space:pre-line">'+qHtml(q)+'</h3>';
       /* 내 답변 + 내 답변에 달린 댓글(누가 달았는지) — 읽기 전용 */
       var myA=(bs.answers[i]||'').trim();
       if(bs.submitted && myA){
