@@ -1413,7 +1413,16 @@ function nickPickerHtml(b,opts){
    한번 정해지면 그대로 유지되고, 변경은 답변 페이지 [✏️ 변경] 버튼(startNickChange)으로만. */
 function ensureNick(){
   if(!STATE.phone4||!STATE.bookId)return;
-  if(fixedNick(STATE.phone4,STATE.bookId))return;               /* 이미 정해졌으면 유지 */
+  var cur=fixedNick(STATE.phone4,STATE.bookId),st0=nickSetFor(STATE.bookId);
+  /* 한 단어 사전이 붙기 전에 받은 서재 테마 긴 이름(2026-10-07)은 버리고 한 단어로 다시 받는다.
+     직접 지은 이름은 건드리지 않는다. 서버에 이미 한 단어가 있으면 그 이름을 그대로 쓴다. */
+  if(cur&&st0.one&&VOTE_ADJ.some(function(a){return cur.indexOf(a+' ')===0&&VOTE_NOUN.indexOf(cur.slice(a.length+1))>=0;})){
+    var o0=nkLoad();delete o0[STATE.phone4+'|'+STATE.bookId];cur=null;
+    var sv=(NICKMAP[STATE.bookId]||{})[STATE.phone4];
+    if(sv&&st0.one.indexOf(sv)>=0){o0[STATE.phone4+'|'+STATE.bookId]=sv;nkSave(o0);return;}
+    nkSave(o0);
+  }
+  if(cur)return;                                                /* 이미 정해졌으면 유지 */
   var nm=nickFor(STATE.phone4,STATE.bookId);                    /* 책마다 고정인 해시 닉 */
   /* 한 단어 사전은 낱말이 적어 해시가 겹치기 쉽다 — 남이 이미 쓰는 이름이면 다음 낱말로 넘긴다. */
   var st=nickSetFor(STATE.bookId);

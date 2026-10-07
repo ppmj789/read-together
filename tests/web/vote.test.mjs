@@ -1261,4 +1261,15 @@ test('별명 사전: 빵충은 한 단어 이름, 남이 쓰는 이름은 건너
   a.w.ensureNick();
   const mine = JSON.parse(a.w.localStorage.getItem('rt:nick'))['1234|bBread'];
   assert.equal(mine, one[(one.indexOf(auto) + 1) % one.length]);
+  /* 사전이 붙기 전에 받은 서재 테마 긴 이름은 한 단어로 바뀐다 — 서버에 한 단어가 있으면 그 이름 */
+  const setLocal = (v) => { const o = JSON.parse(a.w.localStorage.getItem('rt:nick')); o['1234|bBread'] = v; a.w.localStorage.setItem('rt:nick', JSON.stringify(o)); };
+  const getLocal = () => JSON.parse(a.w.localStorage.getItem('rt:nick'))['1234|bBread'];
+  setLocal(a.w.VOTE_ADJ[0] + ' ' + a.w.VOTE_NOUN[0]);
+  a.w.nickMapSet('bBread', '1234', one[5]);
+  a.w.ensureNick();
+  assert.equal(getLocal(), one[5]);
+  /* 직접 지은 이름은 그대로 */
+  setLocal('내가 지은 이름');
+  a.w.ensureNick();
+  assert.equal(getLocal(), '내가 지은 이름');
 });
