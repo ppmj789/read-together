@@ -252,3 +252,11 @@ test('닉네임 직접 입력: 20자 초과 거부', async (t) => {
   assert.match(a.lastToast() || '', /20자/);
   assert.equal(a.w.NICKMODE, true, '실패 시 변경 모드 유지');
 });
+
+test('질문 속 주소는 링크로, 나머지는 그대로 이스케이프', async (t) => {
+  const a = app(t);
+  const h = a.w.qHtml('검사 <b> https://prismatest.com/ko/tests/holland 하고 오세요');
+  assert.ok(h.includes('<a href="https://prismatest.com/ko/tests/holland" target="_blank"'));
+  assert.ok(h.includes('&lt;b&gt;'), '주소 밖 글자는 이스케이프 유지');
+  assert.equal(a.w.qHtml('주소 없는 질문'), '주소 없는 질문');
+});

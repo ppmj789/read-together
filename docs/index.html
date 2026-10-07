@@ -1230,10 +1230,16 @@ var NICK_NOUN=['항해자','우주비행사','탐사선','인공위성','혜성'
    이름을 넣는다. 이름은 남녀 섞고, 실존 인물이 통째로 나오지 않게 골랐다. */
 var NICK_SEI_MASK=['사토','스즈키','다카하시','다나카','이토','와타나베','야마모토','나카무라','고바야시','가토','요시다','야마다','사사키','야마구치','마쓰모토','이노우에','기무라','하야시','시미즈','야마자키','모리','아베','이케다','하시모토','야마시타','이시카와','나카지마','마에다','후지타','오가와','고토','오카다','하세가와','무라카미','곤도','이시이','사이토','사카모토','엔도','아오키','후지이'];
 var NICK_MEI_MASK=['다카유키','겐지','슌스케','료타','다이스케','마사히로','히로시','가즈오','데쓰야','유타','소타','하루토','렌','유키','아키라','마코토','가오루','나오','준','쓰바사','미사키','사키','아야카','유이','리에','하루카','나쓰미','유카','아이','메구미','지히로','노조미','사토미','미유키','가나코','도모코','게이코','요시코','히로미','마유','리코','사쿠라','아스카','시오리','히나','유리','마이'];
+/* 빵충 사육 준수 사항 — 한 단어 별명 (2026-10-06). 앞뒤를 잇는 이름이 길다는 의견으로
+   이 책은 빵 이름 하나만 준다. {one:[...]} 사전은 조합 없이 한 낱말을 그대로 쓴다.
+   낱말 수(89)가 조합형보다 훨씬 적어 겹치기 쉬우므로 ensureNick 이 빈 이름을 찾아 준다. */
+var NICK_BREAD=['소보로','단팥빵','크루아상','바게트','모닝빵','베이글','스콘','카스텔라','마들렌','휘낭시에','까눌레','치아바타','포카치아','브리오슈','프레첼','도넛','꽈배기','고로케','소금빵','크림빵','메론빵','슈크림','에클레어','마카롱','머핀','와플','팬케이크','호밀빵','깜빠뉴','또띠아','파니니','토스트','러스크','크럼블','타르트','롤케이크','쉬폰','브라우니','쿠키','비스킷','크래커','호두과자','붕어빵','호빵','찐빵','술빵','계란빵','국화빵','풀빵','맘모스','피자빵','야채빵','옥수수빵','마늘빵','초코빵','밤빵','찹쌀도넛','츄러스','시나몬롤','크로플','슈톨렌','파네토네','팡도르','구겔호프','바움쿠헨','다쿠아즈','사브레','갈레트','크레이프','퀸아망','팔미에','밀푀유','몽블랑','티라미수','푸딩','치즈케이크','당근케이크','티그레','공갈빵','건빵','꿀빵','보리빵','쌀빵','통밀빵','버터롤','핫도그','샌드위치','파운드케이크','애플파이'];
 /* 책 제목 → 별명 사전. 없는 책은 NICK_DEFAULT(서재·독서 테마) */
 var NICK_SETS={
   '프로젝트 헤일메리':{adj:NICK_ADJ,noun:NICK_NOUN},
-  '가면산장 살인사건':{adj:NICK_SEI_MASK,noun:NICK_MEI_MASK}
+  '가면산장 살인사건':{adj:NICK_SEI_MASK,noun:NICK_MEI_MASK},
+  '빵충 사육 준수 사항':{one:NICK_BREAD},
+  '빵충 사육 준수사':{one:NICK_BREAD}
 };
 /* 사전이 등록되지 않은 책의 기본값 — 투표 화면과 같은 서재·독서 테마.
    (VOTE_ADJ/VOTE_NOUN 은 아래에서 정의되지만 호출은 로드 후라 문제없다) */
@@ -1300,6 +1306,7 @@ function nkSave(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:nick',v)
 function fixedNick(p4,bid){return (nkLoad()[p4+'|'+bid])||null;}
 function randomNick(){
   var st=nickSetFor(STATE.bookId);
+  if(st.one) return st.one[Math.floor(Math.random()*st.one.length)];
   return st.adj[Math.floor(Math.random()*st.adj.length)]+' '+st.noun[Math.floor(Math.random()*st.noun.length)];
 }
 /* 닉네임 정규화: 연속 공백 축약 + 앞뒤 trim + 소문자 (중복 판정 기준 · v13 인덱스와 동일) */
@@ -1408,6 +1415,13 @@ function ensureNick(){
   if(!STATE.phone4||!STATE.bookId)return;
   if(fixedNick(STATE.phone4,STATE.bookId))return;               /* 이미 정해졌으면 유지 */
   var nm=nickFor(STATE.phone4,STATE.bookId);                    /* 책마다 고정인 해시 닉 */
+  /* 한 단어 사전은 낱말이 적어 해시가 겹치기 쉽다 — 남이 이미 쓰는 이름이면 다음 낱말로 넘긴다. */
+  var st=nickSetFor(STATE.bookId);
+  if(st.one){
+    var m=NICKMAP[STATE.bookId]||{},used={};
+    Object.keys(m).forEach(function(p){ if(p!==STATE.phone4) used[normNick(m[p])]=1; });
+    for(var i=st.one.indexOf(nm),k=0;k<st.one.length&&used[normNick(nm)];k++) nm=st.one[(i+k+1)%st.one.length];
+  }
   var o=nkLoad();o[STATE.phone4+'|'+STATE.bookId]=nm;nkSave(o); /* 로컬 즉시 고정(동기) */
   nickMapSet(STATE.bookId,STATE.phone4,nm);
   /* 서버에도 비동기 반영 — 닉 충돌(드묾)은 조용히 무시하고 로컬 닉 유지(제출 시 재시도) */
@@ -1435,6 +1449,7 @@ function nickFor(phone4,bookId){
   var str=String(phone4)+'|'+bookId,h=0;
   for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))>>>0;}
   var st=nickSetFor(bookId);
+  if(st.one) return st.one[h%st.one.length];
   return st.adj[h%st.adj.length]+' '+st.noun[Math.floor(h/st.adj.length)%st.noun.length];
 }
 /* ── 책 표지 ──
@@ -3481,6 +3496,13 @@ async function delMeetingHost(){
   go('meetings');toast('시즌을 삭제했어요');
 }
 
+/* 질문 속 주소는 눌러서 열리게 (2026-10-07) — 검사 링크처럼 질문에 주소를 넣는 경우.
+   esc 한 뒤 http(s) 주소만 <a> 로 감싼다. 긴 주소가 화면을 밀지 않게 어디서든 줄바꿈. */
+function qHtml(q){
+  return esc(q).replace(/https?:\/\/[^\s<]+/g,function(u){
+    return '<a href="'+u+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;overflow-wrap:anywhere;word-break:break-all">'+u+'</a>';
+  });
+}
 /* ═══════════ RENDER: 사전정보 ═══════════ */
 function renderBook(){
   var b=bookById(STATE.bookId);if(!b)return go('season');
@@ -4021,7 +4043,7 @@ function renderDiscussion(){
           var __sq=(i===ihyangScoreQIndex(b));
           h+='<div class="sheet">'+
             '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
-            '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
+            '<h3 class="h-3" style="margin-bottom:14px">'+qHtml(q)+'</h3>'+
             (__sq?ihyangBlockHtml(b,bs):'')+
             '<textarea class="input" id="ans-'+i+'" rows="3" enterkeyhint="enter" placeholder="'+(__sq?'이 점수에 동의하나요? 어떻게 생각하세요?':'내 생각을 적어주세요')+'">'+esc(bs.answers[i]||'')+'</textarea>'+
           '</div>';
@@ -4037,7 +4059,7 @@ function renderDiscussion(){
         var isEmpty=!ansBody;
         h+='<div class="sheet">'+
           '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
-          '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>'+
+          '<h3 class="h-3" style="margin-bottom:14px">'+qHtml(q)+'</h3>'+
           (i===ihyangScoreQIndex(b)?ihyangBlockHtml(b,bs):'');
         if(isEmpty && !editing){
           /* 삭제됐거나 미작성 — 마감 무관 다시 작성 허용 (마감일 땐 안내만) */
@@ -4067,7 +4089,7 @@ function renderDiscussion(){
     b.questions.forEach(function(q,i){
       var oas=(b.others[i]||[]);if(oas.length)hasOthers=true;
       h+='<div class="sheet"><div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag tag-accent">Q0'+(i+1)+'</span></div>'+
-        '<h3 class="h-3" style="margin-bottom:14px">'+esc(q)+'</h3>';
+        '<h3 class="h-3" style="margin-bottom:14px">'+qHtml(q)+'</h3>';
       /* 내 답변 + 내 답변에 달린 댓글(누가 달았는지) — 읽기 전용 */
       var myA=(bs.answers[i]||'').trim();
       if(bs.submitted && myA){

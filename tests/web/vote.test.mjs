@@ -1233,3 +1233,32 @@ test('시즌 소개: 토막이 한 권뿐이면 흐름 줄은 안 붙는다', as
   await tick();
   assert.equal(a.d.querySelector('#page-season .season-thread'), null);
 });
+
+test('별명 사전: 빵충은 한 단어 이름, 남이 쓰는 이름은 건너뛴다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  const cs = JSON.parse(a.w.localStorage.getItem('rt:meetings') || '[]');
+  cs.push({
+    id: 'mBread', clubId: 'c1', name: '未知의 서재', kind: 'custom', isOpen: true,
+    season: { title: '빵 시즌', sub: '', eyebrow: '', meta: '', books: [{
+      id: 'bBread', title: '빵충 사육 준수 사항', author: '', spine: '빵',
+      yearmonth: '', month: '', angle: '', tagline: '', intro: '', intro_note: '',
+      authorBio: '', bio: [], links: [], questions: [''], others: [[]],
+      opened_at: '2026-10-01T00:00:00Z', closed_at: null, closed: false, report: null,
+    }] },
+  });
+  a.w.localStorage.setItem('rt:meetings', JSON.stringify(cs));
+  const one = a.w.nickSetForTitle('빵충 사육 준수 사항').one;
+  assert.equal(new Set(one).size, one.length, '낱말 중복 없음');
+  assert.ok(one.every((x) => !/\s/.test(x)), '모두 한 단어');
+  const auto = a.w.nickFor('1234', 'bBread');
+  assert.ok(one.includes(auto), `${auto} 는 한 단어 사전에서 나와야 함`);
+  assert.equal(a.w.nickFor('1234', 'bBread'), auto);
+  a.w.STATE.meetingId = 'mBread'; a.w.STATE.bookId = 'bBread';
+  for (let i = 0; i < 12; i++) assert.ok(one.includes(a.w.randomNick()));
+  /* 다른 사람이 내 해시 이름을 이미 쓰고 있으면 다음 낱말을 받는다 */
+  a.w.nickMapSet('bBread', '9999', auto);
+  a.w.ensureNick();
+  const mine = JSON.parse(a.w.localStorage.getItem('rt:nick'))['1234|bBread'];
+  assert.equal(mine, one[(one.indexOf(auto) + 1) % one.length]);
+});
