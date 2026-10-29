@@ -903,6 +903,17 @@ body.is-page-season .book-card__cover{width:96px}
 .rxa__badges{margin-left:auto;font-size:13.5px;font-weight:700;color:var(--ink);white-space:nowrap;flex-shrink:0}
 .rxa__quote{font-size:13.5px;line-height:1.6;color:var(--ink-soft)}
 
+.ev-sub{font-size:15px;color:var(--ink-soft);text-align:center;word-break:keep-all;margin:-12px 0 0}
+.ev-clues{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;width:100%}
+.ev-clue{font:inherit;text-align:left;min-height:130px;padding:18px;border-radius:var(--radius-lg);border:2px dashed var(--rule);background:var(--paper);cursor:pointer;display:flex;flex-direction:column;gap:8px;color:var(--ink)}
+.ev-clue__no{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--accent)}
+.ev-clue__t{font-size:17px;font-weight:700;line-height:1.5;word-break:keep-all}
+.ev-clue.locked{align-items:center;justify-content:center;color:var(--ink-dim)}
+.ev-clue.locked .ev-clue__t{font-size:30px}
+.ev-clue.open{border-style:solid;border-color:var(--accent);box-shadow:var(--shadow-sm);animation:nmPop .45s cubic-bezier(.2,1.6,.4,1) both}
+.ev-answer{width:auto;font-size:17px;padding:12px 28px}
+.ev-bonus{display:none;max-width:640px;font-size:15px;line-height:1.65;color:var(--ink-soft);text-align:center;word-break:keep-all}
+.ev-bonus.show{display:block}
 .scene-highlights__layout{display:flex;flex-direction:column;align-items:center;gap:24px}
 .scene-highlights__title{font-family:var(--display);font-weight:900;font-size:clamp(28px,4vw,48px);letter-spacing:-.04em;color:var(--ink);text-align:center}
 .scene-highlights__grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;width:100%}
@@ -1058,6 +1069,7 @@ body.is-page-season .book-card__cover{width:96px}
     <a data-scene="members" onclick="showStageScene('members')">멤버 추리</a>
     <a data-scene="live" onclick="showStageScene('live')">진행</a>
     <a data-scene="highlights" onclick="showStageScene('highlights')">하이라이트</a>
+    <a data-scene="event" id="stage-nav-event" onclick="showStageScene('event')" style="display:none">🎁 깜짝 이벤트</a>
     <a data-scene="season" id="stage-nav-season" onclick="showStageScene('season')" style="display:none">📰 시즌 결산</a>
   </div>
 </nav>
@@ -1172,6 +1184,16 @@ body.is-page-season .book-card__cover{width:96px}
     <div class="grp-wrap" id="sl-groups" style="display:none"></div>
     <div id="sl-pickcard"></div>
     <div class="nm-tools" id="nm-tools" style="display:none"><button type="button" class="btn btn-sm btn-pill" style="width:auto" onclick="nameHideAll()">🙈 이름 모두 가리기</button></div>
+  </div>
+</div>
+
+<div class="scene" id="scene-event">
+  <div class="scene-highlights__layout">
+    <h2 class="scene-highlights__title" id="ev-title"></h2>
+    <p class="ev-sub" id="ev-sub"></p>
+    <div class="ev-clues" id="ev-clues"></div>
+    <button type="button" class="btn btn-pill btn-primary ev-answer" onclick="eventReveal()">🎭 정답 공개</button>
+    <div class="ev-bonus" id="ev-bonus"></div>
   </div>
 </div>
 
@@ -2869,6 +2891,9 @@ async function startShare(bookId){
   wireCardZoom();renderStageRoadmap();renderStageRating();renderStageMembers();renderStageLive();renderStageHighlights();
   /* 시즌 결산(v31) — 이 책의 시즌에 결산 리포트가 있을 때만 마지막 탭 노출 */
   var snav=document.getElementById('stage-nav-season'); if(snav) snav.style.display=seasonReportOf(meetingOfBook(bookId))?'':'none';
+  /* 깜짝 이벤트 — 발표자료에 event 가 있을 때만 (하이라이트 다음, 2026-10-29) */
+  var enav=document.getElementById('stage-nav-event'); if(enav) enav.style.display=(b.report&&b.report.event)?'':'none';
+  EV={open:{},revealed:false};
   showStageScene('roadmap');
   toast('발표를 시작합니다');
 }
@@ -2947,6 +2972,7 @@ function showStageScene(name){
   else if(name==='live') renderStageLive();
   else if(name==='highlights') renderStageHighlights();
   else if(name==='season') renderStageSeason();
+  else if(name==='event') renderStageEvent();
 }
 
 /* ═══════════ RENDER: 시즌 포탈 ═══════════ */
@@ -4970,15 +4996,45 @@ function namePop(nick){
   var nm=nameOfNick(nick);
   if(!nm){toast('이 닉네임의 번호를 못 찾았어요');return;}
   NM_SHOWN[STAGE.bookId+'|'+nick]=true;
-  document.getElementById('nm-pop-nick').textContent=nick+'의 정체는…';
-  document.getElementById('nm-pop-name').textContent=nm;
+  popShow(nick+'의 정체는…',nm);
+  renderPickCard();
+}
+function popShow(top,big){
+  document.getElementById('nm-pop-nick').textContent=top;
+  document.getElementById('nm-pop-name').textContent=big;
   var burst=document.getElementById('nm-pop-burst'),cols=['#3B5998','#E8B23A','#E07A3F','#5FA87A','#C45A8E'],h='';
   for(var i=0;i<28;i++){var a=i/28*Math.PI*2,r=160+(i%4)*45;
     h+='<i style="background:'+cols[i%cols.length]+';--dx:'+Math.round(Math.cos(a)*r)+'px;--dy:'+Math.round(Math.sin(a)*r)+'px"></i>';}
   burst.innerHTML=h;
   var pop=document.getElementById('nm-pop'),inner=pop.querySelector('.nm-pop__inner');
   pop.classList.add('show');inner.style.animation='none';void inner.offsetWidth;inner.style.animation='';
-  renderPickCard();
+}
+/* 깜짝 이벤트 (2026-10-29 사용자 요청: 선물 걸고 '니세모노'(멤버 별명)가 이번 책 어느 닉네임인지 맞히기).
+   report.event = {title, sub, alias, answer_nick, clues:[{icon,t}], bonus} — 단서를 한 장씩 열고 마지막에 뾱.
+   실명은 report 에 넣지 않고 nameOfNick(DB member.display_name)으로 붙인다 */
+var EV={open:{},revealed:false};
+function renderStageEvent(){
+  var b=bookById(STAGE.bookId),ev=b&&b.report&&b.report.event;
+  var host=document.getElementById('ev-clues');if(!host)return;
+  if(!ev){host.innerHTML='<div class="sl-empty">이 책엔 깜짝 이벤트가 없어요.</div>';return;}
+  document.getElementById('ev-title').textContent=ev.title||'깜짝 이벤트';
+  document.getElementById('ev-sub').textContent=ev.sub||'';
+  host.innerHTML=(ev.clues||[]).map(function(c,i){
+    var o=EV.open[i];
+    return '<button type="button" class="ev-clue '+(o?'open':'locked')+'" onclick="eventClue('+i+')">'+
+      '<span class="ev-clue__no">단서 '+(i+1)+'</span>'+
+      '<span class="ev-clue__t">'+(o?esc((c.icon?c.icon+' ':'')+(c.t||'')):'🔒')+'</span></button>';
+  }).join('');
+  var bo=document.getElementById('ev-bonus');
+  if(bo){bo.innerHTML=EV.revealed&&ev.bonus?markNicks(ev.bonus,repNicks(b.report)):'';bo.classList.toggle('show',!!(EV.revealed&&ev.bonus));}
+}
+function eventClue(i){EV.open[i]=true;renderStageEvent();}
+function eventReveal(){
+  var b=bookById(STAGE.bookId),ev=b&&b.report&&b.report.event;if(!ev)return;
+  var nm=nameOfNick(ev.answer_nick);
+  EV.revealed=true;
+  popShow(ev.answer_nick+'의 정체는…','🎭 '+(ev.alias||'')+(nm&&nm.indexOf('뒷자리')!==0?' '+nm:''));
+  renderStageEvent();
 }
 function namePopClose(){var pop=document.getElementById('nm-pop');if(pop)pop.classList.remove('show');}
 /* 무리 모션 (2026-07-31 사용자 피드백) — report.question_groups 기반. 질문마다 비슷한

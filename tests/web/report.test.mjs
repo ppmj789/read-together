@@ -452,3 +452,34 @@ test('진행탭 답변 카드 👀 → DB 이름(없으면 번호)이 뾱, 🙈 
   card('타오르는 로켓').click();
   assert.equal(a.w.STAGE.pickedName, '타오르는 로켓', '카드 자체를 누르면 여전히 발언자 선택');
 });
+
+test('깜짝 이벤트 — event 가 있으면 하이라이트 다음 탭, 단서를 한 장씩 열고 정답은 DB 이름과 함께 뾱', async (t) => {
+  const a = app(t);
+  const b = await withReport(a, { event: { title: '🎁 찾아라', sub: '맞혀요', alias: '별명', answer_nick: '타오르는 로켓',
+    clues: [{ icon: '🔄', t: '첫 단서' }, { icon: '🎬', t: '둘째 단서' }], bonus: '덤 이야기' } });
+  b.others = b.questions.map(() => [{ n: '타오르는 로켓', a: '답', phone4: '2222' }]);
+  await a.w.startShare('ihyangin');
+  const nav = a.d.getElementById('stage-nav-event');
+  assert.equal(nav.style.display, '');
+  assert.equal(nav.previousElementSibling.dataset.scene, 'highlights', '하이라이트 바로 다음');
+  a.w.MEMBER_NAMES = { 2222: '김로켓' };
+  a.w.showStageScene('event');
+  const clues = a.d.querySelectorAll('#ev-clues .ev-clue');
+  assert.equal(clues.length, 2);
+  assert.doesNotMatch(a.d.getElementById('ev-clues').textContent, /첫 단서/, '처음엔 잠김');
+  clues[0].click();
+  assert.match(a.d.getElementById('ev-clues').textContent, /첫 단서/);
+  assert.doesNotMatch(a.d.getElementById('ev-clues').textContent, /둘째 단서/, '한 장씩');
+  assert.ok(!a.d.getElementById('ev-bonus').className.includes('show'));
+  a.d.querySelector('#scene-event .ev-answer').click();
+  assert.equal(a.d.getElementById('nm-pop-nick').textContent, '타오르는 로켓의 정체는…');
+  assert.equal(a.d.getElementById('nm-pop-name').textContent, '🎭 별명 김로켓');
+  assert.ok(a.d.getElementById('ev-bonus').className.includes('show'), '정답 뒤 덤');
+});
+
+test('깜짝 이벤트 — event 가 없으면 탭을 숨긴다', async (t) => {
+  const a = app(t);
+  await withReport(a, {});
+  await a.w.startShare('ihyangin');
+  assert.equal(a.d.getElementById('stage-nav-event').style.display, 'none');
+});

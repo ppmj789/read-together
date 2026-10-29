@@ -81,6 +81,10 @@ def main():
            any(not isinstance(g.get('members'), list) or 'name' not in g for g in qg['groups']):
             print('question_groups 항목은 {q_index, groups:[{name, members:[]}]} 여야 함: '
                   + json.dumps(qg, ensure_ascii=False)[:120], file=sys.stderr); sys.exit(2)
+    ev = rep.get('event')  # 깜짝 이벤트 (2026-10-29, 선택) — 실명은 넣지 않는다(프론트가 DB 이름을 붙임)
+    if ev is not None and (not ev.get('answer_nick') or not isinstance(ev.get('clues'), list) or
+                           any(not isinstance(c, dict) or not c.get('t') for c in ev['clues'])):
+        print('event 형식: {title, sub, alias, answer_nick, clues:[{icon, t}], bonus}', file=sys.stderr); sys.exit(2)
     url, key = creds()
     payload = json.dumps({'report': rep}, ensure_ascii=False).encode('utf-8')
     req = urllib.request.Request(url + '/rest/v1/book?id=eq.' + bid, data=payload, method='PATCH')
