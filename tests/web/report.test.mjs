@@ -231,7 +231,7 @@ test('진행탭 — 발언자 뽑기가 질문선택 오른쪽 상단바에 있�
   assert.equal(a.d.querySelector('#scene-live .scene-live__left'), null, '왼쪽 패널 제거');
   const bar = a.d.querySelector('#scene-live .sl-topbar .sl-pickbar');
   assert.ok(bar, '뽑기 바가 상단바 오른쪽에');
-  assert.match(bar.textContent, /지정 발언자/);
+  assert.match(bar.textContent, /답변 다 보기/);
   assert.doesNotMatch(bar.textContent, /무작위/, '무작위 뽑기는 없앴다 (2026-09-30)');
   assert.ok(a.d.getElementById('stage-speaker-name'), '발언자 이름 표시는 유지');
   assert.equal(a.d.getElementById('sl-order'), null, '발언 순서 목록은 없앴다 (2026-09-30)');
@@ -309,6 +309,40 @@ test('지정 발언자가 없는 질문이면 아무도 뽑지 않는다', async
   assert.equal(a.w.STAGE.pickedName, null);
 });
 
+test('답변 보드 — 발언자가 없으면 그 질문의 답변이 전부 카드로 보이고, 누르면 그 사람이 발언자', async (t) => {
+  const a = app(t);
+  const b = await withReport(a, {});
+  b.others = b.questions.map((_, qi) => [{ n: '꿈꾸는 표류자', a: 'Q' + qi + ' 표류자 답' }, { n: '타오르는 로켓', a: 'Q' + qi + ' 로켓 답' }]);
+  a.w.STAGE.bookId = 'ihyangin';
+  a.w.showStageScene('live');
+  b.reactions = { q1a1: { counts: { insight: 3, empathy: 1 }, mine: {}, total: 4 } };
+  a.w.stageSetQ(1);
+  const cards = a.d.querySelectorAll('#sl-pickcard .sl-board__card');
+  assert.match(cards[1].textContent, /반응 4/, '종류별 반응 합계');
+  assert.equal(cards.length, 2, '답변자 전원 카드');
+  assert.match(cards[1].textContent, /Q1 로켓 답/);
+  cards[1].click();
+  assert.equal(a.w.STAGE.pickedName, '타오르는 로켓');
+  assert.equal(a.w.STAGE.critText, '다 같이 고른 발언자');
+  assert.ok(a.d.querySelector('#sl-pickcard .sl-pick-card'), '답변 카드로 전환');
+  a.d.querySelector('#sl-pickcard .sl-board-back').click();
+  assert.equal(a.w.STAGE.pickedName, null);
+  assert.equal(a.d.querySelectorAll('#sl-pickcard .sl-board__card').length, 2, '다시 보드로');
+});
+
+test('지정 발언자 버튼은 speaker_picks 가 있는 책에서만 보인다', async (t) => {
+  const a = app(t);
+  const b = await withReport(a, {});
+  b.others = b.questions.map(() => [{ n: '꿈꾸는 표류자', a: '답' }]);
+  a.w.STAGE.bookId = 'ihyangin';
+  a.w.showStageScene('live');
+  a.w.renderStageLive();
+  assert.equal(a.d.getElementById('sl-assigned-btn').style.display, 'none');
+  b.report.speaker_picks = [{ q_index: 0, nick: '꿈꾸는 표류자' }];
+  a.w.renderStageLive();
+  assert.equal(a.d.getElementById('sl-assigned-btn').style.display, '');
+});
+
 test('반 별 입력 — 왼쪽 절반을 누르면 0.5점으로 저장되고 반 별로 그려진다', async (t) => {
   const a = app(t);
   await a.loginAs('1234');
@@ -346,4 +380,39 @@ test('별점 흩어짐 — 키워드 카드 아래에 점수별 인원 동그라
   assert.equal(lenDots[0].textContent, '3');
   assert.equal(rows[1].querySelectorAll('.rt-spread__dot').length, 2, '0점(미입력)은 빼고 4.5·4');
   assert.doesNotMatch(sp.innerHTML, /9876|8765|7654/, '번호는 절대 싣지 않는다(익명)');
+});
+
+test('홀랜드 코너 — 답변 속 검사 주소에서 점수를 읽어 팀 분포·1위 유형·재미 카드를 그린다', async (t) => {
+  const a = app(t);
+  const b = await withReport(a, {});
+  const url = (r, i, ar, s, e, c) => 'https://prismatest.com/ko/tests/holland?res=realistic%3A' + r +
+    '-investigative%3A' + i + '-artistic%3A' + ar + '-social%3A' + s + '-enterprising%3A' + e + '-conventional%3A' + c;
+  b.others = b.questions.map((_, qi) => qi === 1
+    ? [{ n: '꿈꾸는 표류자', a: url(100, 50, 40, 60, 20, 100) + '\n\n결과 설명' },
+       { n: '타오르는 로켓', a: url(50, 50, 90, 70, 60, 50) },
+       { n: '조용한 관찰자', a: '검사 못 했어요' }]
+    : [{ n: '꿈꾸는 표류자', a: '답' }, { n: '타오르는 로켓', a: '답' }, { n: '조용한 관찰자', a: '답' }]);
+  const hd = a.w.hollandData(b);
+  assert.equal(hd.qi, 1);
+  assert.equal(hd.people.length, 2, '주소 없는 답변은 빠진다');
+  a.w.STAGE.bookId = 'ihyangin';
+  a.w.showStageScene('holland');
+  const host = a.d.getElementById('stage-holland');
+  assert.ok(host.querySelector('svg polygon'), '레이더');
+  const rows = [...host.querySelectorAll('.hol-type')];
+  assert.match(rows[0].textContent, /실재형 75/, '팀 평균');
+  assert.match(rows[0].textContent, /꿈꾸는 표류자/, '공동 1위도 들어간다');
+  assert.match(rows[5].textContent, /꿈꾸는 표류자/);
+  assert.match(rows[2].textContent, /타오르는 로켓/);
+  assert.match(host.textContent, /만점 100점/);
+  host.querySelector('.hol-who button[data-n="타오르는 로켓"]').click();
+  assert.equal(host.querySelectorAll('svg polygon[stroke="#E07A3F"]').length, 1, '고른 사람 육각형이 겹쳐진다');
+});
+
+test('홀랜드 코너 — 검사 결과가 없는 책이면 탭을 숨긴다', async (t) => {
+  const a = app(t);
+  const b = await withReport(a, {});
+  b.others = b.questions.map(() => [{ n: '꿈꾸는 표류자', a: '답' }]);
+  await a.w.startShare('ihyangin');
+  assert.equal(a.d.getElementById('stage-nav-holland').style.display, 'none');
 });

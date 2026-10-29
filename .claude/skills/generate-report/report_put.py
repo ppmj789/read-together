@@ -47,13 +47,14 @@ def main():
         print('keywords 는 5개 이하 (현재 %d)' % len(rep['keywords']), file=sys.stderr); sys.exit(2)
     if len(rep.get('summary_slides', [])) > 5:
         print('summary_slides 는 5장 이하 (현재 %d)' % len(rep['summary_slides']), file=sys.stderr); sys.exit(2)
-    # 질문별 지정 발언자 (2026-09-30) — 무작위 뽑기 대체, 사용자 검수 후 확정한 값만
+    # 질문별 지정 발언자 (2026-09-30) — 선택 필드 (2026-10-29: 진행탭 답변 보드에서 다 같이 고르는 방식이 기본).
+    # 넣는다면 사용자 검수 후 확정한 값만
     sp = rep.get('speaker_picks')
-    if not isinstance(sp, list) or not sp or \
-       any(not isinstance(x, dict) or 'q_index' not in x or not x.get('nick') for x in sp):
-        print('speaker_picks 필요: [{q_index, nick, why}] — 질문별 1명, 사용자 검수 후 확정',
+    if sp is not None and (not isinstance(sp, list) or
+       any(not isinstance(x, dict) or 'q_index' not in x or not x.get('nick') for x in sp)):
+        print('speaker_picks 형식: [{q_index, nick, why}] — 질문별 1명, 사용자 검수 후 확정',
               file=sys.stderr); sys.exit(2)
-    if len({x['q_index'] for x in sp}) != len(sp):
+    if sp and len({x['q_index'] for x in sp}) != len(sp):
         print('speaker_picks 는 질문당 1명', file=sys.stderr); sys.exit(2)
     rx = rep.get('reactions')  # 선택 필드(v22) — 있으면 형태만 검사
     if rx is not None and not isinstance(rx.get('by_kind'), dict):

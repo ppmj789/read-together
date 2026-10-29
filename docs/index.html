@@ -806,6 +806,29 @@ body.is-page-season .book-card__cover{width:96px}
 .sl-pick-why{margin:10px 0 2px;padding:9px 12px;background:var(--accent-tint);border-radius:var(--radius-sm);font-size:13.5px;line-height:1.55;color:var(--ink);word-break:keep-all}
 .rt-comment{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--rule);font-size:13.5px;line-height:1.65;color:var(--ink-soft)}
 .rt-comment.show{display:block}
+/* 홀랜드 특별 코너 (2026-10-29) — 답변 속 검사 결과 주소에서 점수를 읽어 팀 분포를 보여 준다 */
+.hol{display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:20px;align-items:start}
+.hol-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-sm)}
+.hol-card__label{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink-dim);margin-bottom:10px;word-break:keep-all}
+.hol-radar svg{width:100%;height:auto;display:block}
+.hol-radar .ax{font-size:13px;font-weight:700;fill:var(--ink)}
+.hol-who{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.hol-who button{font:inherit;font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:var(--radius-pill);border:1px solid var(--rule);background:var(--paper);color:var(--ink-soft);cursor:pointer}
+.hol-who button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hol-type{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--rule-soft);align-items:center}
+.hol-type:first-of-type{border-top:0}
+.hol-type__name{font-weight:800;font-size:15px;word-break:keep-all}
+.hol-type__desc{font-size:12px;color:var(--ink-dim);font-weight:500;line-height:1.45;word-break:keep-all}
+.hol-bar{height:8px;border-radius:4px;background:var(--highlight);overflow:hidden;margin-bottom:7px}
+.hol-bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.hol-pebs{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:12px;color:var(--ink-dim)}
+.hol-peb{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:var(--radius-pill);background:var(--accent-tint);color:var(--accent);word-break:keep-all}
+.hol-facts{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.hol-fact{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:16px}
+.hol-fact__t{font-size:12px;font-weight:700;color:var(--ink-dim);margin-bottom:6px;word-break:keep-all}
+.hol-fact__v{font-weight:800;font-size:17px;color:var(--accent);word-break:keep-all;line-height:1.4}
+.hol-fact__s{font-size:13px;color:var(--ink-soft);margin-top:4px;line-height:1.55;word-break:keep-all}
+@media (max-width:760px){.hol{grid-template-columns:1fr}.hol-type{grid-template-columns:1fr;gap:6px}}
 /* 멤버 추리 씬 (2026-07-31) — 닉네임 프로필 카드, 누구인지 맞히기 */
 .member-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
 .member-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px}
@@ -942,6 +965,15 @@ body.is-page-season .book-card__cover{width:96px}
 .sl-cmt{background:var(--highlight);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;line-height:1.55;margin-bottom:6px;white-space:pre-line;overflow-wrap:anywhere}
 .sl-cmt b{color:var(--accent);font-weight:700}
 .sl-empty{font-size:14px;color:var(--ink-dim);text-align:center;padding:28px 8px}
+/* 답변 보드 (2026-10-29 사용자 피드백: AI가 발언자를 지정하는 대신 답변을 한 화면에 다 보여 주고 다 같이 고른다) */
+.sl-board__hd{font-size:13px;font-weight:700;color:var(--ink-dim);margin:4px 0 10px;word-break:keep-all}
+.sl-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.sl-board__card{display:flex;flex-direction:column;gap:8px;text-align:left;font:inherit;color:var(--ink);padding:16px;border:1px solid var(--rule);border-radius:var(--radius-lg);background:var(--paper);cursor:pointer;transition:border-color .2s,transform .2s}
+.sl-board__card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.sl-board__who{font-weight:800;font-size:15px;word-break:keep-all}
+.sl-board__ans{font-size:15px;line-height:1.65;max-height:13.2em;overflow-y:auto;white-space:pre-line;word-break:keep-all;overflow-wrap:anywhere}
+.sl-board__meta{font-size:12px;font-weight:700;color:var(--ink-dim);margin-top:auto}
+.sl-board-back{margin-bottom:10px;width:auto}
 .sl-qa{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule-soft)}
 
 @media(max-width:768px){
@@ -1011,6 +1043,7 @@ body.is-page-season .book-card__cover{width:96px}
     <a data-scene="members" onclick="showStageScene('members')">멤버 추리</a>
     <a data-scene="live" onclick="showStageScene('live')">진행</a>
     <a data-scene="highlights" onclick="showStageScene('highlights')">하이라이트</a>
+    <a data-scene="holland" id="stage-nav-holland" onclick="showStageScene('holland')" style="display:none">🧭 홀랜드</a>
     <a data-scene="season" id="stage-nav-season" onclick="showStageScene('season')" style="display:none">📰 시즌 결산</a>
   </div>
 </nav>
@@ -1112,16 +1145,24 @@ body.is-page-season .book-card__cover{width:96px}
       <div class="sl-pickbar">
         <div class="scene-live__speaker-label" style="margin:0 0 8px;text-align:right">발언자 뽑기</div>
         <div class="sl-crit-row" style="justify-content:flex-end">
-          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'assigned'})">🎯 지정 발언자</button>
+          <button class="btn btn-sm btn-pill" style="width:auto" onclick="stageBoard()">🗳️ 답변 다 보기</button>
+          <button class="btn btn-sm btn-pill" id="sl-assigned-btn" style="width:auto" onclick="stagePick({type:'assigned'})">🎯 지정 발언자</button>
           <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'empathy'})">🙌 반응 최다</button>
           <button class="btn btn-sm btn-pill" style="width:auto" onclick="stagePick({type:'comments'})">💬 댓글 최다</button>
         </div>
-        <div class="sl-speaker"><span id="speaker-prompt">발언자를 뽑아보세요</span><b id="stage-speaker-name">?</b></div>
+        <div class="sl-speaker"><span id="speaker-prompt">답변을 보고 다 같이 고르세요</span><b id="stage-speaker-name">?</b></div>
       </div>
     </div>
     <div id="sl-qtext" class="sl-qtext"></div>
     <div class="grp-wrap" id="sl-groups" style="display:none"></div>
     <div id="sl-pickcard"></div>
+  </div>
+</div>
+
+<div class="scene" id="scene-holland">
+  <div class="scene-analysis__layout">
+    <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리 팀 홀랜드 지도</h2><p class="scene-analysis__sub" id="hl-sub"></p></div>
+    <div class="hol" id="stage-holland"></div>
   </div>
 </div>
 
@@ -2815,6 +2856,8 @@ async function startShare(bookId){
   wireCardZoom();renderStageRoadmap();renderStageRating();renderStageMembers();renderStageLive();renderStageHighlights();
   /* 시즌 결산(v31) — 이 책의 시즌에 결산 리포트가 있을 때만 마지막 탭 노출 */
   var snav=document.getElementById('stage-nav-season'); if(snav) snav.style.display=seasonReportOf(meetingOfBook(bookId))?'':'none';
+  /* 홀랜드 특별 코너 — 답변에 검사 결과가 있는 책에서만 */
+  var hnav=document.getElementById('stage-nav-holland'); if(hnav) hnav.style.display=hollandData(bookById(bookId)).people.length?'':'none';
   showStageScene('roadmap');
   toast('발표를 시작합니다');
 }
@@ -2893,6 +2936,7 @@ function showStageScene(name){
   else if(name==='live') renderStageLive();
   else if(name==='highlights') renderStageHighlights();
   else if(name==='season') renderStageSeason();
+  else if(name==='holland') renderStageHolland();
 }
 
 /* ═══════════ RENDER: 시즌 포탈 ═══════════ */
@@ -4824,6 +4868,97 @@ function renderStageMembers(){
       (p.quote?'<div class="member-card__quote">“'+esc(p.quote)+'”</div>':'')+'</div>';
   }).join('');
 }
+/* 홀랜드 특별 코너 (2026-10-29 사용자 요청: 검사 결과로 우리 팀 분포를 재미있게).
+   답변 속 prismatest 결과 주소(?res=realistic:68-investigative:46-…)에서 6유형 점수를 읽는다.
+   검사 결과가 가장 많이 붙은 질문 하나를 쓴다. 닉네임은 답변에 공개된 값이라 그대로 보여 준다 */
+var HOLLAND_TYPES=[
+  {k:'realistic',name:'실재형',e:'🔧',d:'손으로 만들고 고치는 사람'},
+  {k:'investigative',name:'탐구형',e:'🔬',d:'왜 그런지 끝까지 파는 사람'},
+  {k:'artistic',name:'예술형',e:'🎨',d:'틀 밖에서 표현하는 사람'},
+  {k:'social',name:'사회형',e:'🤝',d:'사람을 돕고 가르치는 사람'},
+  {k:'enterprising',name:'진취형',e:'🚀',d:'앞장서서 이끄는 사람'},
+  {k:'conventional',name:'관습형',e:'📋',d:'규칙과 질서를 지키는 사람'}];
+var HOL={who:null};
+function hollandParse(text){
+  var m=/holland\?res=([^\s"'<>]+)/.exec(text||'');if(!m)return null;
+  var raw=m[1];try{raw=decodeURIComponent(raw);}catch(e){}
+  var sc={},n=0;
+  raw.split('-').forEach(function(pair){var kv=pair.split(':');var v=parseInt(kv[1],10);
+    if(HOLLAND_TYPES.some(function(t){return t.k===kv[0];})&&!isNaN(v)){sc[kv[0]]=v;n++;}});
+  return n===HOLLAND_TYPES.length?sc:null;
+}
+function hollandData(b){
+  var best={qi:-1,people:[]};
+  if(!b||!b.others)return best;
+  (b.questions||[]).forEach(function(_,qi){
+    var ps=[];
+    (b.others[qi]||[]).forEach(function(o){var sc=hollandParse(o.a);if(sc)ps.push({n:o.n,s:sc});});
+    if(ps.length>best.people.length)best={qi:qi,people:ps};
+  });
+  return best;
+}
+function hollandTops(sc){
+  var mx=Math.max.apply(null,HOLLAND_TYPES.map(function(t){return sc[t.k];}));
+  return HOLLAND_TYPES.filter(function(t){return sc[t.k]===mx;}).map(function(t){return t.k;});
+}
+function hollandRadar(avg,mine){
+  var cx=170,cy=165,R=118,n=HOLLAND_TYPES.length;
+  function pt(i,v){var a=-Math.PI/2+i*2*Math.PI/n;return [cx+R*v/100*Math.cos(a),cy+R*v/100*Math.sin(a)];}
+  function poly(sc){return HOLLAND_TYPES.map(function(t,i){return pt(i,sc[t.k]).map(function(x){return x.toFixed(1);}).join(',');}).join(' ');}
+  var h='<svg viewBox="0 0 340 330" role="img" aria-label="홀랜드 6유형 레이더">';
+  [25,50,75,100].forEach(function(lv){h+='<polygon points="'+HOLLAND_TYPES.map(function(_,i){return pt(i,lv).join(',');}).join(' ')+'" fill="none" stroke="var(--rule)" stroke-width="1"/>';});
+  HOLLAND_TYPES.forEach(function(t,i){var e=pt(i,100),l=pt(i,122);
+    h+='<line x1="'+cx+'" y1="'+cy+'" x2="'+e[0]+'" y2="'+e[1]+'" stroke="var(--rule)" stroke-width="1"/>'+
+      '<text class="ax" x="'+l[0].toFixed(1)+'" y="'+(l[1]+4).toFixed(1)+'" text-anchor="middle">'+t.e+' '+t.name+'</text>';});
+  h+='<polygon points="'+poly(avg)+'" fill="var(--accent)" fill-opacity="'+(mine?'.12':'.28')+'" stroke="var(--accent)" stroke-width="2"'+(mine?' stroke-dasharray="4 4"':'')+'/>';
+  if(mine)h+='<polygon points="'+poly(mine)+'" fill="#E07A3F" fill-opacity=".25" stroke="#E07A3F" stroke-width="2.5"/>';
+  return h+'</svg>';
+}
+function hollandPick(n){HOL.who=(HOL.who===n)?null:n;renderStageHolland();}
+function renderStageHolland(){
+  var host=document.getElementById('stage-holland'),sub=document.getElementById('hl-sub');if(!host)return;
+  var hd=hollandData(bookById(STAGE.bookId)),ps=hd.people;
+  if(!ps.length){host.innerHTML='<div class="sl-empty" style="grid-column:1/-1">이 책엔 홀랜드 검사 결과가 없어요.</div>';if(sub)sub.textContent='';return;}
+  if(sub)sub.textContent=ps.length+'명이 주인공과 같은 검사를 받았어요 — 이름을 누르면 그 사람의 육각형이 겹쳐집니다';
+  var avg={};HOLLAND_TYPES.forEach(function(t){avg[t.k]=Math.round(ps.reduce(function(a,p){return a+p.s[t.k];},0)/ps.length);});
+  var me=null;ps.forEach(function(p){if(p.n===HOL.who)me=p;});
+  if(!me)HOL.who=null;
+  var tops={};ps.forEach(function(p){hollandTops(p.s).forEach(function(k){(tops[k]=tops[k]||[]).push(p.n);});});
+  /* 레이더 + 이름 */
+  var h='<div class="hol-card hol-radar"><div class="hol-card__label">'+(me?esc(me.n)+' (주황) vs 팀 평균 (파랑)':'팀 평균 육각형')+'</div>'+hollandRadar(avg,me&&me.s)+
+    '<div class="hol-who">'+ps.map(function(p){return '<button type="button" class="'+(p.n===HOL.who?'on':'')+'" data-n="'+esc(p.n)+'" onclick="hollandPick(this.getAttribute(\'data-n\'))">'+esc(p.n)+'</button>';}).join('')+'</div></div>';
+  /* 유형별 — 팀 평균 막대 + 이 유형이 1위인 사람 (공동 1위 포함) */
+  h+='<div class="hol-card"><div class="hol-card__label">유형별 팀 평균 · 이 유형이 1위인 사람 (공동 1위 포함)</div>';
+  HOLLAND_TYPES.forEach(function(t){
+    var who=tops[t.k]||[];
+    h+='<div class="hol-type"><div><div class="hol-type__name">'+t.e+' '+t.name+' <span style="color:var(--accent)">'+avg[t.k]+'</span></div><div class="hol-type__desc">'+t.d+'</div></div>'+
+      '<div><div class="hol-bar"><i style="width:'+avg[t.k]+'%"></i></div><div class="hol-pebs">'+
+      (who.length?who.map(function(n){return '<span class="hol-peb">'+esc(n)+'</span>';}).join(''):'1위인 사람 없음')+'</div></div></div>';
+  });
+  h+='</div>';
+  /* 재미 카드 — 전부 점수에서 결정론으로 계산 */
+  var byAvg=HOLLAND_TYPES.slice().sort(function(a,b){return avg[b.k]-avg[a.k];});
+  function dist(a,b){return Math.sqrt(HOLLAND_TYPES.reduce(function(s,t){var d=a.s[t.k]-b.s[t.k];return s+d*d;},0));}
+  function spread(p){var v=HOLLAND_TYPES.map(function(t){return p.s[t.k];});return Math.max.apply(null,v)-Math.min.apply(null,v);}
+  var facts=[];
+  facts.push({t:'우리 팀은',v:byAvg[0].e+' '+byAvg[0].name+' 조직',s:'팀 평균 '+avg[byAvg[0].k]+'점으로 가장 높아요. 둘째는 '+byAvg[1].name+' '+avg[byAvg[1].k]+'점.'});
+  facts.push({t:'우리 팀에 가장 귀한 유형',v:byAvg[byAvg.length-1].e+' '+byAvg[byAvg.length-1].name,s:'팀 평균 '+avg[byAvg[byAvg.length-1].k]+'점 — 이 유형이 높은 사람이 우리 팀의 희귀 자원이에요.'});
+  var solo=HOLLAND_TYPES.filter(function(t){return (tops[t.k]||[]).length===1;});
+  if(solo.length){var st=solo[0];facts.push({t:'혼자서 한 유형을 지키는 사람',v:(tops[st.k][0]),s:st.e+' '+st.name+'이 1위인 사람은 팀에서 단 한 명이에요.'});}
+  var full=[];ps.forEach(function(p){var ts=HOLLAND_TYPES.filter(function(t){return p.s[t.k]>=100;}).map(function(t){return t.name;});if(ts.length)full.push(p.n+' ('+ts.join('·')+')');});
+  if(full.length)facts.push({t:'만점 100점',v:full.join(', '),s:'검사가 줄 수 있는 최고 점수예요.'});
+  if(ps.length>=2){
+    var near=null,far=null;
+    for(var i=0;i<ps.length;i++)for(var j=i+1;j<ps.length;j++){var d=dist(ps[i],ps[j]);
+      if(!near||d<near.d)near={a:ps[i].n,b:ps[j].n,d:d};if(!far||d>far.d)far={a:ps[i].n,b:ps[j].n,d:d};}
+    facts.push({t:'육각형이 가장 닮은 두 사람',v:near.a+' & '+near.b,s:'여섯 유형 점수가 팀에서 가장 비슷해요.'});
+    facts.push({t:'육각형이 가장 다른 두 사람',v:far.a+' & '+far.b,s:'둘이 같이 일하면 서로 없는 걸 채워 줄 조합.'});
+  }
+  var flat=ps.slice().sort(function(a,b){return spread(a)-spread(b);})[0];
+  facts.push({t:'가장 둥근 육각형',v:flat.n,s:'최고와 최저 점수 차가 '+spread(flat)+'점 — 어느 쪽으로도 치우치지 않은 팔방미인.'});
+  h+='<div class="hol-facts">'+facts.map(function(f){return '<div class="hol-fact"><div class="hol-fact__t">'+esc(f.t)+'</div><div class="hol-fact__v">'+esc(f.v)+'</div><div class="hol-fact__s">'+esc(f.s)+'</div></div>';}).join('')+'</div>';
+  host.innerHTML=h;
+}
 /* 무리 모션 (2026-07-31 사용자 피드백) — report.question_groups 기반. 질문마다 비슷한
    답변끼리 무리(zone)로 나뉘고, 조약돌(닉네임 칩)이 무리 사이를 이동한다. 조약돌 DOM 은
    질문이 바뀌어도 재사용 → CSS transition 으로 스르륵 이동, wob 키프레임으로 오밀조밀 흔들림 */
@@ -4888,11 +5023,12 @@ function renderStageGroups(){
   });
 }
 /* 조약돌 클릭 → 그 사람 지목 + 답변 카드 열기 (2026-07-31 사용자 피드백) */
-function stagePickNick(nick){
-  STAGE.pickedName=nick;STAGE.critText='무리 지도에서 선택';
+function stagePickNick(nick,crit){
+  crit=crit||'무리 지도에서 선택';
+  STAGE.pickedName=nick;STAGE.critText=crit;
   var nameEl=document.getElementById('stage-speaker-name'),promptEl=document.getElementById('speaker-prompt');
   if(nameEl){nameEl.textContent=nick;nameEl.style.color='var(--accent)';}
-  if(promptEl)promptEl.textContent='무리 지도에서 선택';
+  if(promptEl)promptEl.textContent=crit;
   renderStageLive();
   renderStageGroups(); /* 표본이 없어 renderStageLive 가 조기 리턴해도 지도 강조는 갱신 */
 }
@@ -4911,6 +5047,9 @@ function renderStageLive(){
   var qx=document.getElementById('sl-qtext');
   if(qx)qx.textContent=bk.questions.length?('Q'+(STAGE.q+1)+'. '+bk.questions[STAGE.q]):'';
   renderStageGroups(); /* 질문이 바뀌면 조약돌이 새 무리로 이동 (2026-07-31) */
+  /* 지정 발언자는 발표자료에 speaker_picks 가 있는 책에서만 (2026-10-29 — 기본은 답변 보드에서 다 같이 고르기) */
+  var ab=document.getElementById('sl-assigned-btn');
+  if(ab)ab.style.display=(bk.report&&bk.report.speaker_picks&&bk.report.speaker_picks.length)?'':'none';
   renderPickCard();
 }
 function renderStageHighlights(){
@@ -4970,9 +5109,30 @@ function renderStageHighlights(){
   grid.innerHTML=cards.join('');
 }
 function stageSetQ(i){STAGE.q=i;STAGE.pickedName=null;renderStageLive();}
+/* 답변 보드 — 발언자가 정해지지 않은 동안 그 질문의 답변을 전부 카드로 보여 주고, 다 같이 골라 누르면 그 사람이 발언자 (2026-10-29) */
+function stageBoardHtml(){
+  var qi=STAGE.q,b=bookById(STAGE.bookId)||{},cards='';
+  stageParts().forEach(function(p){
+    var a=(p.answers[qi]||'').trim();if(!a)return;
+    var rx=normReact(b.reactions&&b.reactions['q'+qi+'a'+p.idx]).total,cc=cmtCount(p,qi);
+    cards+='<button type="button" class="sl-board__card" data-nick="'+esc(p.name)+'" onclick="stagePickNick(this.getAttribute(\'data-nick\'),\'다 같이 고른 발언자\')">'+
+      '<div class="sl-board__who">'+esc(p.name)+'</div><div class="sl-board__ans">'+esc(a)+'</div>'+
+      '<div class="sl-board__meta">반응 '+rx+' · 댓글 '+cc+'</div></button>';
+  });
+  if(!cards)return '<div class="sl-empty">이 질문엔 아직 답변이 없어요.</div>';
+  return '<div class="sl-board__hd">🗳️ 답변을 다 같이 읽고, 이야기를 듣고 싶은 답변을 눌러 발언자로 정하세요</div><div class="sl-board">'+cards+'</div>';
+}
+function stageBoard(){
+  STAGE.pickedName=null;STAGE.critText='';
+  var nameEl=document.getElementById('stage-speaker-name'),promptEl=document.getElementById('speaker-prompt');
+  if(nameEl){nameEl.textContent='?';nameEl.style.color='';}
+  if(promptEl)promptEl.textContent='답변을 보고 다 같이 고르세요';
+  renderStageLive();
+  renderStageGroups();
+}
 function renderPickCard(){
   var host=document.getElementById('sl-pickcard');if(!host)return;
-  if(!STAGE.pickedName){host.innerHTML='<div class="sl-empty">질문을 고르고 왼쪽 선정 기준을 누르면,<br>그 질문의 발표자와 답변·댓글이 표시됩니다.</div>';return;}
+  if(!STAGE.pickedName){host.innerHTML=stageBoardHtml();return;}
   var b=bookById(STAGE.bookId),p=null;stageParts().forEach(function(x){if(x.name===STAGE.pickedName)p=x;});
   if(!p){host.innerHTML='';return;}
   var crit=STAGE.critText||'',qi=STAGE.q;
@@ -4982,7 +5142,8 @@ function renderPickCard(){
   var cmts=(STAGE_COMMENTS['q'+qi+'|'+p.name]||[]).slice();
   if(STATE.phone4){var bs=bookState(STAGE.bookId),uk='q'+qi+'a'+p.idx;((bs.comments&&bs.comments[uk])||[]).forEach(function(t){cmts.push({by:'나 (개인모드)',t:t});});}
   var ch=cmts.map(function(c){return '<div class="sl-cmt"><b>'+esc(c.by)+'</b> '+esc(c.t)+'</div>';}).join('');
-  host.innerHTML='<div class="sl-pick-card"><div class="sl-pick-card__top">'+
+  host.innerHTML='<button class="btn btn-sm btn-pill sl-board-back" onclick="stageBoard()">← 답변 다 보기</button>'+
+    '<div class="sl-pick-card"><div class="sl-pick-card__top">'+
     '<div class="sl-pick-card__av">'+esc(p.name.charAt(0))+'</div>'+
     '<div><div style="font-weight:800;font-size:17px">'+esc(p.name)+'</div>'+
     '<div style="font-size:12px;color:var(--ink-dim)">Q'+(qi+1)+' · '+esc(crit)+'</div></div></div>'+
