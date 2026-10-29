@@ -361,7 +361,7 @@ test('반 별 입력 — 왼쪽 절반을 누르면 0.5점으로 저장되고 �
   assert.match(row.textContent, /3\.5/);
 });
 
-test('별점 흩어짐 — 키워드 카드 아래에 점수별 인원 동그라미로 그린다', async (t) => {
+test('별점 — 축마다 몇 점에 몇 명인지 점(한 사람 = 하나)으로, 별점 카드 하나에만', async (t) => {
   const a = app(t);
   const b = await withReport(a, {});
   b.allRatings = [
@@ -370,16 +370,16 @@ test('별점 흩어짐 — 키워드 카드 아래에 점수별 인원 동그라
     { phone4: '7654', length: 5, difficulty: 0, fun: 4, novelty: 4, overall: 3.5 }];
   a.w.STAGE.bookId = 'ihyangin';
   a.w.showStageScene('analysis');
-  const sp = a.d.getElementById('analysis-rating-spread');
-  assert.ok(sp.closest('.analysis-card').querySelector('.analysis-keywords'), '키워드 카드 안');
-  assert.notEqual(sp.style.display, 'none');
-  const rows = sp.querySelectorAll('.rt-spread__row');
-  assert.equal(rows.length, 5);
-  const lenDots = rows[0].querySelectorAll('.rt-spread__dot');
-  assert.equal(lenDots.length, 1, '분량은 전원 5점 → 동그라미 1개');
-  assert.equal(lenDots[0].textContent, '3');
-  assert.equal(rows[1].querySelectorAll('.rt-spread__dot').length, 2, '0점(미입력)은 빼고 4.5·4');
-  assert.doesNotMatch(sp.innerHTML, /9876|8765|7654/, '번호는 절대 싣지 않는다(익명)');
+  assert.equal(a.d.getElementById('analysis-rating-spread'), null, '키워드 카드의 흩어짐 그래프는 없앴다');
+  const axes = a.d.querySelectorAll('#stage-rating-rows .rt-axis');
+  assert.equal(axes.length, 5);
+  const len = axes[0].querySelectorAll('.rt-cnt__g');
+  assert.equal(len.length, 1, '분량은 전원 5점');
+  assert.match(len[0].textContent, /5점/);
+  assert.equal(len[0].querySelectorAll('.rt-cnt__dot').length, 3, '세 사람 = 점 세 개');
+  const diff = [...axes[1].querySelectorAll('.rt-cnt__g')].map((g) => g.textContent);
+  assert.deepEqual(diff, ['4.5점', '4점'], '높은 점수부터, 0점(미입력)은 뺀다');
+  assert.doesNotMatch(a.d.getElementById('stage-rating-rows').innerHTML, /9876|8765|7654/, '번호는 절대 싣지 않는다(익명)');
 });
 
 test('홀랜드 — 검사 결과가 붙은 질문을 고르면 답변 보드 대신 팀 지도가 뜬다', async (t) => {
@@ -419,4 +419,25 @@ test('홀랜드는 별도 탭이 아니다', async (t) => {
   const a = app(t);
   await withReport(a, {});
   assert.equal(a.d.querySelector('#top-nav a[data-scene="holland"]'), null);
+});
+
+test('멤버 추리 — 이름 보기를 누르면 이름표 이름(없으면 번호 뒷자리)이 화면 가운데에 뾱', async (t) => {
+  const a = app(t);
+  const b = await withReport(a, { member_profiles: [
+    { nick: '꿈꾸는 표류자', title: 'A', desc: '한 문장.' }, { nick: '타오르는 로켓', title: 'B', desc: '한 문장.' }] });
+  b.others = b.questions.map(() => [{ n: '꿈꾸는 표류자', a: '답', phone4: '1111' }, { n: '타오르는 로켓', a: '답', phone4: '2222' }]);
+  a.w.STAGE.bookId = 'ihyangin';
+  a.w.showStageScene('members');
+  assert.doesNotMatch(a.d.getElementById('stage-members-grid').textContent, /1111|2222/, '누르기 전엔 안 보인다');
+  a.d.getElementById('nm-paste-ta').value = '1111 홍길동 / 3333 다른사람(오늘 불참)';
+  a.w.nameTagSave();
+  assert.deepEqual(JSON.parse(a.w.localStorage.getItem('rt:names')), { 1111: '홍길동', 3333: '다른사람(오늘 불참)' });
+  a.d.querySelector('.member-card__reveal[data-nick="꿈꾸는 표류자"]').click();
+  assert.ok(a.d.getElementById('nm-pop').className.includes('show'));
+  assert.equal(a.d.getElementById('nm-pop-name').textContent, '홍길동');
+  assert.match(a.d.querySelector('.member-card').textContent, /홍길동/, '닫아도 카드에 남는다');
+  assert.match(a.d.querySelector('.member-card__reveal').textContent, /공개됨/);
+  a.w.namePopClose();
+  a.d.querySelector('.member-card__reveal[data-nick="타오르는 로켓"]').click();
+  assert.equal(a.d.getElementById('nm-pop-name').textContent, '뒷자리 2222', '이름표 없으면 번호');
 });

@@ -789,20 +789,6 @@ body.is-page-season .book-card__cover{width:96px}
 .kw-detail__q{color:var(--ink-soft);font-style:italic}
 /* 별점 요약 코멘트 (2026-07-31) — '팀원들은 이렇게 생각했다' 한 문단 */
 /* 별점 흩어짐 (2026-09-30) — 축마다 1~5 트랙 위에 점수별 동그라미(크기=인원), 회색 선=최저~최고, 아래 ▲=평균 */
-.rt-spread{margin-top:16px;padding-top:14px;border-top:1px dashed var(--rule)}
-.rt-spread__hd{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;word-break:keep-all}
-.rt-spread__hd span{font-weight:400;color:var(--ink-dim)}
-.rt-spread__row{display:grid;grid-template-columns:64px 1fr 34px;align-items:center;gap:10px;height:46px}
-.rt-spread__lab{font-size:13px;font-weight:600;color:var(--ink);word-break:keep-all}
-.rt-spread__track{position:relative;height:100%;margin:0 12px}
-.rt-spread__base{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--rule-soft)}
-.rt-spread__range{position:absolute;top:50%;height:3px;margin-top:-1px;border-radius:2px;background:var(--rule)}
-.rt-spread__dot{position:absolute;top:50%;transform:translate(-50%,-50%);border-radius:50%;background:var(--star);box-shadow:0 0 0 2px var(--paper);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--ink)}
-.rt-spread__avg{position:absolute;bottom:0;width:0;height:0;margin-left:-5px;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid var(--ink)}
-.rt-spread__num{font-size:13px;font-weight:700;color:var(--ink-soft);text-align:right}
-.rt-spread__axis{display:grid;grid-template-columns:64px 1fr 34px;gap:10px;font-size:11px;color:var(--ink-dim)}
-.rt-spread__ticks{position:relative;height:14px;margin:0 12px}
-.rt-spread__ticks span{position:absolute;transform:translateX(-50%)}
 .sl-pick-why{margin:10px 0 2px;padding:9px 12px;background:var(--accent-tint);border-radius:var(--radius-sm);font-size:13.5px;line-height:1.55;color:var(--ink);word-break:keep-all}
 .rt-comment{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--rule);font-size:13.5px;line-height:1.65;color:var(--ink-soft)}
 .rt-comment.show{display:block}
@@ -833,7 +819,26 @@ body.is-page-season .book-card__cover{width:96px}
 @media (max-width:760px){.hol{grid-template-columns:1fr}.hol-type{grid-template-columns:1fr;gap:6px}}
 /* 멤버 추리 씬 (2026-07-31) — 닉네임 프로필 카드, 누구인지 맞히기 */
 .member-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-.member-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px}
+.member-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px;position:relative}
+/* 이름 보기 (2026-10-29 사용자 요청) — 카드 오른쪽 위 버튼 → 화면 가운데에 이름이 뾱. 실명은 이 브라우저에만 저장 */
+.member-card__reveal{position:absolute;top:14px;right:14px;font:inherit;font-size:12px;font-weight:700;padding:5px 11px;border-radius:var(--radius-pill);border:1px solid var(--accent);background:var(--paper);color:var(--accent);cursor:pointer}
+.member-card__reveal.done{border-color:var(--rule);color:var(--ink-dim)}
+.member-card__nick{padding-right:84px}
+.member-card__real{font-style:normal;font-family:inherit;font-size:14px;font-weight:700;color:var(--ink-soft);margin-left:6px}
+.nm-tools{display:flex;justify-content:flex-end;margin:-6px 0 10px}
+.nm-paste{display:none;margin-bottom:14px;padding:14px;border:1px dashed var(--rule);border-radius:var(--radius-lg);background:var(--paper)}
+.nm-paste.show{display:flex;flex-direction:column;gap:8px}
+.nm-paste__hd{font-size:12.5px;color:var(--ink-dim);word-break:keep-all}
+.nm-paste textarea{width:100%;font:inherit;font-size:14px;padding:8px;border:1px solid var(--rule);border-radius:var(--radius-sm);box-sizing:border-box}
+.nm-pop{position:fixed;inset:0;z-index:9000;display:none;align-items:center;justify-content:center;background:rgba(20,22,30,.55);cursor:pointer}
+.nm-pop.show{display:flex}
+.nm-pop__inner{position:relative;text-align:center;padding:36px 56px;border-radius:28px;background:var(--paper);box-shadow:0 20px 60px rgba(0,0,0,.35);animation:nmPop .55s cubic-bezier(.2,1.6,.4,1) both}
+.nm-pop__nick{font-size:18px;font-weight:700;color:var(--ink-dim);word-break:keep-all}
+.nm-pop__name{font-size:clamp(48px,10vw,110px);font-weight:900;color:var(--accent);letter-spacing:-.03em;line-height:1.15;word-break:keep-all}
+.nm-pop__burst{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
+.nm-pop__burst i{position:absolute;width:10px;height:10px;border-radius:2px;animation:nmBurst .9s ease-out forwards}
+@keyframes nmPop{0%{transform:scale(.1);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes nmBurst{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(540deg);opacity:0}}
 .member-card__nick{font-family:var(--display);font-weight:900;font-size:20px;font-style:italic;color:var(--accent);letter-spacing:-.02em}
 .member-card__title{font-weight:700;font-size:15px;color:var(--ink)}
 .member-card__desc{font-size:13.5px;line-height:1.65;color:var(--ink-soft);word-break:keep-all}
@@ -940,6 +945,14 @@ body.is-page-season .book-card__cover{width:96px}
 .sr-meta{font-size:15px;color:var(--ink-soft);font-weight:500}
 .sr-meta b{font-weight:900;color:var(--ink);font-size:22px}
 /* Stage rating stars */
+.rt-axis{padding:6px 0 10px;border-bottom:1px solid var(--rule-soft)}
+.rt-axis:last-child{border-bottom:none}
+.rt-axis .rt-stars-row{border-bottom:none;padding:4px 0}
+/* 몇 점에 몇 명 (2026-10-29 사용자 피드백: 흩어짐 그래프가 어렵다 → 점 하나 = 한 사람) */
+.rt-cnt{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--ink-soft)}
+.rt-cnt__g{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.rt-cnt__g b{font-weight:700;color:var(--ink);min-width:28px}
+.rt-cnt__dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#E8B23A;vertical-align:middle}
 .rt-stars-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--rule-soft)}
 .rt-stars-row:last-child{border-bottom:none}
 .rt-stars-row__label{font-size:14px;font-weight:600;color:var(--ink)}
@@ -1118,8 +1131,8 @@ body.is-page-season .book-card__cover{width:96px}
   <div class="scene-analysis__layout">
     <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요 &middot; 사람은 반응만, 분석은 AI</p></div>
     <div class="scene-analysis__grid">
-      <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드 <span style="color:var(--ink-dim);font-weight:400;text-transform:none">— 누르면 아래에 선정 이유가 고정돼요</span></div><div class="analysis-keywords"><span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span></div><div class="kw-detail" id="analysis-kw-detail"></div><div class="rt-spread" id="analysis-rating-spread" style="display:none"></div></div>
-      <div class="analysis-card"><div class="analysis-card__label">책 별점 분포 (익명 · 5점 만점)</div><div id="stage-rating-rows"></div>
+      <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드 <span style="color:var(--ink-dim);font-weight:400;text-transform:none">— 누르면 아래에 선정 이유가 고정돼요</span></div><div class="analysis-keywords"><span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span></div><div class="kw-detail" id="analysis-kw-detail"></div></div>
+      <div class="analysis-card"><div class="analysis-card__label">책 별점 (익명 · 5점 만점) <span style="color:var(--ink-dim);font-weight:400;text-transform:none">— <span class="rt-cnt__dot"></span> 하나가 한 사람</span></div><div id="stage-rating-rows"></div>
         <div class="rt-comment" id="analysis-rating-comment"></div>
       </div>
       <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 요약</div><div class="analysis-summary">발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.</div></div>
@@ -1130,9 +1143,14 @@ body.is-page-season .book-card__cover{width:96px}
 <div class="scene" id="scene-members">
   <div class="scene-analysis__layout">
     <div class="scene-analysis__header"><h2 class="scene-analysis__title">이 사람은 누구일까요?</h2><p class="scene-analysis__sub">AI가 답변·댓글 스타일로 뽑은 멤버 프로필 — 닉네임만 보고 누구인지 맞혀보세요</p></div>
+    <div class="nm-tools"><button type="button" class="btn btn-sm btn-pill" style="width:auto" onclick="nameTagToggle()">🏷️ 이름표</button></div>
+    <div class="nm-paste" id="nm-paste"><div class="nm-paste__hd">번호 뒷자리와 이름을 붙여 넣으세요 — 이 브라우저에만 저장돼요 (예: 7220 박미지 / 5331 박진형)</div>
+      <textarea id="nm-paste-ta" rows="3"></textarea>
+      <div style="display:flex;gap:6px;justify-content:flex-end"><button type="button" class="btn btn-sm btn-pill" style="width:auto" onclick="nameTagClear()">지우기</button><button type="button" class="btn btn-sm btn-pill btn-primary" style="width:auto" onclick="nameTagSave()">저장</button></div></div>
     <div class="member-grid" id="stage-members-grid"></div>
   </div>
 </div>
+<div class="nm-pop" id="nm-pop" onclick="namePopClose()"><div class="nm-pop__inner"><div class="nm-pop__nick" id="nm-pop-nick"></div><div class="nm-pop__name" id="nm-pop-name"></div><div class="nm-pop__burst" id="nm-pop-burst"></div></div></div>
 
 <div class="scene" id="scene-live">
   <!-- 진행탭 전체 폭 (2026-07-31 사용자 피드백) — 질문·무리 지도가 메인,
@@ -4694,32 +4712,16 @@ function axisLabel(k){for(var i=0;i<RATING_AXES.length;i++){if(RATING_AXES[i].k=
 function starStr(v){var s='';for(var i=1;i<=5;i++)s+=(i<=v?'★':(i-0.5===v?'<span class="half">★</span>':'<span class="off">★</span>'));return s;}
 /* 0.5 단위로 반올림 — 반 별 표시용 (2026-09-30) */
 function halfRound(v){return Math.round((v||0)*2)/2;}
-/* 별점 흩어짐 그래프 (2026-09-30 사용자 요청) — 평균만으론 안 보이는 '갈림'을 보여 준다.
-   b.allRatings(member_book 전체)에서 축별 점수 목록만 꺼내 인원수로 묶는다 — 누가 줬는지는 쓰지 않음(익명) */
-function ratingSpreadHtml(b){
-  var rows=(b&&b.allRatings)||[];
-  if(!rows.some(function(r){return RATING_AXES.some(function(ax){return r[ax.k]>0;});}))return '';
-  function pos(v){return ((v-1)/4*100).toFixed(2)+'%';}
-  var h='<div class="rt-spread__hd">별점 흩어짐 <span>— 동그라미 숫자 = 인원 · 회색 선 = 최저~최고 · ▲ = 평균</span></div>';
-  RATING_AXES.forEach(function(ax){
-    var vals=rows.map(function(r){return r[ax.k]||0;}).filter(function(v){return v>0;});
-    h+='<div class="rt-spread__row"><div class="rt-spread__lab">'+esc(ax.label)+'</div><div class="rt-spread__track"><div class="rt-spread__base"></div>';
-    if(vals.length){
-      var cnt={},mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals),avg=vals.reduce(function(a,c){return a+c;},0)/vals.length;
-      vals.forEach(function(v){cnt[v]=(cnt[v]||0)+1;});
-      h+='<div class="rt-spread__range" style="left:'+pos(mn)+';width:'+((mx-mn)/4*100).toFixed(2)+'%"></div>';
-      Object.keys(cnt).forEach(function(k){
-        var v=+k,c=cnt[k],d=Math.min(12+(c-1)*4,30);
-        h+='<div class="rt-spread__dot" style="left:'+pos(v)+';width:'+d+'px;height:'+d+'px" title="'+v+'점 · '+c+'명">'+(c>1?c:'')+'</div>';
-      });
-      h+='<div class="rt-spread__avg" style="left:'+pos(avg)+'" title="평균 '+avg.toFixed(1)+'"></div>';
-      h+='</div><div class="rt-spread__num">'+avg.toFixed(1)+'</div></div>';
-    } else h+='</div><div class="rt-spread__num">-</div></div>';
-  });
-  h+='<div class="rt-spread__axis"><div></div><div class="rt-spread__ticks">';
-  for(var i=1;i<=5;i++)h+='<span style="left:'+pos(i)+'">'+i+'</span>';
-  h+='</div><div></div></div>';
-  return h;
+/* 몇 점에 몇 명 (2026-10-29 사용자 피드백: 흩어짐 그래프가 직관적이지 않다) — 축마다 '5점 ●●● 4점 ●●'.
+   b.allRatings(member_book 전체)에서 점수만 꺼내 센다 — 누가 줬는지는 쓰지 않음(익명) */
+function ratingCountsHtml(b,k){
+  var vals=((b&&b.allRatings)||[]).map(function(r){return r[k]||0;}).filter(function(v){return v>0;});
+  if(!vals.length)return '';
+  var cnt={};vals.forEach(function(v){cnt[v]=(cnt[v]||0)+1;});
+  return '<div class="rt-cnt">'+Object.keys(cnt).map(Number).sort(function(x,y){return y-x;}).map(function(v){
+    var dots='';for(var i=0;i<cnt[v];i++)dots+='<span class="rt-cnt__dot"></span>';
+    return '<span class="rt-cnt__g" title="'+v+'점 · '+cnt[v]+'명"><b>'+v+'점</b>'+dots+'</span>';
+  }).join('')+'</div>';
 }
 function stageParts(){
   var b=bookById(STAGE.bookId),base=(b.others[0]||[]);
@@ -4765,8 +4767,6 @@ function renderStageRoadmap(){
 function renderStageRating(){
   var host=document.getElementById('stage-rating-rows');if(!host)return;
   var b=bookById(STAGE.bookId);
-  var spEl=document.getElementById('analysis-rating-spread');
-  if(spEl){ var sph=ratingSpreadHtml(b); spEl.innerHTML=sph; spEl.style.display=sph?'':'none'; }
   var sub=document.querySelector('.scene-analysis__sub');
   var kwHost=document.querySelector('#scene-analysis .analysis-keywords');
   var smHost=document.querySelector('#scene-analysis .analysis-summary');
@@ -4775,8 +4775,9 @@ function renderStageRating(){
     var rep=b.report,h='';
     RATING_AXES.forEach(function(ax){
       var rr=(rep.ratings||{})[ax.k]||{avg:0,n:0};
-      h+='<div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'</div>'+
-        '<div><span class="rt-stars">'+starStr(halfRound(rr.avg))+'</span><span class="rt-stars__num">'+(rr.avg||0).toFixed(1)+' · '+rr.n+'명</span></div></div>';
+      h+='<div class="rt-axis"><div class="rt-stars-row"><div class="rt-stars-row__label">'+esc(ax.label)+'</div>'+
+        '<div><span class="rt-stars">'+starStr(halfRound(rr.avg))+'</span><span class="rt-stars__num">'+(rr.avg||0).toFixed(1)+' · '+rr.n+'명</span></div></div>'+
+        ratingCountsHtml(b,ax.k)+'</div>';
     });
     host.innerHTML=h;
     /* 별점 요약 코멘트 — '팀원들은 이렇게 생각했다' (2026-07-31) */
@@ -4853,7 +4854,9 @@ function renderStageMembers(){
   if(!mp.length){grid.innerHTML='<div class="sl-empty" style="grid-column:1/-1">발표자료에 멤버 프로필이 없어요 — 발표자료를 (다시) 생성하면 채워집니다.</div>';return;}
   var nicks=repNicks(rep);
   grid.innerHTML=mp.map(function(p){
-    return '<div class="member-card"><div class="member-card__nick">'+esc(p.nick||'')+'</div>'+
+    var shown=NM_SHOWN[STAGE.bookId+'|'+p.nick];
+    return '<div class="member-card"><button type="button" class="member-card__reveal'+(shown?' done':'')+'" data-nick="'+esc(p.nick||'')+'" onclick="namePop(this.getAttribute(\'data-nick\'))">'+(shown?'✓ 공개됨':'👀 이름 보기')+'</button>'+
+      '<div class="member-card__nick">'+esc(p.nick||'')+(shown?'<span class="member-card__real">'+esc(nameOfNick(p.nick))+'</span>':'')+'</div>'+
       (p.title?'<div class="member-card__title">'+esc(p.title)+'</div>':'')+
       (p.desc?'<div class="member-card__desc">'+markNicks(p.desc,nicks)+'</div>':'')+
       (p.quote?'<div class="member-card__quote">“'+esc(p.quote)+'”</div>':'')+'</div>';
@@ -4952,6 +4955,49 @@ function renderStageHolland(){
   h+='<div class="hol-facts">'+facts.map(function(f){return '<div class="hol-fact"><div class="hol-fact__t">'+esc(f.t)+'</div><div class="hol-fact__v">'+esc(f.v)+'</div><div class="hol-fact__s">'+esc(f.s)+'</div></div>';}).join('')+'</div>';
   host.innerHTML=h;
 }
+/* 멤버 추리 이름 공개 (2026-10-29 사용자 요청). 실명은 공개 사이트·DB 에 올리지 않고 방장 브라우저(rt:names)에만 둔다.
+   이름표가 없으면 번호 뒷자리를 보여 준다 — 번호는 b.others[].phone4 */
+var NM_SHOWN={};
+function nameTags(){try{return JSON.parse(localStorage.getItem('rt:names'))||{};}catch(e){return MEM['rt:names']?JSON.parse(MEM['rt:names']):{};}}
+function nameTagsSet(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:names',v);}catch(e){MEM['rt:names']=v;}}
+function nameTagParse(text){
+  var o={},re=/(\d{4})\s*([^\/\n\d]+)/g,m;
+  while((m=re.exec(text||''))){var nm=m[2].trim();if(nm)o[m[1]]=nm;}
+  return o;
+}
+function phone4OfNick(nick){
+  var b=bookById(STAGE.bookId),p4='';
+  ((b&&b.others&&b.others[0])||[]).forEach(function(o){if(o.n===nick&&o.phone4)p4=o.phone4;});
+  return p4;
+}
+function nameOfNick(nick){var p4=phone4OfNick(nick);if(!p4)return '';return nameTags()[p4]||('뒷자리 '+p4);}
+function nameTagToggle(){
+  var el=document.getElementById('nm-paste');if(!el)return;
+  var ta=document.getElementById('nm-paste-ta'),t=nameTags();
+  if(ta)ta.value=Object.keys(t).map(function(k){return k+' '+t[k];}).join('\n');
+  el.classList.toggle('show');
+}
+function nameTagSave(){
+  var ta=document.getElementById('nm-paste-ta'),o=nameTagParse(ta&&ta.value);
+  nameTagsSet(o);document.getElementById('nm-paste').classList.remove('show');
+  toast('🏷️ 이름표 '+Object.keys(o).length+'명 저장 (이 브라우저에만)');renderStageMembers();
+}
+function nameTagClear(){nameTagsSet({});var ta=document.getElementById('nm-paste-ta');if(ta)ta.value='';toast('이름표를 지웠어요');renderStageMembers();}
+function namePop(nick){
+  var nm=nameOfNick(nick);
+  if(!nm){toast('이 닉네임의 번호를 못 찾았어요');return;}
+  NM_SHOWN[STAGE.bookId+'|'+nick]=true;
+  document.getElementById('nm-pop-nick').textContent=nick+'의 정체는…';
+  document.getElementById('nm-pop-name').textContent=nm;
+  var burst=document.getElementById('nm-pop-burst'),cols=['#3B5998','#E8B23A','#E07A3F','#5FA87A','#C45A8E'],h='';
+  for(var i=0;i<28;i++){var a=i/28*Math.PI*2,r=160+(i%4)*45;
+    h+='<i style="background:'+cols[i%cols.length]+';--dx:'+Math.round(Math.cos(a)*r)+'px;--dy:'+Math.round(Math.sin(a)*r)+'px"></i>';}
+  burst.innerHTML=h;
+  var pop=document.getElementById('nm-pop'),inner=pop.querySelector('.nm-pop__inner');
+  pop.classList.add('show');inner.style.animation='none';void inner.offsetWidth;inner.style.animation='';
+  renderStageMembers();
+}
+function namePopClose(){var pop=document.getElementById('nm-pop');if(pop)pop.classList.remove('show');}
 /* 무리 모션 (2026-07-31 사용자 피드백) — report.question_groups 기반. 질문마다 비슷한
    답변끼리 무리(zone)로 나뉘고, 조약돌(닉네임 칩)이 무리 사이를 이동한다. 조약돌 DOM 은
    질문이 바뀌어도 재사용 → CSS transition 으로 스르륵 이동, wob 키프레임으로 오밀조밀 흔들림 */
