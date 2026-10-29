@@ -382,9 +382,10 @@ test('별점 흩어짐 — 키워드 카드 아래에 점수별 인원 동그라
   assert.doesNotMatch(sp.innerHTML, /9876|8765|7654/, '번호는 절대 싣지 않는다(익명)');
 });
 
-test('홀랜드 코너 — 답변 속 검사 주소에서 점수를 읽어 팀 분포·1위 유형·재미 카드를 그린다', async (t) => {
+test('홀랜드 — 검사 결과가 붙은 질문을 고르면 답변 보드 대신 팀 지도가 뜬다', async (t) => {
   const a = app(t);
-  const b = await withReport(a, {});
+  const b = await withReport(a, { question_groups: [
+    { q_index: 1, groups: [{ name: 'A', members: ['꿈꾸는 표류자'] }] }] });
   const url = (r, i, ar, s, e, c) => 'https://prismatest.com/ko/tests/holland?res=realistic%3A' + r +
     '-investigative%3A' + i + '-artistic%3A' + ar + '-social%3A' + s + '-enterprising%3A' + e + '-conventional%3A' + c;
   b.others = b.questions.map((_, qi) => qi === 1
@@ -396,8 +397,13 @@ test('홀랜드 코너 — 답변 속 검사 주소에서 점수를 읽어 팀 �
   assert.equal(hd.qi, 1);
   assert.equal(hd.people.length, 2, '주소 없는 답변은 빠진다');
   a.w.STAGE.bookId = 'ihyangin';
-  a.w.showStageScene('holland');
+  a.w.showStageScene('live');
+  assert.equal(a.d.getElementById('stage-holland'), null, '다른 질문엔 지도 없음');
+  a.w.stageSetQ(1);
   const host = a.d.getElementById('stage-holland');
+  assert.ok(host, 'Q2 아래에 지도');
+  assert.equal(a.d.querySelectorAll('#sl-pickcard .sl-board__card').length, 0, '링크뿐인 답변 카드는 안 보인다');
+  assert.equal(a.d.getElementById('sl-groups').style.display, 'none', '무리 지도도 숨김');
   assert.ok(host.querySelector('svg polygon'), '레이더');
   const rows = [...host.querySelectorAll('.hol-type')];
   assert.match(rows[0].textContent, /실재형 75/, '팀 평균');
@@ -406,13 +412,11 @@ test('홀랜드 코너 — 답변 속 검사 주소에서 점수를 읽어 팀 �
   assert.match(rows[2].textContent, /타오르는 로켓/);
   assert.match(host.textContent, /만점 100점/);
   host.querySelector('.hol-who button[data-n="타오르는 로켓"]').click();
-  assert.equal(host.querySelectorAll('svg polygon[stroke="#E07A3F"]').length, 1, '고른 사람 육각형이 겹쳐진다');
+  assert.equal(a.d.querySelectorAll('#stage-holland svg polygon[stroke="#E07A3F"]').length, 1, '고른 사람 육각형이 겹쳐진다');
 });
 
-test('홀랜드 코너 — 검사 결과가 없는 책이면 탭을 숨긴다', async (t) => {
+test('홀랜드는 별도 탭이 아니다', async (t) => {
   const a = app(t);
-  const b = await withReport(a, {});
-  b.others = b.questions.map(() => [{ n: '꿈꾸는 표류자', a: '답' }]);
-  await a.w.startShare('ihyangin');
-  assert.equal(a.d.getElementById('stage-nav-holland').style.display, 'none');
+  await withReport(a, {});
+  assert.equal(a.d.querySelector('#top-nav a[data-scene="holland"]'), null);
 });

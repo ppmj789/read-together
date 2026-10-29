@@ -808,6 +808,8 @@ body.is-page-season .book-card__cover{width:96px}
 .rt-comment.show{display:block}
 /* 홀랜드 특별 코너 (2026-10-29) — 답변 속 검사 결과 주소에서 점수를 읽어 팀 분포를 보여 준다 */
 .hol{display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:20px;align-items:start}
+.hol-head{grid-column:1/-1;font-weight:800;font-size:18px;word-break:keep-all}
+.hol-head span{display:block;font-size:13px;font-weight:500;color:var(--ink-dim);margin-top:4px}
 .hol-card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-sm)}
 .hol-card__label{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink-dim);margin-bottom:10px;word-break:keep-all}
 .hol-radar svg{width:100%;height:auto;display:block}
@@ -1043,7 +1045,6 @@ body.is-page-season .book-card__cover{width:96px}
     <a data-scene="members" onclick="showStageScene('members')">멤버 추리</a>
     <a data-scene="live" onclick="showStageScene('live')">진행</a>
     <a data-scene="highlights" onclick="showStageScene('highlights')">하이라이트</a>
-    <a data-scene="holland" id="stage-nav-holland" onclick="showStageScene('holland')" style="display:none">🧭 홀랜드</a>
     <a data-scene="season" id="stage-nav-season" onclick="showStageScene('season')" style="display:none">📰 시즌 결산</a>
   </div>
 </nav>
@@ -1156,13 +1157,6 @@ body.is-page-season .book-card__cover{width:96px}
     <div id="sl-qtext" class="sl-qtext"></div>
     <div class="grp-wrap" id="sl-groups" style="display:none"></div>
     <div id="sl-pickcard"></div>
-  </div>
-</div>
-
-<div class="scene" id="scene-holland">
-  <div class="scene-analysis__layout">
-    <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리 팀 홀랜드 지도</h2><p class="scene-analysis__sub" id="hl-sub"></p></div>
-    <div class="hol" id="stage-holland"></div>
   </div>
 </div>
 
@@ -2856,8 +2850,6 @@ async function startShare(bookId){
   wireCardZoom();renderStageRoadmap();renderStageRating();renderStageMembers();renderStageLive();renderStageHighlights();
   /* 시즌 결산(v31) — 이 책의 시즌에 결산 리포트가 있을 때만 마지막 탭 노출 */
   var snav=document.getElementById('stage-nav-season'); if(snav) snav.style.display=seasonReportOf(meetingOfBook(bookId))?'':'none';
-  /* 홀랜드 특별 코너 — 답변에 검사 결과가 있는 책에서만 */
-  var hnav=document.getElementById('stage-nav-holland'); if(hnav) hnav.style.display=hollandData(bookById(bookId)).people.length?'':'none';
   showStageScene('roadmap');
   toast('발표를 시작합니다');
 }
@@ -2936,7 +2928,6 @@ function showStageScene(name){
   else if(name==='live') renderStageLive();
   else if(name==='highlights') renderStageHighlights();
   else if(name==='season') renderStageSeason();
-  else if(name==='holland') renderStageHolland();
 }
 
 /* ═══════════ RENDER: 시즌 포탈 ═══════════ */
@@ -4869,6 +4860,7 @@ function renderStageMembers(){
   }).join('');
 }
 /* 홀랜드 특별 코너 (2026-10-29 사용자 요청: 검사 결과로 우리 팀 분포를 재미있게).
+   진행탭에서 검사 결과가 붙은 질문을 고르면 답변 보드 대신 이 지도가 뜬다 (답변이 링크뿐이라 카드는 의미 없음).
    답변 속 prismatest 결과 주소(?res=realistic:68-investigative:46-…)에서 6유형 점수를 읽는다.
    검사 결과가 가장 많이 붙은 질문 하나를 쓴다. 닉네임은 답변에 공개된 값이라 그대로 보여 준다 */
 var HOLLAND_TYPES=[
@@ -4915,17 +4907,18 @@ function hollandRadar(avg,mine){
   return h+'</svg>';
 }
 function hollandPick(n){HOL.who=(HOL.who===n)?null:n;renderStageHolland();}
+function isHollandQ(){var hd=hollandData(bookById(STAGE.bookId));return hd.people.length>0&&hd.qi===STAGE.q;}
 function renderStageHolland(){
-  var host=document.getElementById('stage-holland'),sub=document.getElementById('hl-sub');if(!host)return;
+  var host=document.getElementById('stage-holland');if(!host)return;
   var hd=hollandData(bookById(STAGE.bookId)),ps=hd.people;
-  if(!ps.length){host.innerHTML='<div class="sl-empty" style="grid-column:1/-1">이 책엔 홀랜드 검사 결과가 없어요.</div>';if(sub)sub.textContent='';return;}
-  if(sub)sub.textContent=ps.length+'명이 주인공과 같은 검사를 받았어요 — 이름을 누르면 그 사람의 육각형이 겹쳐집니다';
+  if(!ps.length){host.innerHTML='';return;}
   var avg={};HOLLAND_TYPES.forEach(function(t){avg[t.k]=Math.round(ps.reduce(function(a,p){return a+p.s[t.k];},0)/ps.length);});
   var me=null;ps.forEach(function(p){if(p.n===HOL.who)me=p;});
   if(!me)HOL.who=null;
   var tops={};ps.forEach(function(p){hollandTops(p.s).forEach(function(k){(tops[k]=tops[k]||[]).push(p.n);});});
   /* 레이더 + 이름 */
-  var h='<div class="hol-card hol-radar"><div class="hol-card__label">'+(me?esc(me.n)+' (주황) vs 팀 평균 (파랑)':'팀 평균 육각형')+'</div>'+hollandRadar(avg,me&&me.s)+
+  var h='<div class="hol-head">🧭 우리 팀 홀랜드 지도 <span>'+ps.length+'명이 주인공과 같은 검사를 받았어요 — 이름을 누르면 그 사람의 육각형이 겹쳐집니다</span></div>'+
+    '<div class="hol-card hol-radar"><div class="hol-card__label">'+(me?esc(me.n)+' (주황) vs 팀 평균 (파랑)':'팀 평균 육각형')+'</div>'+hollandRadar(avg,me&&me.s)+
     '<div class="hol-who">'+ps.map(function(p){return '<button type="button" class="'+(p.n===HOL.who?'on':'')+'" data-n="'+esc(p.n)+'" onclick="hollandPick(this.getAttribute(\'data-n\'))">'+esc(p.n)+'</button>';}).join('')+'</div></div>';
   /* 유형별 — 팀 평균 막대 + 이 유형이 1위인 사람 (공동 1위 포함) */
   h+='<div class="hol-card"><div class="hol-card__label">유형별 팀 평균 · 이 유형이 1위인 사람 (공동 1위 포함)</div>';
@@ -4968,6 +4961,7 @@ function renderStageGroups(){
   var b=bookById(STAGE.bookId),rep=b&&b.report;
   var qg=((rep&&rep.question_groups)||[]).filter(function(g){return g.q_index===STAGE.q;})[0];
   var groups=(qg&&qg.groups)||[];
+  if(isHollandQ())groups=[]; /* 홀랜드 질문은 지도가 분포를 보여 줌 */
   if(!groups.length){host.style.display='none';host.innerHTML='';host._pebs=null;return;}
   host.style.display='block';
   if(!host._pebs)host._pebs={};
@@ -5132,7 +5126,10 @@ function stageBoard(){
 }
 function renderPickCard(){
   var host=document.getElementById('sl-pickcard');if(!host)return;
-  if(!STAGE.pickedName){host.innerHTML=stageBoardHtml();return;}
+  if(!STAGE.pickedName){
+    if(isHollandQ()){host.innerHTML='<div class="hol" id="stage-holland"></div>';renderStageHolland();return;}
+    host.innerHTML=stageBoardHtml();return;
+  }
   var b=bookById(STAGE.bookId),p=null;stageParts().forEach(function(x){if(x.name===STAGE.pickedName)p=x;});
   if(!p){host.innerHTML='';return;}
   var crit=STAGE.critText||'',qi=STAGE.q;
