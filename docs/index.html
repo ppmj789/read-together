@@ -1177,7 +1177,7 @@ body.is-page-season .book-card__cover{width:96px}
     <div class="grp-wrap" id="sl-groups" style="display:none"></div>
     <div id="sl-pickcard"></div>
     <div class="nm-tools"><button type="button" class="btn btn-sm btn-pill" style="width:auto" onclick="nameTagToggle()">🏷️ 이름표</button></div>
-    <div class="nm-paste" id="nm-paste"><div class="nm-paste__hd">번호 뒷자리와 이름을 붙여 넣으세요 — 이 브라우저에만 저장돼요 (예: 7220 박미지 / 5331 박진형)</div>
+    <div class="nm-paste" id="nm-paste"><div class="nm-paste__hd">회원 이름은 DB 에서 자동으로 나와요. 이 노트북에서만 다르게 보이고 싶을 때 붙여 넣으세요 (예: 7220 박미지 / 5331 박진형)</div>
       <textarea id="nm-paste-ta" rows="3"></textarea>
       <div style="display:flex;gap:6px;justify-content:flex-end"><button type="button" class="btn btn-sm btn-pill" style="width:auto" onclick="nameTagClear()">지우기</button><button type="button" class="btn btn-sm btn-pill btn-primary" style="width:auto" onclick="nameTagSave()">저장</button></div></div>
   </div>
@@ -2868,7 +2868,11 @@ async function startShare(bookId){
   var b=bookById(bookId);
   if(!b||!b.report){toast('🔒 먼저 책을 닫고(마감) 발표자료를 생성해 주세요');return;}
   STAGE.bookId=bookId;STAGE.pickedName=null;
-  if(ONLINE){try{await RT.loadBook(bookId);}catch(e){rtErr(e);}}
+  if(ONLINE){try{await RT.loadBook(bookId);}catch(e){rtErr(e);}
+    /* 진행탭 👀 이름 보기용 실명 — member.display_name (2026-10-29 사용자 결정: 어느 기기에서나 나오게 DB 에) */
+    try{var mt=meetingOfBook(bookId),cid=mt&&mt.clubId;
+      if(cid){var mr=await sb.from('member').select('phone4,display_name').eq('club_id',cid);
+        MEMBER_NAMES={};((mr&&mr.data)||[]).forEach(function(x){if(x.display_name)MEMBER_NAMES[x.phone4]=x.display_name;});}}catch(e){}}
   setStage(true);
   wireCardZoom();renderStageRoadmap();renderStageRating();renderStageMembers();renderStageLive();renderStageHighlights();
   /* 시즌 결산(v31) — 이 책의 시즌에 결산 리포트가 있을 때만 마지막 탭 노출 */
@@ -4958,9 +4962,9 @@ function renderStageHolland(){
   h+='<div class="hol-facts">'+facts.map(function(f){return '<div class="hol-fact"><div class="hol-fact__t">'+esc(f.t)+'</div><div class="hol-fact__v">'+esc(f.v)+'</div><div class="hol-fact__s">'+esc(f.s)+'</div></div>';}).join('')+'</div>';
   host.innerHTML=h;
 }
-/* 이름 공개 (2026-10-29 사용자 요청) — 진행탭 답변 보드 카드 오른쪽 위 👀. 실명은 공개 사이트·DB 에 올리지 않고 방장 브라우저(rt:names)에만 둔다.
-   이름표가 없으면 번호 뒷자리를 보여 준다 — 번호는 b.others[].phone4 */
-var NM_SHOWN={};
+/* 이름 공개 (2026-10-29 사용자 요청) — 진행탭 답변 보드 카드 오른쪽 위 👀.
+   이름 순서: 🏷️ 이름표(이 브라우저 rt:names) > member.display_name(DB) > 번호 뒷자리. 번호는 b.others[].phone4 */
+var NM_SHOWN={},MEMBER_NAMES={};
 function nameTags(){try{return JSON.parse(localStorage.getItem('rt:names'))||{};}catch(e){return MEM['rt:names']?JSON.parse(MEM['rt:names']):{};}}
 function nameTagsSet(o){var v=JSON.stringify(o);try{localStorage.setItem('rt:names',v);}catch(e){MEM['rt:names']=v;}}
 function nameTagParse(text){
@@ -4973,7 +4977,7 @@ function phone4OfNick(nick){
   ((b&&b.others&&b.others[0])||[]).forEach(function(o){if(o.n===nick&&o.phone4)p4=o.phone4;});
   return p4;
 }
-function nameOfNick(nick){var p4=phone4OfNick(nick);if(!p4)return '';return nameTags()[p4]||('뒷자리 '+p4);}
+function nameOfNick(nick){var p4=phone4OfNick(nick);if(!p4)return '';return nameTags()[p4]||MEMBER_NAMES[p4]||('뒷자리 '+p4);}
 function nameTagToggle(){
   var el=document.getElementById('nm-paste');if(!el)return;
   var ta=document.getElementById('nm-paste-ta'),t=nameTags();

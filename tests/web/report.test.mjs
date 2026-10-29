@@ -441,8 +441,11 @@ test('진행탭 답변 카드 오른쪽 위 👀 → 이름표 이름(없으면 
   assert.match(a.d.querySelector('.sl-board__card[data-nick="꿈꾸는 표류자"]').textContent, /홍길동/, '닫아도 카드에 남는다');
   a.w.namePopClose();
   a.d.querySelector('.sl-board__card[data-nick="타오르는 로켓"] .nm-eye').click();
-  assert.equal(a.d.getElementById('nm-pop-name').textContent, '뒷자리 2222', '이름표 없으면 번호');
+  assert.equal(a.d.getElementById('nm-pop-name').textContent, '뒷자리 2222', '이름표도 DB 이름도 없으면 번호');
   a.w.namePopClose();
+  a.w.MEMBER_NAMES = { 2222: '김로켓' };
+  assert.equal(a.w.nameOfNick('타오르는 로켓'), '김로켓', 'DB member.display_name');
+  assert.equal(a.w.nameOfNick('꿈꾸는 표류자'), '홍길동', '이름표가 DB 보다 우선');
   a.d.querySelector('.sl-board__card[data-nick="타오르는 로켓"]').click();
   assert.equal(a.w.STAGE.pickedName, '타오르는 로켓', '카드 자체를 누르면 여전히 발언자 선택');
 });
