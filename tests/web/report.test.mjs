@@ -421,23 +421,28 @@ test('홀랜드는 별도 탭이 아니다', async (t) => {
   assert.equal(a.d.querySelector('#top-nav a[data-scene="holland"]'), null);
 });
 
-test('멤버 추리 — 이름 보기를 누르면 이름표 이름(없으면 번호 뒷자리)이 화면 가운데에 뾱', async (t) => {
+test('진행탭 답변 카드 오른쪽 위 👀 → 이름표 이름(없으면 번호 뒷자리)이 화면 가운데에 뾱, 발언자 선택은 안 된다', async (t) => {
   const a = app(t);
-  const b = await withReport(a, { member_profiles: [
-    { nick: '꿈꾸는 표류자', title: 'A', desc: '한 문장.' }, { nick: '타오르는 로켓', title: 'B', desc: '한 문장.' }] });
+  const b = await withReport(a, { member_profiles: [{ nick: '꿈꾸는 표류자', title: 'A', desc: '한 문장.' }] });
   b.others = b.questions.map(() => [{ n: '꿈꾸는 표류자', a: '답', phone4: '1111' }, { n: '타오르는 로켓', a: '답', phone4: '2222' }]);
   a.w.STAGE.bookId = 'ihyangin';
   a.w.showStageScene('members');
-  assert.doesNotMatch(a.d.getElementById('stage-members-grid').textContent, /1111|2222/, '누르기 전엔 안 보인다');
+  assert.equal(a.d.querySelector('#scene-members .nm-eye'), null, '멤버 추리 탭엔 이름 보기 없음');
+  a.w.showStageScene('live');
+  a.w.stageSetQ(0);
+  assert.doesNotMatch(a.d.getElementById('sl-pickcard').textContent, /1111|2222/, '누르기 전엔 안 보인다');
   a.d.getElementById('nm-paste-ta').value = '1111 홍길동 / 3333 다른사람(오늘 불참)';
   a.w.nameTagSave();
   assert.deepEqual(JSON.parse(a.w.localStorage.getItem('rt:names')), { 1111: '홍길동', 3333: '다른사람(오늘 불참)' });
-  a.d.querySelector('.member-card__reveal[data-nick="꿈꾸는 표류자"]').click();
+  a.d.querySelector('.sl-board__card[data-nick="꿈꾸는 표류자"] .nm-eye').click();
+  assert.equal(a.w.STAGE.pickedName, null, '👀 는 발언자 선택과 별개');
   assert.ok(a.d.getElementById('nm-pop').className.includes('show'));
   assert.equal(a.d.getElementById('nm-pop-name').textContent, '홍길동');
-  assert.match(a.d.querySelector('.member-card').textContent, /홍길동/, '닫아도 카드에 남는다');
-  assert.match(a.d.querySelector('.member-card__reveal').textContent, /공개됨/);
+  assert.match(a.d.querySelector('.sl-board__card[data-nick="꿈꾸는 표류자"]').textContent, /홍길동/, '닫아도 카드에 남는다');
   a.w.namePopClose();
-  a.d.querySelector('.member-card__reveal[data-nick="타오르는 로켓"]').click();
+  a.d.querySelector('.sl-board__card[data-nick="타오르는 로켓"] .nm-eye').click();
   assert.equal(a.d.getElementById('nm-pop-name').textContent, '뒷자리 2222', '이름표 없으면 번호');
+  a.w.namePopClose();
+  a.d.querySelector('.sl-board__card[data-nick="타오르는 로켓"]').click();
+  assert.equal(a.w.STAGE.pickedName, '타오르는 로켓', '카드 자체를 누르면 여전히 발언자 선택');
 });
