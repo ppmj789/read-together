@@ -951,10 +951,13 @@ body.is-page-season .book-card__cover{width:96px}
 .rt-axis:last-child{border-bottom:none}
 .rt-axis .rt-stars-row{border-bottom:none;padding:4px 0}
 /* 몇 점에 몇 명 (2026-10-29 사용자 피드백: 흩어짐 그래프가 어렵다 → 점 하나 = 한 사람) */
-.rt-cnt{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--ink-soft)}
-.rt-cnt__g{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
-.rt-cnt__g b{font-weight:700;color:var(--ink);min-width:28px}
-.rt-cnt__dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#E8B23A;vertical-align:middle}
+/* 점 대신 한 줄 막대 (2026-10-29 사용자 피드백: 점이 이상하다) — 칸 길이 = 사람 수, 진할수록 높은 점수 */
+.rt-cnt{display:flex;height:22px;border-radius:11px;overflow:hidden;background:var(--highlight);gap:2px}
+.rt-cnt__g{display:flex;align-items:center;justify-content:center;min-width:0;font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+.rt-cnt__g.s5{background:#E8B23A;color:#3a2a00}
+.rt-cnt__g.s4{background:#F1CB72;color:#4a3700}
+.rt-cnt__g.s3{background:#F6E1AE;color:#5a4a1e}
+.rt-cnt__g.s2{background:#E6E1D6;color:#5d5a52}
 .rt-stars-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--rule-soft)}
 .rt-stars-row:last-child{border-bottom:none}
 .rt-stars-row__label{font-size:14px;font-weight:600;color:var(--ink)}
@@ -1134,7 +1137,7 @@ body.is-page-season .book-card__cover{width:96px}
     <div class="scene-analysis__header"><h2 class="scene-analysis__title">우리의 생각 지도</h2><p class="scene-analysis__sub">AI가 참가자들의 답변을 분석했어요 &middot; 사람은 반응만, 분석은 AI</p></div>
     <div class="scene-analysis__grid">
       <div class="analysis-card"><div class="analysis-card__label">자주 등장한 키워드 <span style="color:var(--ink-dim);font-weight:400;text-transform:none">— 누르면 아래에 선정 이유가 고정돼요</span></div><div class="analysis-keywords"><span class="dim" style="font-size:14px">발표자료를 생성하면 키워드가 표시됩니다.</span></div><div class="kw-detail" id="analysis-kw-detail"></div></div>
-      <div class="analysis-card"><div class="analysis-card__label">책 별점 (익명 · 5점 만점) <span style="color:var(--ink-dim);font-weight:400;text-transform:none">— <span class="rt-cnt__dot"></span> 하나가 한 사람</span></div><div id="stage-rating-rows"></div>
+      <div class="analysis-card"><div class="analysis-card__label">책 별점 (익명 · 5점 만점) <span style="color:var(--ink-dim);font-weight:400;text-transform:none">— 막대 길이가 사람 수, 진할수록 높은 점수</span></div><div id="stage-rating-rows"></div>
         <div class="rt-comment" id="analysis-rating-comment"></div>
       </div>
       <div class="analysis-card analysis-card--wide"><div class="analysis-card__label">AI 요약</div><div class="analysis-summary">발표자료를 생성하면 답변 기반 AI 요약이 여기에 표시됩니다.</div></div>
@@ -4721,8 +4724,8 @@ function ratingCountsHtml(b,k){
   if(!vals.length)return '';
   var cnt={};vals.forEach(function(v){cnt[v]=(cnt[v]||0)+1;});
   return '<div class="rt-cnt">'+Object.keys(cnt).map(Number).sort(function(x,y){return y-x;}).map(function(v){
-    var dots='';for(var i=0;i<cnt[v];i++)dots+='<span class="rt-cnt__dot"></span>';
-    return '<span class="rt-cnt__g" title="'+v+'점 · '+cnt[v]+'명"><b>'+v+'점</b>'+dots+'</span>';
+    var cls=v>=5?'s5':(v>=4?'s4':(v>=3?'s3':'s2'));
+    return '<span class="rt-cnt__g '+cls+'" style="flex:'+cnt[v]+' 1 0" title="'+v+'점 · '+cnt[v]+'명">'+v+'점 '+cnt[v]+'명</span>';
   }).join('')+'</div>';
 }
 function stageParts(){

@@ -361,7 +361,7 @@ test('반 별 입력 — 왼쪽 절반을 누르면 0.5점으로 저장되고 �
   assert.match(row.textContent, /3\.5/);
 });
 
-test('별점 — 축마다 몇 점에 몇 명인지 점(한 사람 = 하나)으로, 별점 카드 하나에만', async (t) => {
+test('별점 — 축마다 몇 점에 몇 명인지 한 줄 막대로, 별점 카드 하나에만', async (t) => {
   const a = app(t);
   const b = await withReport(a, {});
   b.allRatings = [
@@ -375,10 +375,10 @@ test('별점 — 축마다 몇 점에 몇 명인지 점(한 사람 = 하나)으�
   assert.equal(axes.length, 5);
   const len = axes[0].querySelectorAll('.rt-cnt__g');
   assert.equal(len.length, 1, '분량은 전원 5점');
-  assert.match(len[0].textContent, /5점/);
-  assert.equal(len[0].querySelectorAll('.rt-cnt__dot').length, 3, '세 사람 = 점 세 개');
+  assert.equal(len[0].textContent, '5점 3명');
+  assert.match(len[0].getAttribute('style'), /flex:\s*3/, '막대 칸 길이 = 사람 수');
   const diff = [...axes[1].querySelectorAll('.rt-cnt__g')].map((g) => g.textContent);
-  assert.deepEqual(diff, ['4.5점', '4점'], '높은 점수부터, 0점(미입력)은 뺀다');
+  assert.deepEqual(diff, ['4.5점 1명', '4점 1명'], '높은 점수부터, 0점(미입력)은 뺀다');
   assert.doesNotMatch(a.d.getElementById('stage-rating-rows').innerHTML, /9876|8765|7654/, '번호는 절대 싣지 않는다(익명)');
 });
 
