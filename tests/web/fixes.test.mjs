@@ -228,9 +228,10 @@ test('하단 내비: 화면 이동에 따라 활성 탭이 따라온다', async 
   a.w.enterMeeting('m1');
   assert.equal(activeNav(a), 'season');
   await a.w.openBook('ihyangin');
-  assert.equal(activeNav(a), 'book');
+  assert.equal(activeNav(a), 'shelf', '책 화면은 책장 소속 (이번 책 탭 제거 2026-11-09)');
   a.w.go('discussion');
-  assert.equal(activeNav(a), 'book', '답변 화면도 이번 책 탭 소속');
+  assert.equal(activeNav(a), 'shelf', '답변 화면도 책장 소속');
+  assert.equal(a.d.querySelector('#bottomnav [data-nav="book"]'), null, '이번 책 탭 없음');
   await a.w.openHistory();
   assert.equal(activeNav(a), 'history');
 });
@@ -238,9 +239,6 @@ test('하단 내비: 화면 이동에 따라 활성 탭이 따라온다', async 
 test('하단 내비: 어느 화면에서든 목적지로 직행 (시즌 미선택 시 자동 보정)', async (t) => {
   const a = app(t);
   await a.loginAs('1234'); // meetings — meetingId 없음
-  await a.w.navGo('book');
-  assert.equal(a.page(), 'book');
-  assert.equal(a.w.STATE.bookId, 'ihyangin', '열림 상태인 이번 달 책으로 직행');
   await a.w.navGo('history');
   assert.equal(a.page(), 'history');
   await a.w.navGo('season');
@@ -317,4 +315,27 @@ test('meta description 존재 + 토스트 지속시간 파라미터 동작', asy
   assert.equal(a.toasts().length, 1);
   await new Promise((r) => setTimeout(r, 400));
   assert.equal(a.toasts().length, 0, 'ms 파라미터대로 사라져야 함');
+});
+
+/* ── 2026-11-09: 책장 → 책으로 바로 들어가도 모임장 열기/닫기 노출 ── */
+test('모임장 책 화면에 운영 막대(열기/닫기)가 있고 누르면 책 화면이 갱신된다', async (t) => {
+  const a = app(t);
+  await hostLogin(a);
+  a.w.enterMeeting('m1');
+  await a.w.openBook('ihyangin');
+  assert.equal(a.page(), 'book');
+  const bar = () => a.d.querySelector('#page-book .host-ctl');
+  assert.ok(bar(), '운영 막대 있음');
+  assert.match(bar().textContent, /닫기/);
+  await a.w.hostCloseBook('ihyangin', '이향인', true);
+  assert.equal(a.page(), 'book', '책 화면에 그대로 남는다');
+  assert.match(bar().textContent, /다시 열기/, '닫은 뒤 막대가 바로 바뀐다');
+});
+
+test('참가자 책 화면에는 운영 막대가 없다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  a.w.enterMeeting('m1');
+  await a.w.openBook('ihyangin');
+  assert.equal(a.d.querySelector('#page-book .host-ctl'), null);
 });

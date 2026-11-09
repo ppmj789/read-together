@@ -72,6 +72,8 @@ body{font-family:'Pretendard Variable','Pretendard',sans-serif;font-size:15px;li
 /* ═══ BOTTOM NAV — 하단 주 내비게이션 (로그인 후 상시, 2026-07-21 UX) ═══ */
 .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:58;display:none;background:var(--paper);border-top:1px solid var(--rule);padding:5px max(8px,env(safe-area-inset-left)) calc(5px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-right));box-shadow:0 -2px 12px rgba(0,0,0,.05)}
 .bottomnav.visible{display:block}
+.host-ctl{margin:16px 0 4px;padding:12px 14px;border:1px solid var(--rule-soft);border-radius:12px;background:var(--accent-tint);word-break:keep-all}
+.host-ctl__st{font-size:13px;color:var(--ink);margin-bottom:8px}
 .bottomnav__row{display:flex;width:100%;max-width:680px;margin:0 auto}
 .bottomnav button{flex:1;background:none;border:none;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 5px;color:var(--ink-dim);font-size:11px;font-weight:600;border-radius:12px;transition:color .15s,background .15s}
 .bottomnav button .ic{display:block;line-height:0;opacity:.6;transition:opacity .15s}
@@ -1056,7 +1058,6 @@ body.is-page-season .book-card__cover{width:96px}
   <div class="bottomnav__row">
     <button data-nav="shelf" onclick="navGo('shelf')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 4h3.2v16H4.5z"/><path d="M10.2 4h3.2v16h-3.2z"/><path d="m16.1 5 3.1-.8 3.3 15.2-3.1.8z"/></svg></span>서재</button>
     <button data-nav="season" onclick="navGo('season')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16h14v3.5H5z"/><path d="M6.5 11.5h11V15h-11z"/><path d="M5.8 7h12.4v3.5H5.8z"/></svg></span>시즌</button>
-    <button data-nav="book" onclick="navGo('book')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4H8a4 4 0 0 1 4 4v12.5a3 3 0 0 0-3-3H2.5z"/><path d="M21.5 4H16a4 4 0 0 0-4 4v12.5a3 3 0 0 1 3-3h6.5z"/></svg></span>이번 책</button>
     <button data-nav="history" onclick="navGo('history')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>내 기록</button>
   </div>
 </nav>
@@ -1306,12 +1307,17 @@ var NICK_MEI_MASK=['다카유키','겐지','슌스케','료타','다이스케','
    이 책은 빵 이름 하나만 준다. {one:[...]} 사전은 조합 없이 한 낱말을 그대로 쓴다.
    낱말 수(89)가 조합형보다 훨씬 적어 겹치기 쉬우므로 ensureNick 이 빈 이름을 찾아 준다. */
 var NICK_BREAD=['소보로','단팥빵','크루아상','바게트','모닝빵','베이글','스콘','카스텔라','마들렌','휘낭시에','까눌레','치아바타','포카치아','브리오슈','프레첼','도넛','꽈배기','고로케','소금빵','크림빵','메론빵','슈크림','에클레어','마카롱','머핀','와플','팬케이크','호밀빵','깜빠뉴','또띠아','파니니','토스트','러스크','크럼블','타르트','롤케이크','쉬폰','브라우니','쿠키','비스킷','크래커','호두과자','붕어빵','호빵','찐빵','술빵','계란빵','국화빵','풀빵','맘모스','피자빵','야채빵','옥수수빵','마늘빵','초코빵','밤빵','찹쌀도넛','츄러스','시나몬롤','크로플','슈톨렌','파네토네','팡도르','구겔호프','바움쿠헨','다쿠아즈','사브레','갈레트','크레이프','퀸아망','팔미에','밀푀유','몽블랑','티라미수','푸딩','치즈케이크','당근케이크','티그레','공갈빵','건빵','꿀빵','보리빵','쌀빵','통밀빵','버터롤','핫도그','샌드위치','파운드케이크','애플파이'];
+/* 백야 — 러시아 동물 한 단어 (2026-11-09 사용자 결정: 긴 이름 싫고 '러시아 동물로').
+   시베리아·타이가·북극해 동물에 러시아 개·고양이 몇 마리 (라이카 = 우주로 간 개). 65개. */
+var NICK_RUSSIA=['불곰','북극곰','반달곰','순록','엘크','무스','사슴','노루','고라니','산양','들소','늑대','여우','은여우','북극여우','스라소니','호랑이','표범','눈표범','삵','담비','흑담비','수달','비버','오소리','족제비','밍크','다람쥐','청설모','하늘다람쥐','산토끼','눈토끼','우는토끼','레밍','마멋','고슴도치','물범','바다표범','바다사자','바다코끼리','해달','흰고래','범고래','올빼미','부엉이','흰올빼미','수리부엉이','독수리','송골매','두루미','고니','기러기','청둥오리','딱따구리','까마귀','까치','뇌조','들꿩','철갑상어','연어','사모예드','허스키','보르조이','라이카','러시안블루'];
 /* 책 제목 → 별명 사전. 없는 책은 NICK_DEFAULT(서재·독서 테마) */
 var NICK_SETS={
   '프로젝트 헤일메리':{adj:NICK_ADJ,noun:NICK_NOUN},
   '가면산장 살인사건':{adj:NICK_SEI_MASK,noun:NICK_MEI_MASK},
   '빵충 사육 준수 사항':{one:NICK_BREAD},
-  '빵충 사육 준수사':{one:NICK_BREAD}
+  '빵충 사육 준수사':{one:NICK_BREAD},
+  '백야':{one:NICK_RUSSIA},
+  '우리는 가장 밝은 밤에 헤어졌다(원제:백야)':{one:NICK_RUSSIA}
 };
 /* 사전이 등록되지 않은 책의 기본값 — 투표 화면과 같은 서재·독서 테마.
    (VOTE_ADJ/VOTE_NOUN 은 아래에서 정의되지만 호출은 로드 후라 문제없다) */
@@ -2298,7 +2304,9 @@ function goHome(){
 
 /* ═══════════ 하단 주 내비게이션 (2026-07-21 UX) ═══════════
  * 뒤로가기 체인에만 의존하던 화면 이동을 4개 목적지 직행으로 보완:
- * 서재(책장) · 시즌 · 이번 책 · 내 기록. 로그인 후에만 노출, 발표모드에선 숨김. */
+ * 서재(책장) · 시즌 · 내 기록. 로그인 후에만 노출, 발표모드에선 숨김.
+ * '이번 책' 탭은 2026-11-09 사용자 요청으로 뺐다 (지금 책이 아닌 책을 가리킬 때가 있고, 책장에서 바로 들어가면 됨).
+ * 책 화면은 책장에서 들어오고 뒤로도 책장으로 가므로 서재 탭 소속. */
 function _ensureMeeting(){
   if(STATE.meetingId) return true;
   var ms=clubMeetings(STATE.clubId);
@@ -2324,7 +2332,7 @@ function syncBottomNav(){
   var on=!!(STATE.phone4||STATE.isHost)&&!isStage&&!!STATE.page&&STATE.page!=='login';
   nav.classList.toggle('visible',on);
   document.body.classList.toggle('has-bottomnav',on);
-  var map={meetings:'shelf',owners:'shelf',create:'shelf',manage:'shelf',clubs:'shelf',season:'season',vote:'season',book:'book',discussion:'book',results:'book',history:'history'};
+  var map={meetings:'shelf',owners:'shelf',create:'shelf',manage:'shelf',clubs:'shelf',season:'season',vote:'season',book:'shelf',discussion:'shelf',results:'shelf',history:'history'};
   var act=map[STATE.page]||'';
   nav.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active',b.dataset.nav===act); });
 }
@@ -3157,13 +3165,7 @@ function renderSeason(){
          (STATE.isHost?('<div class="book-card__host">'+
            /* 운영 동선만 — 모임장 답변 진입은 사전정보 페이지 하단 1곳으로 축소 (2026-07-21).
               카드 본문 클릭 = 편집 페이지라 버튼마다 stopPropagation. */
-           (isUpcoming?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto;background:var(--success);border-color:var(--success)" onclick="event.stopPropagation();hostOpenBook(\''+b.id+'\',\''+esc(b.title)+'\')">🟢 열기</button>':'')+
-           (isOpen?'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();hostCloseBook(\''+b.id+'\',\''+esc(b.title)+'\',true)">🔒 닫기 (마감)</button>':'')+
-           (closed?'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();hostCloseBook(\''+b.id+'\',\''+esc(b.title)+'\',false)">🔓 다시 열기</button>':'')+
-           /* 발표자료 — 닫힘 상태에서만 생성 가능 */
-           (closed?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto;background:var(--accent);border-color:var(--accent)" onclick="event.stopPropagation();hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')">'+(hasReport?'📊 발표자료 재생성':'📊 발표자료 생성')+'</button>':'')+
-           /* 발표 시작 — 보고서 있을 때만 */
-           (hasReport?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();startShare(\''+b.id+'\')">&#9654; 발표 시작</button>':'')+
+           hostBookCtlHtml(b)+
            /* 편집(사전정보·질문·삭제 통합) — 카드 클릭과 동일, 명시적 진입로로 유지 */
            '<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();openBook(\''+b.id+'\')">✏️ 편집</button>'+
          '</div>'):'')+
@@ -3605,6 +3607,9 @@ function renderBook(){
      '<div class="cover__top"><span>未知의 서재</span><span>'+esc(b.month||'')+'</span></div>'+
    '</div>';
   if(STATE.isHost){
+    /* 운영 막대 — 지금 상태 + 열기/닫기·발표자료·발표 시작 (시즌 카드와 같은 버튼) */
+    h+='<div class="host-ctl"><div class="host-ctl__st">'+bookStatusEmoji(st)+' 지금 <b>'+esc(bookStatusLabel(st))+'</b></div>'+
+       '<div class="book-card__host" style="margin-top:0">'+hostBookCtlHtml(b)+'</div></div>';
     /* ───── 모임장 모드 — 책 정보 / 질문 두 섹션 독립 CRUD (박진형 정책) ─────
      * 두 폼은 한 화면에 모두 노출. 각자 [💾 저장] 1번씩. 마감 여부 무관 항상 편집 가능. */
     /* ─ ① 책 정보 sheet ─ buf 있으면 편집 폼, 없으면 읽기 전용 카드 + [편집] 버튼 */
@@ -4633,6 +4638,22 @@ function generateReportMock(b){
     reactions:reactions,stats:{answers:nAns,comments:nCmt,reactions:rxTotal,participants:nPart}};
 }
 
+/* 모임장 책 운영 버튼 — 시즌 카드와 책 화면(사전정보) 위에서 같이 쓴다 (2026-11-09:
+   책장 → 책으로 바로 들어가면 열기/닫기가 안 보인다는 사용자 요청). 카드 안에서도 눌리게 stopPropagation. */
+function hostBookCtlHtml(b){
+  var st=bookStatus(b),hasReport=!!b.report;
+  var closed=(st==='closed'),isOpen=(st==='open'),isUpcoming=(st==='upcoming');
+  return ''+
+           (isUpcoming?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto;background:var(--success);border-color:var(--success)" onclick="event.stopPropagation();hostOpenBook(\''+b.id+'\',\''+esc(b.title)+'\')">🟢 열기</button>':'')+
+           (isOpen?'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();hostCloseBook(\''+b.id+'\',\''+esc(b.title)+'\',true)">🔒 닫기 (마감)</button>':'')+
+           (closed?'<button class="btn btn-ghost btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();hostCloseBook(\''+b.id+'\',\''+esc(b.title)+'\',false)">🔓 다시 열기</button>':'')+
+           /* 발표자료 — 닫힘 상태에서만 생성 가능 */
+           (closed?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto;background:var(--accent);border-color:var(--accent)" onclick="event.stopPropagation();hostGenerateReport(\''+b.id+'\',\''+esc(b.title)+'\')">'+(hasReport?'📊 발표자료 재생성':'📊 발표자료 생성')+'</button>':'')+
+           /* 발표 시작 — 보고서 있을 때만 */
+           (hasReport?'<button class="btn btn-primary btn-sm btn-pill" style="width:auto" onclick="event.stopPropagation();startShare(\''+b.id+'\')">&#9654; 발표 시작</button>':'');
+}
+/* 운영 버튼을 누른 뒤 지금 보고 있는 화면을 다시 그린다 — 책 화면이면 책 화면, 아니면 시즌 */
+function hostRerender(){ if(STATE.page==='book') renderBook(); else renderSeason(); }
 async function hostOpenBook(id,title){
   /* 박진형 정책: 등록 시엔 자유, 오픈 시에만 validation. 질문이 1개 이상 있어야 참가자가 답할 게 있음 */
   var b=bookById(id);
@@ -4644,7 +4665,7 @@ async function hostOpenBook(id,title){
   if(!(await uiConfirm('「'+title+'」 책을 열까요? (질문 '+qs.length+'개)\n열면 참가자가 답변·별점·댓글을 남길 수 있어요.',{okLabel:'열기'})))return;
   if(ONLINE){if(!(await RT.openBook(id,true)))return;}
   else {_setBookOpenedLocal(id,true);}
-  renderSeason();toast('🟢 책을 열었어요 · 참가자 답변을 받습니다');
+  hostRerender();toast('🟢 책을 열었어요 · 참가자 답변을 받습니다');
 }
 async function hostCloseBook(id,title,on){
   var msg=on?('「'+title+'」 책을 닫을까요?\n닫으면 답변·별점·댓글이 모두 잠기고, 발표자료를 생성할 수 있어요. (다시 열 수 있어요)'):('「'+title+'」 책을 다시 열까요?\n참가자가 다시 답변·별점·댓글을 남길 수 있어요.');
@@ -4660,7 +4681,7 @@ async function hostCloseBook(id,title,on){
     if(on)_setBookClosedLocal(id,true);
     else {_setBookClosedLocal(id,false);_setBookOpenedLocal(id,true);}
   }
-  renderSeason();toast(on?'🔒 책을 닫았어요 · 📊 발표자료 생성을 누를 수 있어요':'🟢 책을 다시 열었어요');
+  hostRerender();toast(on?'🔒 책을 닫았어요 · 📊 발표자료 생성을 누를 수 있어요':'🟢 책을 다시 열었어요');
 }
 async function hostGenerateReport(id,title){
   var b=bookById(id);if(!b)return;
@@ -4670,7 +4691,7 @@ async function hostGenerateReport(id,title){
   var rep=generateReportMock(bookById(id)||b);
   if(ONLINE){if(!(await RT.saveReport(id,rep)))return;}
   else {_setBookReportLocal(id,rep);}
-  renderSeason();toast(regen?'발표자료를 다시 생성했어요 (mock)':'발표자료를 생성했어요 (mock)');
+  hostRerender();toast(regen?'발표자료를 다시 생성했어요 (mock)':'발표자료를 생성했어요 (mock)');
 }
 function toast(msg,ms){
   /* ms: 표시 시간(기본 2.2초). 행동 지시·오류처럼 읽는 데 시간이 걸리는 메시지는 길게 준다. */

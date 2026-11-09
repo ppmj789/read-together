@@ -1273,3 +1273,18 @@ test('별명 사전: 빵충은 한 단어 이름, 남이 쓰는 이름은 건너
   a.w.ensureNick();
   assert.equal(getLocal(), '내가 지은 이름');
 });
+
+test('별명 사전: 백야는 러시아 동물 한 단어, 옛 서재 테마 긴 이름은 버린다', async (t) => {
+  const a = app(t);
+  await a.loginAs('1234');
+  const one = a.w.nickSetForTitle('백야').one;
+  assert.ok(one && one.length >= 50, '러시아 동물 사전');
+  assert.equal(new Set(one).size, one.length, '낱말 중복 없음');
+  assert.ok(one.every((x) => !/\s/.test(x) && x.length <= 5), '모두 짧은 한 단어');
+  assert.equal(a.w.nickSetForTitle('우리는 가장 밝은 밤에 헤어졌다(원제:백야)').one, one);
+  /* 운영 DB 에 이미 들어간 백야 이름 7개는 모두 서재 테마 조합 — ensureNick 이 버리는 대상 */
+  const old = ['띠지를 버리는 도서관 유령','초판을 모으는 반납 담당','표지부터 보는 책벌레','여백에 적는 번역가',
+    '빌려만 놓는 마지막 장 애호가','서서 읽는 절판본 추적자','밑줄 긋는 마지막 장 애호가'];
+  const isVote = (cur) => a.w.eval('VOTE_ADJ').some((x) => cur.indexOf(x + ' ') === 0 && a.w.eval('VOTE_NOUN').indexOf(cur.slice(x.length + 1)) >= 0);
+  old.forEach((n) => assert.ok(isVote(n), n + ' 는 자동 교체 대상'));
+});
